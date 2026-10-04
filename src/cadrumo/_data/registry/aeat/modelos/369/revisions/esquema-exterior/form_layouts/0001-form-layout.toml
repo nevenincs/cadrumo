@@ -7,7 +7,7 @@ revision_id = "esquema-exterior"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "0b3c499eb354b72094cadda433083907bb77bd6fcf8725937968cdc8a2dfcc48"
+source_state_digest = "97de503b202ff9fa2cd6c4c56591edfa477613206b2370cdaabd888755a43a6f"
 design_sources = [
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },
 ]
@@ -329,15 +329,4 @@ blocks = [
     { kind = "field", id = "field-138", binding_id = "modelo-369-exterior-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28" },
     { kind = "field", id = "field-139", binding_id = "modelo-369-exterior-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28" },
     { kind = "field", id = "field-140", binding_id = "modelo-369-exterior-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28" },
-]
-
-[[revisions.esquema-exterior.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.369.form.page.other-inputs.heading"
-
-[[revisions.esquema-exterior.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.369.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-369-exterior-fichero.tipo-y-cierre"] },
 ]

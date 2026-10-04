@@ -257,9 +257,10 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
     ``DR23200``'s administracion bytes.
 
     This inventory was built from ``_join_record(...) is None`` alone, which is
-    ALSO true of every AUX header, so it carried two Modelo 232 entries that
-    gave up no rigor whatsoever. The sibling multi-record assertion catches one
-    flavour of overstatement; this catches the other.
+    ALSO true of a separately declared AUX header. The historical inventory
+    carried two Modelo 232 entries before its official variable envelope was
+    enrolled. The sibling multi-record assertion catches one flavour of
+    overstatement; this catches the other.
     """
     _, _, _, _, misfiled = _scan()
 

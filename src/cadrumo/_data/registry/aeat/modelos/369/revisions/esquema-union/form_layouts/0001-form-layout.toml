@@ -7,7 +7,7 @@ revision_id = "esquema-union"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "bce744ed532d663e7701173a44b21d00632d394a01d9631d716e60dd2c547f46"
+source_state_digest = "786edc3fb36f0e00e160fb734f317d6c8dac0a794c0d560142bb54a1221c943b"
 design_sources = [
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },
 ]
@@ -886,15 +886,4 @@ blocks = [
     { kind = "field", id = "field-390", binding_id = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-192" },
     { kind = "field", id = "field-391", binding_id = "modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-196" },
     { kind = "field", id = "field-392", binding_id = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-193" },
-]
-
-[[revisions.esquema-union.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.369.form.page.other-inputs.heading"
-
-[[revisions.esquema-union.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.369.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-369-union-fichero.tipo-y-cierre"] },
 ]

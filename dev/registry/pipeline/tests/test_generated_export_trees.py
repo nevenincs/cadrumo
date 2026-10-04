@@ -41,7 +41,11 @@ from ...compiler.loader import (
 )
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from .._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from .._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedHistoricalStaticGeneratedExportTree,
+    validate_generated_export_tree,
+)
 from ..cli import stage_published_modelo
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
@@ -66,11 +70,26 @@ _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispos
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
 
 
+def test_repaired_historical_m232_tree_is_enrolled_with_its_official_frame() -> None:
+    tree = next(item for item in _GENERATED_TREES if str(item) == "m232-2016-2017")
+    assert (tree.source_ref, tree.epoch, tree.filing_year, tree.period, tree.historical_static) == (
+        "aeat-dr-232-2016",
+        "2016",
+        2016,
+        "0A",
+        True,
+    )
+
+
 def _expected_filing_grade_refusals() -> dict[str, str]:
     """The declared capability controls which targets must refuse a filing snapshot."""
     authority = compiled_bundled_authority()
     expected = {}
     for tree in _GENERATED_TREES:
+        if tree.historical_static:
+            # Its check yields only a source-pinned static inspection. The
+            # ordinary filing-grade/floor refusal is asserted separately.
+            continue
         revision = authority.modelo(tree.modelo).revisions[tree.revision]
         grade = revision.authority_grade or UNDECLARED_REGISTRY_AUTHORITY_GRADE
         if grade is not RegistryAuthorityGrade.FILING:
@@ -209,11 +228,11 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     is not accompanied by a regenerated tree reds here, and so does a hand-edited
     fragment.
 
-    Whether the generator's own `check_generated_export_tree` PASSES is a stronger
-    question, because it validates the candidate through the real registry
-    authority at filing grade. A lower declared capability must refuse at that
-    boundary; a filing-grade target must pass the full check. The expected
-    refusal is selected from current authority rather than a revision roster.
+    The generator's own `check_generated_export_tree` also validates the isolated
+    candidate through the real registry authority. Ordinary targets select at
+    filing grade, and lower capabilities must refuse there. A historical tree
+    below the support floor instead proves the distinct source-pinned static
+    result, with no runtime snapshot or filing admission.
     """
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
@@ -350,6 +369,8 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             period=tree.period,
             supporting_modelos=supporting_modelos(tree),
             continuity_metadata_modelo_root=continuity_metadata_modelo_root,
+            scope_authority=compiled_bundled_authority() if tree.historical_static else None,
+            historical_static_source_ref=tree.source_ref if tree.historical_static else None,
         ),
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),
@@ -378,6 +399,10 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         "from _EXPECTED_FILING_GRADE_REFUSALS and let this gate assert the pass"
     )
     assert str(checked.candidate.layout.id) == tree.layout_id
+    if tree.historical_static:
+        assert isinstance(checked.candidate, ValidatedHistoricalStaticGeneratedExportTree)
+        assert str(checked.candidate.inspection.revision_id) == tree.revision
+        assert not hasattr(checked.candidate, "snapshot")
 
 
 @pytest.mark.parametrize(

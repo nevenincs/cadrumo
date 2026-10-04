@@ -61,9 +61,13 @@ from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .export_tree_models import RenderedExportTree
 from .generated_export_inheritance import select_generated_export_inheritance
 from .generated_export_inheritance_model import GeneratedExportInheritanceContext
+from .generated_form_bridge import (
+    GeneratedFormBridge,
+    generated_form_companion_changed,
+    prepare_generated_form_bridge,
+)
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .historical_static_repair import validated_historical_repair_source
-from .m232_form_bridge import M232FormBridge, prepare_m232_form_bridge
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -605,7 +609,7 @@ def publish_prepared_invocation(
     rendered: RenderedExportTree,
     target_state: GeneratedExportTreeTargetStateReceipt,
     *,
-    m232_form_bridge: M232FormBridge | None = None,
+    generated_form_bridge: GeneratedFormBridge | None = None,
 ) -> None:
     """Publish the exact prepared candidate the read-only check just validated."""
     publish_validated_generated_export_tree(
@@ -617,8 +621,8 @@ def publish_prepared_invocation(
             expected_target_state=target_state,
             supersession=prepared.supersession,
             final_live_validator=(
-                (lambda: m232_form_bridge.require_export_cutover(prepared.target_root))
-                if m232_form_bridge is not None
+                (lambda: generated_form_bridge.require_export_cutover(prepared.target_root))
+                if generated_form_bridge is not None
                 else (lambda: _validate_final_live_target(prepared))
             ),
         ),
@@ -776,7 +780,7 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    m232_form_bridge = None
+    generated_form_bridge = None
     if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
         _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
     else:
@@ -786,27 +790,37 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
             comparison,
             source_sha256=str(prepared.inputs.transport_profile.source_sha256),
         )
-    if prepared.invocation.modelo == "232" and prepared.invocation.revision in {"2016-2017", "2018-y-siguientes"}:
-        m232_form_bridge = prepare_m232_form_bridge(
+    if (prepared.invocation.modelo, prepared.invocation.revision) in {
+        ("232", "2016-2017"),
+        ("232", "2018-y-siguientes"),
+        ("190", "2025-y-siguientes"),
+    } and generated_form_companion_changed(
+        prepared.target_root,
+        prepared.candidate_root,
+        prepared.invocation.modelo,
+        prepared.invocation.revision,
+    ):
+        generated_form_bridge = prepare_generated_form_bridge(
             registry_root=prepared.target_root,
             candidate_root=prepared.candidate_root,
+            modelo=prepared.invocation.modelo,
             revision=prepared.invocation.revision,
             source_ref=prepared.invocation.source_ref,
             source_sha256=str(prepared.inputs.transport_profile.source_sha256),
             expected_manifest_sha256=prepared.invocation.expected_manifest_sha256,
         )
-    publish_prepared_invocation(prepared, rendered, target_state, m232_form_bridge=m232_form_bridge)
-    if m232_form_bridge is not None:
-        _finish_m232_republication(
+    publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=generated_form_bridge)
+    if generated_form_bridge is not None:
+        _finish_form_republication(
             prepared.target_root,
-            m232_form_bridge,
+            generated_form_bridge,
             final_live_validator=lambda: _validate_final_live_target(prepared),
         )
 
 
-def _finish_m232_republication(
+def _finish_form_republication(
     registry_root: Path,
-    bridge: M232FormBridge,
+    bridge: GeneratedFormBridge,
     *,
     final_live_validator: Callable[[], None],
 ) -> None:
@@ -816,7 +830,7 @@ def _finish_m232_republication(
         final_live_validator()
     except (OSError, RegistryError, ValueError) as error:
         raise RegistryValidationError(
-            "M232 export source was installed but companion/currentness closure is incomplete; "
+            "Generated export source was installed but companion/currentness closure is incomplete; "
             f"repair through the canonical form owner: {error}"
         ) from error
 

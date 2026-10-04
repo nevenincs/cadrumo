@@ -7,7 +7,7 @@ revision_id = "esquema-importacion"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "36c7dbffcb2edfff9d8e18fa5aa404bc11bd673ccfad3edc55773f69ece69e34"
+source_state_digest = "16a7a12a27d31b3a6fecb29adea49fe80008cbc73e7c0187f65e6c9dbbf8c7b5"
 design_sources = [
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },
 ]
@@ -333,15 +333,4 @@ blocks = [
     { kind = "field", id = "field-153", binding_id = "modelo-369-importacion-fichero.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-28" },
     { kind = "field", id = "field-154", binding_id = "modelo-369-importacion-fichero.3-importaciones-de-bienes-de-menos-de-150-base-imponible-28" },
     { kind = "field", id = "field-155", binding_id = "modelo-369-importacion-fichero.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-28" },
-]
-
-[[revisions.esquema-importacion.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.369.form.page.other-inputs.heading"
-
-[[revisions.esquema-importacion.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.369.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-369-importacion-fichero.tipo-y-cierre"] },
 ]

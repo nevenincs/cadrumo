@@ -7,7 +7,7 @@ revision_id = "2016-2017"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "f84fb6bb2c91d558a1cb5ba75e0e8e0de1042d269205cb7ed8ad9e95d370e3ad"
+source_state_digest = "e1cd6814fc830752c9175d96623341b86f72e51e425e4b6788f1ea285974dff2"
 design_sources = [
     { source_ref = "aeat-dr-232-2016", sha256 = "b0e1f1545d2c13175c4004d543bf46671c1dad39d5ee552d919e54263e942f65" },
 ]
@@ -157,13 +157,343 @@ blocks = [
     { kind = "field", id = "field-9", casilla_id = "vinculada-5-importe" },
 ]
 
-[[revisions.2016-2017.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.232.form.page.other-inputs.heading"
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "4-operaciones-con-personas-o-entidades-vi-23f4e3"
+heading_key = "modelo.schema.232.form.section.4-operaciones-con-personas-o-entidades-vi-23f4e3.heading"
+official_heading = "4.Operaciones con personas o entidades vinculadas"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_01.matriz-nif" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_01.matriz-razon-social" },
+]
 
 [[revisions.2016-2017.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.232.form.section.inputs.heading"
+id = "4-operaciones-con-personas-o-entidades-vi-d1aaed"
+heading_key = "modelo.schema.232.form.section.4-operaciones-con-personas-o-entidades-vi-d1aaed.heading"
+official_heading = "4.Operaciones con personas o entidades vinculadas 1"
 blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-232.page_01.matriz-nif", "modelo-232.page_01.matriz-razon-social", "modelo-232.page_01.vinculada-metodo-1-fjo", "modelo-232.page_01.vinculada-metodo-1-importe", "modelo-232.page_01.vinculada-metodo-1-nif", "modelo-232.page_01.vinculada-metodo-1-provincia-pais", "modelo-232.page_01.vinculada-metodo-1-razon-social", "modelo-232.page_01.vinculada-metodo-1-tipo-vinculacion", "modelo-232.page_01.vinculada-metodo-2-fjo", "modelo-232.page_01.vinculada-metodo-2-importe", "modelo-232.page_01.vinculada-metodo-2-nif", "modelo-232.page_01.vinculada-metodo-2-provincia-pais", "modelo-232.page_01.vinculada-metodo-2-razon-social", "modelo-232.page_01.vinculada-metodo-2-tipo-vinculacion", "modelo-232.page_01.vinculada-metodo-3-fjo", "modelo-232.page_01.vinculada-metodo-3-importe", "modelo-232.page_01.vinculada-metodo-3-nif", "modelo-232.page_01.vinculada-metodo-3-provincia-pais", "modelo-232.page_01.vinculada-metodo-3-razon-social", "modelo-232.page_01.vinculada-metodo-3-tipo-vinculacion", "modelo-232.page_02.paraiso-operacion-1-clave-pais", "modelo-232.page_02.paraiso-operacion-1-descripcion", "modelo-232.page_02.paraiso-operacion-1-fjo", "modelo-232.page_02.paraiso-operacion-1-importe", "modelo-232.page_02.paraiso-operacion-1-persona", "modelo-232.page_02.paraiso-operacion-10-clave-pais", "modelo-232.page_02.paraiso-operacion-10-descripcion", "modelo-232.page_02.paraiso-operacion-10-fjo", "modelo-232.page_02.paraiso-operacion-10-importe", "modelo-232.page_02.paraiso-operacion-10-persona", "modelo-232.page_02.paraiso-operacion-11-clave-pais", "modelo-232.page_02.paraiso-operacion-11-descripcion", "modelo-232.page_02.paraiso-operacion-11-fjo", "modelo-232.page_02.paraiso-operacion-11-importe", "modelo-232.page_02.paraiso-operacion-11-persona", "modelo-232.page_02.paraiso-operacion-12-clave-pais", "modelo-232.page_02.paraiso-operacion-12-descripcion", "modelo-232.page_02.paraiso-operacion-12-fjo", "modelo-232.page_02.paraiso-operacion-12-importe", "modelo-232.page_02.paraiso-operacion-12-persona", "modelo-232.page_02.paraiso-operacion-2-clave-pais", "modelo-232.page_02.paraiso-operacion-2-descripcion", "modelo-232.page_02.paraiso-operacion-2-fjo", "modelo-232.page_02.paraiso-operacion-2-importe", "modelo-232.page_02.paraiso-operacion-2-persona", "modelo-232.page_02.paraiso-operacion-3-clave-pais", "modelo-232.page_02.paraiso-operacion-3-descripcion", "modelo-232.page_02.paraiso-operacion-3-fjo", "modelo-232.page_02.paraiso-operacion-3-importe", "modelo-232.page_02.paraiso-operacion-3-persona", "modelo-232.page_02.paraiso-operacion-4-clave-pais", "modelo-232.page_02.paraiso-operacion-4-descripcion", "modelo-232.page_02.paraiso-operacion-4-fjo", "modelo-232.page_02.paraiso-operacion-4-importe", "modelo-232.page_02.paraiso-operacion-4-persona", "modelo-232.page_02.paraiso-operacion-5-clave-pais", "modelo-232.page_02.paraiso-operacion-5-descripcion", "modelo-232.page_02.paraiso-operacion-5-fjo", "modelo-232.page_02.paraiso-operacion-5-importe", "modelo-232.page_02.paraiso-operacion-5-persona", "modelo-232.page_02.paraiso-operacion-6-clave-pais", "modelo-232.page_02.paraiso-operacion-6-descripcion", "modelo-232.page_02.paraiso-operacion-6-fjo", "modelo-232.page_02.paraiso-operacion-6-importe", "modelo-232.page_02.paraiso-operacion-6-persona", "modelo-232.page_02.paraiso-operacion-7-clave-pais", "modelo-232.page_02.paraiso-operacion-7-descripcion", "modelo-232.page_02.paraiso-operacion-7-fjo", "modelo-232.page_02.paraiso-operacion-7-importe", "modelo-232.page_02.paraiso-operacion-7-persona", "modelo-232.page_02.paraiso-operacion-8-clave-pais", "modelo-232.page_02.paraiso-operacion-8-descripcion", "modelo-232.page_02.paraiso-operacion-8-fjo", "modelo-232.page_02.paraiso-operacion-8-importe", "modelo-232.page_02.paraiso-operacion-8-persona", "modelo-232.page_02.paraiso-operacion-9-clave-pais", "modelo-232.page_02.paraiso-operacion-9-descripcion", "modelo-232.page_02.paraiso-operacion-9-fjo", "modelo-232.page_02.paraiso-operacion-9-importe", "modelo-232.page_02.paraiso-operacion-9-persona", "modelo-232.page_02.paraiso-valor-1-clave-pais", "modelo-232.page_02.paraiso-valor-1-entidad", "modelo-232.page_02.paraiso-valor-1-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-1-tipo", "modelo-232.page_02.paraiso-valor-1-valor-adquisicion", "modelo-232.page_02.paraiso-valor-10-clave-pais", "modelo-232.page_02.paraiso-valor-10-entidad", "modelo-232.page_02.paraiso-valor-10-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-10-tipo", "modelo-232.page_02.paraiso-valor-10-valor-adquisicion", "modelo-232.page_02.paraiso-valor-11-clave-pais", "modelo-232.page_02.paraiso-valor-11-entidad", "modelo-232.page_02.paraiso-valor-11-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-11-tipo", "modelo-232.page_02.paraiso-valor-11-valor-adquisicion", "modelo-232.page_02.paraiso-valor-12-clave-pais", "modelo-232.page_02.paraiso-valor-12-entidad", "modelo-232.page_02.paraiso-valor-12-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-12-tipo", "modelo-232.page_02.paraiso-valor-12-valor-adquisicion", "modelo-232.page_02.paraiso-valor-2-clave-pais", "modelo-232.page_02.paraiso-valor-2-entidad", "modelo-232.page_02.paraiso-valor-2-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-2-tipo", "modelo-232.page_02.paraiso-valor-2-valor-adquisicion", "modelo-232.page_02.paraiso-valor-3-clave-pais", "modelo-232.page_02.paraiso-valor-3-entidad", "modelo-232.page_02.paraiso-valor-3-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-3-tipo", "modelo-232.page_02.paraiso-valor-3-valor-adquisicion", "modelo-232.page_02.paraiso-valor-4-clave-pais", "modelo-232.page_02.paraiso-valor-4-entidad", "modelo-232.page_02.paraiso-valor-4-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-4-tipo", "modelo-232.page_02.paraiso-valor-4-valor-adquisicion", "modelo-232.page_02.paraiso-valor-5-clave-pais", "modelo-232.page_02.paraiso-valor-5-entidad", "modelo-232.page_02.paraiso-valor-5-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-5-tipo", "modelo-232.page_02.paraiso-valor-5-valor-adquisicion", "modelo-232.page_02.paraiso-valor-6-clave-pais", "modelo-232.page_02.paraiso-valor-6-entidad", "modelo-232.page_02.paraiso-valor-6-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-6-tipo", "modelo-232.page_02.paraiso-valor-6-valor-adquisicion", "modelo-232.page_02.paraiso-valor-7-clave-pais", "modelo-232.page_02.paraiso-valor-7-entidad", "modelo-232.page_02.paraiso-valor-7-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-7-tipo", "modelo-232.page_02.paraiso-valor-7-valor-adquisicion", "modelo-232.page_02.paraiso-valor-8-clave-pais", "modelo-232.page_02.paraiso-valor-8-entidad", "modelo-232.page_02.paraiso-valor-8-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-8-tipo", "modelo-232.page_02.paraiso-valor-8-valor-adquisicion", "modelo-232.page_02.paraiso-valor-9-clave-pais", "modelo-232.page_02.paraiso-valor-9-entidad", "modelo-232.page_02.paraiso-valor-9-porcentaje-participacion", "modelo-232.page_02.paraiso-valor-9-tipo", "modelo-232.page_02.paraiso-valor-9-valor-adquisicion"] },
+    { kind = "field", id = "field", binding_id = "modelo-232.page_01.vinculada-metodo-1-nif" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_01.vinculada-metodo-1-fjo" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_01.vinculada-metodo-1-razon-social" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_01.vinculada-metodo-1-provincia-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_01.vinculada-metodo-1-tipo-vinculacion" },
+    { kind = "field", id = "field-6", binding_id = "modelo-232.page_01.vinculada-metodo-1-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "4-operaciones-con-personas-o-entidades-vi-b5a1fa"
+heading_key = "modelo.schema.232.form.section.4-operaciones-con-personas-o-entidades-vi-b5a1fa.heading"
+official_heading = "4.Operaciones con personas o entidades vinculadas 2"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_01.vinculada-metodo-2-nif" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_01.vinculada-metodo-2-fjo" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_01.vinculada-metodo-2-razon-social" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_01.vinculada-metodo-2-provincia-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_01.vinculada-metodo-2-tipo-vinculacion" },
+    { kind = "field", id = "field-6", binding_id = "modelo-232.page_01.vinculada-metodo-2-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "4-operaciones-con-personas-o-entidades-vi-3fcc2f"
+heading_key = "modelo.schema.232.form.section.4-operaciones-con-personas-o-entidades-vi-3fcc2f.heading"
+official_heading = "4.Operaciones con personas o entidades vinculadas 3"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_01.vinculada-metodo-3-nif" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_01.vinculada-metodo-3-fjo" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_01.vinculada-metodo-3-razon-social" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_01.vinculada-metodo-3-provincia-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_01.vinculada-metodo-3-tipo-vinculacion" },
+    { kind = "field", id = "field-6", binding_id = "modelo-232.page_01.vinculada-metodo-3-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages]]
+id = "dr23202"
+official_ref = "DR23202"
+heading_key = "modelo.schema.232.form.page.dr23202.heading"
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-694b29"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-694b29.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 1"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-1-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-1-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-1-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-1-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-1-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-e75c02"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-e75c02.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 2"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-2-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-2-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-2-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-2-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-2-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-26d93e"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-26d93e.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 3"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-3-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-3-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-3-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-3-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-3-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-bccdb0"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-bccdb0.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 4"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-4-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-4-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-4-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-4-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-4-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-5d8e63"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-5d8e63.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 5"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-5-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-5-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-5-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-5-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-5-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-7851e9"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-7851e9.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 6"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-6-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-6-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-6-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-6-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-6-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-048f97"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-048f97.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 7"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-7-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-7-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-7-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-7-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-7-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-403536"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-403536.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 8"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-8-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-8-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-8-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-8-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-8-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-bf4056"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-bf4056.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 9"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-9-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-9-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-9-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-9-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-9-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-7f7b86"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-7f7b86.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 10"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-10-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-10-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-10-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-10-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-10-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-a4694a"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-a4694a.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 11"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-11-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-11-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-11-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-11-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-11-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "5-operaciones-relacionadas-con-paraisos-f-76e985"
+heading_key = "modelo.schema.232.form.section.5-operaciones-relacionadas-con-paraisos-f-76e985.heading"
+official_heading = "5.Operaciones relacionadas con paraísos fiscales 12"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-operacion-12-descripcion" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-operacion-12-persona" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-operacion-12-fjo" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-operacion-12-clave-pais" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-operacion-12-importe" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-bb1f23"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-bb1f23.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 1"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-1-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-1-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-1-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-1-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-1-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-1d4633"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-1d4633.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 2"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-2-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-2-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-2-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-2-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-2-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-869938"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-869938.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 3"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-3-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-3-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-3-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-3-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-3-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-4dff90"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-4dff90.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 4"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-4-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-4-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-4-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-4-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-4-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-872026"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-872026.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 5"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-5-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-5-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-5-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-5-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-5-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-35b23c"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-35b23c.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 6"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-6-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-6-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-6-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-6-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-6-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-c2250f"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-c2250f.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 7"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-7-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-7-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-7-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-7-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-7-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-a8b880"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-a8b880.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 8"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-8-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-8-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-8-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-8-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-8-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-84219d"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-84219d.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 9"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-9-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-9-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-9-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-9-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-9-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-3f6d2d"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-3f6d2d.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 10"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-10-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-10-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-10-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-10-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-10-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-0758ff"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-0758ff.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 11"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-11-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-11-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-11-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-11-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-11-porcentaje-participacion" },
+]
+
+[[revisions.2016-2017.form_layouts.pages.sections]]
+id = "6-tenencia-de-valores-relacionadas-con-pa-e742e0"
+heading_key = "modelo.schema.232.form.section.6-tenencia-de-valores-relacionadas-con-pa-e742e0.heading"
+official_heading = "6.Tenencia de valores relacionadas con paraísos fiscales 12"
+blocks = [
+    { kind = "field", id = "field", binding_id = "modelo-232.page_02.paraiso-valor-12-tipo" },
+    { kind = "field", id = "field-2", binding_id = "modelo-232.page_02.paraiso-valor-12-entidad" },
+    { kind = "field", id = "field-3", binding_id = "modelo-232.page_02.paraiso-valor-12-clave-pais" },
+    { kind = "field", id = "field-4", binding_id = "modelo-232.page_02.paraiso-valor-12-valor-adquisicion" },
+    { kind = "field", id = "field-5", binding_id = "modelo-232.page_02.paraiso-valor-12-porcentaje-participacion" },
 ]

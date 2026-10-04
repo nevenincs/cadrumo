@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:460e6b29a4a55acc2ad7823715934eef403bdfbed22d8baa6db8c3d5ac8b0ba0'
+body_hash: 'sha256:46d62e0c2509929231a67f0d62caa6ef2126287d4c3306ae16fd2460b20ae793'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3414,6 +3414,88 @@ related:
 - `S05` `A` `.codex/handoffs/tui-all-mcp-efb-dispositions.json`
 - `S05` `M` `.codex/handoffs/tui-all-mcp-53f-dispositions.json`
 - `S05` `verify:` `native distribution identity nine current tests` -> `pass`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-dispositions.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-invoice-request-schema-repair.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-portable-cohort-readiness.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-product-readiness.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-product-reconciliation.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-product-source-manifest.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-registry-reconciliation.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-efb-dispositions.json`
+- `S05` `M` `dev/registry/compiler/tests/test_below_floor_export_refs.py`
+- `S05` `M` `dev/registry/compiler/tests/test_export_layout_source_coverage.py`
+- `S05` `A` `dev/registry/pipeline/generated_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/generated_tree_inventory.py`
+- `S05` `M` `dev/registry/pipeline/historical_static_repair.py`
+- `S05` `M` `dev/registry/pipeline/m232_form_bridge.py`
+- `S05` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0002-record-modelo-190-perceptor.toml`
+- `S05` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0003-record-modelo-190-perceptor.toml`
+- `S05` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/_generation.provenance.json`
+- `S05` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/pipeline/tests/test_below_floor_dispositions.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_export_tree.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_export_tree_validation.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S05` `A` `dev/registry/pipeline/tests/test_generated_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_tree_check.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_tree_publication.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_m232_form_bridge.py`
+- `S05` `M` `dev/registry/tests/test_declaration_invariant_gates.py`
+- `S05` `M` `dev/registry/tests/test_embedded_envelope_source_authority.py`
+- `S05` `M` `dev/registry/tests/test_export_layout_join_ratchet.py`
+- `S05` `M` `dev/registry/tests/test_export_parse.py`
+- `S05` `M` `dev/registry/tests/test_modelo_145_registry_foundation.py`
+- `S05` `M` `dev/registry/tests/test_modelo_232_registry.py`
+- `S05` `M` `dev/registry/tests/test_render_check.py`
+- `S05` `M` `docs/locales/es/LC_MESSAGES/technical/evidence/review-questions.po`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/0001-record-modelo-145-dr-v20-record.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0000-export-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0001-record-m232-operaciones-vinculadas.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0002-record-m232-paraisos-fiscales.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0003-record-m232-paraisos-fiscales.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0001-record-modelo-490-490-01.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0002-record-modelo-490-490-02.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0001-record-modelo-490-490-01.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0002-record-modelo-490-490-02.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0005-record-modelo-490-490-03.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0001-record-modelo-490-490-01.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0002-record-modelo-490-490-02.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0005-record-modelo-490-490-03.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S05` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S05` `A` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S05` `A` `src/cadrumo/application/filing/tests/test_modelo_360_header_export.py`
+- `S05` `A` `src/cadrumo/application/filing/tests/test_modelo_360_producer_facts.py`
+- `S05` `A` `src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py`
+- `S05` `M` `src/cadrumo/domain/iva/components.py`
+- `S05` `A` `src/cadrumo/domain/iva/tests/test_component_registry_tokens.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_variants.py`
+- `S05` `verify:` `latest captured TUI product pure126/parser catalogues186 owner reconciliation` -> `pass`
 
 ## Notes
 
@@ -3430,3 +3512,4 @@ related:
 - `S05` Forward explicit child run-log root and preserve bounded owned execution. Native Home diagnostic reports finite public refusal/updating/account posture only; excludes private labels, expiry timestamps and worker exception text. Keep historical failing quality/native evidence, current Mac offline and elevated noninteractive Windows provider limitations separate from demonstrated defects. User authorized subsequent verification/green landing; prior deferral retained as history and active verification resumed. Later immutable TUI53f prepared and not merged at this checkpoint; live destination advanced again to efb85a8 and is not landed.
 - `S05` Reconcile immutable TUI53f against its original a8 base, preserving current recovered MCP intent. Resolve729conflicted paths including652PO; all4858source paths have exact original binary delta and per-path dispositions. Restore invoice-backed M347 lease/cadastral fields and plain datetime UTC validators required for real registered startup; no admission/schema guard weakening. Carry both snapshot scenarios through272uniqueprimary IDs and54additional real-supervisor variants; pure collection is not behavioral proof. Retain current generated9target/form artifacts as bootstrap; owning reproduction pending efb/captured66 interpreting inputs. Preserve historical decision acceptance/additive receipts/binding-plan retirement; no new costly decision. Accepted new native identity/Desktop source retained with bounded join ownership and fail-closed closure; Rust unit/live execution pending. Final12configuredgates, stateful cohort, native Mac/Home continuation, current artifact and safe landing remain open. Live TUI efb +248laterpaths preserved separately; no other worktree/index overwritten.
 - `S05` Carry exact immutable efb16path committed native layout/installation intent after53f semantic baseline. Native staging/uninstall static findings remain assigned corrections in disjoint owned Windows/POSIX modules and are intentionally not captured midway in this source-baseline commit. No native install/uninstall or globalgreen claim. Actual staged immutable bytes pinned independently from ongoing working edits. Next captured66 product/registry/catalogue reconciliation is disjoint from native paths and may proceed in parallel; generation waits for interpreting closure. No other worktree/index changed or landing performed.
+- `S05` Actual merge of preserved66b785 snapshot against originalbaseefb85 and currentf39. Two semantic product conflicts resolved preserving current public defining helpers, blank-page producer and source-backed independent610byte success oracle. Original248 path dispositions recorded; six transient coordination locks deliberately excluded with explicit replacement rationale. Registry generators own generated changes; All20 affected canonical targets CURRENT and all58modelos/160revisions validation/runtime-load/integrity pass. Each prior nine bootstrap artifact has fresh owner proof; remainingM190testprocess verification is fixture deletion budget after assertions passed, separately pending runner600s replay. Defining M232 bridge moves atomically to `generated_form_bridge` and keeps originalpins, adding source-reviewedM190 companion form repair; M347typedrepeat mappings restored without replacing alreadycurrent generatedoutput. Current native staging/exact-file ownership repairs and six inventory refreshes are intentionally held for a separate coherent follow-up commit; global/native/E2E evidence remains pending. Capture is a recorded time window; active destination writer/index untouched. No landing or finalgreen claim.

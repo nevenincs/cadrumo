@@ -12,11 +12,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Literal, Self, override
+from typing import Literal
 
 from pydantic import Field, ValidationInfo, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.registry_token import StrictRegistryToken
 from ...core.time.clock import today_madrid
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.governed_fact_scope import (
@@ -44,86 +45,32 @@ from .schema import (
 )
 
 
-class _IvaRegistryToken(str):
-    """Opaque token base for component vocabularies authored in fact 0084."""
-
-    __slots__ = ()
-
-    @classmethod
-    def _token_label(cls) -> str:
-        return "IVA component registry token"
-
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        if not _registry_validated:
-            raise TypeError(f"{cls._token_label()} must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError(f"{cls._token_label()} must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise IvaValidationError(f"{cls._token_label()} must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
-        from pydantic_core import core_schema
-
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        return str(self)
-
-
-class IvaComponentPresence(_IvaRegistryToken):
+class IvaComponentPresence(StrictRegistryToken):
     """Registry-projected component-presence token."""
 
-    @classmethod
-    @override
-    def _token_label(cls) -> str:
-        return "IVA component-presence token"
+    _vocabulary_label = "IVA component-presence"
+    _refusal_error = IvaValidationError
 
 
-class IvaRetencionExpectation(_IvaRegistryToken):
+class IvaRetencionExpectation(StrictRegistryToken):
     """Registry-projected retención-expectation token."""
 
-    @classmethod
-    @override
-    def _token_label(cls) -> str:
-        return "IVA retención-expectation token"
+    _vocabulary_label = "IVA retención-expectation"
+    _refusal_error = IvaValidationError
 
 
-class IvaRetencionRole(_IvaRegistryToken):
+class IvaRetencionRole(StrictRegistryToken):
     """Registry-projected retención-role token."""
 
-    @classmethod
-    @override
-    def _token_label(cls) -> str:
-        return "IVA retención-role token"
+    _vocabulary_label = "IVA retención-role"
+    _refusal_error = IvaValidationError
 
 
-class IvaKindApplicability(_IvaRegistryToken):
+class IvaKindApplicability(StrictRegistryToken):
     """Registry-projected category/kind applicability token."""
 
-    @classmethod
-    @override
-    def _token_label(cls) -> str:
-        return "IVA kind-applicability token"
+    _vocabulary_label = "IVA kind-applicability"
+    _refusal_error = IvaValidationError
 
 
 class IvaCuotaSettlement(str):
@@ -197,7 +144,7 @@ class IvaComponentVocabulary:
     kind_applicability: frozenset[IvaKindApplicability]
 
     @staticmethod
-    def _require[IvaRegistryTokenT: _IvaRegistryToken](
+    def _require[IvaRegistryTokenT: StrictRegistryToken](
         value: object,
         token_type: type[IvaRegistryTokenT],
         declared: frozenset[IvaRegistryTokenT],
@@ -543,7 +490,7 @@ def registry_cuota_settlement_catalogue(
     return cuota_settlement_catalogue_from_entries(entries)
 
 
-def component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
+def component_axis_membership[IvaRegistryTokenT: StrictRegistryToken](
     entries: Mapping[str, str],
     *,
     key: str,

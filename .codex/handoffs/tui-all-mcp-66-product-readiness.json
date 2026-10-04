@@ -1,0 +1,137 @@
+{
+  "status": "read-only preparation; awaiting root application announcement",
+  "original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "incoming": "66b785a1418ef48cb2f56711c83933c0828c46f8",
+  "rows": [
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py",
+      "base_sha256": "c77871a3512c440f87f3ee9836fa65944b33fae8e48b930735647a00d9c8783b",
+      "incoming_sha256": "1fce94f1ee70bc21602688fafe00e58a1ac321008caf2329f062176f5e174136",
+      "current_sha256": "80913150d797c820a2d86db47abf399e3d12b3c72be8735af577620d6b92df0c",
+      "current_equals_base": false,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/application/filing/export_producer.py",
+      "base_sha256": "7c1adf05dd78b5e167cca947102a7fd94312b3637dd7c47b838527666878e974",
+      "incoming_sha256": "7355bd34da8d25c970bf295b575e510ab6ecb8503bd39644f8700824bd357a8d",
+      "current_sha256": "7c1adf05dd78b5e167cca947102a7fd94312b3637dd7c47b838527666878e974",
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/application/filing/producer_snapshot.py",
+      "base_sha256": "8596f543b583d944d3d5fc45f82bb6a2870295f892f6e044c83c5178e7514bb4",
+      "incoming_sha256": "2cd2140ae701b0a8560ba31cdd6ac426dde5351c02048c692cf419e3649dea6c",
+      "current_sha256": "8596f543b583d944d3d5fc45f82bb6a2870295f892f6e044c83c5178e7514bb4",
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/application/filing/producer_snapshot_m360.py",
+      "base_sha256": null,
+      "incoming_sha256": "0b88ef76607beda57a066566b39643be0a8050ad71b6ee67e1c49253349743ce",
+      "current_sha256": null,
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/application/filing/tests/test_modelo_360_header_export.py",
+      "base_sha256": null,
+      "incoming_sha256": "0cb2c209333a9d8ec98eb1d1b1ae32e746850d482221b3193490ce3c5b326617",
+      "current_sha256": null,
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/application/filing/tests/test_modelo_360_producer_facts.py",
+      "base_sha256": null,
+      "incoming_sha256": "b847ebc3a281b5fd8a8c7f9a3ed2269823f1396c7685794f35a7027fe9c1529f",
+      "current_sha256": null,
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py",
+      "base_sha256": null,
+      "incoming_sha256": "edf1e6c5b572839b9ff3d9ca104511ce7b468ad739260e42929a511ca3a49912",
+      "current_sha256": null,
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/components.py",
+      "base_sha256": "ba2b1238d9417ac9576e3f27b8f34fba0fc087ba5d504ca2ee8b59867c579e68",
+      "incoming_sha256": "ab015b298c782dee4cdaf68488e82b5c34be82e240fa2d2273333a4523c0f507",
+      "current_sha256": "3e3beab5afec83526b299a2dbd7ce96118f6382dd116d962e68c6d475a454d6b",
+      "current_equals_base": false,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/tests/test_component_registry_tokens.py",
+      "base_sha256": null,
+      "incoming_sha256": "a0b6a070b4e778c52c548a129a0ff637d00a749cbd5213ff67bd9ac3580b6b40",
+      "current_sha256": null,
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "base_sha256": "98f5d87d5946e67a206065dcc6716df529ea268bbcb6b7dec366ec45e0185b81",
+      "incoming_sha256": "fd1025063b96b40c91551d159b5d26f31d03ee0a6f28c5a2067167da10da431c",
+      "current_sha256": "d015a1f5b75fa8dd4c08219233f790b6d9a241e63e1277936c013bfefb82dd1a",
+      "current_equals_base": false,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py",
+      "base_sha256": "efd45f10be2efc35d7df87238109be21dc55a221de59802ca45bb2ff57639ae4",
+      "incoming_sha256": "c3a933124ad733daa14ad5282817d2230605952cece30c3d29083b038aeccdf1",
+      "current_sha256": "efd45f10be2efc35d7df87238109be21dc55a221de59802ca45bb2ff57639ae4",
+      "current_equals_base": true,
+      "incoming_utf8_replacement_characters": 0,
+      "disposition": "pending announcement; no source mutation"
+    }
+  ],
+  "preservation_requirements": [
+    "Direct defining public IVA helper imports and component_axis_membership name remain authoritative.",
+    "Existing optional TEXT blank producer semantics and literal M145 byte10 proof survive.",
+    "Obsolete missing-page wire refusal replaced by physical DR145 principal/complementary page success and invalid enum negatives; no artificial missing-field case.",
+    "Predicate-operator coverage moves intact to the pure domain schema owner.",
+    "M360 profile facts must validate real refund-account+BIC prerequisites, source widths/enums and registered producer-key exhaustiveness."
+  ],
+  "affected_test_modules": [
+    "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py",
+    "src/cadrumo/application/filing/tests/test_modelo_360_header_export.py",
+    "src/cadrumo/application/filing/tests/test_modelo_360_producer_facts.py",
+    "src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py",
+    "src/cadrumo/domain/iva/tests/test_component_registry_tokens.py",
+    "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+    "src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py"
+  ],
+  "broader_owner_replays": [
+    "src/cadrumo/application/filing/tests/test_export_producer_resolution.py",
+    "src/cadrumo/application/filing/tests/test_producer_snapshot.py",
+    "src/cadrumo/domain/iva/tests/test_component_expectations.py",
+    "src/cadrumo/core/tests/test_registry_token.py",
+    "src/cadrumo/application/modelo/tests/test_m145_communication_service_contract.py",
+    "src/cadrumo/application/modelo/tests/test_m145_communication_operation.py",
+    "src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py"
+  ],
+  "verification": "No behavioral run or source edit. Final cohort extends earlier185/late affected inventory, never silently omits new tests.",
+  "merge_previews": {
+    "m145_adapter_test": "clean three-way; preserve explicit blank ordinary fixture plus new genuine absent-page input witness",
+    "iva_components": "one conflict; preserve all current public projection helpers while replacing local token base with StrictRegistryToken",
+    "m145_conformance": "four conflicts; preserve current material actor/note/prefix-selector case and primary blank byte10 success; migrate stronger independent610-byte payload/audit oracle; retire obsolete missing-page wire refusal"
+  }
+}

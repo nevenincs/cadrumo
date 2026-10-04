@@ -60,6 +60,7 @@ from ..aggregation.m303_arrivals import (
 )
 from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
 from .producer_snapshot_m200 import Modelo200ProfileFacts
+from .producer_snapshot_m360 import Modelo360ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
@@ -1031,6 +1032,7 @@ type FilingModelProfileFacts = (
     | Modelo222ProfileFacts
     | Modelo296ProfileFacts
     | Modelo353ProfileFacts
+    | Modelo360ProfileFacts
     | ModeloIVAProfile
 )
 
@@ -1105,6 +1107,9 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo == Modelo("353"):
         _validate_modelo_353_snapshot(snapshot)
         return
+    if snapshot.modelo == Modelo("360"):
+        _validate_modelo_360_snapshot(snapshot)
+        return
     _validate_general_modelo_snapshot(snapshot)
 
 
@@ -1132,6 +1137,22 @@ def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """Modelo 353 is the grupo de entidades aggregate; it cannot be filed without it."""
     if not isinstance(snapshot.model_profile, Modelo353ProfileFacts):
         raise ValueError("modelo 353 requires Modelo353ProfileFacts")
+
+
+def _validate_modelo_360_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 360 is a solicitud de devolución; DR360 makes its datos bancarios obligatorio.
+
+    Campos 115 and 116 -- the IBAN and the banco-BIC -- are both required, so a solicitud
+    without a selected refund account, or with one that carries no BIC, has nowhere to be
+    paid and is refused here rather than at the first blank position.
+    """
+    if not isinstance(snapshot.model_profile, Modelo360ProfileFacts):
+        raise ValueError("modelo 360 requires Modelo360ProfileFacts")
+    selected = snapshot.selected_account
+    if not isinstance(selected, RefundAccountSelection) or selected.account.iban is None:
+        raise ValueError("modelo 360 requires a selected refund account")
+    if not selected.account.swift_bic.strip():
+        raise ValueError("modelo 360 requires the refund account's banco-BIC")
 
 
 def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:

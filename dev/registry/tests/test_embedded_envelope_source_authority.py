@@ -1,8 +1,8 @@
 """Embedded envelope provenance must remain a live catalogue claim.
 
-Filing envelopes and auxiliary page-zero headers are generated declarations that
-restate a source identity and digest.  This suite exercises both real shipped
-shapes: a pass through ``build_snapshot`` proves registry composition accepts
+Filing envelopes are generated declarations that restate a source identity and
+digest. This suite exercises two real shipped source epochs: a pass through
+``build_snapshot`` proves registry composition accepts
 the authoritative declaration, while each mutation proves the compiler's export
 validation, run on the revision the build coordinate selects, cannot preserve a
 missing, rebound, mismatched, or stale source claim.
@@ -26,9 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ZERO_DIGEST = "0" * 64
 
 
-@pytest.fixture(params=(("303", 2025, "1T", "filing_envelope"), ("232", 2024, "0A", "auxiliary_envelope_header")))
+@pytest.fixture(params=(("303", 2025, "1T", "filing_envelope"), ("232", 2024, "0A", "filing_envelope")))
 def embedded_envelope_case(request: pytest.FixtureRequest) -> tuple[str, int, str, str]:
-    """Return one real filing-envelope and one real auxiliary-header case."""
+    """Return two real filing envelopes with independent official sources."""
     modelo_id, filing_year, period, declaration_name = request.param
     assert isinstance(modelo_id, str)
     assert isinstance(filing_year, int)
@@ -37,7 +37,7 @@ def embedded_envelope_case(request: pytest.FixtureRequest) -> tuple[str, int, st
     return modelo_id, filing_year, period, declaration_name
 
 
-def _embedded_declaration(layout, declaration_name: str):  # type: ignore[no-untyped-def]  # reason: the narrow test-only selector returns either of the two typed declarations, and spelling the union repeats the production protocol without improving assertions
+def _embedded_declaration(layout, declaration_name: str):  # type: ignore[no-untyped-def]  # reason: the narrow test-only selector uses the exact generated declaration name, and spelling the layout type repeats the production protocol without improving assertions
     declaration = getattr(layout, declaration_name)
     assert declaration is not None, f"layout {layout.id!r} has no {declaration_name} declaration"
     return declaration
@@ -61,7 +61,7 @@ def _case_modelo_and_revision(
     return modelo, revision, layout, catalogues
 
 
-def _modelo_with_layout(modelo, revision, layout, replacement):  # type: ignore[no-untyped-def]  # reason: model_copy preserves strict production schemas while these test-only transformations each target a different concrete envelope declaration
+def _modelo_with_layout(modelo, revision, layout, replacement):  # type: ignore[no-untyped-def]  # reason: model_copy preserves strict production schemas while these test-only transformations each target a concrete envelope declaration
     updated_revision = revision.model_copy(
         update={
             "export_layouts": tuple(
@@ -119,7 +119,7 @@ def _validate_envelope(
 def test_real_embedded_envelopes_build_from_their_live_catalogue_authority(
     embedded_envelope_case: tuple[str, int, str, str],
 ) -> None:
-    """Both shipped envelope shapes compose only after their source is re-hashed."""
+    """Both shipped source epochs compose only after their source is re-hashed."""
     modelo, _revision, layout, catalogues = _case_modelo_and_revision(embedded_envelope_case)
     _modelo_id, filing_year, period, declaration_name = embedded_envelope_case
     declaration = _embedded_declaration(layout, declaration_name)

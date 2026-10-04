@@ -50,7 +50,7 @@ msgstr ""
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:10
 msgid "Scope and sampling method"
-msgstr ""
+msgstr "Alcance y método de muestreo"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:12
 msgid ""
@@ -67,6 +67,20 @@ msgid ""
 "manifest; it is inventory coverage, not a claim that all 876 contents "
 "received semantic review."
 msgstr ""
+"Este bloque inventaría 876 archivos que suman 290,532,686 bytes (unos "
+"290.5 MB) bajo `corpus/aeat_official`. Se analizaron los metadatos de "
+"inventario de todos los archivos; no cargué en contexto la colección "
+"completa de PDF, Excel o texto extraído. Tomé muestras del archivo de "
+"diseños de registro, páginas actuales de calendario y procedimientos, "
+"formularios oficiales en blanco, esquemas SII/VERI*FACTU, referencias de "
+"identidad, muestras de respuestas GROI, aviso de modelo suprimido, aviso "
+"de actualización fiscal y página de Renta Web Open. Dentro del "
+"subconjunto de libros de cálculo tomé muestras de un diseño actual del "
+"Modelo 303 y de un diseño grande del Modelo 200, incluidas partes "
+"acotadas de sus archivos auxiliares generados. El apéndice completo de "
+"enlaces a fuentes se genera a partir del manifiesto del bloque; es "
+"cobertura de inventario, no una afirmación de que los contenidos de los "
+"876 archivos recibieran revisión semántica."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:14
 msgid "Corpus capabilities and sampled behavior"
@@ -104,6 +118,38 @@ msgid ""
 " 2025 Modelo 200 package "
 "(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/manifest.json`)."
 msgstr ""
+"La sección más grande es `disenos_registro`: 731 archivos y unos 271.8 "
+"MB. Su catálogo superior identifica 58 directorios de modelos y 254 "
+"artefactos de origen, mientras que el mayor recuento en disco incluye "
+"libros de cálculo y PDF originales, archivos auxiliares extraídos JSON y "
+"Markdown, metadatos de correcciones y manifiestos por modelo. El catálogo"
+" registra páginas de origen, fechas de recuperación, nombres de archivos,"
+" tamaños y valores SHA-256. Abarca diseños actuales e históricos de "
+"modelos. Por ejemplo, el diseño archivado del Modelo 303 para 2026 y "
+"posteriores define un intercambio de ancho fijo con discriminadores de "
+"registro y página, posiciones y longitudes de campos, tipos de campos, "
+"validaciones y formas permitidas de períodos; también marca su uso desde "
+"el ejercicio 2026. Su extracción generada se divide en siete secciones. "
+"El archivo auxiliar informa de `status: ok` y su hash de origen coincide "
+"con el libro archivado. El archivo del Modelo 200 de 2025 también incluye"
+" un libro XLS de 11.5 MB y una extracción con 77 secciones cuyo hash de "
+"origen coincide; los modelos anuales más antiguos se conservan como "
+"revisiones PDF. Estos formatos pueden servir para leer y producir diseños"
+" oficiales de intercambio de presentaciones, pero este bloque no "
+"establece qué analizador o exportador los consume ni si los campos "
+"extraídos concuerdan con todas las páginas de origen. Véanse el catálogo "
+"de diseños de registro "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`),"
+" el manifiesto del Modelo 303 "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/manifest.json`),"
+" el libro archivado del Modelo 303 de 2026 "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y"
+"-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx`), su texto extraído de"
+" diseño de registros "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y"
+"-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md`), el "
+"paquete del Modelo 200 de 2025 "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/manifest.json`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:18
 msgid ""
@@ -122,6 +168,23 @@ msgid ""
 "contribuyente-2026-domiciliacion.html`) and Modelo 303 procedure page "
 "(`src/cadrumo/_data/corpus/aeat_official/instructions/modelo_303/files/modelo-303-procedure.html`)."
 msgstr ""
+"Los 112 archivos de `instructions` (unos 7.4 MB) y nueve archivos de "
+"calendario (unos 10.2 MB) proporcionan referencias operativas. Una página"
+" de domiciliación de la AEAT de 2026 muestreada distingue modelos "
+"mensuales de trimestrales y ofrece ventanas separadas de domiciliación y "
+"presentación; su tabla incluye casos mensuales y trimestrales de los "
+"modelos 303 y 353, lo que ilustra por qué la periodicidad y la forma de "
+"pago deben leerse del calendario fechado en lugar de suponerse. La página"
+" del procedimiento del Modelo 303 es una página de flujos y enlaces de la"
+" AEAT, no un esquema de máquina. El archivo también tiene 121 PDF y "
+"numerosos orígenes HTML capturados y derivados extraídos. Las fechas de "
+"recuperación y publicación permiten rastrear el material, pero la "
+"instantánea del repositorio no es un servicio de plazos en directo. "
+"Véanse el calendario de domiciliación de 2026 "
+"(`src/cadrumo/_data/corpus/aeat_official/calendars/files/calendario-"
+"contribuyente-2026-domiciliacion.html`), la página del procedimiento del "
+"Modelo 303 "
+"(`src/cadrumo/_data/corpus/aeat_official/instructions/modelo_303/files/modelo-303-procedure.html`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:20
 msgid ""
@@ -142,6 +205,24 @@ msgid ""
 "(`src/cadrumo/_data/corpus/aeat_official/renta_web_open/renta-web-"
 "open.html`)."
 msgstr ""
+"Diez archivos de formularios publicados incluyen PDF en blanco de los "
+"modelos 145 y 840 con texto extraído y manifiestos de procedencia. El "
+"formulario muestreado del Modelo 145 comunica las circunstancias "
+"personales y familiares de un perceptor a un pagador para las "
+"retenciones; el formulario 840 abarca alta, variación y baja en el IAE. "
+"Son plantillas documentales y orientación sobre campos, no evidencia "
+"sobre ningún contribuyente. Una página separada de `renta_web_open` "
+"describe expresamente Renta Web Open como un simulador que no valida el "
+"NIF y no puede presentar una declaración. Esa distinción ayuda a impedir "
+"que una simulación se represente como presentación. Véanse la extracción "
+"del Modelo 145 "
+"(`src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_145/files/mod145_es_es.pdf.extracted.md`),"
+" la extracción del Modelo 840 "
+"(`src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_840/files/01-840"
+"-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.extracted.md`), la "
+"página de Renta Web Open "
+"(`src/cadrumo/_data/corpus/aeat_official/renta_web_open/renta-web-"
+"open.html`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:22
 msgid ""
@@ -168,6 +249,31 @@ msgid ""
 " and VERI*FACTU envelope "
 "(`src/cadrumo/_data/corpus/aeat_official/einvoice_record_schemas/verifactu/SuministroLR.xsd`)."
 msgstr ""
+"El directorio de cinco archivos `einvoice_record_schemas` es, más "
+"precisamente, un conjunto de esquemas de servicios web de suministro de "
+"registros de la AEAT para SII y VERI*FACTU, no formatos de factura "
+"electrónica a nivel de documento; el manifiesto remite al corpus separado"
+" de Facturae para eso. El manifiesto indica que el directorio exacto de "
+"cada familia y los nombres originales de archivos son esenciales porque "
+"ambas familias importan `SuministroInformacion.xsd` por nombre relativo. "
+"El análisis XML estático confirmó que cada familia tiene su propio "
+"esquema base con el mismo nombre y espacio de nombres de destino y que "
+"cada `SuministroLR.xsd` importa su base local. El sobre de SII declara 17"
+" elementos superiores de registros; el sobre muestreado de VERI*FACTU "
+"declara uno. El manifiesto fecha esta única instantánea en 2026-08-07 e "
+"indica que los esquemas no exponen un atributo de versión, por lo que el "
+"paquete no puede identificar de forma independiente una revisión "
+"posterior del protocolo. Comprobé únicamente la buena formación del XML y"
+" la estructura de importaciones; no se ejecutó ningún motor de XML Schema"
+" ni importaciones remotas. El manifiesto indica que VERI*FACTU se incluye"
+" para una ruta de rechazo, no como capacidad del producto, lo que es una "
+"justificación declarada de alcance y no comportamiento del consumidor "
+"verificado de forma independiente. Véanse el manifiesto de esquemas "
+"(`src/cadrumo/_data/corpus/aeat_official/einvoice_record_schemas/manifest.json`),"
+" el sobre de SII "
+"(`src/cadrumo/_data/corpus/aeat_official/einvoice_record_schemas/sii/SuministroLR.xsd`),"
+" el sobre de VERI*FACTU "
+"(`src/cadrumo/_data/corpus/aeat_official/einvoice_record_schemas/verifactu/SuministroLR.xsd`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:24
 msgid ""
@@ -182,6 +288,17 @@ msgid ""
 "workbook "
 "(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm`)."
 msgstr ""
+"El `.xlsm` muestreado del Modelo 220 de 2022 tiene una relación con un "
+"libro externo que apunta a `DR220e22_5.xlsm`; ese destino no está entre "
+"los archivos archivados del Modelo 220. El paquete ZIP no contenía un "
+"`vbaProject.bin`, por lo que esta muestra no mostró un proyecto VBA "
+"incorporado, pero el software de hojas de cálculo aún podría ofrecer o "
+"intentar actualizar el enlace externo. Cualquier flujo de vista previa o "
+"importación debería suprimir las actualizaciones automáticas de enlaces y"
+" mantener aislado el análisis. Esta observación se limita a un libro y no"
+" demuestra que una ruta del producto lo abra. Véanse el libro archivado "
+"del Modelo 220 de 2022 "
+"(`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:26
 msgid ""
@@ -203,6 +320,26 @@ msgid ""
 "control.html`), and GROI provenance "
 "(`src/cadrumo/_data/corpus/aeat_official/groi_response_samples/PROVENANCE.md`)."
 msgstr ""
+"Las tres páginas de identidad proporcionan orientación sobre composición "
+"y dígitos de control del NIF y NIE. Dos son páginas de la AEAT; la "
+"tercera es una página de la DGOJ almacenada bajo el directorio del corpus"
+" de la AEAT. Ese HTML de la DGOJ contiene JavaScript en línea y una URL "
+"remota de seguimiento de Matomo. Nada aquí prueba que el producto "
+"presente la página, pero cualquier ruta que la abra como HTML activo debe"
+" tratarla como contenido ejecutable de origen remoto, no como texto "
+"pasivo. El conjunto de 3 archivos de muestras GROI es más explícito sobre"
+" la procedencia: su nota de auditoría indica que los pequeños fragmentos "
+"de respuestas se capturaron del servicio autenticado de la AEAT el "
+"2026-05-07 y que los artefactos brutos de captura no están incorporados "
+"al repositorio. El conjunto de muestras incluye una respuesta positiva de"
+" operador y un rechazo por NIF no válido, lo que puede ayudar a "
+"fundamentar el comportamiento del analizador, pero no cubre todo el "
+"vocabulario de respuestas del servicio. Véanse las referencias de "
+"identidad (`src/cadrumo/_data/corpus/aeat_official/identity/aeat-nif-"
+"personas-fisicas.html`), la referencia de la DGOJ "
+"(`src/cadrumo/_data/corpus/aeat_official/identity/dgoj-nif-nie-"
+"control.html`), la procedencia GROI "
+"(`src/cadrumo/_data/corpus/aeat_official/groi_response_samples/PROVENANCE.md`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:28
 msgid ""
@@ -220,18 +357,33 @@ msgid ""
 "(`src/cadrumo/_data/corpus/aeat_official/notices/aeat-nota-efectos-"
 "rdl-16-2025-rdl-2-2026.html`)."
 msgstr ""
+"El corpus también contiene un aviso de supresión del Modelo 037, una nota"
+" de la AEAT de abril de 2026 sobre los efectos fiscales de dos reales "
+"decretos leyes y otros formularios oficiales y páginas de servicios. Son "
+"referencias sensibles al tiempo. El aviso de modelo suprimido está "
+"almacenado como un archivo `.txt` de una sola línea y 24,141 bytes que "
+"falla en la decodificación UTF-8 estricta (un decodificador con "
+"sustitución informa de 134 caracteres de sustitución); su texto inicial "
+"contiene una página del BOE y entidades HTML. Un consumidor no debe "
+"suponer que este archivo concreto sea UTF-8 limpio y orientado a líneas "
+"sin comprobar su ruta real de decodificación. Véanse el aviso de "
+"supresión "
+"(`src/cadrumo/_data/corpus/aeat_official/historical_retired_modelos/modelo_037/files/BOE-A-2025-410"
+"-orden-hac-1526-2024-supresion-m037.txt`), la nota de efectos fiscales de"
+" 2026 (`src/cadrumo/_data/corpus/aeat_official/notices/aeat-nota-efectos-"
+"rdl-16-2025-rdl-2-2026.html`)."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:30
 msgid "Inventory and limitations"
-msgstr ""
+msgstr "Inventario y limitaciones"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Subtree"
-msgstr ""
+msgstr "Subárbol"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Files"
-msgstr ""
+msgstr "Archivos"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Bytes"
@@ -239,7 +391,7 @@ msgstr "Bytes"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Record designs"
-msgstr ""
+msgstr "Diseños de registro"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "731"
@@ -251,7 +403,7 @@ msgstr "271,789,235"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Filing calendars"
-msgstr ""
+msgstr "Calendarios de presentación"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "9"
@@ -263,7 +415,7 @@ msgstr "10,244,684"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Filing instructions and procedures"
-msgstr ""
+msgstr "Instrucciones y procedimientos de presentación"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "112"
@@ -275,7 +427,7 @@ msgstr "7,398,604"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Published forms"
-msgstr ""
+msgstr "Formularios publicados"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "10"
@@ -287,7 +439,7 @@ msgstr "764,314"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "SII/VERI*FACTU record schemas"
-msgstr ""
+msgstr "Esquemas de registros SII/VERI*FACTU"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "5"
@@ -299,7 +451,7 @@ msgstr "161,978"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Identity pages"
-msgstr ""
+msgstr "Páginas de identidad"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "3"
@@ -311,7 +463,7 @@ msgstr "122,576"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "GROI response samples and provenance"
-msgstr ""
+msgstr "Muestras de respuestas GROI y procedencia"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "3,918"
@@ -319,7 +471,7 @@ msgstr "3,918"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Retired-model reference"
-msgstr ""
+msgstr "Referencia de modelo suprimido"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "1"
@@ -331,7 +483,7 @@ msgstr "24,141"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Tax-effects notice"
-msgstr ""
+msgstr "Aviso de efectos fiscales"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "8,890"
@@ -339,7 +491,7 @@ msgstr "8,890"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "Renta Web Open page"
-msgstr ""
+msgstr "Página de Renta Web Open"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "14,346"
@@ -347,7 +499,7 @@ msgstr "14,346"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "**Total**"
-msgstr ""
+msgstr "**Total**"
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md
 msgid "**876**"
@@ -369,6 +521,17 @@ msgid ""
 "extraction points to the corresponding archived raw file, not that "
 "extraction is semantically complete."
 msgstr ""
+"La inspección del contenido fue representativa y acotada, como se "
+"solicitó. No se intentó leer el corpus de más de 780 MB en su conjunto, "
+"reconstruir el diseño jurídico de todos los modelos, validar cada "
+"extracción de hoja de cálculo o PDF ni verificar los orígenes archivados "
+"frente a las páginas actuales de la AEAT. Los archivos y manifiestos "
+"muestreados contienen fechas de captura entre 2026-05 y 2026-08; la "
+"vigencia a una fecha determinada y la validez jurídica quedan fuera de "
+"esta revisión estática. Las comprobaciones de hashes de archivos "
+"auxiliares de libros archivados solo establecen que la extracción "
+"muestreada apunta al archivo bruto archivado correspondiente, no que la "
+"extracción sea semánticamente completa."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:48
 msgid "Complete assigned-file inventory"
@@ -380,6 +543,9 @@ msgid ""
 "Inventory listing is full; semantic source inspection remains limited to "
 "the samples described above."
 msgstr ""
+"Los siguientes enlaces cubren todas las rutas del manifiesto del bloque "
+"de 876 archivos. La lista de inventario está completa; la inspección "
+"semántica de fuentes sigue limitada a las muestras descritas arriba."
 
 #: ../../technical/articles/192-aeat-official-reference-corpus.md:51
 msgid ""

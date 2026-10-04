@@ -50,7 +50,7 @@ msgstr ""
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:10
 msgid "Scope and sampling method"
-msgstr ""
+msgstr "Alcance y método de muestreo"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:12
 msgid ""
@@ -64,6 +64,16 @@ msgid ""
 "metadata rather than reading the full PDFs or their several megabytes of "
 "sidecar text."
 msgstr ""
+"Este bloque inventaría 124 archivos que suman 245,309,915 bytes (unos "
+"245.3 MB): manuales de IVA de 2020–2025, manuales de IRPF/Renta de "
+"2020–2025 más volúmenes de deducciones autonómicas de 2024 y 2025 y "
+"manuales del Impuesto sobre Sociedades de 2022–2025. El inventario "
+"completo se resume por familia abajo y se enlaza desde el apéndice "
+"generado por el manifiesto. Tomé muestras del manual de IVA de 2025, los "
+"volúmenes 1 y 2 de Renta de 2024 y el manual de Sociedades de 2024, "
+"inspeccionando pequeños índices estructurales y metadatos acotados de "
+"páginas extraídas en lugar de leer los PDF completos o sus varios "
+"megabytes de texto auxiliar."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:14
 msgid "Content and retrieval capabilities"
@@ -86,6 +96,22 @@ msgid ""
 "for manual examples and operator explanations, though no retrieval "
 "consumer was inspected here."
 msgstr ""
+"Cada familia de manuales empareja PDF de fuentes oficiales de la AEAT y "
+"manifiestos de captura con alguna combinación de JSON y Markdown "
+"extraídos, una breve descripción `manual.json`, un índice `chapters.json`"
+" y pequeños resúmenes estructurados de secciones. Los manifiestos "
+"contienen URL de origen, fechas de captura, longitudes en bytes, hashes, "
+"edición y año y un indicador `synthetic: false`. En los paquetes "
+"muestreados de IVA de 2025, Renta de 2024 volumen 1 y Sociedades de 2024,"
+" los metadatos de extracción informan de `status: ok` y su hash de origen"
+" coincide con el PDF archivado. Sus unidades de páginas extraídas "
+"permiten citar un pasaje acotado sin presentar un manual entero: los "
+"archivos muestreados contienen 350, 1,558 y 852 unidades de página, "
+"respectivamente. Dos archivos pequeños de anotaciones de Renta de 2025 "
+"asignan anclajes temáticos a números de páginas seleccionadas y vinculan "
+"esas selecciones a un hash de origen. Esta es una base útil de "
+"fundamentación para ejemplos de manuales y explicaciones al operador, "
+"aunque aquí no se inspeccionó ningún consumidor de recuperación."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:18
 msgid ""
@@ -115,6 +141,34 @@ msgid ""
 "autonomicas/manifest.json`), and Sociedades 2024 manual metadata "
 "(`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/manual.json`)."
 msgstr ""
+"La navegación estructurada está explícitamente seleccionada y es escasa "
+"en esta instantánea. En las 18 partes de manuales, 16 archivos "
+"`chapters.json` contienen una entrada de capítulo y dos (Sociedades de "
+"2022 y 2023) están vacíos; hay 16 archivos JSON pequeños de resúmenes de "
+"secciones. Los 18 archivos `structure/manual.json` marcan al revisor de "
+"la definición como `operator`. Estos son puntos de entrada útiles "
+"seleccionados, no índices completos ni prueba de que cada capítulo o "
+"regla de la extensa fuente esté indexado. El PDF de deducciones "
+"autonómicas de Renta de 2024 está presente con un manifiesto y un breve "
+"índice de manual, capítulo y sección, pero sin archivo auxiliar JSON o "
+"Markdown extraído en este subárbol `corpus/manuals`. Existe un registro "
+"separado de texto normalizado en `manual_corpus_text` (recurso textual de"
+" origen (`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2"
+"-deducciones-autonomicas/source.pdf.corpus_text.json`), analizado en "
+"[STAGE-2-201](201-aeat-manuals-extracted-text.md)); por tanto, la "
+"ausencia del archivo auxiliar aquí no establece una ausencia de texto "
+"legible por máquina en todo el repositorio. Véanse el manifiesto de "
+"origen de IVA de 2025 "
+"(`src/cadrumo/_data/corpus/manuals/iva/2025/manifest.json`), las páginas "
+"extraídas de IVA de 2025 "
+"(`src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf.extracted.md`), "
+"Renta de 2024 volumen 1 "
+"(`src/cadrumo/_data/corpus/manuals/renta/2024/part1/manifest.json`), el "
+"volumen de deducciones autonómicas de Renta de 2024 "
+"(`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/manifest.json`), los metadatos del manual de Sociedades de "
+"2024 "
+"(`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/manual.json`)."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:20
 msgid ""
@@ -127,6 +181,15 @@ msgid ""
 " not whether the source remains current or whether text extraction "
 "preserved every table and footnote."
 msgstr ""
+"Los datos son históricos y están limitados a una edición. Las fechas de "
+"captura muestreadas van de mayo a junio de 2026; los propios manuales se "
+"refieren a ejercicios fiscales declarados de 2020–2025. Los documentos "
+"pueden fundamentar una respuesta sobre la edición citada, pero no deben "
+"tratarse como autoridad jurídica actual sin confirmar el ejercicio de "
+"presentación pertinente, las modificaciones posteriores y las páginas "
+"exactas citadas. Una URL o hash de origen confirma lo que el paquete dice"
+" haber capturado, no si la fuente sigue vigente ni si la extracción "
+"textual conservó todas las tablas y notas al pie."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:22
 msgid "Assessment and limitations"
@@ -143,6 +206,16 @@ msgid ""
 "retrieval. A separate normalized-text record exists as noted above; how "
 "retrieval uses it is outside this chunk."
 msgstr ""
+"La propiedad más sólida es la trazabilidad: el PDF de origen se conserva "
+"junto al texto extraído, unidades por página, hashes y un pequeño índice "
+"temático redactado por una persona. La distinción entre fuente y "
+"metadatos seleccionados importa. Los resúmenes estructurales pueden "
+"orientar una búsqueda, mientras que el PDF y la extracción de páginas "
+"siguen siendo necesarios para fundamentar una afirmación. La escasa "
+"indexación de capítulos y la ausencia del archivo auxiliar de origen en "
+"este subárbol limitan este conjunto de archivos para la recuperación. "
+"Existe un registro separado de texto normalizado, como se indica arriba; "
+"cómo lo usa la recuperación queda fuera de este bloque."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:26
 msgid ""
@@ -152,14 +225,20 @@ msgid ""
 "only; parser safety, extraction completeness, and legal correctness were "
 "not tested. No application was run and no code was modified."
 msgstr ""
+"Estos son documentos de referencia, no lógica ejecutable de presentación."
+" No se revisaron expedientes personales ni credenciales, aunque los "
+"propios manuales incluyen ejemplos resueltos. Los PDF y el texto extraído"
+" se tratan únicamente como datos; no se probaron la seguridad del "
+"analizador, la integridad de la extracción ni la corrección jurídica. No "
+"se ejecutó ninguna aplicación ni se modificó código."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Family"
-msgstr ""
+msgstr "Familia"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Files"
-msgstr ""
+msgstr "Archivos"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Bytes"
@@ -167,11 +246,11 @@ msgstr "Bytes"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Edition coverage"
-msgstr ""
+msgstr "Cobertura de ediciones"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "IVA manuals"
-msgstr ""
+msgstr "Manuales de IVA"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "42"
@@ -183,11 +262,11 @@ msgstr "41,819,576"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "2020–2025"
-msgstr ""
+msgstr "2020–2025"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Renta manuals"
-msgstr ""
+msgstr "Manuales de Renta"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "56"
@@ -199,11 +278,11 @@ msgstr "155,084,171"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "2020–2025; regional-deduction volumes in 2024–2025"
-msgstr ""
+msgstr "2020–2025; volúmenes de deducciones autonómicas en 2024–2025"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "Sociedades manuals"
-msgstr ""
+msgstr "Manuales de Sociedades"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "26"
@@ -215,11 +294,11 @@ msgstr "48,406,168"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "2022–2025"
-msgstr ""
+msgstr "2022–2025"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "**Total**"
-msgstr ""
+msgstr "**Total**"
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md
 msgid "**124**"
@@ -238,6 +317,9 @@ msgid ""
 "The 124 source links below cover the chunk manifest. Inventory coverage "
 "is complete; semantic inspection is limited to the samples above."
 msgstr ""
+"Los 124 enlaces a fuentes de abajo cubren el manifiesto del bloque. La "
+"cobertura de inventario está completa; la inspección semántica se limita "
+"a las muestras anteriores."
 
 #: ../../technical/articles/196-aeat-practical-manual-corpus.md:38
 msgid "`src/cadrumo/_data/corpus/manuals/iva/2020/manifest.json` — 407 bytes"

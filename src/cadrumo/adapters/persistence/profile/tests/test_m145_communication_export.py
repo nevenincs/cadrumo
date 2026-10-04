@@ -26,8 +26,10 @@ from .....application.modelo.m145_communication_records import (
     M145CommunicationExportResult,
     M145CommunicationRecordExportError,
     M145CommunicationRecordValidationError,
+    M145CommunicationValidationIssueKind,
     create_m145_communication_record,
     export_m145_communication_record,
+    validate_m145_communication_record,
 )
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
@@ -261,6 +263,92 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
                 operation=operation,
             )
+
+
+_PAGE_INDICATOR = "comunicacion.pagina-complementaria"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected_slot"),
+    (
+        # DR145 row 2 admits blanco (the principal page) or "C" (an attached
+        # ejemplar carrying the fifth and later descendants).
+        ({}, b" "),
+        ({_PAGE_INDICATOR: "C"}, b"C"),
+    ),
+    ids=("principal-page", "complementary-page"),
+)
+def test_a_page_indicator_that_validates_also_exports(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    overrides: dict[str, str],
+    expected_slot: bytes,
+) -> None:
+    indicator = _resolved_layout().fields_by_id["modelo-145-dr-02-page-complementaria"]
+
+    field_values = _field_values(**overrides)
+    if _PAGE_INDICATOR not in overrides:
+        # Principal-page evidence also proves genuine absence is legal; the
+        # shared material fixture supplies an explicit blank for its byte10 witness.
+        field_values.pop(_PAGE_INDICATOR, None)
+        assert _PAGE_INDICATOR not in field_values
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=field_values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+        result = export_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
+            ports=ports,
+            operation=operation,
+        )
+
+    assert validation.valid is True
+    assert _payload_slice(result.payload, indicator) == expected_slot
+
+
+@pytest.mark.parametrize("value", ("X", "c", "CC"))
+def test_a_page_indicator_outside_blank_or_c_fails_validation_before_export(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    value: str,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(
+                communication_year=2026, field_values=_field_values(**{_PAGE_INDICATOR: value})
+            ),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+        with pytest.raises(M145CommunicationRecordValidationError, match="validation passes"):
+            export_m145_communication_record(
+                record.communication_record_id,
+                bucket_id=runtime.bucket_id,
+                renderer=RegistryFixedWidthRecordRenderer(),
+                ports=ports,
+                operation=operation,
+            )
+
+    assert validation.valid is False
+    assert [(issue.kind, issue.casilla_id) for issue in validation.issues] == [
+        (M145CommunicationValidationIssueKind.INVALID_VALUE, _PAGE_INDICATOR),
+    ]
+    assert "not in enum ('C',)" in validation.issues[0].message
 
 
 def _seeded_export(runtime, *, operation: PinnedAuthorityOperation) -> M145CommunicationExportResult:
