@@ -9,7 +9,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dev._paths import UTF_8
 from dev.quality.cyclic_gc import cyclic_gc_paused
 
 
@@ -65,7 +64,7 @@ def parse_module(path: Path) -> ast.Module:
     memo = _SCAN_MEMO.get()
     if memo is not None and (cached := memo.trees.get(path)) is not None:
         return cached
-    tree = ast.parse(path.read_text(encoding=UTF_8), filename=str(path))
+    tree = ast.parse(path.read_bytes(), filename=str(path))
     if memo is not None:
         memo.trees[path] = tree
     return tree

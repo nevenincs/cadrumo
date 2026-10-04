@@ -349,6 +349,7 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
         "Config.PROSE_ONLY",
         "Widget.hidden_field",
         "Widget.hidden",
+        "Widget.on_mount",
         "COINCIDENTAL_CONST",
         "orphan_fn",
     }
@@ -633,9 +634,10 @@ def test_filtering_to_one_tier_keeps_the_counts_and_drops_the_rest(result: Unrea
 
     assert narrowed.modules == ()
     assert narrowed.tests == ()
-    assert {finding.qualname for finding in narrowed.symbols} == {"Widget.hidden"}
+    assert {finding.qualname for finding in narrowed.symbols} == {"Widget.hidden", "Widget.on_mount"}
     assert narrowed.shipped_modules == result.shipped_modules
     assert narrowed.reachable_modules == result.reachable_modules
+    assert narrowed.dev_cleared == result.dev_cleared == 1
 
 
 def test_filtering_away_every_finding_returns_a_clean_result(result: UnreachableCodeResult) -> None:
@@ -677,7 +679,7 @@ def test_clean_tree_is_green(tmp_path: Path) -> None:
     assert outcome.outcome is UnreachableCodeOutcome.CLEAN
     assert outcome.is_green
     assert outcome.reachable_modules == outcome.shipped_modules == 3
-    assert "every shipped module and symbol is reachable" in outcome.headline()
+    assert "no reachability findings" in outcome.headline()
 
 
 def test_outside_relative_import_is_credited_at_every_nesting_depth(tmp_path: Path) -> None:
@@ -766,7 +768,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "9 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
+        "10 unused-symbol candidate(s) in reachable modules, 2 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
     assert "4 data-shaped member(s) cleared" in report
@@ -800,7 +802,7 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     capped = render_console_report(result, cap=1)
 
     assert "... 1 more (--full for all)" in capped
-    assert "... 8 more (--full for all)" in capped
+    assert "... 9 more (--full for all)" in capped
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 
@@ -1040,12 +1042,9 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
         entry_points=(),
         data_globs=("_data/registry/**/*.json",),
     )
-    tokens = _data_tokens(spec)
-
-    assert "readable_token" in tokens
-    error = capsys.readouterr().err
-    assert "deletion candidate" in error
-    assert "undecodable.json" in error
+    with pytest.raises(OSError, match=r"undecodable\.json") as failure:
+        _data_tokens(spec)
+    assert "coverage is unproven" in str(failure.value)
 
 
 def test_an_absent_root_is_announced_while_an_empty_one_is_not(
@@ -1067,8 +1066,8 @@ def test_an_absent_root_is_announced_while_an_empty_one_is_not(
     assert list(iter_python_files(empty)) == []
     assert capsys.readouterr().err == "", "an empty directory is a true answer, not a defect"
 
-    assert list(iter_python_files(tmp_path / "never-created")) == []
-    assert "does not exist" in capsys.readouterr().err
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        list(iter_python_files(tmp_path / "never-created"))
 
 
 def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:

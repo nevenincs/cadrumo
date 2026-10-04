@@ -10,7 +10,7 @@ from typing import cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import UTF_8
-from dev.quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_memo import _walked
 from .unreachable_policy import _COMMAND_TOKEN, _DATA_TOKEN, _DOTTED_SPEC
@@ -247,11 +247,8 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
                 continue
             tokens.update(_DATA_TOKEN.findall(text))
-    report_unread(
-        "unreachable-code data tokens",
-        "a field or enum value addressed only by one of them will look dead and is a deletion candidate",
-        unread,
-    )
+    if unread:
+        raise OSError(format_unread_notice("unreachable-code data tokens", "coverage is unproven", unread).rstrip())
     return frozenset(tokens)
 
 
@@ -267,8 +264,8 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     or a whole string value is a reference; a word inside a sentence, or in a
     comment, is prose about the domain.
 
-    Unparseable files are skipped rather than salvaged by regex: a partial
-    read would reintroduce exactly the prose matching this exists to exclude.
+    Unparseable files make the scan unavailable: a partial read would
+    reintroduce exactly the prose matching this exists to exclude.
     """
     package_root = spec.src_root / spec.package
     values: set[str] = set()
@@ -285,11 +282,10 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
                 continue
             _collect_declared_strings(parsed, values)
-    report_unread(
-        "unreachable-code declared data values",
-        "an enum value addressed only by one of them will look dead and is a deletion candidate",
-        unread,
-    )
+    if unread:
+        raise OSError(
+            format_unread_notice("unreachable-code declared data values", "coverage is unproven", unread).rstrip()
+        )
     return frozenset(values)
 
 

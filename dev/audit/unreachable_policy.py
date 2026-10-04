@@ -25,23 +25,6 @@ _DOTTED_SPEC: Final = re.compile(r"^\.*[A-Za-z_][\w.]*(:[A-Za-z_]\w*)?$")
 _SKIPPED_DIRS: Final[frozenset[str]] = frozenset({"__pycache__"})
 
 
-# Decorators that merely shape a definition. Any OTHER decorator is read as a
-# framework registration (typer command, pydantic validator, textual handler)
-# that reaches the symbol without ever spelling its name.
-_PLAIN_DECORATORS: Final[frozenset[str]] = frozenset(
-    {
-        "abstractmethod",
-        "cached_property",
-        "classmethod",
-        "final",
-        "overload",
-        "override",
-        "property",
-        "staticmethod",
-    }
-)
-
-
 # Method names a framework calls by convention rather than by reference.
 _HOOK_METHOD_NAMES: Final[frozenset[str]] = frozenset(
     {"compose", "render", "model_post_init", "check_action", "on_mount", "on_unmount"},

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ from dev.quality.source_import_analysis import (
 )
 
 from .unreachable_definitions import _collection_uses, _definitions
+from .unreachable_frameworks import framework_contracts
 from .unreachable_graph import _collapse_packages, _importers_of_span, resolved_symbol_uses
 from .unreachable_memo import _walked, parse_module
 from .unreachable_models import (
@@ -95,10 +95,10 @@ def _symbol_findings(
     consumes the symbol. Folding them into one number under the data name
     would misreport both.
     """
-    entry_attributes = {entry.attribute for entry in spec.entry_points}
-    member_names: set[str] = set(entry_attributes)
-    literal_tokens: set[str] = set(entry_attributes)
-    resolved_uses: set[tuple[str, str]] = set()
+    entries = spec.entry_points + tuple(entry for companion in spec.companions for entry in companion.entry_points)
+    member_names: set[str] = set()
+    literal_tokens: set[str] = set()
+    resolved_uses: set[tuple[str, str]] = {(entry.module, entry.attribute) for entry in entries}
     self_uses: dict[str, set[str]] = {}
     whole_use: set[str] = set()
     for name in full_reach:
@@ -117,9 +117,10 @@ def _symbol_findings(
     audited_reach = sorted(
         name for name in runtime_reach if name == spec.package or name.startswith(spec.package + ".")
     )
+    contracts = framework_contracts(modules)
     for name in audited_reach:
         module = modules[name]
-        for definition in _definitions(module.tree):
+        for definition in _definitions(module.tree, contracts.get(name)):
             finding, data_clear, dev_clear = _definition_finding(
                 name,
                 module,
@@ -221,8 +222,6 @@ def _test_finding_for_path(
     if not is_test_source(path, root=spec.src_root) or not path.name.startswith("test_"):
         return None
     test = _read_test_module(path, spec)
-    if test is None:
-        return None
     modules, symbols = _test_subjects(test, known)
     if not modules and not symbols:
         modules, symbols = _support_hop_subjects(test, known, spec, support_cache)
@@ -357,10 +356,7 @@ def _support_target_subjects(
         return
     found = cache.get(target)
     if found is None:
-        try:
-            support = ShippedModule(candidate, target, target.name == "__init__.py", parse_module(target))
-        except (OSError, SyntaxError, UnicodeDecodeError):
-            return
+        support = ShippedModule(candidate, target, target.name == "__init__.py", parse_module(target))
         # One support module serves many tests here, so parsing
         # it once per importer dominated the walk.
         found = _test_subjects(support, known)
@@ -369,17 +365,9 @@ def _support_target_subjects(
     reached_symbols.update(found[1])
 
 
-def _read_test_module(path: Path, spec: ShippedTreeSpec) -> ShippedModule | None:
+def _read_test_module(path: Path, spec: ShippedTreeSpec) -> ShippedModule:
     """Refuse malformed test sources and report a file that vanished during enumeration."""
-    try:
-        tree = parse_module(path)
-    except (SyntaxError, UnicodeDecodeError) as error:
-        raise SystemExit(
-            f"{path} does not parse, so it could not be checked for testing only dead code: {error}"
-        ) from error
-    except OSError:
-        sys.stderr.write(f"unreachable-code: {path} vanished during the test walk and was not checked" + chr(10))
-        return None
+    tree = parse_module(path)
     return ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
 
 

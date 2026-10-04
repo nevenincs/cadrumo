@@ -19,12 +19,16 @@ minutes and would prove the checkers rather than the harness.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import threading
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
+
+from dev.packaging.command_execution import run_command
 
 from ..types import (
     _IRREDUCIBLE_EXTERNAL_GAPS,
@@ -139,7 +143,49 @@ def test_ty_uses_the_same_project_discovery_as_a_standalone_check(monkeypatch: p
     monkeypatch.setattr("dev.quality.types._run", run)
 
     assert collect_ty(TargetPlatform(key="linux", basedpyright="Linux")) == []
-    assert seen == [["ty", "check", "--python-platform", "linux", "--output-format", "gitlab", "--color", "never"]]
+    assert seen == [
+        [
+            "ty",
+            "check",
+            "--python-platform",
+            "linux",
+            "--python",
+            sys.executable,
+            "--output-format",
+            "gitlab",
+            "--color",
+            "never",
+        ]
+    ]
+
+
+def test_ty_uses_the_harness_interpreter_when_virtual_env_is_broken(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Interpreter selection must preserve both imports and real type diagnostics."""
+    broken_environment = tmp_path / "broken-environment"
+    broken_environment.mkdir()
+    monkeypatch.setenv("VIRTUAL_ENV", str(broken_environment))
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pyproject.toml").write_text('[tool.ty.src]\ninclude = ["sample.py"]\n', encoding="utf-8")
+    source = tmp_path / "sample.py"
+    source.write_text("from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n", encoding="utf-8")
+    ty_executable = shutil.which("ty")
+    assert ty_executable is not None
+    automatic = run_command([ty_executable, "check", "--output-format", "gitlab"], cwd=tmp_path, timeout_seconds=30)
+    assert automatic.returncode != 0
+    assert "Invalid `VIRTUAL_ENV`" in automatic.stderr
+    target = TargetPlatform(key="linux", basedpyright="Linux")
+    assert collect_ty(target) == []
+
+    source.write_text(
+        "from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n"
+        "record = Record(value=1)\ntext: str = record.value\n",
+        encoding="utf-8",
+    )
+    findings = collect_ty(target)
+    assert any(finding.rule == "invalid-assignment" and finding.line == 5 for finding in findings)
+    assert all(finding.rule != "unresolved-import" for finding in findings)
 
 
 def test_every_checker_names_the_target_platform_it_analyses_for(monkeypatch: pytest.MonkeyPatch) -> None:

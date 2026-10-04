@@ -60,6 +60,7 @@ def filter_by_confidence(result: UnreachableCodeResult, tier: Confidence) -> Unr
         symbols=symbols,
         tests=tests,
         data_cleared=result.data_cleared,
+        dev_cleared=result.dev_cleared,
         reason=result.reason,
     )
 
@@ -85,6 +86,9 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
         out.append(f"  {result.dev_cleared} top-level symbol(s) cleared by a resolved reference from dev/ tooling")
     if result.outcome is UnreachableCodeOutcome.CLEAN:
         return "\n".join(out)
+
+    if any(finding.confidence is not Confidence.EXACT for finding in result.symbols + result.tests):
+        out.append("  name-match tiers are heuristic candidates; framework or dynamic use may require confirmation")
 
     sections = _console_finding_sections(result)
     for title, findings in sections:

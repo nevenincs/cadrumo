@@ -65,7 +65,10 @@ def _resolve_scan_graph(
 def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     """Run the two-layer reachability scan over the tree ``spec`` describes."""
     with shared_scan_memo():
-        return _scan_with_memo(spec)
+        try:
+            return _scan_with_memo(spec)
+        except (OSError, SyntaxError, UnicodeDecodeError, ImportError) as exc:
+            return UnreachableCodeResult.error(f"scan input could not be read ({type(exc).__name__}: {exc})")
 
 
 def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
@@ -126,7 +129,7 @@ def run_unreachable_code_scan(
     """
     try:
         spec = ShippedTreeSpec.from_repository(repo_root, extra_roots=extra_roots)
-    except (OSError, KeyError, ValueError, TomlDecodeError) as exc:
+    except (OSError, KeyError, ValueError, SyntaxError, TomlDecodeError) as exc:
         return UnreachableCodeResult.error(f"packaging config unreadable ({exc})")
     return scan_unreachable_code(spec)
 

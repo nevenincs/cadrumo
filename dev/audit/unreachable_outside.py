@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 from dev.first_party_source import is_test_source
 from dev.quality.source_import_analysis import (
     module_name_for,
 )
+from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_graph import module_edges, resolved_symbol_uses
 from .unreachable_memo import parse_module
@@ -38,11 +38,10 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
                 continue
             try:
                 tree = parse_module(path)
-            except (OSError, SyntaxError, UnicodeDecodeError):
-                # The tree can move under a long scan; a file that is gone or
-                # unreadable is skipped rather than crashing the audit, but it
-                # is recorded so the report can say the corpus was incomplete.
-                use.unreadable.append(str(path))
+            except (OSError, SyntaxError, UnicodeDecodeError) as error:
+                # Collect each failure so one unavailable result names the
+                # complete set of references the walk could not consult.
+                use.unreadable.append(f"{path}: {type(error).__name__}: {error}")
                 continue
             for name in _references(tree):
                 use.names.setdefault(name, set()).add(corpus.label)
@@ -58,13 +57,11 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
             for pair in resolved_symbol_uses(probe, known):
                 use.resolved.setdefault(pair, set()).add(corpus.label)
     if use.unreadable:
-        # Reported at the point of loss rather than folded into the findings.
-        # These files' references were never read, so any symbol only THEY use
-        # is about to be reported as dead. A reviewer needs to know the corpus
-        # was incomplete before acting on a deletion list.
-        sys.stderr.write(
-            f"unreachable-code: {len(use.unreadable)} file(s) were unreadable during the "
-            "reference walk and did not contribute references; findings over symbols they "
-            f"use may be false: {sorted(use.unreadable)}" + chr(10)
+        raise OSError(
+            format_unread_notice(
+                "unreachable-code reference walk",
+                "coverage is unproven; references from these files were not consulted",
+                use.unreadable,
+            ).rstrip()
         )
     return use

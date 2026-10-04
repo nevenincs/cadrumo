@@ -15,7 +15,6 @@ from dev.quality.source_import_analysis import (
     module_name_for,
     wheel_exclude_globs,
 )
-from dev.quality.unread_inputs import report_unread
 
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule
@@ -216,12 +215,7 @@ def iter_python_files(root: Path) -> Iterator[Path]:
             yield root
         return
     if not root.is_dir():
-        report_unread(
-            "unreachable-code enumeration",
-            "it does not exist, so every walk over it analysed an empty corpus",
-            [str(root)],
-        )
-        return
+        raise FileNotFoundError(f"unreachable-code corpus {root} does not exist; coverage is unproven")
     for path in sorted(root.rglob("*.py")):
         if _SKIPPED_DIRS.isdisjoint(path.parts):
             yield path
@@ -231,8 +225,8 @@ def is_module_execution_surface(path: Path) -> bool:
     """Return whether an installed user can execute the module with ``python -m``."""
     if path.name == "__main__.py":
         return True
-    source = path.read_text(encoding=UTF_8)
-    if "__main__" not in source:
+    source = path.read_bytes()
+    if b"__main__" not in source:
         return False
     tree = ast.parse(source, filename=str(path))
     return any(_is_module_main_guard(statement) for statement in tree.body)

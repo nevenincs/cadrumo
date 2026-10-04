@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 
+from .unreachable_frameworks import FrameworkContract
 from .unreachable_memo import _walked
 from .unreachable_models import SymbolKind, _Definition
 from .unreachable_policy import (
@@ -12,7 +13,6 @@ from .unreachable_policy import (
     _ENUM_COLLECTION_ATTRS,
     _HOOK_METHOD_NAMES,
     _HOOK_METHOD_PREFIXES,
-    _PLAIN_DECORATORS,
 )
 
 
@@ -29,12 +29,45 @@ def _is_dunder(name: str) -> bool:
     return name.startswith("__") and name.endswith("__")
 
 
-def _is_framework_bound(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+def _registration_names(tree: ast.Module, contract: FrameworkContract) -> frozenset[str]:
+    """Resolve the supported framework registration decorators from actual imports."""
+    exports = {
+        "pydantic": {"field_validator", "model_validator", "field_serializer", "model_serializer"}
+        if contract.pydantic
+        else set(),
+        "textual": {"on"} if contract.textual else set(),
+    }
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in exports:
+            names.update(alias.asname or alias.name for alias in node.names if alias.name in exports[node.module])
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name in exports:
+                    names.update(f"{alias.asname or alias.name}.{name}" for name in exports[alias.name])
+    return frozenset(names)
+
+
+def _is_registered(function: ast.FunctionDef | ast.AsyncFunctionDef, registrations: frozenset[str]) -> bool:
+    for decorator in function.decorator_list:
+        target = decorator.func if isinstance(decorator, ast.Call) else decorator
+        if ast.unparse(target) in registrations:
+            return True
+    return False
+
+
+def _is_framework_bound(
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+    contract: FrameworkContract,
+    registrations: frozenset[str],
+) -> bool:
     """A method a framework reaches by convention or by decorator registration."""
     name = function.name
-    if _is_dunder(name) or name in _HOOK_METHOD_NAMES or name.startswith(_HOOK_METHOD_PREFIXES):
+    if _is_dunder(name) or name in contract.members:
         return True
-    return any(_decorator_name(decorator) not in _PLAIN_DECORATORS for decorator in function.decorator_list)
+    if contract.textual and (name in _HOOK_METHOD_NAMES or name.startswith(_HOOK_METHOD_PREFIXES)):
+        return True
+    return _is_registered(function, registrations)
 
 
 def _is_enum_class(node: ast.ClassDef) -> bool:
@@ -70,22 +103,28 @@ def _assigned_str_value(statement: ast.stmt) -> str:
     return ""
 
 
-def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
+def _class_definitions(
+    node: ast.ClassDef, contract: FrameworkContract, registrations: frozenset[str]
+) -> Iterator[_Definition]:
     member_kind = SymbolKind.ENUM_MEMBER if _is_enum_class(node) else SymbolKind.ATTRIBUTE
     for statement in node.body:
         if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
-            if not _is_framework_bound(statement):
+            if not _is_framework_bound(statement, contract, registrations):
                 yield _Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.METHOD)
         elif isinstance(statement, ast.ClassDef):
             yield _Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.CLASS)
             yield from (
                 _Definition(inner.name, f"{node.name}.{inner.qualname}", inner.line, inner.kind, owner=inner.owner)
-                for inner in _class_definitions(statement)
+                for inner in _class_definitions(statement, FrameworkContract(), registrations)
             )
         else:
             declared = _assigned_str_value(statement)
             for name in _assigned_names(statement):
-                if not _is_dunder(name) and name != "_ignore_":
+                if (
+                    not _is_dunder(name)
+                    and not (member_kind is SymbolKind.ENUM_MEMBER and name == "_ignore_")
+                    and name not in contract.members
+                ):
                     yield _Definition(
                         name,
                         f"{node.name}.{name}",
@@ -96,15 +135,15 @@ def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
                     )
 
 
-def _definitions(tree: ast.Module) -> Iterator[_Definition]:
+def _definitions(tree: ast.Module, contracts: Mapping[str, FrameworkContract] | None = None) -> Iterator[_Definition]:
     """Top-level functions, classes, constants, and the members inside each class."""
     for statement in tree.body:
         if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
-            if not any(_decorator_name(d) not in _PLAIN_DECORATORS for d in statement.decorator_list):
-                yield _Definition(statement.name, statement.name, statement.lineno, SymbolKind.FUNCTION)
+            yield _Definition(statement.name, statement.name, statement.lineno, SymbolKind.FUNCTION)
         elif isinstance(statement, ast.ClassDef):
             yield _Definition(statement.name, statement.name, statement.lineno, SymbolKind.CLASS)
-            yield from _class_definitions(statement)
+            contract = (contracts or {}).get(statement.name, FrameworkContract())
+            yield from _class_definitions(statement, contract, _registration_names(tree, contract))
         else:
             for name in _assigned_names(statement):
                 if not _is_dunder(name):

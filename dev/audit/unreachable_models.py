@@ -216,7 +216,7 @@ class UnreachableCodeResult:
 
     @classmethod
     def clean(cls, *, roots: tuple[str, ...], shipped_modules: int, reachable_modules: int) -> UnreachableCodeResult:
-        """A scan in which every shipped module and symbol is reachable."""
+        """A complete scan with no findings in its reported population."""
         return cls(
             outcome=UnreachableCodeOutcome.CLEAN,
             roots=roots,
@@ -290,12 +290,12 @@ class UnreachableCodeResult:
             return f"unreachable-code signal unavailable this cycle: {self.reason}"
         coverage = f"{self.reachable_modules}/{self.shipped_modules} shipped modules reachable at runtime"
         if self.outcome is UnreachableCodeOutcome.CLEAN:
-            return f"every shipped module and symbol is reachable from the entrypoints ({coverage})"
+            return f"no reachability findings ({coverage})"
         return (
             f"{self.unreachable_module_total} unreachable module(s), "
             f"{self.module_exec_only_total} module-exec-only, "
             f"{self.type_only_module_total} type-only module(s), "
-            f"{len(self.symbols)} unused symbol(s) in reachable modules, "
+            f"{len(self.symbols)} unused-symbol candidate(s) in reachable modules, "
             f"{len(self.tests)} orphaned test module(s) ({coverage})"
         )
 

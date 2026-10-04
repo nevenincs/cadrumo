@@ -282,7 +282,20 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
 
 def collect_ty(platform: TargetPlatform) -> list[Diagnostic]:
     """Run ty against one target platform and parse its GitLab-JSON diagnostics."""
-    result = _run(["ty", "check", "--python-platform", platform.key, "--output-format", "gitlab", "--color", "never"])
+    result = _run(
+        [
+            "ty",
+            "check",
+            "--python-platform",
+            platform.key,
+            "--python",
+            sys.executable,
+            "--output-format",
+            "gitlab",
+            "--color",
+            "never",
+        ]
+    )
     payload = result.stdout.strip()
     require_report(payload, result, f"ty[{platform.key}]")
     try:
