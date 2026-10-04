@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import plistlib
 from dataclasses import asdict
 from pathlib import Path
@@ -10,6 +11,7 @@ from pathlib import Path
 import pytest
 from defusedxml import ElementTree
 
+from dev.packaging.native import installation, installation_filesystem
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import inventory, member, prepare, uninstall, validate_payload, verify_inventory
@@ -152,3 +154,132 @@ def test_symlinked_prefix_is_refused(tmp_path: Path) -> None:
         pytest.skip("Host does not permit unprivileged symlinks")
     with pytest.raises(ValueError, match="link"):
         member(redirected, "file")
+
+
+def test_prepare_refuses_a_preexisting_unowned_stage_without_deleting_it(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    root = tmp_path / "build/native-install-tree"
+    root.mkdir(parents=True)
+    sentinel = root / "user-owned"
+    sentinel.write_text("preserve me", encoding="utf-8")
+    with pytest.raises(ValueError, match="no owning receipt"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    assert sentinel.read_text(encoding="utf-8") == "preserve me"
+
+
+@pytest.mark.parametrize("change", ["modified", "unowned"])
+def test_prepare_preserves_intervening_stage_changes(tmp_path: Path, change: str) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    path = root / ("app/cadrumo" if change == "modified" else "user-owned")
+    path.write_text("preserve me", encoding="utf-8")
+    with pytest.raises(ValueError, match="changed"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    assert path.read_text(encoding="utf-8") == "preserve me"
+
+
+def test_prepare_reuses_an_identical_owned_stage_without_replacing_files(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    before = (root / "app/cadrumo").stat()
+    assert prepare(payload, identity_file, tmp_path / "build", "cadrumo") == root
+    after = (root / "app/cadrumo").stat()
+    assert (after.st_dev, after.st_ino, after.st_mtime_ns) == (before.st_dev, before.st_ino, before.st_mtime_ns)
+
+
+def test_prepare_refuses_a_different_requested_payload_without_erasing_old_stage(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    before = (root / "app/cadrumo").read_bytes()
+    (payload / "cadrumo").write_text("new release", encoding="utf-8")
+    manifest_path = payload / "data/package-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"]["cadrumo"] = digest(payload / "cadrumo")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="differs from the requested payload"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    assert (root / "app/cadrumo").read_bytes() == before
+
+
+def test_uninstall_preserves_a_file_changed_after_preflight(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = tmp_path / "installation"
+    (root / "data").mkdir(parents=True)
+    (root / "data/package-manifest.json").write_text("anchor", encoding="utf-8")
+    owned = root / "owned"
+    owned.write_text("original", encoding="utf-8")
+    receipt = tmp_path / "receipt.json"
+    inventory(root, receipt, "md.neve.cadrumo")
+    original = installation.digest
+
+    def intervene(path: Path) -> str:
+        checksum = original(path)
+        if path == owned:
+            owned.write_text("intervening user edit", encoding="utf-8")
+        return checksum
+
+    monkeypatch.setattr(installation, "digest", intervene)
+    assert uninstall(root, receipt) == ["owned"]
+    assert owned.read_text(encoding="utf-8") == "intervening user edit"
+    assert (root / "data/package-manifest.json").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX no-replace claim interleaving")
+def test_posix_claim_restores_an_intervening_replacement(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    owned = tmp_path / "owned"
+    owned.write_text("original", encoding="utf-8")
+    checksum = digest(owned)
+    expected = installation_filesystem.file_identity(owned)
+    original = installation_filesystem.rename_noreplace_at
+    replaced = False
+
+    def intervene(*, source_fd: int, source_name: str, destination_fd: int, destination_name: str) -> None:
+        nonlocal replaced
+        if not replaced:
+            replaced = True
+            owned.rename(tmp_path / "earlier-owned")
+            owned.write_text("replacement belongs to a different owner", encoding="utf-8")
+        original(
+            source_fd=source_fd,
+            source_name=source_name,
+            destination_fd=destination_fd,
+            destination_name=destination_name,
+        )
+
+    monkeypatch.setattr(installation_filesystem, "rename_noreplace_at", intervene)
+    assert installation_filesystem.remove_owned_file(owned, checksum, expected) is False
+    assert owned.read_text(encoding="utf-8") == "replacement belongs to a different owner"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX retained directory descriptor interleaving")
+def test_posix_parent_redirection_preserves_the_claim_and_outside_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    parent = tmp_path / "program"
+    parent.mkdir()
+    owned = parent / "owned"
+    owned.write_text("original", encoding="utf-8")
+    checksum = digest(owned)
+    expected = installation_filesystem.file_identity(owned)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "owned").write_text("outside data", encoding="utf-8")
+    original = installation_filesystem.rename_noreplace_at
+    redirected = False
+
+    def intervene(*, source_fd: int, source_name: str, destination_fd: int, destination_name: str) -> None:
+        nonlocal redirected
+        if not redirected:
+            redirected = True
+            parent.rename(tmp_path / "earlier-program")
+            parent.symlink_to(outside, target_is_directory=True)
+        original(
+            source_fd=source_fd,
+            source_name=source_name,
+            destination_fd=destination_fd,
+            destination_name=destination_name,
+        )
+
+    monkeypatch.setattr(installation_filesystem, "rename_noreplace_at", intervene)
+    assert installation_filesystem.remove_owned_file(owned, checksum, expected) is False
+    assert (outside / "owned").read_text(encoding="utf-8") == "outside data"
+    assert (tmp_path / "earlier-program/owned").read_text(encoding="utf-8") == "original"

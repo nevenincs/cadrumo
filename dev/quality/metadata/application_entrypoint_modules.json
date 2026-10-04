@@ -256,6 +256,7 @@
         "cadrumo.application.filing.m280_context_validation",
         "cadrumo.application.filing.producer_snapshot",
         "cadrumo.application.filing.producer_snapshot_m200",
+        "cadrumo.application.filing.producer_snapshot_m360",
         "cadrumo.application.filing.projection",
         "cadrumo.application.filing.record_field_renderer",
         "cadrumo.application.filing.record_renderer",

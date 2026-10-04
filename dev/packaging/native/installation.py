@@ -7,7 +7,7 @@ import json
 import plistlib
 import re
 import shutil
-from contextlib import suppress
+import tempfile
 from pathlib import Path, PurePosixPath
 from uuid import UUID, uuid5
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -15,6 +15,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from dev._paths import REPO_ROOT
 
 from .hashing import digest
+from .installation_filesystem import file_identity, remove_owned_file
 
 
 def member(root: Path, relative: str) -> Path:
@@ -108,36 +109,55 @@ def uninstall(prefix: Path, receipt: Path, *, dry_run: bool = False) -> list[str
         if not path.is_file() or digest(path) != checksum:
             preserved.append(relative)
         else:
-            removals.append(path)
+            removals.append((relative, checksum, file_identity(path)))
     if not dry_run:
-        for path in removals:
-            if path != anchor or not preserved:
-                path.unlink()
-        parents = {
-            parent for path in removals for parent in path.parents if parent != prefix and parent.is_relative_to(prefix)
-        }
-        for parent in sorted(parents, key=lambda p: len(p.parts), reverse=True):
-            # Nonempty directories contain preserved or unowned files.
-            with suppress(OSError):
-                parent.rmdir()
+        # Keep the anchor until every other file's retained removal has settled.
+        removals.sort(key=lambda item: item[0] == anchors[0])
+        for relative, checksum, expected in removals:
+            if relative == anchors[0] and preserved:
+                continue
+            path = member(prefix, relative)
+            if not remove_owned_file(path, checksum, expected):
+                preserved.append(relative)
+        # Empty directories do not belong to the receipt. Preserve them rather
+        # than removing a newly replaced/unowned directory by its path name.
     return preserved
 
 
 def prepare(payload: Path, identity_file: Path, build: Path, desktop: str | None = None) -> Path:
+    """Reuse only an unchanged, identical owning stage; never erase existing state."""
+    validate_payload(payload, identity_file, desktop)
+    build = build.absolute()
+    root = member(build, "native-install-tree")
+    if root.exists():
+        receipt = member(build, "installation.json")
+        if not receipt.is_file():
+            raise ValueError("Existing native installation stage has no owning receipt; select a fresh build directory")
+        verify_inventory(root, receipt)
+        with tempfile.TemporaryDirectory(prefix="native-install-candidate-", dir=build) as scratch:
+            candidate = Path(scratch)
+            _prepare_fresh(payload, identity_file, candidate, desktop)
+            expected = json.loads((candidate / "installation.json").read_text(encoding="utf-8"))
+            existing = json.loads(receipt.read_text(encoding="utf-8"))
+            if existing != expected:
+                raise ValueError(
+                    "Native installation stage differs from the requested payload; select a fresh build directory"
+                )
+        # Recheck after construction: another writer may have touched the stage.
+        verify_inventory(root, receipt)
+        return root
+    return _prepare_fresh(payload, identity_file, build, desktop)
+
+
+def _prepare_fresh(payload: Path, identity_file: Path, build: Path, desktop: str | None = None) -> Path:
     """Create platform installation layout, with desktop registration only for a real entrypoint."""
     validate_payload(payload, identity_file, desktop)
     value = json.loads(identity_file.read_text(encoding="utf-8"))
-    build = build.resolve()
+    build = build.absolute()
     root = member(build, "native-install-tree")
     if payload.resolve().is_relative_to(root) or root.is_relative_to(payload.resolve()):
         raise ValueError("Payload and installer staging directory must not overlap")
-    if root.exists():
-        # This is the fixed, generated child of the explicitly supplied build directory.
-        # Check every descendant before a recursive deletion; never follow a junction.
-        for path in root.rglob("*"):
-            member(root, path.relative_to(root).as_posix())
-        shutil.rmtree(root)
-    root.mkdir(parents=True)
+    root.mkdir(parents=True, mode=0o700)
     target = value["target"]
     if target.startswith("linux-"):
         destination = root / "opt" / value["package_name"]
