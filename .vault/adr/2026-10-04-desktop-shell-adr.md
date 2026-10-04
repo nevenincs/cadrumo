@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e04c87d9cdf7dacef1ab1e75ec87e83ae5d87f20dabf779dd386e9c0b39bbad'
+body_hash: 'sha256:3a8824c3ff1d06f7d53f2591ea6337ab86b9628585743f1f0ff930a63e820476'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -51,7 +51,13 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 
 ## Constraints
 
-- The documentation origin gets no IPC, plugin or capability. Every command checks the shell origin and the per-launch shell token.
+- The documentation origin gets no IPC, plugin or capability. Tauri 2.12.1 treats every registered custom scheme as a local origin, so it resolves the documentation frame to the same capabilities as the shell. The refusal therefore belongs to the application, through a per-launch shell token:
+  - the host mints the token at startup from a CSPRNG, at least 128 bits, and never logs or persists it
+  - it is injected by an initialization script into the top frame only, never into all frames
+  - the shell reads it once from a namespaced, non-enumerable global and keeps it in module scope
+  - every app command takes the token as an argument, or in the `x-cadrumo-token` header for raw-body `terminal_write`, compares it in constant time, and refuses a mismatch with `invalid_arguments`
+  - the shell never posts the token to the iframe and never puts it in a URL or in storage; the bridge envelope never carries it
+  - defence in depth: the documentation CSP `connect-src 'self'` blocks the IPC fetch transport, and no plugin JavaScript command is granted to the webview
 - Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused.
 - The shell never captures F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape or plain keys while a terminal has focus.
 - The log view keeps "available", "missing" and "unreadable" sources distinct from an empty list. It only reads the log and never truncates, rotates or deletes it.
@@ -125,8 +131,7 @@ shell to documentation:
 - Shell commands:
   - `desktop_environment`: output language and documentation origin and languages
   - `open_external`
-  - clipboard read and write text
-  - native context menus
+  - clipboard read and write text, and native context menus, each a token-checked app command that wraps the plugin or menu Rust API
   - window state
   - WebView2 browser accelerator keys and default context menus are disabled.
 
@@ -144,7 +149,7 @@ shell to documentation:
 | Escape | Close the flyout | Flyout |
 | Enter after exit | Start the session again | Exited terminal |
 
-**Context menus.** Native menus are built in the shell and placed at coordinates relayed from the iframe. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
+**Context menus.** The shell describes each menu and its localized labels. A token-checked host command shows it natively at coordinates relayed from the iframe and returns the chosen item. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
 
 | Target | Items |
 |---|---|
