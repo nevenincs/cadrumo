@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbb4c71266c60a8e81f576dbbf740ccc5170849deebb9d23415e4d9f9449477c'
+body_hash: 'sha256:9dd36b6b02c3ff22d35bc58b31fc9feb9eb4b9271d5ecd694a93694f8667f7fd'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
