@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:8176908503782e37ba5836dc394674d43babef8d1f1c7519e8543f5ad60ef418'
+body_hash: 'sha256:714fc23b8251a5cc913f4507a8b1b80b654f433ebd9a4e4c0b38d7e7c3f0add2'
 ---
 
 # `google-app-identity` plan
@@ -85,7 +85,7 @@ proposed to the product owner at plan close.
 
 - [x] `S01` - Remove the service-account impersonation credential source, its taxonomy, dispatch, adapter, error types, stored selection namespace, credential-source commands, locale keys and tests; `src/cadrumo/adapters/outbound/google/impersonation.py`.
 - [x] `S02` - Remove Google evidence acquisition, the evidence pull and pull-all commands and the document-link CLI choice, keeping the stored attachment source vocabulary; `src/cadrumo/adapters/outbound/google/document_link_resolver.py`.
-- [ ] `S03` - Drop the spreadsheets scope from the bundled scope constants and the required scope set so sign-in requests exactly openid, userinfo.email and drive.file; `src/cadrumo/core/external_constants.toml`.
+- [x] `S03` - Drop the spreadsheets scope from the bundled scope constants and the required scope set so sign-in requests exactly openid, userinfo.email and drive.file; `src/cadrumo/core/external_constants.toml`.
 - [ ] `S04` - Refuse unmarked Drive entries in the Sheets adapter and the mirror provider, and create workbooks through Drive with the ownership marker in one call; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
 - [ ] `S05` - Create and store a marker-stamped root folder per profile, trust a stored ID only when marker-owned, type the non-Cadrumo workbook refusal, and remove the folder-set command, the root folder setting and its environment example and reference; `src/cadrumo/adapters/outbound/storage/factory.py`.
 - [ ] `S06` - Resolve the OAuth client through one owner with precedence profile-registered, then installation-bundled public metadata, then a typed refusal, committing no client ID; `src/cadrumo/adapters/outbound/google/session_store.py`.

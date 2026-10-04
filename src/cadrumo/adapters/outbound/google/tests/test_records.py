@@ -33,7 +33,6 @@ from ..errors import (
 from ..records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
-    SHEETS_SCOPE,
     DriveAppProperties,
     OAuthClient,
     OAuthMetadata,
@@ -81,10 +80,12 @@ def _valid_metadata_kwargs() -> _MetadataKwargs:
     }
 
 
-def test_required_scopes_contains_drive_and_sheets() -> None:
-    assert DRIVE_FILE_SCOPE in REQUIRED_SCOPES
-    assert SHEETS_SCOPE in REQUIRED_SCOPES
-    assert len(REQUIRED_SCOPES) == 4
+def test_required_scopes_are_exactly_the_three_non_sensitive_scopes() -> None:
+    assert REQUIRED_SCOPES == (
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/drive.file",
+    )
 
 
 def test_oauth_client_round_trips_through_strict_validation() -> None:
@@ -184,7 +185,7 @@ def test_oauth_metadata_round_trip() -> None:
 
     assert reloaded == metadata
     assert metadata.reauth_required is False
-    assert SHEETS_SCOPE in metadata.granted_scopes
+    assert DRIVE_FILE_SCOPE in metadata.granted_scopes
     assert metadata.issued_at.isoformat() == "2026-05-14T09:00:00+00:00"
     assert metadata.last_refresh_at.isoformat() == "2026-05-14T12:00:00+00:00"
 
@@ -208,7 +209,7 @@ def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_ins
         OAuthMetadata.model_validate(payload)
 
 
-def test_oauth_metadata_requires_drive_and_sheets_scopes() -> None:
+def test_oauth_metadata_requires_every_required_scope() -> None:
     kwargs = _valid_metadata_kwargs()
     kwargs["granted_scopes"] = (DRIVE_FILE_SCOPE,)
     with pytest.raises(ValidationError, match="missing required scopes"):

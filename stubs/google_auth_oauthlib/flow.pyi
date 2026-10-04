@@ -25,6 +25,8 @@ class OAuthCredentials(Protocol):
 
 class Flow:
     credentials: OAuthCredentials
+    redirect_uri: str | None
+    def authorization_url(self, **kwargs: Any) -> tuple[str, str]: ...
     def run_local_server(
         self,
         host: str = ...,

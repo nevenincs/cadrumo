@@ -415,7 +415,6 @@ class GoogleOAuthScopeSection(_Frozen):
     openid: str
     email: str
     drive_file: str
-    spreadsheets: str
 
 
 class GoogleServiceSection(_Frozen):

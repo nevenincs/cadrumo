@@ -464,8 +464,8 @@ def pull_operator_edits(
             Must already exist and carry the
             ``appProperties.cadrumo_vault_app=cadrumo`` ownership marker.
         credentials: A ``google.oauth2.credentials.Credentials``-shaped
-            object carrying a refresh + access token with at least
-            the ``drive.file`` + ``spreadsheets`` scopes.
+            object carrying a refresh + access token with the
+            ``drive.file`` scope.
 
     Returns:
         A :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` carrying the

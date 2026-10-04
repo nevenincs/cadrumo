@@ -890,8 +890,8 @@ def apply_export_plan(
             produced by
             :func:`~application.storage.calc_sheets.engine.build_export_plan`.
         credentials: A ``google.oauth2.credentials.Credentials``-shaped
-            object carrying refresh + access tokens with at least the
-            ``drive.file`` + ``spreadsheets`` scopes.
+            object carrying refresh + access tokens with the
+            ``drive.file`` scope.
         root_folder_id: The operator's Drive root folder id (the same
             folder
             :class:`~adapters.outbound.storage._google_drive.GoogleDriveProvider`

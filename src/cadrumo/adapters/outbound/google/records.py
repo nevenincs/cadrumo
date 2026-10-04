@@ -29,22 +29,18 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
 
-# Scopes the desktop app requests at first login. Per Google's
-# Identity Platform "Sign in with Google" guidance, an OAuth flow that
-# needs to display *which* Google account is linked must request the
-# `openid` + `userinfo.email` scope pair so Google returns a verifiable
-# id_token carrying the user's email claim. The data-access scopes
-# (`drive.file`, `spreadsheets`) cover the integration's substrate
-# read/write surface. `drive.file` is non-sensitive (only files the
-# app creates or the operator explicitly picks); `spreadsheets` is
-# sensitive (full read/write) and surfaces on the consent screen.
+# Scopes the desktop app requests at sign-in. An OAuth flow that needs to
+# display *which* Google account is linked must request the `openid` +
+# `userinfo.email` pair so Google returns a verifiable id_token carrying
+# the user's email claim. `drive.file` is the only data-access scope: it is
+# non-sensitive and reaches only files this application created, which is
+# all the export and its readback are meant to touch.
 # Reference: https://developers.google.com/identity/openid-connect/openid-connect
 _SCOPES = Settings.external_constants().online_services.google.oauth_scopes
 OPENID_SCOPE: str = _SCOPES.openid
 EMAIL_SCOPE: str = _SCOPES.email
 DRIVE_FILE_SCOPE: str = _SCOPES.drive_file
-SHEETS_SCOPE: str = _SCOPES.spreadsheets
-REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE, SHEETS_SCOPE)
+REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE)
 
 
 def _google_oauth_endpoint_has_https_hostname(parsed: SplitResult) -> bool:
@@ -196,9 +192,9 @@ class OAuthMetadata(BaseModel):
         :class:`adapters.outbound.google.records.OAuthMetadata` after the consent
         screen returns every scope in
         :data:`adapters.outbound.google.records.REQUIRED_SCOPES` (``openid`` +
-        ``email`` + ``drive.file`` + ``spreadsheets``). Guards against
-        accidental writes that would leave the integration unable to call
-        Sheets, Drive, or display which account is linked.
+        ``email`` + ``drive.file``). Guards against accidental writes that
+        would leave the integration unable to call Sheets, Drive, or display
+        which account is linked.
         """
         missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in value)
         if missing:
@@ -238,7 +234,6 @@ __all__ = [
     "EMAIL_SCOPE",
     "OPENID_SCOPE",
     "REQUIRED_SCOPES",
-    "SHEETS_SCOPE",
     "DriveAppProperties",
     "DriveConfig",
     "OAuthClient",

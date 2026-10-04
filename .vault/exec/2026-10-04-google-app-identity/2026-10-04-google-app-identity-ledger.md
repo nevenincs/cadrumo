@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:484186f466e3058d9635d2458ed8fdb2439b9295f68a981d106a361a6471b830'
+body_hash: 'sha256:1959b7d68d0437b48797024636a54b500cb0fba1a39613eab61706925b7b8eb9'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -168,6 +168,23 @@ related:
 - `S02` `verify:` `just check-import-boundaries` -> `fail`
 - `S02` `verify:` `dev.docs.sequences check --page how-to/ledger-evidence` -> `fail`
 - `S02` `by:` `CADRUMO-GOOGLE-OATH`
+- `S03` `M` `src/cadrumo/core/external_constants.toml`
+- `S03` `M` `src/cadrumo/core/external_constants.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_records.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_flow.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/storage/tests/test_factory.py`
+- `S03` `M` `stubs/google_auth_oauthlib/flow.pyi`
+- `S03` `verify:` `pytest unit: scope set, consent URL scopes through the real installed-app flow, hydrated credential scopes, records and factory (57 tests)` -> `pass`
+- `S03` `verify:` `pytest unit and integration: Google adapters, storage, calc sheets, export and CLI config outside the conformance suite (541 tests)` -> `pass`
+- `S03` `verify:` `git grep for the spreadsheets, drive.readonly and gmail.readonly scope strings in non-test source` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
+- `S03` `verify:` `pytest integration: registered-executor conformance` -> `fail`
+- `S03` `verify:` `just check-types` -> `fail`
+- `S03` `verify:` `just check-import-boundaries` -> `fail`
+- `S03` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -184,3 +201,8 @@ related:
 - `S02` The AttachmentSource members GMAIL, `GOOGLE_DRIVE` and URL and `AttachmentKind.DRIVE_DOCUMENT` are kept as stored-history vocabulary; only the DocumentLinkSource CLI choice is removed.
 - `S02` Translated documentation catalogues under docs/locales still carry the removed how-to passages; they are refreshed with S09.
 - `S02` Shared files carry other sessions' uncommitted changes; only this Step's lines are committed in evidence.py, `_ledger.py,` `ledger_lifecycle_cli.py,` `_application_part3a2.py,` the four errors.yml catalogues and the two `import_load_targets` files.
+- `S03` The scope change is pending verification: no live run under drive.file alone has exercised the Sheets and Drive methods the export calls. That proof is S10 and is not claimed here.
+- `S03` The registered-executor conformance suite cannot start in the shared tree: the operation supervisor another session is editing refuses with 'typed financial operations require hardened durable custody' for every scenario, including non-Google ones. It passed for the Google and evidence families before that edit appeared.
+- `S03` check-types reports diagnostics only in files this Step does not touch after the two new tests were made type-clean; the local InstalledAppFlow stub gained the two members the consent-URL test calls.
+- `S03` check-import-boundaries kept all 15 contracts; its two hard findings are in modelo workbench tests another session is changing.
+- `S03` One native automation-change test failed in a broad run; it does not involve Google scopes.

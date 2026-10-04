@@ -21,8 +21,8 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...google.records import DriveConfig, OAuthClient
-from ...google.session_store import save_client, save_drive_config
+from ...google.records import DriveConfig, OAuthClient, OAuthToken
+from ...google.session_store import save_client, save_drive_config, save_token
 from ..errors import OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ..protocol import StorageProvider
@@ -247,3 +247,34 @@ def test_build_google_credentials_refuses_a_profile_without_a_registered_client(
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
     assert exc.context == {"profile": profile}
+
+
+def test_build_google_credentials_hydrates_exactly_the_three_non_sensitive_scopes(tmp_path: Path) -> None:
+    """A stored sign-in is hydrated with the consented scope set and nothing wider."""
+    from google.oauth2.credentials import Credentials as OAuthCredentials
+
+    profile = "0d3ee1f5-2f0b-4a62-8a56-7d7f7e0a9b11"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile):
+        save_client(
+            profile,
+            OAuthClient(
+                client_id="desktop-client.apps.googleusercontent.com",
+                client_secret="client-secret",
+                project_id="desktop-project",
+                auth_uri="https://accounts.google.com/o/oauth2/auth",
+                token_uri="https://oauth2.googleapis.com/token",
+                auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
+                redirect_uris=("http://localhost",),
+            ),
+        )
+        save_token(
+            profile, OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token")
+        )
+        credentials = build_google_credentials(profile=profile)
+
+    assert isinstance(credentials, OAuthCredentials)
+    assert credentials.scopes == [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/drive.file",
+    ]

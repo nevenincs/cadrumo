@@ -7,6 +7,7 @@ import sys
 import textwrap
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -21,6 +22,7 @@ from ..errors import (
     GoogleAuthProfileUnboundError,
 )
 from ..oauth_flow import (
+    _oauth_loopback_client_config,
     _raise_local_server_error,
     credentials_to_records,
     require_interactive_terminal,
@@ -42,6 +44,22 @@ def _valid_oauth_client() -> OAuthClient:
         auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
         redirect_uris=("http://localhost",),
     )
+
+
+def test_consent_url_requests_exactly_the_three_non_sensitive_scopes() -> None:
+    """The real installed-app flow, given the stored client, asks Google for no other scope."""
+    from google_auth_oauthlib.flow import InstalledAppFlow
+
+    flow = InstalledAppFlow.from_client_config(
+        _oauth_loopback_client_config(_valid_oauth_client()), scopes=list(REQUIRED_SCOPES)
+    )
+    flow.redirect_uri = "http://127.0.0.1:1/"
+    url, _state = flow.authorization_url()
+
+    requested = parse_qs(urlsplit(url).query)["scope"]
+    assert requested == [
+        "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file"
+    ]
 
 
 def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
