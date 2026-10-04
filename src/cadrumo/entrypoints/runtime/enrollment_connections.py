@@ -333,14 +333,18 @@ class RuntimeEnrollmentConnections:
             except (AutomationCustodyError, ProfileAccessRefusedError):
                 self.disconnect(offer.prepared.connection_id)
 
-    def retire_profile(self, profile_id: UUID) -> None:
+    def retire_profile(self, profile_id: UUID, *, host: RuntimeProfileHost | None = None) -> None:
         """An old host must not keep publishing after its guarded owner is replaced."""
         with self._guard:
-            identities = tuple(
-                identity for identity, offer in self._offers.items() if offer.connection.profile_id == profile_id
+            offers = tuple(
+                offer
+                for offer in self._offers.values()
+                if offer.connection.profile_id == profile_id and (host is None or offer.host is host)
             )
-        for identity in identities:
-            self.disconnect(identity)
+            for offer in offers:
+                self._offers.pop(offer.prepared.connection_id)
+        for offer in offers:
+            offer.close()
 
     def close(self) -> None:
         """Wake every producer before runtime shutdown attempts to settle it."""

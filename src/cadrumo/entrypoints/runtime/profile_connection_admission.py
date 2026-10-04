@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -19,6 +20,7 @@ from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
     RuntimeRefusalError,
+    RuntimeShutdownIncompleteError,
 )
 from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentPrepare,
@@ -50,48 +52,62 @@ class ProfileConnectionAdmissionMixin:
     def _host(
         self: RuntimeProfileConnections, profile_id: UUID, context: RuntimeConnectionContext
     ) -> RuntimeProfileHost:
-        with self._guard:
-            if not self._admitting():
-                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-            if self._installation is None:
-                self._installation = runtime_installation(
-                    storage_root=self.root,
-                    os_owner_id=context.peer.os_owner_id,
-                    storage_identity=self.storage_identity,
+        deadline = time.monotonic() + 15
+        while True:
+            with self._guard:
+                if not self._admitting():
+                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                if self._installation is None:
+                    self._installation = runtime_installation(
+                        storage_root=self.root,
+                        os_owner_id=context.peer.os_owner_id,
+                        storage_identity=self.storage_identity,
+                    )
+                if self._installation.os_owner_id != context.peer.os_owner_id:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                binding = current_automation_profile_binding(
+                    profile_id=profile_id,
+                    installation_id=self._installation.installation_id,
+                    os_owner_id=self._installation.os_owner_id,
+                    root=self.root,
                 )
-            if self._installation.os_owner_id != context.peer.os_owner_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            binding = current_automation_profile_binding(
-                profile_id=profile_id,
-                installation_id=self._installation.installation_id,
-                os_owner_id=self._installation.os_owner_id,
-                root=self.root,
-            )
-            existing = self._profiles.get(profile_id)
-            if existing is not None:
-                if existing.store.binding != binding:
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-                return existing
-            registry = self._registry
-            if registry is None:
-                # Direct in-process hosts may omit startup preparation. The
-                # installed server calls prepare_registry before listening.
-                registry = self.prepare_registry()
-            host = RuntimeProfileHost(
-                store=AutomationControlStore(root=self.root, binding=binding, secrets_store_factory=self._secret_store),
-                runtime_boot_id=self.boot,
-                registry=registry,
-                connected=self._connected,
-                logins=self._login_contexts,
-                admitting=self._private_work_available,
-                recipient=self._enrollments.recipient,
-                worker_script=self._worker_script,
-                wall_clock=self._wall_clock,
-            )
-            if not self._admitting():
-                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-            self._profiles[profile_id] = host
-            return host
+                existing = self._profiles.get(profile_id)
+                if existing is not None and existing.store.binding == binding:
+                    return existing
+                if existing is None:
+                    registry = self._registry
+                    if registry is None:
+                        # Direct in-process hosts may omit startup preparation. The
+                        # installed server calls prepare_registry before listening.
+                        registry = self.prepare_registry()
+                    host = RuntimeProfileHost(
+                        store=AutomationControlStore(
+                            root=self.root, binding=binding, secrets_store_factory=self._secret_store
+                        ),
+                        runtime_boot_id=self.boot,
+                        registry=registry,
+                        connected=self._connected,
+                        logins=self._login_contexts,
+                        admitting=self._private_work_available,
+                        recipient=self._enrollments.recipient,
+                        worker_script=self._worker_script,
+                        wall_clock=self._wall_clock,
+                    )
+                    if not self._admitting():
+                        raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                    self._profiles[profile_id] = host
+                    return host
+            # Retirement needs callbacks that may borrow connection state.
+            # Release the connection guard before waiting for containment.
+            if time.monotonic() >= deadline:
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+            try:
+                retired = existing.retire_replaced_binding(deadline=deadline)
+            except (RuntimeRefusalError, RuntimeShutdownIncompleteError, ExceptionGroup):
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
+            if retired is not True:
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+            self._remove_retired_host(existing)
 
     def _prepare(
         self: RuntimeProfileConnections,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:eebdf25a5a4f273c405bc2336736031e83870cee392f89fbfa09aa64c5c64899'
+body_hash: 'sha256:925c12104ea241159ccd38ee7d503614bce11ac949a9a69791abfcf72f9c7a6e'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -158,6 +158,10 @@ Resolved. The supplementary independent oracle accepts the defining physical dec
 ### installed-cli-bootstrap-adapter | low | Native acceptance uses the existing console bootstrap through every fresh CLI child
 
 Resolved acceptance runner wiring. The optional immutable cli_argument_prefix precedes CLI options and is preserved by both IVA reopen adapters and sanitized receipts. The actual console entry is cadrumo.entrypoints.cli.bootstrap:main via the existing interpreter -c invocation; the package has no __main__, and the earlier -m attempt is recorded as a runner error. Profile creation and authenticated secrets remain stdin-only with the existing custom-stdin conflict guard. Fifteen scoped adapter tests pass in1.76s, preserving incomplete-verification refusal and both fresh adapter boundaries; Ruff/format/ty pass on all four paths. These mocked adapter tests do not prove product calculation, export or native custody. The dev acceptance helpers are outside actual native action and wheel membership; installed native journey replay remains required.
+
+### replacement-binding-admission | high | Immediate successor login now retires the predecessor through canonical containment
+
+Resolved production race. A committed successor binding previously met the cached predecessor until the 0.5s polling cycle, refusing an immediate legitimate fresh login. Admission now releases the connection map guard, attempts the canonical bounded retirement, removes only a proved contained incarnation and reobserves the current binding. A nonblocking retirement fence prevents a competing caller treating denied authority as containment; failed cleanup retains worker ownership for retry. Enrollment removal selects the exact host and takes offers atomically before closing outside its guard, preserving successor offers and leases. Three deterministic actual-Windows-worker tests pass, including held commit guards, concurrent and failed retirement, callback map borrowing and stale-cleanup successor preservation. Ten complete affected runtime/recovery modules pass62 with no failure or skip in926.14s; the plain public forgotten-passphrase reset passes36.58s without the diagnostic observer. Four production and one test path pass scoped Ruff/format/ty. Five unrelated CLI fixture/test paths and Git HEAD changed during the run; relevant tested owners and authority did not, so no full-tree zero-drift is claimed. Native Mac containment and the changed compiled Windows interpreter remain separate required proof.
 
 ## Recommendations
 

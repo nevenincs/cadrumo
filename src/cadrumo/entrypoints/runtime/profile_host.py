@@ -10,7 +10,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from threading import RLock
+from threading import Lock, RLock
 from typing import override
 from uuid import UUID, uuid4
 
@@ -191,6 +191,7 @@ class RuntimeProfileHost:
         self._recipient = recipient
         self._wall_clock = wall_clock
         self.guard = RLock()
+        self._replacement_retirement_guard = Lock()
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
         self.issuer = CustodyAutomationKeyIssuer()
@@ -525,43 +526,48 @@ class RuntimeProfileHost:
         leave that invocation alone. An unreadable binding also retires access
         without claiming that a successor was committed.
         """
-        if not self.guard.acquire(blocking=False):
+        # Only one caller may prove retirement. Another admission must not
+        # mistake the denial fence for completed process containment.
+        if not self._replacement_retirement_guard.acquire(blocking=False):
             return None
         try:
-            if self.owner.lost:
-                return False
-            binding = self.store.binding
+            if not self.guard.acquire(blocking=False):
+                return None
             try:
-                current = current_automation_profile_binding(
-                    profile_id=binding.profile_id,
-                    installation_id=binding.installation_id,
-                    os_owner_id=binding.os_owner_id,
-                    root=self.store.root,
-                )
-            except AutomationCustodyError:
-                current = None
-            if current == binding:
-                return False
-            worker = self.owner.begin_drain()
-        finally:
-            self.guard.release()
-        # Worker callbacks may still need the profile guard to release their
-        # exact permit. No host or connection lock is held while waiting here.
-        self.approvals.close()
-        if worker is not None:
-            # An independently fenced or crashed worker may supply no receipt.
-            # It still must pass the containment and callback checks below;
-            # its persisted operations retain their reconciliation obligations.
-            with suppress(RuntimeRefusalError, AutomationCustodyError, ProfileAccessRefusedError):
+                binding = self.store.binding
                 try:
-                    if current is not None and self._password_rotation is not None:
-                        worker.settlement(
-                            self._password_rotation, timeout=max(0.001, min(5.0, deadline - time.monotonic()))
-                        )
-                finally:
-                    worker.drain(deadline=deadline)
-        if not self.owner.wait_construction(deadline=deadline):
-            raise RuntimeShutdownIncompleteError()
-        self.owner.settle(deadline=deadline)
-        asyncio.run(self.authority.close())
-        return True
+                    current = current_automation_profile_binding(
+                        profile_id=binding.profile_id,
+                        installation_id=binding.installation_id,
+                        os_owner_id=binding.os_owner_id,
+                        root=self.store.root,
+                    )
+                except AutomationCustodyError:
+                    current = None
+                if current == binding:
+                    return False
+                worker = self.owner.begin_drain()
+            finally:
+                self.guard.release()
+            # Worker callbacks may still need the profile guard to release their
+            # exact permit. No host or connection lock is held while waiting here.
+            self.approvals.close()
+            if worker is not None:
+                # An independently fenced or crashed worker may supply no receipt.
+                # It still must pass the containment and callback checks below;
+                # its persisted operations retain their reconciliation obligations.
+                with suppress(RuntimeRefusalError, AutomationCustodyError, ProfileAccessRefusedError):
+                    try:
+                        if current is not None and self._password_rotation is not None:
+                            worker.settlement(
+                                self._password_rotation, timeout=max(0.001, min(5.0, deadline - time.monotonic()))
+                            )
+                    finally:
+                        worker.drain(deadline=deadline)
+            if not self.owner.wait_construction(deadline=deadline):
+                raise RuntimeShutdownIncompleteError()
+            self.owner.settle(deadline=deadline)
+            asyncio.run(self.authority.close())
+            return True
+        finally:
+            self._replacement_retirement_guard.release()
