@@ -193,6 +193,10 @@ matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to the Git commit cou
 The Windows preset scopes `TEMP`, `TMP` and `TMPDIR` to its build tree before
 compiler discovery and builds. The host embeds a long-path-aware Windows manifest
 so deeply nested product resources remain readable after Unicode/path relocation.
+Both hosts embed `interpreter/windows/host.manifest` directly as process resource
+1, including Windows 10 compatibility and `asInvoker` privileges. Linker manifest
+generation is disabled; a post-link check rejects any source/resource byte
+divergence before staging. ZIP acceptance also checks the reported Windows version.
 
 | Target | Operation |
 | --- | --- |

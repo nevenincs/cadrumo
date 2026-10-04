@@ -12,7 +12,7 @@ from cadrumo.core.storage_environment import storage_directory
 
 from ...command_execution import CommandResult, run_command
 from ..hashing import digest
-from ..verify import verification_destination
+from ..verification_paths import verification_destination
 
 PROBE = r"""
 import importlib, json, os, pathlib, subprocess, sys, tempfile

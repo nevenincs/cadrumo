@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3cf62a01fc5e425b62ed7886742b744b3379b5f698a8ba683209cdf247081afc'
+body_hash: 'sha256:13333be57ae6125e7264af911ed63e125524dacfe7ffb4f3b5fa35a59b53af1e'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -95,6 +95,20 @@ related:
 - `S10` `verify:` `CMake verify-package initial attempt verification_destination import failure` -> `fail`
 - `S10` `verify:` `Fresh process artifact_verify b1787 Windows major-version acceptance` -> `fail`
 - `S10` `verify:` `CMake-generated Rust Release probe against fresh b1787 ZIP extraction; CPython3.13.11 and80 exact distributions` -> `pass`
+- `S10` `M` `native/interpreter/windows/host.manifest`
+- `S10` `A` `native/interpreter/windows/host.rc`
+- `S10` `A` `dev/packaging/native/platforms/windows_manifest.py`
+- `S10` `A` `dev/packaging/native/verification_paths.py`
+- `S10` `M` `dev/packaging/native/verify.py`
+- `S10` `M` `dev/packaging/native/platforms/windows.py`
+- `S10` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S10` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S10` `verify:` `CMake Release python and python_d direct embedded manifest post-link checks` -> `pass`
+- `S10` `verify:` `New manifest guard rejects previous broken ZIP host` -> `pass`
+- `S10` `verify:` `pytest test_native_storage_environment_contract.py;2 tests` -> `pass`
+- `S10` `verify:` `Ruff check and format for six changed Python files` -> `pass`
+- `S10` `verify:` `Fresh process backend eagerly imports Windows verifier and leaf path helper` -> `pass`
+- `S10` `verify:` `CMake Release verify-package with development binary; Python native acceptance and Rust80distribution probe` -> `pass`
 
 ## Notes
 
@@ -118,3 +132,7 @@ related:
 - `S10` Concurrent shared-branch merge commits captured the implementation during verification; source remains intact. This checkpoint records verification without rewriting those commits. No registry source changes or validation bypass. Full S10/S11 remain open.
 - `S10` User-requested recheck: prior Modelo232 registry compiler blocker cleared; all three product wheels and ZIP built. Archive SHA256 d0d0769319e4c6294f2a7aef6fbbb30c5f0c33414bb2966beee09e2131ed039b; manifest SHA256 e799b11ca559c9dd6bb5e28246b2815e15019d89f0b34a7e0ab38270d9eb7ec1.
 - `S10` Initial harness import failed; retry in fresh process passed that point but native acceptance rejected packaged Windows version6.2.9200 versus `platform_version10.0.26100.` Source host.manifest fix5b8458ce7e predates this build. No full artifact pass; separate Rust probe passed with browser MissingDependency. No source edits or acceptance bypass; S10 remains open.
+- `S10` Root cause evidence: linker tlog included canonical host.manifest but PE resource1 omitted supportedOS while preserving longPathAware. Hosts now embed resource1 directly with MANIFEST:NO; explicit asInvoker preserves prior UAC behavior; post-link byte comparison enforces source/image identity.
+- `S10` Removed dispatcher-adapter dependency cycle by moving `verification_destination` to a leaf module and eagerly loading Windows verification with its backend. This removes the observed late-import seam; it is not a general guarantee against edits to a shared checkout.
+- `S10` Both staged hosts report10.0.26200. A diagnostic equality assertion against `platform_version10.0.26100` was overly strict; Python documents that kernel32.dll-derived `platform_version` can differ from the OS build. Production acceptance still requires major>=10 without modifying Python version reporting.
+- `S10` Fresh ZIP SHA256 8a2955ff026da1e565526ded6054a48cf3ca48643ab48e43522ee4db9f986d8d; manifest SHA256 7f56cc65a43a182eb638efc9ddafbc11d5916360adef15f3d0ea60dc2b2a0f57. Reports in build/windows-x64/application-cmake/verification/Release/result.json and verification.json. CPython3.13.11;80 exact distributions; browserMissingDependency. Independent focused review found no concrete defects. Four-target acceptance remains open.

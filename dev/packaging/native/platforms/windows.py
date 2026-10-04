@@ -19,6 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..hashing import digest
 from .pe import imports as pe_imports
+from .windows_verify import verify as windows_verify
 
 
 def assemble_native(python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]) -> dict[str, Any]:
@@ -209,8 +210,6 @@ END
 
 def verify(package: Path, *, destination: Path | None, product: bool, build_root: Path | None) -> None:
     """Run the Windows hostile-loader acceptance suite."""
-    from .windows_verify import verify as windows_verify
-
     windows_verify(package, destination=destination, product=product, build_root=build_root)
 
 

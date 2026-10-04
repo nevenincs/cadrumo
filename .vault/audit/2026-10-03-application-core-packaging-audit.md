@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5e83aaf1f78b82463852578384d0d5e95eec8b5e8c08bbd942289cd050fb804'
+body_hash: 'sha256:095c588e4ed7cca3d668b63d0162c411be82d4a1d16295bf2113b331ae9769e2'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -96,6 +96,16 @@ Reviewed the CMake-generated argv projection, existing artifact verifier and new
 ### zip-probe-final | low | Combined Python and Rust verification passes on the pinned ZIP
 
 The real artifact verifier passed existing Python relocation/native-library checks and the CMake-generated Rust command against one fresh extraction of the prior pinned Release ZIP. The Rust probe matched CPython 3.13.11 and all 80 distributions, returned MissingDependency for Playwright and preserved the original inventory. The result at build/windows-x64/application-cmake/archive-fixture/verification/Release/result.json records application_probe=passed with archive and manifest hashes. A final independent hash comparison confirms both original locator values. The final manifest-recheck assertion was added after the live process started; its failure behavior passed the real mutation regression and its success condition passed the post-run hash comparison. All changed Python files pass Ruff and formatting. Verdict: PASS for ZIP-bound probe integration; current-source package acceptance remains PENDING following the recorded authority compiler failure. Concurrent shared-branch commits captured the implementation; no merge history was rewritten.
+
+### host-manifest-divergence | low | PASS: direct resource embedding and fresh ZIP acceptance
+
+The previous linker command consumed the canonical host manifest but emitted resource 1 without its supportedOS section. Both Windows hosts now compile the manifest as resource 1 with linker manifest generation disabled; explicit asInvoker preserves the prior privilege contract. A post-link resource reader rejects any byte divergence. Both Release hosts passed, and the prior broken ZIP host was rejected. MSBuild resource dependency tracing names host.manifest.
+
+The dispatcher/adapter cycle was removed by moving verification_destination into a leaf module and loading Windows verification eagerly with the backend. Fresh-process imports and the existing two path/environment tests passed. This fixes the late-import seam, not arbitrary concurrent edits to a checkout. Independent focused review found no concrete defect; no duplicate expensive build was run.
+
+The complete CMake Release verify-package target passed with both production and development hosts included. The native report observes Windows 10.0.26200, unchanged package inventory, matched three-wheel cohort, and successful pre-secret worker readiness/refusal checks. Rust validated CPython 3.13.11 and all 80 distribution versions. Browser readiness is MissingDependency. Archive SHA256: 8a2955ff026da1e565526ded6054a48cf3ca48643ab48e43522ee4db9f986d8d; manifest SHA256: 7f56cc65a43a182eb638efc9ddafbc11d5916360adef15f3d0ea60dc2b2a0f57. Evidence: build/windows-x64/application-cmake/verification/Release/result.json and verification.json.
+
+An extra diagnostic initially asserted equality with platform_version 10.0.26100; this was an invalid expectation because that field derives from kernel32.dll and can differ from the OS build, as documented by [Python](https://docs.python.org/3/library/sys.html#sys.getwindowsversion). No production acceptance was weakened. Formatting/lint passed for all six changed Python files. Debug execution and four-target acceptance remain outside this corrective verification; S10/S11 remain open.
 
 ## Recommendations
 

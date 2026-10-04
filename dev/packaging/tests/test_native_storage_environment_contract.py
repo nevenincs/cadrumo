@@ -13,7 +13,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
 from dev.packaging.native.generate import generate
-from dev.packaging.native.verify import verification_destination
+from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

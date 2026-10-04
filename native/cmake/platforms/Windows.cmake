@@ -52,10 +52,20 @@ add_custom_target(rust_platform DEPENDS "${platform_static}" "${platform_import}
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/$<CONFIG>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/$<CONFIG>")
 set(CMAKE_PDB_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/symbols/$<CONFIG>")
-add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/host.manifest "${CONTRACT_DIR}/interpreter.rc")
+add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
 set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME "${production_name}")
-add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.manifest "${CONTRACT_DIR}/interpreter.rc")
+add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
 set_target_properties(cadrumo_python_d PROPERTIES OUTPUT_NAME "${development_name}")
+set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY OBJECT_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest")
+foreach(target cadrumo_python cadrumo_python_d)
+  target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows")
+  target_link_options(${target} PRIVATE /MANIFEST:NO)
+  add_custom_command(TARGET ${target} POST_BUILD
+    COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
+      "$<TARGET_FILE:${target}>" "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+endforeach()
 target_compile_definitions(cadrumo_python_d PRIVATE CADRUMO_DEVELOPMENT=1)
 target_compile_options(cadrumo_python_d PRIVATE /Od /Zi)
 target_link_options(cadrumo_python_d PRIVATE /DEBUG)
