@@ -9,10 +9,20 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.config import Settings
+from cadrumo.core.storage_environment import (
+    PROCESS_ENVIRONMENT,
+    STORAGE_ROOT,
+    StorageMode,
+    development_tool_env_var_names,
+    product_env_var_names,
+    storage_root_vectors,
+)
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
+from dev.packaging.native import generate as generator_module
 from dev.packaging.native.generate import generate
+from dev.packaging.native.layout import load_layout
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -29,6 +39,8 @@ def test_native_storage_allowlist_tracks_settings_taxonomy_and_tool_paths(tmp_pa
     observed = tuple(re.findall(r'"([^"]+)"', rust_values))
     expected = tuple(sorted(Settings.storage_env_var_names()))
     assert observed == expected == tuple(contract["storage_environment_allowlist"])
+    assert expected == tuple(sorted(product_env_var_names()))
+    assert not set(observed) & development_tool_env_var_names()
     assert "CADRUMO_STRICT_SECURITY" not in observed
 
     temporary = STORAGE_TAXONOMY[StorageCategory.TEMPORARY_FILES]
@@ -55,3 +67,93 @@ def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Pat
     assert explicit_absolute == tmp_path / "external-package"
     with pytest.raises(ValueError, match="CADRUMO_NATIVE_BUILD_ROOT"):
         verification_destination(Path("../outside"), build_root)
+
+
+def _rust_strings(generated: str, constant: str) -> list[str]:
+    line = next(line for line in generated.splitlines() if line.startswith(f"pub const {constant}:"))
+    return [match.group(1) for match in re.finditer(r'"([^"]*)"', line.partition("= ")[2])]
+
+
+def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path)
+    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+
+    assert contract["schema"] == 1
+    assert "#define CADRUMO_CONTRACT_SCHEMA 1" in (tmp_path / "contract.h").read_text(encoding="utf-8")
+    root = contract["root"]
+    assert root["variable"] == STORAGE_ROOT.variable
+    assert root["precedence"] == {
+        "development": [STORAGE_ROOT.variable, STORAGE_ROOT.development_variable],
+        "installed": [STORAGE_ROOT.variable],
+    }
+    assert root["development_default"] == Path(*STORAGE_ROOT.development_default).as_posix()
+    assert root["relative_override"] == {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode}
+    assert {rule["platform"] for rule in root["installed_defaults"]} == {"windows", "linux", "macos"}
+    windows = next(rule for rule in root["installed_defaults"] if rule["platform"] == "windows")
+    assert windows["candidates"] == [{"variable": "LOCALAPPDATA", "subpath": []}]
+
+    locations = {entry["category"]: entry for entry in contract["locations"]}
+    assert set(locations) == {category.value for category in STORAGE_TAXONOMY}
+    for category, location in STORAGE_TAXONOMY.items():
+        entry = locations[category.value]
+        assert entry["subpath"] == location.subpath
+        expected_variable = None if location.settings_field is None else location.settings_field.upper()
+        assert entry["variable"] == expected_variable
+        assert entry["override_policy"] == location.override_policy.value
+
+    environment = contract["environment"]
+    assert environment["pinned"] == [STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables]
+    assert environment["allowlist"]["product"] == sorted(product_env_var_names())
+    assert environment["allowlist"]["development"] == sorted(development_tool_env_var_names())
+    assert not set(environment["allowlist"]["product"]) & set(environment["allowlist"]["development"])
+    assert environment["profiles"] == {
+        "operator": {"passes_product_allowlist": True},
+        "strict": {"passes_product_allowlist": False},
+    }
+    layout = load_layout()
+    assert contract["mode"] == {
+        "package_manifest": layout["files"]["package_manifest"],
+        "package_root_from_executable": layout["package_root_from_executable"],
+        "checkout_marker": STORAGE_ROOT.checkout_marker,
+    }
+    assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors()]
+    assert len(contract["vectors"]) >= 1
+
+    # contract.rs carries the same data from the same run.
+    assert _rust_strings(generated, "ROOT_VARIABLE") == [STORAGE_ROOT.variable]
+    assert _rust_strings(generated, "INSTALLED_ROOT_PRECEDENCE") == root["precedence"]["installed"]
+    assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
+    assert _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST") == environment["allowlist"]["product"]
+    assert _rust_strings(generated, "MODE_PACKAGE_MANIFEST") == [contract["mode"]["package_manifest"]]
+    rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', generated)
+    assert rust_vectors == [vector["name"] for vector in contract["vectors"]]
+
+
+def test_packaged_contract_carries_no_development_tool_location_beyond_the_interim_cache_pin(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path)
+    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    leaked = {name for name in development_tool_env_var_names() if f'"{name}"' in generated}
+    # The platform crate still pins the pywin32 generated cache through this one
+    # development location until it consumes a contract-declared successor.
+    assert leaked == {"CADRUMO_TOOL_CACHE_DIR"}
+
+
+_ENVIRONMENT_NAME = re.compile(r"[A-Z][A-Z0-9_]+")
+
+
+def _location_variable_names() -> frozenset[str]:
+    taxonomy = {location.settings_field.upper() for location in STORAGE_TAXONOMY.values() if location.settings_field}
+    return frozenset({*STORAGE_ROOT.precedence, *taxonomy, *product_env_var_names(), *development_tool_env_var_names()})
+
+
+def _spelled_location_names(source: str) -> set[str]:
+    return set(_ENVIRONMENT_NAME.findall(source)) & _location_variable_names()
+
+
+def test_generator_spells_no_location_variable_name() -> None:
+    planted = 'strings = {"STORAGE_ENV": "CADRUMO_LOCAL_STORAGE_ROOT"}'
+    assert _spelled_location_names(planted) == {"CADRUMO_LOCAL_STORAGE_ROOT"}
+    source = Path(generator_module.__file__).read_text(encoding="utf-8")
+    assert _spelled_location_names(source) == set()
+    assert "var/storage" not in source

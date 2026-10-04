@@ -62,7 +62,6 @@ from .resources.bundled_data import bundled_path
 from .storage_environment import (
     STORAGE_ROOT,
     configured_root_value,
-    development_tool_env_var_names,
     product_env_var_names,
     storage_mode,
     storage_root_override,
@@ -1033,9 +1032,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     def storage_env_var_names(cls) -> frozenset[str]:
         """Return path controls safe to carry across isolated process launch boundaries.
 
-        The product allowlist plus the development tool refinements.
+        This is the product allowlist: both root variables and the settings field
+        of every operator-overridable taxonomy member. Development tool locations
+        are not product controls; ``dev/`` reads them from
+        :func:`~cadrumo.core.storage_environment.development_tool_env_var_names`.
         """
-        return product_env_var_names() | development_tool_env_var_names()
+        return product_env_var_names()
 
     @staticmethod
     def external_constants() -> ExternalConstants:

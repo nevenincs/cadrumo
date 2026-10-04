@@ -31,13 +31,14 @@ string(JSON package_manifest GET "${package_layout}" files package_manifest)
 set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
 file(GLOB settings_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/cadrumo/core/config*.py"
   "${PROJECT_SOURCE_DIR}/src/cadrumo/core/storage*.py" "${PROJECT_SOURCE_DIR}/src/cadrumo/core/product_identity.py")
-add_custom_command(OUTPUT "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h"
+add_custom_command(OUTPUT "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.generate "${CONTRACT_DIR}"
   DEPENDS ${settings_inputs} ${contract_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/generate.py"
     "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version" "${PROJECT_SOURCE_DIR}/.python-version"
     "${CADRUMO_BUILD_HELPER}"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(native_contract DEPENDS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
+add_custom_target(native_contract DEPENDS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h"
+  "${CONTRACT_DIR}/contract.json")
 add_custom_command(OUTPUT "${CADRUMO_PATH_RUNTIME}/ready"
   COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"

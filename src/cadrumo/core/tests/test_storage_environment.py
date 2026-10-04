@@ -141,8 +141,7 @@ def test_allowlist_split_separates_product_controls_from_development_tools() -> 
     assert "CADRUMO_TOOL_CACHE_DIR" in development
     assert not product & development
     assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
-    # The launch allowlist narrows to the product set together with the native contract generator.
-    assert Settings.storage_env_var_names() == product | development
+    assert Settings.storage_env_var_names() == product
 
 
 def test_desktop_webview_member_defaults_beneath_the_root_and_follows_its_setting(tmp_path: Path) -> None:
