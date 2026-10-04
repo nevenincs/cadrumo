@@ -49,6 +49,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.notification_documents import notification_document_repository
+from ...adapters.persistence.profile.own_accounts import OwnAccountRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.tests.cross_period_seeding import (
     SEEDED_SOURCE_TAX_ID,
@@ -180,6 +181,7 @@ from ...application.ledger.llm_classification import reject_llm_suggestion
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from ...application.ledger.merge_operation import LedgerMergeOperationResult, LedgerMergeRequest
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, SplitChildCommand
+from ...application.ledger.own_account_operation import LedgerOwnAccountRequest, LedgerOwnAccountResult
 from ...application.ledger.participation_operation import (
     LedgerParticipationProjection as LedgerParticipationLookupProjection,
 )
@@ -451,6 +453,7 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSta
 from ...domain.notifications.sancion import SancionLiquidacion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.own_accounts import OwnAccountHolding
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -543,6 +546,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "s45-registered-executor-passphrase"
 _ROTATED_CREDENTIAL_INPUT = "s45-registered-executor-rotated-passphrase"
 _LEDGER_LIST_PRIVATE_FILTER_SENTINEL = "private-ledger-list-filter-sentinel-6d7c"
+_OWN_ACCOUNT_SYNTHETIC_IBAN = "ES9121000418450200051332"
 
 
 def _registered_definition_ids() -> tuple[str, ...]:
@@ -1108,6 +1112,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.counterparty",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.own_account",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("ledger.own_account",),
         ),
         RegisteredExecutorConformanceCase(
             "ledger.remove", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.remove",)
@@ -2921,6 +2931,15 @@ def _payload(
                 "territorial_scope": "es_canarias",
                 "asserted_by": "operator:registered-executor-conformance",
                 "note": "synthetic supervisor conformance assertion",
+            }
+        case "ledger.own_account":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "action": "add",
+                "label": "synthetic conformance account",
+                "holding": OwnAccountHolding.TITULAR,
+                "iban": _OWN_ACCOUNT_SYNTHETIC_IBAN,
             }
         case "ledger.remove":
             ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
@@ -5051,6 +5070,25 @@ def _run_registered_executor_conformance_case(
             assert persisted.territorial_scope is not None
             assert persisted.territorial_scope.value == result.facts.territorial_scope
             assert persisted.asserted_by == payload.asserted_by
+        if case.definition_id == "ledger.own_account":
+            assert isinstance(payload, LedgerOwnAccountRequest)
+            result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerOwnAccountResult,
+            )
+            assert isinstance(result, LedgerOwnAccountResult)
+            assert result.profile_id == profile_id
+            assert result.action == "add"
+            assert result.changed is True
+            assert result.own_account_id == "acc-01"
+            assert [account.masked_iban for account in result.accounts] == ["ES \u00b7\u00b7\u00b7\u00b7 1332"]
+            assert _OWN_ACCOUNT_SYNTHETIC_IBAN[4:-4] not in result.model_dump_json()
+            persisted = OwnAccountRepository(bucket_id=str(profile_id)).load()
+            assert [account.iban for account in persisted.accounts] == [_OWN_ACCOUNT_SYNTHETIC_IBAN]
         if case.definition_id == "ledger.remove":
             assert isinstance(payload, LedgerRemoveRequest)
             removal = _resolve_result_projection(

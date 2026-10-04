@@ -286,7 +286,7 @@ class OwnAccountRegister(BaseModel):
         for account in self.accounts:
             if account.own_account_id == own_account_id:
                 return account
-        raise OwnAccountRegisterError(f"own account {own_account_id!r} is not registered")
+        raise OwnAccountRegisterValidationError(f"own account {own_account_id!r} is not registered")
 
     def designated(self, role: OwnAccountRole, modelo: Modelo) -> OwnBankAccount | None:
         """Resolve ``role`` for ``modelo``: its scoped designation, else the ALL one, else ``None``."""
@@ -343,7 +343,7 @@ class OwnAccountRegister(BaseModel):
         key = (role, None if modelo is None else modelo.value)
         kept = tuple(existing for existing in self.designations if existing.key != key)
         if len(kept) == len(self.designations):
-            raise OwnAccountRegisterError("no designation exists for that role and scope")
+            raise OwnAccountRegisterValidationError("no designation exists for that role and scope")
         return self._replace(designations=kept)
 
     def _replace(

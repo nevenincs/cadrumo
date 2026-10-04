@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:f8da3e7ca25aa47240664a27b141db41b4afeb05d33d6aef7b146190423ba9e5'
+body_hash: 'sha256:bb6c2b9194d3103d3c66d3a3e59ff767f6b3d18b463c6a88784bd6bf57d99a2f'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -39,7 +39,7 @@ Delivers the ledger-owned own bank account entity, its encrypted register with r
 
 - [x] `P01.S01` - add the OwnBankAccount, designation and OwnAccountRegister domain types with ordinal ids, IBAN, BIC and bank-block validation and unit tests; `src/cadrumo/domain/transactions/own_accounts.py (new)`.
 - [x] `P01.S02` - register the cadrumo.ledger.own_accounts FINANCIAL namespace and the revision-guarded OwnAccountRepository on the secure-model-document kernel, with encrypted round-trip and no-plaintext tests; `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, src/cadrumo/adapters/persistence/profile/own_accounts.py (new)`.
-- [ ] `P01.S03` - add registered ledger operations to add, list, show, update, close and designate own accounts with masked projections and refusal of deleting a referenced account; `src/cadrumo/application/ledger/, src/cadrumo/entrypoints/operation_composition.py`.
+- [x] `P01.S03` - add registered ledger operations to add, list, show, update, close and designate own accounts with masked projections and refusal of deleting a referenced account; `src/cadrumo/application/ledger/, src/cadrumo/entrypoints/operation_composition.py`.
 - [ ] `P01.S04` - add the app ledger account CLI fragment with IBAN and bank fields read through the secret input channel and locale keys in all four languages; `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py, new account command spec module, src/cadrumo/locales/*/cli.yml`.
 
 ### Phase `P02` - transaction account link and import repairs

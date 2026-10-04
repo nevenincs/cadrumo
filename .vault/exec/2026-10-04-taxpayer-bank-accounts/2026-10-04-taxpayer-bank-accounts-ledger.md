@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9279e98cb3d303147099ab360e58e3f7991623e6b7dd35400af7e64e46847e4b'
+body_hash: 'sha256:b6832129e10c8839162347c17f48098dbf1dad9b4c633c4171b8872be6993c4c'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -119,6 +119,18 @@ related:
 - `S05` `verify:` `pytest src/cadrumo/domain/transactions` -> `pass`
 - `S05` `verify:` `ruff check and format on touched files` -> `pass`
 - `S05` `by:` `vaultspec-standard-executor`
+- `S03` `A` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S03` `A` `src/cadrumo/application/ledger/own_account_ports.py`
+- `S03` `A` `src/cadrumo/application/ledger/tests/test_own_account_operation.py`
+- `S03` `M` `src/cadrumo/domain/transactions/own_accounts.py`
+- `S03` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S03` `verify:` `pytest test_own_account_operation.py test_own_accounts.py` -> `pass`
+- `S03` `verify:` `pytest test_registered_executor_conformance.py -k ledger.own_account and census` -> `pass`
+- `S03` `verify:` `pytest application/ledger/tests domain/transactions/tests` -> `pass`
+- `S03` `verify:` `ruff check and format on touched files` -> `pass`
+- `S03` `verify:` `ty pyrefly basedpyright on touched modules` -> `pass`
+- `S03` `by:` `lane-a`
 
 ## Notes
 
@@ -127,3 +139,4 @@ related:
 - `S08` `docs/_sequences` import-provider-list golden not refreshed: dev.docs.sequences refresh fails in registry composition on Lane A in-flight `own_account_operation;` refresh pending
 - `S14` the 360 export test hunk for S14 was swept into commit 6bcf868788 by the page-marker session before this Step's code landed
 - `S14` docs goldens how-to/modelo-100 and modelo-349 recorded the fabricated I disposition and need a refresh after the authority is republished
+- `S03` ty on `operation_composition.py` reports one missing-argument diagnostic from Lane B's uncommitted import-ports change, not this Step.

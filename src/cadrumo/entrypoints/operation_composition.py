@@ -252,6 +252,11 @@ from ..application.ledger.operator_iva_operation import (
     build_ledger_operator_iva_definition,
     build_ledger_operator_iva_registration,
 )
+from ..application.ledger.own_account_operation import (
+    build_ledger_own_account_definition,
+    build_ledger_own_account_registration,
+)
+from ..application.ledger.own_account_ports import OwnAccountRepositoryFactory
 from ..application.ledger.participation_operation import (
     build_ledger_participation_definition,
     build_ledger_participation_registration,
@@ -1009,6 +1014,7 @@ def build_production_operation_registry(
     ledger_action_ports_factory: LedgerActionPortsFactory = compose_ledger_action_ports,
     ledger_rule_repository_factory: LedgerClassificationRuleRepositoryFactory = LedgerClassificationRuleRepository,
     counterparty_repository_factory: CounterpartyEstablishmentRepositoryFactory | None = None,
+    own_account_repository_factory: OwnAccountRepositoryFactory | None = None,
     ledger_participation_repository_factory: TransactionParticipationIndexRepositoryFactory = (
         TransactionParticipationIndexRepository
     ),
@@ -1457,6 +1463,11 @@ def build_production_operation_registry(
 
         counterparty_repository_factory = build_counterparty_establishment_repository
     ledger_counterparty_definition = build_ledger_counterparty_definition(counterparty_repository_factory)
+    if own_account_repository_factory is None:
+        from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
+
+        own_account_repository_factory = OwnAccountRepository
+    ledger_own_account_definition = build_ledger_own_account_definition(own_account_repository_factory)
     ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
     ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)
     ledger_review_definition = build_ledger_review_definition(ledger_action_ports_factory)
@@ -1670,6 +1681,7 @@ def build_production_operation_registry(
                 ledger_remove_definition,
                 ledger_reset_definition,
                 ledger_counterparty_definition,
+                ledger_own_account_definition,
                 ledger_check_definition,
                 ledger_preflight_definition,
                 ledger_review_definition,
@@ -1874,6 +1886,7 @@ def build_production_operation_registry(
                 build_ledger_remove_registration(ledger_remove_definition),
                 build_ledger_reset_registration(ledger_reset_definition),
                 build_ledger_counterparty_registration(ledger_counterparty_definition),
+                build_ledger_own_account_registration(ledger_own_account_definition),
                 build_ledger_check_registration(ledger_check_definition),
                 build_ledger_preflight_registration(ledger_preflight_definition),
                 build_ledger_review_registration(ledger_review_definition),
