@@ -19,7 +19,7 @@ from cadrumo.tests.module_target_inventory import (
     compile_inventory,
     load_all_target_sets,
 )
-from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 from dev.packaging.command_execution import run_command
 

@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.config import load_settings
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
@@ -39,9 +39,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 
 
-def test_the_default_verdict_store_is_checkout_local_outside_the_application_storage_root() -> None:
+def test_the_default_verdict_store_is_in_the_configured_development_cache_bucket() -> None:
+    """Without cache overrides, derived output follows the configured storage root."""
     with scoped_env_var(_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, None):
-        assert default_verdict_cache_dir() == REPO_ROOT / ".cache" / "registry-verdict"
+        storage_root = load_settings().cadrumo_local_storage_root
+        assert default_verdict_cache_dir() == storage_root / "development" / "cache" / "registry-verdict"
 
 
 def test_the_shared_cache_root_relocates_the_verdict_store(tmp_path: Path) -> None:
@@ -52,7 +54,10 @@ def test_the_shared_cache_root_relocates_the_verdict_store(tmp_path: Path) -> No
 
 def test_an_explicit_verdict_store_wins_and_holds_the_verdict_file(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
-    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
+    with (
+        scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")),
+        scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "shared-caches")),
+    ):
         path = verdict_cache_path(root)
     assert path.parent == tmp_path / "verdicts"
     assert path.name.startswith("cadrumo_validation_verdict_")

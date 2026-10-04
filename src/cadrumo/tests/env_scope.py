@@ -45,7 +45,6 @@ from pydantic_settings import SettingsConfigDict
 from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, reset_settings_cache, settings_override
 from ..core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, OutputLanguage
-from ..core.storage_environment import prepare_temporary_directory
 from ..core.i18n.render import clear_output_language_cache
 from ..core.storage_environment import prepare_temporary_directory
 from .collection_storage_root import SETTINGS_STEM

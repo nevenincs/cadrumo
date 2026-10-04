@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:50f93d1801c283c78ec735a2e93737b6ddeaec7cc7d291b6a7c45dba72d40e8a'
+body_hash: 'sha256:3656169b8c88c2c7599fdf3ce0657e90357d464fa737f539c9d71dae1e567931'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3503,6 +3503,10 @@ related:
 - `S05` `A` `dev/packaging/tests/test_native_installation_windows.py`
 - `S05` `A` `.codex/handoffs/tui-all-mcp-native-installation-ownership-repairs.json`
 - `S05` `verify:` `native exact-file ownership:39Windows PASS/2POSIXonly skips;33WSL PASS/0skip;5sourcefiles Ruff/format/ty PASS` -> `pass`
+- `S05` `M` `dev/registry/tests/test_validation_verdict_location.py`
+- `S05` `M` `dev/registry/compiler/verdict_cache.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-66-quality-repairs.json`
+- `S05` `verify:` `17source corrective paths:scoped Ruff/format/ty PASS;invoice4 PASS;cache14 PASS;importowner27 PASS` -> `pass`
 
 ## Notes
 
@@ -3521,3 +3525,4 @@ related:
 - `S05` Carry exact immutable efb16path committed native layout/installation intent after53f semantic baseline. Native staging/uninstall static findings remain assigned corrections in disjoint owned Windows/POSIX modules and are intentionally not captured midway in this source-baseline commit. No native install/uninstall or globalgreen claim. Actual staged immutable bytes pinned independently from ongoing working edits. Next captured66 product/registry/catalogue reconciliation is disjoint from native paths and may proceed in parallel; generation waits for interpreting closure. No other worktree/index changed or landing performed.
 - `S05` Actual merge of preserved66b785 snapshot against originalbaseefb85 and currentf39. Two semantic product conflicts resolved preserving current public defining helpers, blank-page producer and source-backed independent610byte success oracle. Original248 path dispositions recorded; six transient coordination locks deliberately excluded with explicit replacement rationale. Registry generators own generated changes; All20 affected canonical targets CURRENT and all58modelos/160revisions validation/runtime-load/integrity pass. Each prior nine bootstrap artifact has fresh owner proof; remainingM190testprocess verification is fixture deletion budget after assertions passed, separately pending runner600s replay. Defining M232 bridge moves atomically to `generated_form_bridge` and keeps originalpins, adding source-reviewedM190 companion form repair; M347typedrepeat mappings restored without replacing alreadycurrent generatedoutput. Current native staging/exact-file ownership repairs and six inventory refreshes are intentionally held for a separate coherent follow-up commit; global/native/E2E evidence remains pending. Capture is a recorded time window; active destination writer/index untouched. No landing or finalgreen claim.
 - `S05` Follow-up to immutable efb16 distribution baseline f39 and reconciled66 merge8be18: preserve/refuse occupied foreign stage trees and protect uninstall identity at destructive operations, Windows retained delete-authorizing handles and POSIX anchored no-replace claims. Tests exercise foreign occupants and interleavings. Retain manifest last/unowned entries. POSIX already-open writers remain outside byteCAS and multi-file uninstall is not atomic. Regenerate configured inventories through owning generators for final source additions and defining bridge move. Current installed ZIP/Desktop/native lifecycle proof remains pending.
+- `S05` Remove duplicate/nondefining imports preserving function/class AST. Restore three original current M347 invoice request fields consumed by unchanged operation and TUI. Keep cache test declaration consistent with independently configured storage owner. The three registry snapshot type-narrowing repairs are recorded in66registry merge, not omitted. Configured12 aggregate and portable226 acceptance are running; no finalgreen claim. Nativecode/metadata corrections separately committed.

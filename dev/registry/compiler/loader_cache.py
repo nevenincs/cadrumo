@@ -32,15 +32,12 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
     scan_directory,
 )
 from cadrumo.core.hashing import blake2b_hex
-from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.toml import read_toml

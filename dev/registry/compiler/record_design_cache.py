@@ -19,8 +19,6 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
-
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
