@@ -263,7 +263,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         register,
                         walk_timeout_ms=settings.cadrumo_live_filed_register_walk_timeout_ms,
                     )
-        except (LiveApplicationError, ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_open", exc) from exc
@@ -298,7 +304,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         playwright=playwright,
                     ),
                 )
-        except (LiveApplicationError, ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_discovery", exc) from exc
