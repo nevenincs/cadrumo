@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:1
 msgid "IVA compensation carry-forward and filing receipts"
-msgstr ""
+msgstr "IVA-kompenzáció továbbvitele és bevallási bizonylatok"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-145` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-145` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:10
 msgid "Scope"
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:16
 msgid ""
@@ -307,55 +309,69 @@ msgid ""
 "iva_compensation/__init__.py "
 "(`src/cadrumo/domain/iva_compensation/__init__.py`)"
 msgstr ""
+"iva_compensation/__init__.py "
+"(`src/cadrumo/domain/iva_compensation/__init__.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:57
 msgid ""
 "iva_compensation/balance.py "
 "(`src/cadrumo/domain/iva_compensation/balance.py`)"
 msgstr ""
+"iva_compensation/balance.py "
+"(`src/cadrumo/domain/iva_compensation/balance.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:58
 msgid ""
 "iva_compensation/carry_forward.py "
 "(`src/cadrumo/domain/iva_compensation/carry_forward.py`)"
 msgstr ""
+"iva_compensation/carry_forward.py "
+"(`src/cadrumo/domain/iva_compensation/carry_forward.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:59
 msgid ""
 "iva_compensation/carry_window.py "
 "(`src/cadrumo/domain/iva_compensation/carry_window.py`)"
 msgstr ""
+"iva_compensation/carry_window.py "
+"(`src/cadrumo/domain/iva_compensation/carry_window.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:60
 msgid ""
 "iva_compensation/errors.py "
 "(`src/cadrumo/domain/iva_compensation/errors.py`)"
 msgstr ""
+"iva_compensation/errors.py "
+"(`src/cadrumo/domain/iva_compensation/errors.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:61
 msgid ""
 "iva_compensation/filed_derivation.py "
 "(`src/cadrumo/domain/iva_compensation/filed_derivation.py`)"
 msgstr ""
+"iva_compensation/filed_derivation.py "
+"(`src/cadrumo/domain/iva_compensation/filed_derivation.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:62
 msgid ""
 "iva_compensation/reconciliation.py "
 "(`src/cadrumo/domain/iva_compensation/reconciliation.py`)"
 msgstr ""
+"iva_compensation/reconciliation.py "
+"(`src/cadrumo/domain/iva_compensation/reconciliation.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:63
 msgid "justificante/__init__.py (`src/cadrumo/domain/justificante/__init__.py`)"
-msgstr ""
+msgstr "justificante/__init__.py (`src/cadrumo/domain/justificante/__init__.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:64
 msgid "justificante/errors.py (`src/cadrumo/domain/justificante/errors.py`)"
-msgstr ""
+msgstr "justificante/errors.py (`src/cadrumo/domain/justificante/errors.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:65
 msgid "justificante/protocols.py (`src/cadrumo/domain/justificante/protocols.py`)"
-msgstr ""
+msgstr "justificante/protocols.py (`src/cadrumo/domain/justificante/protocols.py`)"
 
 #: ../../technical/articles/145-iva-compensation-carry-forward-and-filing-receipts.md:66
 msgid "justificante/schema.py (`src/cadrumo/domain/justificante/schema.py`)"
-msgstr ""
+msgstr "justificante/schema.py (`src/cadrumo/domain/justificante/schema.py`)"

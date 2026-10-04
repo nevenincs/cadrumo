@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:1
 msgid "Calculation findings, reports, and PDF verification"
-msgstr ""
+msgstr "Számítási megállapítások, jelentések és PDF-ellenőrzés"
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-071` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:10
 msgid "Scope"
@@ -225,7 +228,7 @@ msgstr ""
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:30
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:32
 msgid ""
@@ -281,6 +284,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_note_gate.py`) — lines "
 "1–119, fully read."
 msgstr ""
+"calculation_note_gate.py "
+"(`src/cadrumo/application/modelo/calculation_note_gate.py`) — 1–119,. sor"
+" teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:41
 msgid ""
@@ -288,6 +294,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_notes.py`) — lines 1–265, "
 "fully read."
 msgstr ""
+"calculation_notes.py "
+"(`src/cadrumo/application/modelo/calculation_notes.py`) — 1–265,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:42
 msgid ""
@@ -295,6 +304,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_projection.py`) — lines "
 "1–294, fully read."
 msgstr ""
+"calculation_projection.py "
+"(`src/cadrumo/application/modelo/calculation_projection.py`) — 1–294,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:43
 msgid ""
@@ -302,6 +314,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_publication.py`) — lines "
 "1–30, fully read."
 msgstr ""
+"calculation_publication.py "
+"(`src/cadrumo/application/modelo/calculation_publication.py`) — 1–30,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:44
 msgid ""
@@ -309,6 +324,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report.py`) — lines 1–580, "
 "fully read."
 msgstr ""
+"calculation_report.py "
+"(`src/cadrumo/application/modelo/calculation_report.py`) — 1–580,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:45
 msgid ""
@@ -316,6 +334,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_certification.py`) — "
 "lines 1–412, fully read."
 msgstr ""
+"calculation_report_certification.py "
+"(`src/cadrumo/application/modelo/calculation_report_certification.py`) — "
+"1–412,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:46
 msgid ""
@@ -323,6 +344,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_document.py`) — lines"
 " 1–402, fully read."
 msgstr ""
+"calculation_report_document.py "
+"(`src/cadrumo/application/modelo/calculation_report_document.py`) — "
+"1–402,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:47
 msgid ""
@@ -330,6 +354,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_export.py`) — lines "
 "1–457, fully read."
 msgstr ""
+"calculation_report_export.py "
+"(`src/cadrumo/application/modelo/calculation_report_export.py`) — 1–457,."
+" sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:48
 msgid ""
@@ -337,6 +364,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_provenance_key.py`) —"
 " lines 1–169, fully read."
 msgstr ""
+"calculation_report_provenance_key.py "
+"(`src/cadrumo/application/modelo/calculation_report_provenance_key.py`) —"
+" 1–169,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:49
 msgid ""
@@ -344,6 +374,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_verification.py`) — "
 "lines 1–782, fully read."
 msgstr ""
+"calculation_report_verification.py "
+"(`src/cadrumo/application/modelo/calculation_report_verification.py`) — "
+"1–782,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:50
 msgid ""
@@ -351,6 +384,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_report_verification_operation.py`)"
 " — lines 1–309, fully read."
 msgstr ""
+"calculation_report_verification_operation.py "
+"(`src/cadrumo/application/modelo/calculation_report_verification_operation.py`)"
+" — 1–309,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:51
 msgid ""
@@ -358,6 +394,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_repository.py`) — lines "
 "1–59, fully read."
 msgstr ""
+"calculation_repository.py "
+"(`src/cadrumo/application/modelo/calculation_repository.py`) — 1–59,. sor"
+" teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:52
 msgid ""
@@ -365,6 +404,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_request_fields.py`) — lines "
 "1–124, fully read."
 msgstr ""
+"calculation_request_fields.py "
+"(`src/cadrumo/application/modelo/calculation_request_fields.py`) — "
+"1–124,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:53
 msgid ""
@@ -372,6 +414,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_resolution.py`) — lines "
 "1–396, fully read."
 msgstr ""
+"calculation_resolution.py "
+"(`src/cadrumo/application/modelo/calculation_resolution.py`) — 1–396,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:54
 msgid ""
@@ -379,6 +424,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_revision_gate.py`) — lines "
 "1–42, fully read."
 msgstr ""
+"calculation_revision_gate.py "
+"(`src/cadrumo/application/modelo/calculation_revision_gate.py`) — 1–42,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:55
 msgid ""
@@ -386,6 +434,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_route.py`) — lines 1–410, "
 "fully read."
 msgstr ""
+"calculation_route.py "
+"(`src/cadrumo/application/modelo/calculation_route.py`) — 1–410,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:56
 msgid ""
@@ -393,6 +444,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_source_policy.py`) — lines "
 "1–42, fully read."
 msgstr ""
+"calculation_source_policy.py "
+"(`src/cadrumo/application/modelo/calculation_source_policy.py`) — 1–42,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/071-calculation-findings-reports-and-pdf-verification.md:57
 msgid ""
@@ -400,3 +454,6 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_summary_pdf_ports.py`) — "
 "lines 1–179, fully read."
 msgstr ""
+"calculation_summary_pdf_ports.py "
+"(`src/cadrumo/application/modelo/calculation_summary_pdf_ports.py`) — "
+"1–179,. sor teljes egészében elolvasva."

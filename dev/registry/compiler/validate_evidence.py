@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
+from dev._paths import REPO_ROOT
+
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text

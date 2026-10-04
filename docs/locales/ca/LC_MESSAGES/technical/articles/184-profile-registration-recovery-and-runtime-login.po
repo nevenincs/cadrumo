@@ -46,6 +46,9 @@ msgid ""
 "**Report:** `STAGE-2-184` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-184` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:10
 msgid "Scope"
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:14
 msgid "Product capabilities and flow"
-msgstr ""
+msgstr "Capacitats del producte i flux"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:16
 msgid ""
@@ -158,7 +161,7 @@ msgstr ""
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:28
 msgid "Knowledge, data and trust boundaries"
-msgstr ""
+msgstr "Coneixement, dades i límits de confiança"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:30
 msgid ""
@@ -176,7 +179,7 @@ msgstr ""
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:34
 msgid ""
@@ -246,9 +249,13 @@ msgid ""
 "secret/registration.py "
 "(`src/cadrumo/entrypoints/tui/secret/registration.py`) — 935 lines"
 msgstr ""
+"secret/registration.py "
+"(`src/cadrumo/entrypoints/tui/secret/registration.py`) — 935 línies"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:47
 msgid ""
 "secret/runtime_login.py "
 "(`src/cadrumo/entrypoints/tui/secret/runtime_login.py`) — 714 lines"
 msgstr ""
+"secret/runtime_login.py "
+"(`src/cadrumo/entrypoints/tui/secret/runtime_login.py`) — 714 línies"

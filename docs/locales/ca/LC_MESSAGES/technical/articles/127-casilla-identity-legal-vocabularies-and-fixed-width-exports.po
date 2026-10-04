@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:1
 msgid "Casilla identity, legal vocabularies, and fixed-width exports"
-msgstr ""
+msgstr "Identitat de caselles, vocabularis legals i exportacions d’amplada fixa"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-127` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-127` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:14
 msgid "Casilla identity and edition boundaries"
-msgstr ""
+msgstr "Identitat de caselles i límits d'edició"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:16
 msgid ""
@@ -101,7 +103,7 @@ msgstr ""
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:20
 msgid "Governed facts and domain catalogues"
-msgstr ""
+msgstr "Fets governats i catàlegs del domini"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:22
 msgid ""
@@ -189,7 +191,7 @@ msgstr ""
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:30
 msgid "Filing rows and export wire behavior"
-msgstr ""
+msgstr "Files de presentació i comportament del format d'exportació"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:32
 msgid ""
@@ -256,7 +258,7 @@ msgstr ""
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:38
 msgid "Trust, errors and implementation limits"
-msgstr ""
+msgstr "Confiança, errors i límits d'implementació"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:40
 msgid ""
@@ -306,6 +308,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/casilla_membership.py`) — "
 "1–200"
 msgstr ""
+"registry/casilla_membership.py "
+"(`src/cadrumo/domain/calculations/registry/casilla_membership.py`) — "
+"1–200"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:49
 msgid ""
@@ -313,18 +318,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/casilla_structural_succession.py`)"
 " — 1–362"
 msgstr ""
+"registry/casilla_structural_succession.py "
+"(`src/cadrumo/domain/calculations/registry/casilla_structural_succession.py`)"
+" — 1–362"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:50
 msgid ""
 "registry/ccaa_catalogue.py "
 "(`src/cadrumo/domain/calculations/registry/ccaa_catalogue.py`) — 1–294"
 msgstr ""
+"registry/ccaa_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/ccaa_catalogue.py`) — 1–294"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:51
 msgid ""
 "registry/censo_modelos.py "
 "(`src/cadrumo/domain/calculations/registry/censo_modelos.py`) — 1–347"
 msgstr ""
+"registry/censo_modelos.py "
+"(`src/cadrumo/domain/calculations/registry/censo_modelos.py`) — 1–347"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:52
 msgid ""
@@ -332,6 +344,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/checker_oracle_flow.py`) — "
 "1–70"
 msgstr ""
+"registry/checker_oracle_flow.py "
+"(`src/cadrumo/domain/calculations/registry/checker_oracle_flow.py`) — "
+"1–70"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:53
 msgid ""
@@ -339,30 +354,41 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/citation_blocklist.py`) — "
 "1–229"
 msgstr ""
+"registry/citation_blocklist.py "
+"(`src/cadrumo/domain/calculations/registry/citation_blocklist.py`) — "
+"1–229"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:54
 msgid ""
 "registry/cleared_families.py "
 "(`src/cadrumo/domain/calculations/registry/cleared_families.py`) — 1–139"
 msgstr ""
+"registry/cleared_families.py "
+"(`src/cadrumo/domain/calculations/registry/cleared_families.py`) — 1–139"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:55
 msgid ""
 "registry/concepto_ingreso.py "
 "(`src/cadrumo/domain/calculations/registry/concepto_ingreso.py`) — 1–109"
 msgstr ""
+"registry/concepto_ingreso.py "
+"(`src/cadrumo/domain/calculations/registry/concepto_ingreso.py`) — 1–109"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:56
 msgid ""
 "registry/condition_mode.py "
 "(`src/cadrumo/domain/calculations/registry/condition_mode.py`) — 1–38"
 msgstr ""
+"registry/condition_mode.py "
+"(`src/cadrumo/domain/calculations/registry/condition_mode.py`) — 1–38"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:57
 msgid ""
 "registry/convenio.py "
 "(`src/cadrumo/domain/calculations/registry/convenio.py`) — 1–365"
 msgstr ""
+"registry/convenio.py "
+"(`src/cadrumo/domain/calculations/registry/convenio.py`) — 1–365"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:58
 msgid ""
@@ -370,6 +396,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/counterpart_bindings.py`) — "
 "1–36"
 msgstr ""
+"registry/counterpart_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/counterpart_bindings.py`) — "
+"1–36"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:59
 msgid ""
@@ -377,6 +406,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/deadline_coordinate.py`) — "
 "1–87"
 msgstr ""
+"registry/deadline_coordinate.py "
+"(`src/cadrumo/domain/calculations/registry/deadline_coordinate.py`) — "
+"1–87"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:60
 msgid ""
@@ -384,6 +416,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/descendant_relacion_catalogue.py`)"
 " — 1–220"
 msgstr ""
+"registry/descendant_relacion_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/descendant_relacion_catalogue.py`)"
+" — 1–220"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:61
 msgid ""
@@ -391,6 +426,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/design_constant_bindings.py`) "
 "— 1–103"
 msgstr ""
+"registry/design_constant_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/design_constant_bindings.py`) "
+"— 1–103"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:62
 msgid ""
@@ -398,18 +436,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/detail_record_bindings.py`) — "
 "1–447"
 msgstr ""
+"registry/detail_record_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/detail_record_bindings.py`) — "
+"1–447"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:63
 msgid ""
 "registry/entity_type.py "
 "(`src/cadrumo/domain/calculations/registry/entity_type.py`) — 1–309"
 msgstr ""
+"registry/entity_type.py "
+"(`src/cadrumo/domain/calculations/registry/entity_type.py`) — 1–309"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:64
 msgid ""
 "registry/errors.py (`src/cadrumo/domain/calculations/registry/errors.py`)"
 " — 1–604"
 msgstr ""
+"registry/errors.py (`src/cadrumo/domain/calculations/registry/errors.py`)"
+" — 1–604"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:65
 msgid ""
@@ -417,12 +462,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/eu_member_state_catalogue.py`)"
 " — 1–198"
 msgstr ""
+"registry/eu_member_state_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/eu_member_state_catalogue.py`)"
+" — 1–198"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:66
 msgid ""
 "registry/export.py (`src/cadrumo/domain/calculations/registry/export.py`)"
 " — 1–681"
 msgstr ""
+"registry/export.py (`src/cadrumo/domain/calculations/registry/export.py`)"
+" — 1–681"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:67
 msgid ""
@@ -430,6 +480,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/export_field_casilla.py`) — "
 "1–132"
 msgstr ""
+"registry/export_field_casilla.py "
+"(`src/cadrumo/domain/calculations/registry/export_field_casilla.py`) — "
+"1–132"
 
 #: ../../technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md:68
 msgid ""
@@ -437,3 +490,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/export_field_validation.py`) —"
 " 1–292"
 msgstr ""
+"registry/export_field_validation.py "
+"(`src/cadrumo/domain/calculations/registry/export_field_validation.py`) —"
+" 1–292"

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:1
 msgid "Modelo calculation preparation, edits, and evidence gates"
-msgstr ""
+msgstr "Modelo-számítás előkészítése, szerkesztések és bizonyítékkapuk"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:3
 msgid ""
@@ -45,10 +45,13 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-067` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:12
 msgid ""
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:16
 msgid ""
@@ -158,7 +161,7 @@ msgstr ""
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:26
 msgid "Ledger trust and filing boundaries"
-msgstr ""
+msgstr "Főkönyvi bizalom és bevallási határok"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:28
 msgid ""
@@ -207,7 +210,7 @@ msgstr ""
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:34
 msgid "Quality, security, and unresolved questions"
-msgstr ""
+msgstr "Minőség, biztonság és nyitott kérdések"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:36
 msgid ""
@@ -274,22 +277,28 @@ msgid ""
 "All 18 assigned files were read fully across nine bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Mind a 18 kijelölt fájlt teljes egészében elolvastam kilenc körülhatárolt"
+" oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:48
 msgid "modelo/__init__.py (`src/cadrumo/application/modelo/__init__.py`) — 1–8"
-msgstr ""
+msgstr "modelo/__init__.py (`src/cadrumo/application/modelo/__init__.py`) — 1–8"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:49
 msgid ""
 "modelo/_amendment_kind_resolution.py "
 "(`src/cadrumo/application/modelo/_amendment_kind_resolution.py`) — 1–192"
 msgstr ""
+"modelo/_amendment_kind_resolution.py "
+"(`src/cadrumo/application/modelo/_amendment_kind_resolution.py`) — 1–192"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:50
 msgid ""
 "modelo/_art109_activity_income.py "
 "(`src/cadrumo/application/modelo/_art109_activity_income.py`) — 1–417"
 msgstr ""
+"modelo/_art109_activity_income.py "
+"(`src/cadrumo/application/modelo/_art109_activity_income.py`) — 1–417"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:51
 msgid ""
@@ -297,6 +306,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/_attribution_received_advisory.py`) — "
 "1–287"
 msgstr ""
+"modelo/_attribution_received_advisory.py "
+"(`src/cadrumo/application/modelo/_attribution_received_advisory.py`) — "
+"1–287"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:52
 msgid ""
@@ -304,12 +316,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`) — "
 "1–242"
 msgstr ""
+"modelo/_autonomic_deduccion_advisory.py "
+"(`src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`) — "
+"1–242"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:53
 msgid ""
 "modelo/_bienes_inversion_advisory.py "
 "(`src/cadrumo/application/modelo/_bienes_inversion_advisory.py`) — 1–176"
 msgstr ""
+"modelo/_bienes_inversion_advisory.py "
+"(`src/cadrumo/application/modelo/_bienes_inversion_advisory.py`) — 1–176"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:54
 msgid ""
@@ -317,12 +334,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/_calculation_aggregation_context.py`) — "
 "1–58"
 msgstr ""
+"modelo/_calculation_aggregation_context.py "
+"(`src/cadrumo/application/modelo/_calculation_aggregation_context.py`) — "
+"1–58"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:55
 msgid ""
 "modelo/_calculation_helpers.py "
 "(`src/cadrumo/application/modelo/_calculation_helpers.py`) — 1–353"
 msgstr ""
+"modelo/_calculation_helpers.py "
+"(`src/cadrumo/application/modelo/_calculation_helpers.py`) — 1–353"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:56
 msgid ""
@@ -330,63 +352,86 @@ msgid ""
 "(`src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`) — "
 "1–559"
 msgstr ""
+"modelo/_calculation_modelo_adjustments.py "
+"(`src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`) — "
+"1–559"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:57
 msgid ""
 "modelo/_calculation_preparation.py "
 "(`src/cadrumo/application/modelo/_calculation_preparation.py`) — 1–474"
 msgstr ""
+"modelo/_calculation_preparation.py "
+"(`src/cadrumo/application/modelo/_calculation_preparation.py`) — 1–474"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:58
 msgid ""
 "modelo/_calculation_source_staging.py "
 "(`src/cadrumo/application/modelo/_calculation_source_staging.py`) — 1–581"
 msgstr ""
+"modelo/_calculation_source_staging.py "
+"(`src/cadrumo/application/modelo/_calculation_source_staging.py`) — 1–581"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:59
 msgid ""
 "modelo/_decimal_parsing.py "
 "(`src/cadrumo/application/modelo/_decimal_parsing.py`) — 1–79"
 msgstr ""
+"modelo/_decimal_parsing.py "
+"(`src/cadrumo/application/modelo/_decimal_parsing.py`) — 1–79"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:60
 msgid ""
 "modelo/_edit_execution.py "
 "(`src/cadrumo/application/modelo/_edit_execution.py`) — 1–646"
 msgstr ""
+"modelo/_edit_execution.py "
+"(`src/cadrumo/application/modelo/_edit_execution.py`) — 1–646"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:61
 msgid ""
 "modelo/_ledger_anchor_capture.py "
 "(`src/cadrumo/application/modelo/_ledger_anchor_capture.py`) — 1–153"
 msgstr ""
+"modelo/_ledger_anchor_capture.py "
+"(`src/cadrumo/application/modelo/_ledger_anchor_capture.py`) — 1–153"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:62
 msgid ""
 "modelo/_ledger_drift_gate.py "
 "(`src/cadrumo/application/modelo/_ledger_drift_gate.py`) — 1–236"
 msgstr ""
+"modelo/_ledger_drift_gate.py "
+"(`src/cadrumo/application/modelo/_ledger_drift_gate.py`) — 1–236"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:63
 msgid ""
 "modelo/_ledger_evidence_gate.py "
 "(`src/cadrumo/application/modelo/_ledger_evidence_gate.py`) — 1–267"
 msgstr ""
+"modelo/_ledger_evidence_gate.py "
+"(`src/cadrumo/application/modelo/_ledger_evidence_gate.py`) — 1–267"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:64
 msgid ""
 "modelo/_m210_agrupacion_renta.py "
 "(`src/cadrumo/application/modelo/_m210_agrupacion_renta.py`) — 1–157"
 msgstr ""
+"modelo/_m210_agrupacion_renta.py "
+"(`src/cadrumo/application/modelo/_m210_agrupacion_renta.py`) — 1–157"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:65
 msgid ""
 "modelo/_m210_convenio_facts.py "
 "(`src/cadrumo/application/modelo/_m210_convenio_facts.py`) — 1–33"
 msgstr ""
+"modelo/_m210_convenio_facts.py "
+"(`src/cadrumo/application/modelo/_m210_convenio_facts.py`) — 1–33"
 
 #: ../../technical/articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md:66
 msgid ""
 "modelo/_m210_convenio_lob_advisory.py "
 "(`src/cadrumo/application/modelo/_m210_convenio_lob_advisory.py`) — 1–121"
 msgstr ""
+"modelo/_m210_convenio_lob_advisory.py "
+"(`src/cadrumo/application/modelo/_m210_convenio_lob_advisory.py`) — 1–121"

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:1
 msgid "Logging, output privacy, model selection, and periods"
-msgstr ""
+msgstr "Naplózás, kimeneti adatvédelem, modellválasztás és időszakok"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-115` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-115` · **Téma:** [Alapvető felhatalmazás és közös "
+"ellenőrzések](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:14
 msgid "Diagnostics, output privacy, and model selection"
-msgstr ""
+msgstr "Diagnosztika, kimeneti adatvédelem és modellválasztás"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:16
 #, python-format
@@ -157,7 +159,7 @@ msgstr ""
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:26
 msgid "Filing periods, notification facts, and workflow contracts"
-msgstr ""
+msgstr "Bevallási időszakok, értesítési tények és munkafolyamat-szerződések"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:28
 msgid ""
@@ -239,7 +241,7 @@ msgstr ""
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:38
 msgid "Filesystem, extras, and precondition safeguards"
-msgstr ""
+msgstr "Fájlrendszeri, kiegészítő- és előfeltétel-védelem"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:40
 msgid ""
@@ -324,106 +326,122 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:54
 msgid "logging.py (`src/cadrumo/core/logging.py`) — lines 1–1,059"
-msgstr ""
+msgstr "logging.py (`src/cadrumo/core/logging.py`) — 1–1,059. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:55
 msgid "model_catalogue.py (`src/cadrumo/core/model_catalogue.py`) — lines 1–656"
-msgstr ""
+msgstr "model_catalogue.py (`src/cadrumo/core/model_catalogue.py`) — 1–656. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:56
 msgid "modelo.py (`src/cadrumo/core/modelo.py`) — lines 1–47"
-msgstr ""
+msgstr "modelo.py (`src/cadrumo/core/modelo.py`) — 1–47. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:57
 msgid ""
 "modelo_232_codigos.py (`src/cadrumo/core/modelo_232_codigos.py`) — lines "
 "1–165"
 msgstr ""
+"modelo_232_codigos.py (`src/cadrumo/core/modelo_232_codigos.py`) — 1–165."
+" sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:58
 msgid ""
 "modelo_export_artefact.py (`src/cadrumo/core/modelo_export_artefact.py`) "
 "— lines 1–46"
 msgstr ""
+"modelo_export_artefact.py (`src/cadrumo/core/modelo_export_artefact.py`) "
+"— 1–46. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:59
 msgid ""
 "modelo_work_progress_state.py "
 "(`src/cadrumo/core/modelo_work_progress_state.py`) — lines 1–15"
 msgstr ""
+"modelo_work_progress_state.py "
+"(`src/cadrumo/core/modelo_work_progress_state.py`) — 1–15. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:60
 msgid "models.py (`src/cadrumo/core/models.py`) — lines 1–63"
-msgstr ""
+msgstr "models.py (`src/cadrumo/core/models.py`) — 1–63. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:61
 msgid ""
 "notificacion_estado_servicio.py "
 "(`src/cadrumo/core/notificacion_estado_servicio.py`) — lines 1–110"
 msgstr ""
+"notificacion_estado_servicio.py "
+"(`src/cadrumo/core/notificacion_estado_servicio.py`) — 1–110. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:62
 msgid ""
 "observed_header_fact.py (`src/cadrumo/core/observed_header_fact.py`) — "
 "lines 1–94"
 msgstr ""
+"observed_header_fact.py (`src/cadrumo/core/observed_header_fact.py`) — "
+"1–94. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:63
 msgid "operations.py (`src/cadrumo/core/operations.py`) — lines 1–184"
-msgstr ""
+msgstr "operations.py (`src/cadrumo/core/operations.py`) — 1–184. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:64
 msgid ""
 "operator_action_enums.py (`src/cadrumo/core/operator_action_enums.py`) — "
 "lines 1–73"
 msgstr ""
+"operator_action_enums.py (`src/cadrumo/core/operator_action_enums.py`) — "
+"1–73. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:65
 msgid ""
 "operator_progress.py (`src/cadrumo/core/operator_progress.py`) — lines "
 "1–27"
-msgstr ""
+msgstr "operator_progress.py (`src/cadrumo/core/operator_progress.py`) — 1–27. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:66
 msgid "optional_extras.py (`src/cadrumo/core/optional_extras.py`) — lines 1–208"
-msgstr ""
+msgstr "optional_extras.py (`src/cadrumo/core/optional_extras.py`) — 1–208. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:67
 msgid "output_rendering.py (`src/cadrumo/core/output_rendering.py`) — lines 1–216"
-msgstr ""
+msgstr "output_rendering.py (`src/cadrumo/core/output_rendering.py`) — 1–216. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:68
 msgid "package_version.py (`src/cadrumo/core/package_version.py`) — lines 1–8"
-msgstr ""
+msgstr "package_version.py (`src/cadrumo/core/package_version.py`) — 1–8. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:69
 msgid "paths.py (`src/cadrumo/core/paths.py`) — lines 1–774"
-msgstr ""
+msgstr "paths.py (`src/cadrumo/core/paths.py`) — 1–774. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:70
 msgid "payment_election.py (`src/cadrumo/core/payment_election.py`) — lines 1–28"
-msgstr ""
+msgstr "payment_election.py (`src/cadrumo/core/payment_election.py`) — 1–28. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:71
 msgid "percentage.py (`src/cadrumo/core/percentage.py`) — lines 1–36"
-msgstr ""
+msgstr "percentage.py (`src/cadrumo/core/percentage.py`) — 1–36. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:72
 msgid "period.py (`src/cadrumo/core/period.py`) — lines 1–581"
-msgstr ""
+msgstr "period.py (`src/cadrumo/core/period.py`) — 1–581. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:73
 msgid "pid_liveness.py (`src/cadrumo/core/pid_liveness.py`) — lines 1–103"
-msgstr ""
+msgstr "pid_liveness.py (`src/cadrumo/core/pid_liveness.py`) — 1–103. sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:74
 msgid ""
 "post_filing_event.py (`src/cadrumo/core/post_filing_event.py`) — lines "
 "1–183"
 msgstr ""
+"post_filing_event.py (`src/cadrumo/core/post_filing_event.py`) — 1–183. "
+"sor"
 
 #: ../../technical/articles/115-logging-output-privacy-model-selection-and-periods.md:75
 msgid ""
 "precondition_action_invariants.py "
 "(`src/cadrumo/core/precondition_action_invariants.py`) — lines 1–222"
 msgstr ""
+"precondition_action_invariants.py "
+"(`src/cadrumo/core/precondition_action_invariants.py`) — 1–222. sor"

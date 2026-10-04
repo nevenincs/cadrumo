@@ -10,10 +10,12 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation, FilingEnvelopePrefixRole
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.authority_state import source_root_for
-from ..compiler.loader import load_registry_tree
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..pipeline.joined_record_design import join_record_design_semantics
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
@@ -26,6 +28,7 @@ from ..pipeline.semantic_map import (
     EnvelopeTotalAnchor,
     SemanticMapAnchor,
     VariableEnvelopeSemantic,
+    load_semantic_map,
 )
 from ..pipeline.variable_envelope import (
     FilingEnvelopeProvenance,
@@ -268,7 +271,7 @@ _COMPOSED_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = (
 
 def _bundled_intermediate(source_ref: str, *, design_epoch: str, filing_year: int):
     """Load one real design through the catalogue, without a filing snapshot."""
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     return load_record_design_intermediate(
         bundled_path(),
         catalogues.sources,
@@ -353,14 +356,12 @@ def test_one_compiler_declares_every_modelo_sharing_the_official_envelope_gramma
 def test_the_compiler_refuses_a_design_whose_official_closer_names_another_modelo() -> None:
     """The shared grammar is proved per design, not assumed from the role list.
 
-    Modelo 309's bundled source is the live case: its closer content cell reads
+    Modelo 309's unadjudicated 2016 source is the live case: its closer content reads
     ``"</3090AAAAPP0000>"`` while the row's own description reads
-    ``</T3090+Ejercicio+periodo+0000>``, so AEAT dropped the ``T``. Compiling it
-    would emit a closer no AEAT reader accepts, which is why this refuses rather
-    than tolerating a near-match. A declared, sourced correction is the route
-    that opens it, not a widened pattern here.
+    ``</T3090+Ejercicio+periodo+0000>``. The selected 2018 and 2023 sources
+    have their own exact adjudications; this source has none and still refuses.
     """
-    intermediate = _bundled_intermediate("aeat-dr-309-2023", design_epoch="2023", filing_year=2023)
+    intermediate = _bundled_intermediate("aeat-dr-309-2016", design_epoch="2016", filing_year=2016)
     envelope = intermediate.variable_envelopes[0]
 
     with pytest.raises(RegistryValidationError, match="is not the official"):
@@ -369,5 +370,126 @@ def test_the_compiler_refuses_a_design_whose_official_closer_names_another_model
             envelope,
             modelo="309",
             source=intermediate.source,
+            body_record_ids=_BODY_RECORD_IDS,
+        )
+
+
+_M309_SELECTED_DESIGNS = (
+    ("2018", "2018-2022", 2018, 65, "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8"),
+    ("2023", "2023-y-siguientes", 2023, 68, "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"),
+)
+
+
+@pytest.mark.parametrize(("epoch", "revision", "filing_year", "field_count", "source_sha256"), _M309_SELECTED_DESIGNS)
+def test_m309_selected_source_maps_join_every_body_field_and_compile_only_the_reviewed_closer(
+    epoch: str,
+    revision: str,
+    filing_year: int,
+    field_count: int,
+    source_sha256: str,
+) -> None:
+    """Each current map joins its own hash-verified source and selected revision."""
+    root = bundled_path("registry", "aeat")
+    catalogues = load_shared_catalogues(root)
+    modelo = load_modelo_directory(root / "modelos" / "309")
+    inspection = RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=modelo.revisions[revision],
+        source_root=bundled_path(),
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+    intermediate = _bundled_intermediate(f"aeat-dr-309-{epoch}", design_epoch=epoch, filing_year=filing_year)
+    semantic_map = load_semantic_map(Path(__file__).resolve().parents[1] / "mappings" / "modelo_309" / epoch)
+    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+
+    assert joined.source.source_sha256 == source_sha256
+    assert len(joined.records) == 1
+    assert len(joined.fields) == field_count
+    assert tuple(field.parser_field.ordinal for field in joined.fields) == tuple(
+        str(ordinal) for ordinal in range(1, field_count + 1)
+    )
+    assert tuple(record.semantic_record.export_record_id for record in joined.records) == ("modelo-309-page-01",)
+    contract = joined.variable_envelope_contract
+    assert contract is not None
+    declaration = compile_filing_envelope_definition(
+        contract.semantic,
+        contract.parser_envelope,
+        modelo="309",
+        source=joined.source,
+        body_record_ids=("modelo-309-page-01",),
+    )
+    assert declaration.record_identity == "M30900"
+    assert declaration.closer_derivation is FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1
+
+
+@pytest.mark.parametrize(
+    ("epoch", "_revision", "filing_year", "_field_count", "_source_sha256"), _M309_SELECTED_DESIGNS
+)
+@pytest.mark.parametrize(
+    ("mutation", "error"),
+    (
+        ("source_sha256", "source digest changed"),
+        ("source_ref", "is not the official"),
+        ("wrong_modelo", "is not the official"),
+        ("source_row", "no longer matches its exact printed row"),
+        ("description", "no longer matches its exact printed row"),
+        ("validation", "no longer matches its exact printed row"),
+        ("lexeme", "no longer matches its exact printed row"),
+        ("width", "does not match its exact 18-byte source anchor"),
+    ),
+)
+def test_m309_missing_t_adjudication_refuses_changed_source_or_printed_row(
+    epoch: str,
+    _revision: str,
+    filing_year: int,
+    _field_count: int,
+    _source_sha256: str,
+    mutation: str,
+    error: str,
+) -> None:
+    intermediate = _bundled_intermediate(f"aeat-dr-309-{epoch}", design_epoch=epoch, filing_year=filing_year)
+    envelope = intermediate.variable_envelopes[0]
+    semantic = _semantic_for_roles(envelope, _M303_PREFIX_ROLES, source=intermediate.source)
+    source = intermediate.source
+    closing = envelope.closing
+    modelo = "309"
+    assert isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker)
+
+    if mutation == "source_sha256":
+        source = source.model_copy(update={"source_sha256": "0" * 64})
+        semantic = semantic.model_copy(update={"source_sha256": source.source_sha256})
+    elif mutation == "source_ref":
+        source = source.model_copy(update={"source_ref": "aeat-dr-309-2016"})
+        semantic = semantic.model_copy(update={"source_ref": source.source_ref})
+    elif mutation == "wrong_modelo":
+        # Keep the selected source pin and alter the prefix in memory so the
+        # closer guard, rather than the earlier prefix guard, proves isolation.
+        prefix_fields = list(envelope.prefix_fields)
+        prefix_fields[1] = prefix_fields[1].model_copy(update={"content": '"310"'})
+        envelope = envelope.model_copy(update={"prefix_fields": tuple(prefix_fields)})
+        modelo = "310"
+    elif mutation == "source_row":
+        closing = closing.model_copy(update={"source_row": 21})
+        semantic = semantic.model_copy(
+            update={"closer_anchor": semantic.closer_anchor.model_copy(update={"source_row": 21})}
+        )
+    elif mutation == "description":
+        closing = closing.model_copy(update={"normalized_description": "Constante. </3090+Ejercicio+periodo+0000>"})
+    elif mutation == "validation":
+        closing = closing.model_copy(update={"validation": "another statement"})
+    elif mutation == "lexeme":
+        closing = closing.model_copy(update={"content": '"</3100AAAAPP0000>"'})
+    else:
+        assert mutation == "width"
+        closing = closing.model_copy(update={"length": 17})
+    envelope = envelope.model_copy(update={"closing": closing})
+
+    with pytest.raises(RegistryValidationError, match=error):
+        compile_filing_envelope_definition(
+            semantic,
+            envelope,
+            modelo=modelo,
+            source=source,
             body_record_ids=_BODY_RECORD_IDS,
         )

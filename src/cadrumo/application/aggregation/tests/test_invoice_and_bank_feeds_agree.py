@@ -39,10 +39,11 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.enums import IvaRate
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind

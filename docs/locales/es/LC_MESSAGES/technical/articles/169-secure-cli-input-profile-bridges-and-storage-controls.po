@@ -46,6 +46,9 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-169` · **Tema:** [Interfaces de operador, parte 2: "
+"transporte seguro y puentes de operaciones](../topics/operator-"
+"interfaces-part-2.md)"
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:10
 msgid "Scope"

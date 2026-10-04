@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:1
 msgid "Core configuration, profile selection, and durable writes"
-msgstr ""
+msgstr "Alapkonfiguráció, profilválasztás és tartós írások"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-111` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-111` · **Téma:** [Alapvető felhatalmazás és közös "
+"ellenőrzések](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:14
 msgid "Configuration, profile selection, and durable writes"
-msgstr ""
+msgstr "Konfiguráció, profilválasztás és tartós írások"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:16
 msgid ""
@@ -130,7 +132,7 @@ msgstr ""
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:22
 msgid "Shared calculation and evidence vocabulary"
-msgstr ""
+msgstr "Közös számítási és bizonyítékszókincs"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:24
 msgid ""
@@ -264,124 +266,140 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:38
 msgid "__init__.py (`src/cadrumo/core/__init__.py`) — lines 1–10"
-msgstr ""
+msgstr "__init__.py (`src/cadrumo/core/__init__.py`) — 1–10. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:39
 msgid "_config_runtime.py (`src/cadrumo/core/_config_runtime.py`) — lines 1–47"
-msgstr ""
+msgstr "_config_runtime.py (`src/cadrumo/core/_config_runtime.py`) — 1–47. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:40
 msgid ""
 "_config_validation.py (`src/cadrumo/core/_config_validation.py`) — lines "
 "1–252"
 msgstr ""
+"_config_validation.py (`src/cadrumo/core/_config_validation.py`) — 1–252."
+" sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:41
 msgid ""
 "action_argument_resolution.py "
 "(`src/cadrumo/core/action_argument_resolution.py`) — lines 1–73"
 msgstr ""
+"action_argument_resolution.py "
+"(`src/cadrumo/core/action_argument_resolution.py`) — 1–73. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:42
 msgid "aeat_csv.py (`src/cadrumo/core/aeat_csv.py`) — lines 1–71"
-msgstr ""
+msgstr "aeat_csv.py (`src/cadrumo/core/aeat_csv.py`) — 1–71. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:43
 msgid "aggregation.py (`src/cadrumo/core/aggregation.py`) — lines 1–815"
-msgstr ""
+msgstr "aggregation.py (`src/cadrumo/core/aggregation.py`) — 1–815. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:44
 msgid ""
 "amendment_kind_regime.py (`src/cadrumo/core/amendment_kind_regime.py`) — "
 "lines 1–174"
 msgstr ""
+"amendment_kind_regime.py (`src/cadrumo/core/amendment_kind_regime.py`) — "
+"1–174. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:45
 msgid "async_cleanup.py (`src/cadrumo/core/async_cleanup.py`) — lines 1–361"
-msgstr ""
+msgstr "async_cleanup.py (`src/cadrumo/core/async_cleanup.py`) — 1–361. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:46
 msgid "atomic_write.py (`src/cadrumo/core/atomic_write.py`) — lines 1–549"
-msgstr ""
+msgstr "atomic_write.py (`src/cadrumo/core/atomic_write.py`) — 1–549. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:47
 msgid "auth_provider.py (`src/cadrumo/core/auth_provider.py`) — lines 1–51"
-msgstr ""
+msgstr "auth_provider.py (`src/cadrumo/core/auth_provider.py`) — 1–51. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:48
 msgid ""
 "auth_session_keys.py (`src/cadrumo/core/auth_session_keys.py`) — lines "
 "1–66"
-msgstr ""
+msgstr "auth_session_keys.py (`src/cadrumo/core/auth_session_keys.py`) — 1–66. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:49
 msgid "authority_grade.py (`src/cadrumo/core/authority_grade.py`) — lines 1–91"
-msgstr ""
+msgstr "authority_grade.py (`src/cadrumo/core/authority_grade.py`) — 1–91. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:50
 msgid "base64_codec.py (`src/cadrumo/core/base64_codec.py`) — lines 1–56"
-msgstr ""
+msgstr "base64_codec.py (`src/cadrumo/core/base64_codec.py`) — 1–56. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:51
 msgid "bucket_pointer.py (`src/cadrumo/core/bucket_pointer.py`) — lines 1–342"
-msgstr ""
+msgstr "bucket_pointer.py (`src/cadrumo/core/bucket_pointer.py`) — 1–342. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:52
 msgid ""
 "calculation_report_format.py "
 "(`src/cadrumo/core/calculation_report_format.py`) — lines 1–38"
 msgstr ""
+"calculation_report_format.py "
+"(`src/cadrumo/core/calculation_report_format.py`) — 1–38. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:53
 msgid "calendar_shift.py (`src/cadrumo/core/calendar_shift.py`) — lines 1–47"
-msgstr ""
+msgstr "calendar_shift.py (`src/cadrumo/core/calendar_shift.py`) — 1–47. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:54
 msgid "capabilities.py (`src/cadrumo/core/capabilities.py`) — lines 1–91"
-msgstr ""
+msgstr "capabilities.py (`src/cadrumo/core/capabilities.py`) — 1–91. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:55
 msgid "casilla_id.py (`src/cadrumo/core/casilla_id.py`) — lines 1–75"
-msgstr ""
+msgstr "casilla_id.py (`src/cadrumo/core/casilla_id.py`) — 1–75. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:56
 msgid ""
 "casilla_value_absence.py (`src/cadrumo/core/casilla_value_absence.py`) — "
 "lines 1–77"
 msgstr ""
+"casilla_value_absence.py (`src/cadrumo/core/casilla_value_absence.py`) — "
+"1–77. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:57
 msgid ""
 "casilla_value_kind.py (`src/cadrumo/core/casilla_value_kind.py`) — lines "
 "1–65"
 msgstr ""
+"casilla_value_kind.py (`src/cadrumo/core/casilla_value_kind.py`) — 1–65. "
+"sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:58
 msgid ""
 "citation_grounding.py (`src/cadrumo/core/citation_grounding.py`) — lines "
 "1–62"
 msgstr ""
+"citation_grounding.py (`src/cadrumo/core/citation_grounding.py`) — 1–62. "
+"sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:59
 msgid ""
 "classifier_input_source.py "
 "(`src/cadrumo/core/classifier_input_source.py`) — lines 1–88"
 msgstr ""
+"classifier_input_source.py "
+"(`src/cadrumo/core/classifier_input_source.py`) — 1–88. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:60
 msgid "cli_metadata.py (`src/cadrumo/core/cli_metadata.py`) — lines 1–21"
-msgstr ""
+msgstr "cli_metadata.py (`src/cadrumo/core/cli_metadata.py`) — 1–21. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:61
 msgid "click_context.py (`src/cadrumo/core/click_context.py`) — lines 1–187"
-msgstr ""
+msgstr "click_context.py (`src/cadrumo/core/click_context.py`) — 1–187. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:62
 msgid ""
 "concept_lifecycle.py (`src/cadrumo/core/concept_lifecycle.py`) — lines "
 "1–64"
-msgstr ""
+msgstr "concept_lifecycle.py (`src/cadrumo/core/concept_lifecycle.py`) — 1–64. sor"
 
 #: ../../technical/articles/111-core-configuration-profile-selection-and-durable-writes.md:63
 msgid "concepto_ingreso.py (`src/cadrumo/core/concepto_ingreso.py`) — lines 1–48"
-msgstr ""
+msgstr "concepto_ingreso.py (`src/cadrumo/core/concepto_ingreso.py`) — 1–48. sor"

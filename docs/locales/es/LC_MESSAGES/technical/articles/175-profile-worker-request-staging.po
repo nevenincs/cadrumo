@@ -45,10 +45,13 @@ msgid ""
 "**Report:** `STAGE-2-175` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-175` · **Tema:** [Entorno de ejecución instalado, "
+"entorno de trabajo de terminal e infraestructura de agentes](../topics"
+"/runtime-tui-and-agent-harness.md)"
 
 #: ../../technical/articles/175-profile-worker-request-staging.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Ámbito y método"
 
 #: ../../technical/articles/175-profile-worker-request-staging.md:12
 msgid ""
@@ -108,7 +111,7 @@ msgstr ""
 
 #: ../../technical/articles/175-profile-worker-request-staging.md:22
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Valoración de seguridad e implementación"
 
 #: ../../technical/articles/175-profile-worker-request-staging.md:24
 msgid ""

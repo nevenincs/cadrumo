@@ -45,6 +45,8 @@ msgid ""
 "**Report:** `STAGE-2-201` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-201` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:10
 msgid "Scope"
@@ -210,105 +212,141 @@ msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2020/source.pdf.corpus_text.json`"
 " — 1,779,266 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2020/source.pdf.corpus_text.json`"
+" — 1,779,266 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:39
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2021/source.pdf.corpus_text.json`"
 " — 748,089 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2021/source.pdf.corpus_text.json`"
+" — 748,089 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:40
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2022/source.pdf.corpus_text.json`"
 " — 750,548 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2022/source.pdf.corpus_text.json`"
+" — 750,548 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:41
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2023/source.pdf.corpus_text.json`"
 " — 784,157 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2023/source.pdf.corpus_text.json`"
+" — 784,157 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:42
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2024/source.pdf.corpus_text.json`"
 " — 834,722 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2024/source.pdf.corpus_text.json`"
+" — 834,722 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:43
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/iva/2025/source.pdf.corpus_text.json`"
 " — 827,209 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/iva/2025/source.pdf.corpus_text.json`"
+" — 827,209 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:44
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2020/part1/source.pdf.corpus_text.json`"
 " — 3,249,187 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2020/part1/source.pdf.corpus_text.json`"
+" — 3,249,187 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:45
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2021/part1/source.pdf.corpus_text.json`"
 " — 3,682,746 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2021/part1/source.pdf.corpus_text.json`"
+" — 3,682,746 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:46
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2022/part1/source.pdf.corpus_text.json`"
 " — 4,044,963 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2022/part1/source.pdf.corpus_text.json`"
+" — 4,044,963 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:47
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2023/part1/source.pdf.corpus_text.json`"
 " — 4,413,073 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2023/part1/source.pdf.corpus_text.json`"
+" — 4,413,073 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:48
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part1/source.pdf.corpus_text.json`"
 " — 3,456,904 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part1/source.pdf.corpus_text.json`"
+" — 3,456,904 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:49
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2"
 "-deducciones-autonomicas/source.pdf.corpus_text.json` — 1,369,693 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2"
+"-deducciones-autonomicas/source.pdf.corpus_text.json` — 1,369,693 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:50
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2025/part1/source.pdf.corpus_text.json`"
 " — 3,406,844 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2025/part1/source.pdf.corpus_text.json`"
+" — 3,406,844 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:51
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/renta/2025/part2"
 "-deducciones-autonomicas/source.pdf.corpus_text.json` — 1,557,330 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/renta/2025/part2"
+"-deducciones-autonomicas/source.pdf.corpus_text.json` — 1,557,330 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:52
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2022/source.pdf.corpus_text.json`"
 " — 1,952,047 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2022/source.pdf.corpus_text.json`"
+" — 1,952,047 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:53
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2023/source.pdf.corpus_text.json`"
 " — 2,001,323 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2023/source.pdf.corpus_text.json`"
+" — 2,001,323 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:54
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2024/source.pdf.corpus_text.json`"
 " — 2,137,876 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2024/source.pdf.corpus_text.json`"
+" — 2,137,876 bytes"
 
 #: ../../technical/articles/201-aeat-manuals-extracted-text.md:55
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2025/source.pdf.corpus_text.json`"
 " — 2,166,896 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/manuals/sociedades/2025/source.pdf.corpus_text.json`"
+" — 2,166,896 bytes"

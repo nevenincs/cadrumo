@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:1
 msgid "Formula evaluation, traceability, and row-source bindings"
-msgstr ""
+msgstr "Képletkiértékelés, nyomon követhetőség és sorforrás-kötések"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-129` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-129` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:12
 msgid ""
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:14
 msgid "Formula evaluation and traceability"
-msgstr ""
+msgstr "Képletkiértékelés és nyomon követhetőség"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:16
 msgid ""
@@ -120,7 +122,7 @@ msgstr ""
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:22
 msgid "Specialized tax operations and arithmetic helpers"
-msgstr ""
+msgstr "Speciális adóműveletek és számtani segédeszközök"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:24
 msgid ""
@@ -159,7 +161,7 @@ msgstr ""
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:28
 msgid "Authority scope and row-source capabilities"
-msgstr ""
+msgstr "A mérvadó forrás hatóköre és sorforrás-képességek"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:30
 msgid ""
@@ -237,7 +239,7 @@ msgstr ""
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:38
 msgid "Security, quality and limits"
-msgstr ""
+msgstr "Biztonság, minőség és korlátok"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:40
 msgid ""
@@ -268,6 +270,8 @@ msgid ""
 "registry/formula_runtime.py "
 "(`src/cadrumo/domain/calculations/registry/formula_runtime.py`) — 1–1,310"
 msgstr ""
+"registry/formula_runtime.py "
+"(`src/cadrumo/domain/calculations/registry/formula_runtime.py`) — 1–1,310"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:47
 msgid ""
@@ -275,6 +279,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/formula_runtime_m100.py`) — "
 "1–407"
 msgstr ""
+"registry/formula_runtime_m100.py "
+"(`src/cadrumo/domain/calculations/registry/formula_runtime_m100.py`) — "
+"1–407"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:48
 msgid ""
@@ -282,6 +289,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/formula_runtime_ops.py`) — "
 "1–590"
 msgstr ""
+"registry/formula_runtime_ops.py "
+"(`src/cadrumo/domain/calculations/registry/formula_runtime_ops.py`) — "
+"1–590"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:49
 msgid ""
@@ -289,12 +299,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/formula_text_inputs.py`) — "
 "1–112"
 msgstr ""
+"registry/formula_text_inputs.py "
+"(`src/cadrumo/domain/calculations/registry/formula_text_inputs.py`) — "
+"1–112"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:50
 msgid ""
 "registry/gasto193_bindings.py "
 "(`src/cadrumo/domain/calculations/registry/gasto193_bindings.py`) — 1–111"
 msgstr ""
+"registry/gasto193_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/gasto193_bindings.py`) — 1–111"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:51
 msgid ""
@@ -302,12 +317,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/governed_fact_scope.py`) — "
 "1–193"
 msgstr ""
+"registry/governed_fact_scope.py "
+"(`src/cadrumo/domain/calculations/registry/governed_fact_scope.py`) — "
+"1–193"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:52
 msgid ""
 "registry/handoffs.py "
 "(`src/cadrumo/domain/calculations/registry/handoffs.py`) — 1–89"
 msgstr ""
+"registry/handoffs.py "
+"(`src/cadrumo/domain/calculations/registry/handoffs.py`) — 1–89"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:53
 msgid ""
@@ -315,10 +335,13 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/identifier_evolutions.py`) — "
 "1–68"
 msgstr ""
+"registry/identifier_evolutions.py "
+"(`src/cadrumo/domain/calculations/registry/identifier_evolutions.py`) — "
+"1–68"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:54
 msgid "registry/ids.py (`src/cadrumo/domain/calculations/registry/ids.py`) — 1–67"
-msgstr ""
+msgstr "registry/ids.py (`src/cadrumo/domain/calculations/registry/ids.py`) — 1–67"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:55
 msgid ""
@@ -326,6 +349,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/inventory_anexo_d_applicability.py`)"
 " — 1–46"
 msgstr ""
+"registry/inventory_anexo_d_applicability.py "
+"(`src/cadrumo/domain/calculations/registry/inventory_anexo_d_applicability.py`)"
+" — 1–46"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:56
 msgid ""
@@ -333,6 +359,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/inventory_bindings.py`) — "
 "1–117"
 msgstr ""
+"registry/inventory_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/inventory_bindings.py`) — "
+"1–117"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:57
 msgid ""
@@ -340,6 +369,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/invoice_bindings.py`) — "
 "1–1,049"
 msgstr ""
+"registry/invoice_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/invoice_bindings.py`) — "
+"1–1,049"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:58
 msgid ""
@@ -347,6 +379,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/invoice_legal_classification.py`)"
 " — 1–371"
 msgstr ""
+"registry/invoice_legal_classification.py "
+"(`src/cadrumo/domain/calculations/registry/invoice_legal_classification.py`)"
+" — 1–371"
 
 #: ../../technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.md:59
 msgid ""
@@ -354,3 +389,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/irnr_ledger_bindings.py`) — "
 "1–224"
 msgstr ""
+"registry/irnr_ledger_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/irnr_ledger_bindings.py`) — "
+"1–224"

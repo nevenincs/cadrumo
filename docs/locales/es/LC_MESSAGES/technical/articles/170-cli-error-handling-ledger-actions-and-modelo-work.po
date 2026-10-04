@@ -48,6 +48,9 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-170` · **Tema:** [Interfaces de operador, parte 2: "
+"transporte seguro y puentes de operaciones](../topics/operator-"
+"interfaces-part-2.md)"
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:10
 msgid "Scope"

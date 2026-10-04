@@ -76,6 +76,7 @@ from ._m296_projection import build_m296_filing_projection_plan
 from .export_envelope import FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence
 from .export_envelope import FilingEnvelopeRenderRequest as _FilingEnvelopeRenderRequest
 from .export_envelope import FilingEnvelopeRenderResult as _FilingEnvelopeRenderResult
+from .export_envelope import assemble_filing_envelope_payload as _assemble_filing_envelope_payload
 from .export_envelope import envelope_closer_bytes as _envelope_closer_bytes
 from .export_envelope import render_declared_prefix as _render_declared_prefix
 from .export_parity import (
@@ -807,7 +808,9 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         casilla_values={item.casilla_id: item.value for item in request.draft.values},
     )
     closer = _envelope_closer_bytes(modelo=request.modelo, period=request.draft.period, envelope=envelope)
-    payload = prefix + b"".join(item.payload for item in occurrences) + closer
+    terminator, payload = _assemble_filing_envelope_payload(
+        envelope, prefix=prefix, occurrences=occurrences, closer=closer
+    )
     return _FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
         revision_id=str(request.registry_snapshot.revision.id),
@@ -818,6 +821,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         occurrences=occurrences,
         prefix=prefix,
         closer=closer,
+        terminator=terminator,
         payload=payload,
         payload_sha256=sha256_hex(payload),
         total_length=len(payload),

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:1
 msgid "Transaction ledger domain and classifier contracts"
-msgstr ""
+msgstr "Domini del llibre de transaccions i contractes de classificadors"
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-151` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-151` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:10
 msgid "Scope"
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:16
 msgid ""
@@ -152,7 +154,7 @@ msgstr ""
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:26
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i qualitat"
 
 #: ../../technical/articles/151-transaction-ledger-domain-and-classifier-contracts.md:28
 msgid ""

@@ -1,4 +1,4 @@
-"""Real archive bytes, scoped crash recovery and filtered local history scenarios."""
+"""Registered-executor conformance scenarios for the profile archive family."""
 
 from __future__ import annotations
 
@@ -7,12 +7,17 @@ from datetime import UTC, datetime
 
 from ...adapters.outbound.google.records import DriveConfig
 from ...adapters.outbound.google.session_store import save_drive_config
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository, build_bucket_event_history_repository
+from ...adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
 from ...adapters.persistence.storage.secure_object_namespaces import GOOGLE_DRIVE_CONFIG_NAMESPACE
 from ...application.bucket_event_projection import BucketEventProjection
 from ...application.user_profile.archive_operation import (
+    PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
+    PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
+    PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
     ArchiveReconciledExport,
     ProfileArchiveExportProjection,
+    ProfileArchiveExportReceiptSnapshot,
     ProfileArchiveExportRequest,
     ProfileArchivePushProjection,
     ProfileArchivePushRequest,
@@ -32,6 +37,7 @@ from ...application.user_profile.bundle_export_operation import (
     profile_export_staged_path,
 )
 from ...application.user_profile.capsule_archive import inspect_profile_capsule_archive, read_profile_capsule_archive
+from ...application.user_profile.custody_ports import profile_capsule_archive_schema_version
 from ...application.user_profile.history_contracts import ProfileHistoryProjection, ProfileHistoryRequest
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -46,7 +52,100 @@ from .conformance_family_contract import (
 )
 
 
+def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation:
+    profile_id = context.profile_id
+    target = context.input_root / ("profile-archive" + CADRUMO_BUCKET_BUNDLE_SUFFIX)
+    assert not target.exists()
+    schema_version = profile_capsule_archive_schema_version()
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        del outcome
+        header = inspect_profile_capsule_archive(target)
+        assert header.bucket_id == str(profile_id)
+        assert header.archive_schema_version == schema_version
+
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(str(profile_id)),
+        request=ProfileArchiveExportRequest(profile_id=profile_id, target=target),
+        expected_result=ProfileArchiveExportProjection(
+            profile_id=profile_id,
+            receipt=ProfileArchiveExportReceiptSnapshot(
+                bucket_id=str(profile_id),
+                target=str(target),
+                archive_schema_version=schema_version,
+                recovery_enrolled=False,
+            ),
+        ),
+        verify=verify,
+    )
+
+
+def _prepare_push(context: ConformanceFamilyContext) -> ConformancePreparation:
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(str(context.profile_id)),
+        request=ProfileArchivePushRequest(profile_id=context.profile_id),
+    )
+
+
+def _exported_event_count(profile_id: str) -> int:
+    catalogue = build_bucket_event_history_repository(bucket_id=profile_id).load()
+    return len(catalogue.for_bucket(profile_id, event_types=(BucketEventType.PROFILE_EXPORTED,)))
+
+
+def _prepare_reconcile(context: ConformanceFamilyContext) -> ConformancePreparation:
+    profile_id = context.profile_id
+    exported_before = _exported_event_count(str(profile_id))
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        del outcome
+        assert _exported_event_count(str(profile_id)) == exported_before
+
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(str(profile_id)),
+        request=ProfileArchiveReconcileRequest(profile_id=profile_id),
+        expected_result=ProfileArchiveReconcileProjection(profile_id=profile_id, reconciled=(), failed=()),
+        verify=verify,
+    )
+
+
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
+    definition_id = context.definition.definition_id
+    if definition_id == PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID:
+        return _prepare_export(context)
+    if definition_id == PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID:
+        return _prepare_push(context)
+    if definition_id == PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID:
+        return _prepare_reconcile(context)
+    raise AssertionError(f"no profile archive conformance scenario for {definition_id}")
+
+
+PROFILE_ARCHIVE_CONFORMANCE_FAMILY = ConformanceFamily(
+    cases=(
+        RegisteredExecutorConformanceCase(
+            PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            (PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,),
+        ),
+        RegisteredExecutorConformanceCase(
+            PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,),
+            expected_refusal_ref="REFUSED_OUTBOUND_STORAGE_VALIDATION",
+        ),
+        RegisteredExecutorConformanceCase(
+            PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            (PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,),
+        ),
+    ),
+    prepare=_prepare,
+)
+
+
+def _retained_archive_prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
     definition_id = context.definition.definition_id
     if definition_id == "profile.archive.export":
@@ -118,7 +217,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         journal.save(pending)
 
         def verify(outcome: ConformanceOutcome) -> None:
-            assert not staged.exists() and not destination.exists()
+            assert not staged.exists() and (not destination.exists())
             assert not journal.path_for(pending.operation_id).exists()
 
         expected = ProfileArchiveReconcileProjection(
@@ -181,7 +280,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     raise AssertionError(definition_id)
 
 
-ARCHIVE_CONFORMANCE_FAMILY = ConformanceFamily(
+ARCHIVE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=tuple(
         RegisteredExecutorConformanceCase(
             definition_id,
@@ -198,5 +297,5 @@ ARCHIVE_CONFORMANCE_FAMILY = ConformanceFamily(
             "profile.history",
         )
     ),
-    prepare=_prepare,
+    prepare=_retained_archive_prepare,
 )

@@ -46,6 +46,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-167` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:10
 msgid "Scope"
@@ -329,7 +332,7 @@ msgstr "Apéndice de cobertura"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:46
 msgid "All 42 assigned files are linked below."
-msgstr ""
+msgstr "Los 42 archivos asignados se referencian a continuación."
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:48
 msgid "`src/cadrumo/entrypoints/cli/config/_profile_delete.py`"

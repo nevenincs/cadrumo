@@ -22,7 +22,7 @@ msgstr ""
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:1
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:14
 msgid "Registry formulas and filing-row materialization"
-msgstr ""
+msgstr "Fórmules del registre i materialització de files de presentació"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:3
 msgid ""
@@ -47,10 +47,12 @@ msgid ""
 "**Report:** `STAGE-2-124` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-124` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:12
 msgid ""
@@ -169,7 +171,7 @@ msgstr ""
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:26
 msgid "Binding coverage, asset authority, and typed catalogues"
-msgstr ""
+msgstr "Cobertura de vinculacions, autoritat d'actius i catàlegs tipats"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:28
 msgid ""
@@ -283,18 +285,24 @@ msgid ""
 "calculations/__init__.py (`src/cadrumo/domain/calculations/__init__.py`) "
 "— lines 1–22"
 msgstr ""
+"calculations/__init__.py (`src/cadrumo/domain/calculations/__init__.py`) "
+"— línies 1–22"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:43
 msgid ""
 "calculations/export_field_kind.py "
 "(`src/cadrumo/domain/calculations/export_field_kind.py`) — lines 1–76"
 msgstr ""
+"calculations/export_field_kind.py "
+"(`src/cadrumo/domain/calculations/export_field_kind.py`) — línies 1–76"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:44
 msgid ""
 "registry/__init__.py "
 "(`src/cadrumo/domain/calculations/registry/__init__.py`) — lines 1–3"
 msgstr ""
+"registry/__init__.py "
+"(`src/cadrumo/domain/calculations/registry/__init__.py`) — línies 1–3"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:45
 msgid ""
@@ -302,6 +310,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_applicability_labels.py`) — "
 "lines 1–30"
 msgstr ""
+"registry/_applicability_labels.py "
+"(`src/cadrumo/domain/calculations/registry/_applicability_labels.py`) — "
+"línies 1–30"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:46
 msgid ""
@@ -309,6 +320,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_formula_operator_contracts.py`)"
 " — lines 1–95"
 msgstr ""
+"registry/_formula_operator_contracts.py "
+"(`src/cadrumo/domain/calculations/registry/_formula_operator_contracts.py`)"
+" — línies 1–95"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:47
 msgid ""
@@ -316,6 +330,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py`) — "
 "lines 1–529"
 msgstr ""
+"registry/_formula_runtime_irnr.py "
+"(`src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py`) — "
+"línies 1–529"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:48
 msgid ""
@@ -323,6 +340,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_formula_runtime_m131.py`) — "
 "lines 1–832"
 msgstr ""
+"registry/_formula_runtime_m131.py "
+"(`src/cadrumo/domain/calculations/registry/_formula_runtime_m131.py`) — "
+"línies 1–832"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:49
 msgid ""
@@ -330,6 +350,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`)"
 " — lines 1–372"
 msgstr ""
+"registry/_invoice_row_materialization.py "
+"(`src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`)"
+" — línies 1–372"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:50
 msgid ""
@@ -337,6 +360,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py`)"
 " — lines 1–374"
 msgstr ""
+"registry/_ledger_binding_resolution.py "
+"(`src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py`)"
+" — línies 1–374"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:51
 msgid ""
@@ -344,6 +370,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_schema_export_exemption.py`) "
 "— lines 1–41"
 msgstr ""
+"registry/_schema_export_exemption.py "
+"(`src/cadrumo/domain/calculations/registry/_schema_export_exemption.py`) "
+"— línies 1–41"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:52
 msgid ""
@@ -351,6 +380,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/_toml_helpers.py`) — lines "
 "1–31"
 msgstr ""
+"registry/_toml_helpers.py "
+"(`src/cadrumo/domain/calculations/registry/_toml_helpers.py`) — línies "
+"1–31"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:53
 msgid ""
@@ -358,6 +390,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`) "
 "— lines 1–917"
 msgstr ""
+"registry/actividad_asset_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`) "
+"— línies 1–917"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:54
 msgid ""
@@ -365,6 +400,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/activity_kind_catalogue.py`) —"
 " lines 1–174"
 msgstr ""
+"registry/activity_kind_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/activity_kind_catalogue.py`) —"
+" línies 1–174"
 
 #: ../../technical/articles/124-registry-formulas-and-filing-row-materialization.md:55
 msgid ""
@@ -372,3 +410,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/amendment_regime_policy.py`) —"
 " lines 1–149"
 msgstr ""
+"registry/amendment_regime_policy.py "
+"(`src/cadrumo/domain/calculations/registry/amendment_regime_policy.py`) —"
+" línies 1–149"

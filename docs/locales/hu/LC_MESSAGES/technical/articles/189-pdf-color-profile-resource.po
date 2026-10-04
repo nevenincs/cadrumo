@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:1
 msgid "PDF color profile resource"
-msgstr ""
+msgstr "PDF-színprofil-erőforrás"
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-189` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-189` · **Téma:** [Csomagolt tudás és "
+"lokalizáció](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:10
 msgid "Scope and assessment"
-msgstr ""
+msgstr "Hatókör és értékelés"
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:12
 msgid ""
@@ -63,6 +65,18 @@ msgid ""
 "its bundled path; this chunk alone does not prove which renderer embeds "
 "or applies it."
 msgstr ""
+"Ez a részlet egy bináris erőforrást tartalmaz: a 588 bájtos `sRGB-"
+"IEC61966-2.1.icc` (`src/cadrumo/_data/calculation_summary_pdf/color/sRGB-"
+"IEC61966-2.1.icc`) fájlt. Megvizsgáltam az ICC-fejlécét és "
+"címkejegyzékét: `acsp` profilazonosítóval, XYZ profilösszekötő térhez "
+"kapcsolódó RGB színtérrel, `mntr` osztállyal és amerikai angol `sRGB "
+"built-in` leírással rendelkezik. A 11 címke tartalmazza az elvárt leírási"
+" és szerzői jogi adatokat, fehérpontot, kromatikus adaptációt, elsődleges"
+" színösszetevőket, átviteli görbéket és színességi adatokat. Ez "
+"alátámasztja a számítási összefoglaló PDF-kimenetéhez tartozó tömör "
+"színkezelési referencia szerepét, amelyre a csomagbeli útvonala is utal; "
+"ez a részlet önmagában nem bizonyítja, melyik megjelenítő ágyazza be vagy"
+" alkalmazza."
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:14
 msgid ""
@@ -73,6 +87,12 @@ msgid ""
 "Its SHA-256 is "
 "`a725926a3e8a9743234c77fba555624880d2f1074851bfd0487708d186b6d8f5`."
 msgstr ""
+"Az erőforrás nem tartalmaz végrehajtható viselkedést vagy adózói "
+"információt. A statikus feldolgozás megállapítja a fájlszerkezetet és a "
+"profil azonosságát, de nem validálja a PDF megjelenítését, a "
+"színkonverzió pontosságát vagy az erőforrás további betöltését. Ez az "
+"egyetlen fájl nem támaszt alá biztonsági megállapítást. SHA-256 értéke: "
+"`a725926a3e8a9743234c77fba555624880d2f1074851bfd0487708d186b6d8f5`."
 
 #: ../../technical/articles/189-pdf-color-profile-resource.md:16
 msgid "Complete assigned-file coverage"
@@ -83,3 +103,6 @@ msgid ""
 "sRGB-IEC61966-2.1.icc (`src/cadrumo/_data/calculation_summary_pdf/color"
 "/sRGB-IEC61966-2.1.icc`) — 588 bytes; header and tag inventory inspected."
 msgstr ""
+"sRGB-IEC61966-2.1.icc (`src/cadrumo/_data/calculation_summary_pdf/color"
+"/sRGB-IEC61966-2.1.icc`) — 588 bájt; a fejléc és a címkeleltár "
+"megvizsgálva."

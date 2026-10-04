@@ -24,7 +24,8 @@ from cadrumo.application.ledger.counterparty_establishment_ports import Counterp
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
-from cadrumo.domain.iva.schema import require_eu_member_state
+
+from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

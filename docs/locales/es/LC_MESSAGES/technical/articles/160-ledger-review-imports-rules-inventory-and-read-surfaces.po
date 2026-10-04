@@ -48,6 +48,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-160` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:10
 msgid "Scope and capability"
@@ -189,7 +192,7 @@ msgstr ""
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:30
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Valoración de seguridad e implementación"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:32
 msgid ""
@@ -258,77 +261,97 @@ msgstr "Cobertura completa de los archivos asignados"
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:44
 msgid "All 14 manifest files are linked below; every assigned line was read."
 msgstr ""
+"Los 14 archivos del manifiesto se referencian a continuación; se leyó "
+"cada línea asignada."
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:46
 msgid ""
 "_ledger_evidence_review_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`)"
 msgstr ""
+"_ledger_evidence_review_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:47
 msgid ""
 "_ledger_import_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_import_cli.py`)"
 msgstr ""
+"_ledger_import_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_import_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:48
 msgid ""
 "_ledger_inventory_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`)"
 msgstr ""
+"_ledger_inventory_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:49
 msgid "_ledger_list.py (`src/cadrumo/entrypoints/cli/_ledger_list.py`)"
-msgstr ""
+msgstr "_ledger_list.py (`src/cadrumo/entrypoints/cli/_ledger_list.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:50
 msgid "_ledger_llm_cli.py (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`)"
-msgstr ""
+msgstr "_ledger_llm_cli.py (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:51
 msgid ""
 "_ledger_llm_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)"
 msgstr ""
+"_ledger_llm_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:52
 msgid ""
 "_ledger_m210_classify_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`)"
 msgstr ""
+"_ledger_m210_classify_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:53
 msgid "_ledger_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)"
-msgstr ""
+msgstr "_ledger_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:54
 msgid ""
 "_ledger_ratios_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`)"
 msgstr ""
+"_ledger_ratios_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:55
 msgid ""
 "_ledger_ratios_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`)"
 msgstr ""
+"_ledger_ratios_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:56
 msgid "_ledger_read_cli.py (`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`)"
-msgstr ""
+msgstr "_ledger_read_cli.py (`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:57
 msgid ""
 "_ledger_review_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_review_cli.py`)"
 msgstr ""
+"_ledger_review_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_review_cli.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:58
 msgid ""
 "_ledger_rule_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`)"
 msgstr ""
+"_ledger_rule_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`)"
 
 #: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:59
 msgid "_ledger_rules_cli.py (`src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`)"
-msgstr ""
+msgstr "_ledger_rules_cli.py (`src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`)"

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:50c1798cf30a1ea22f93bca6bce3e2fc19677977a8be015068eee46dc929f935'
+body_hash: 'sha256:09b7e7b0831466bad1524111c9882c00e22440d5398523350b884df6303f6054'
 related:
   - "[[2026-10-02-duplication-remediation-reference]]"
   - "[[2026-10-02-duplication-remediation-audit]]"
@@ -14,7 +14,8 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-06-01-calculation-test-oracle-discipline-adr]]"
 ---
-# `duplication-remediation` adr: `Canonical tooling hashes and independent installed proof` | (**status:** `proposed`)
+
+# `duplication-remediation` adr: `Canonical tooling hashes and independent installed proof` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -66,3 +67,9 @@ The private verifier calculation is a role-bound exception to mechanical clone r
 ## Authorization
 
 The user delegated the architect's decision with "make the decisision" after the P08 ambiguity was reported. This authorization covers the recorded functional boundary and the corresponding scoped wording clarifications to the two installed-proof ADRs. It does not release a foreign writer reservation or grant external publication.
+
+## Decision placement and acceptance (2026-10-03)
+
+Accepted under the delegated architect authority recorded above. The new commitment is the explicit host/target provenance boundary; ordinary canonical import ownership and independent numeric-oracle discipline are reused unchanged. The corresponding product-packaging and installation-readiness wording is refined together under the same authorization, without whole-ADR supersession.
+
+One populated-draft Jev-assisted placement pass returned the import-centralization dependency and three declared supporting records. Its bounded coverage judged 33 of a 192-candidate pool in a 535-record corpus; source input and 21 candidate inputs were truncated. Root read the whole operative import, product-packaging, installation-readiness and calculation-oracle records and reviewed the complete new ruling locally. No result is treated as approval or a complete conflict audit; no automatic link writes were requested.

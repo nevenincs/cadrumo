@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:1
 msgid "Workflow execution and local filing orchestration"
-msgstr ""
+msgstr "Munkafolyamat-végrehajtás és helyi bevallásvezérlés"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-109` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-109` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:12
 msgid ""
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:14
 msgid "Workflow execution"
-msgstr ""
+msgstr "Munkafolyamat-végrehajtás"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:16
 msgid ""
@@ -155,7 +157,7 @@ msgstr ""
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:26
 msgid "Profile state, persistence, and recovery"
-msgstr ""
+msgstr "Profilállapot, perzisztencia és helyreállítás"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:28
 msgid ""
@@ -224,7 +226,7 @@ msgstr ""
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:36
 msgid "Resume and assessment"
-msgstr ""
+msgstr "Folytatás és értékelés"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:38
 msgid ""
@@ -282,84 +284,92 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:46
 msgid "__init__.py (`src/cadrumo/application/workflow/__init__.py`)"
-msgstr ""
+msgstr "__init__.py (`src/cadrumo/application/workflow/__init__.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:47
 msgid "_deadline_stage.py (`src/cadrumo/application/workflow/_deadline_stage.py`)"
-msgstr ""
+msgstr "_deadline_stage.py (`src/cadrumo/application/workflow/_deadline_stage.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:48
 msgid "_identity.py (`src/cadrumo/application/workflow/_identity.py`)"
-msgstr ""
+msgstr "_identity.py (`src/cadrumo/application/workflow/_identity.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:49
 msgid "abort.py (`src/cadrumo/application/workflow/abort.py`)"
-msgstr ""
+msgstr "abort.py (`src/cadrumo/application/workflow/abort.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:50
 msgid "active_profile.py (`src/cadrumo/application/workflow/active_profile.py`)"
-msgstr ""
+msgstr "active_profile.py (`src/cadrumo/application/workflow/active_profile.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:51
 msgid "adapters.py (`src/cadrumo/application/workflow/adapters.py`)"
-msgstr ""
+msgstr "adapters.py (`src/cadrumo/application/workflow/adapters.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:52
 msgid "engine.py (`src/cadrumo/application/workflow/engine.py`)"
-msgstr ""
+msgstr "engine.py (`src/cadrumo/application/workflow/engine.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:53
 msgid "engine_helpers.py (`src/cadrumo/application/workflow/engine_helpers.py`)"
-msgstr ""
+msgstr "engine_helpers.py (`src/cadrumo/application/workflow/engine_helpers.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:54
 msgid ""
 "engine_recording.py "
 "(`src/cadrumo/application/workflow/engine_recording.py`)"
 msgstr ""
+"engine_recording.py "
+"(`src/cadrumo/application/workflow/engine_recording.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:55
 msgid "errors.py (`src/cadrumo/application/workflow/errors.py`)"
-msgstr ""
+msgstr "errors.py (`src/cadrumo/application/workflow/errors.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:56
 msgid "events.py (`src/cadrumo/application/workflow/events.py`)"
-msgstr ""
+msgstr "events.py (`src/cadrumo/application/workflow/events.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:57
 msgid "persistence.py (`src/cadrumo/application/workflow/persistence.py`)"
-msgstr ""
+msgstr "persistence.py (`src/cadrumo/application/workflow/persistence.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:58
 msgid ""
 "profile_bucket_models.py "
 "(`src/cadrumo/application/workflow/profile_bucket_models.py`)"
 msgstr ""
+"profile_bucket_models.py "
+"(`src/cadrumo/application/workflow/profile_bucket_models.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:59
 msgid ""
 "profile_bucket_scan.py "
 "(`src/cadrumo/application/workflow/profile_bucket_scan.py`)"
 msgstr ""
+"profile_bucket_scan.py "
+"(`src/cadrumo/application/workflow/profile_bucket_scan.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:60
 msgid "profile_health.py (`src/cadrumo/application/workflow/profile_health.py`)"
-msgstr ""
+msgstr "profile_health.py (`src/cadrumo/application/workflow/profile_health.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:61
 msgid "protocols.py (`src/cadrumo/application/workflow/protocols.py`)"
-msgstr ""
+msgstr "protocols.py (`src/cadrumo/application/workflow/protocols.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:62
 msgid "resume.py (`src/cadrumo/application/workflow/resume.py`)"
-msgstr ""
+msgstr "resume.py (`src/cadrumo/application/workflow/resume.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:63
 msgid ""
 "resume_operation.py "
 "(`src/cadrumo/application/workflow/resume_operation.py`)"
 msgstr ""
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`)"
 
 #: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:64
 msgid "review_models.py (`src/cadrumo/application/workflow/review_models.py`)"
-msgstr ""
+msgstr "review_models.py (`src/cadrumo/application/workflow/review_models.py`)"

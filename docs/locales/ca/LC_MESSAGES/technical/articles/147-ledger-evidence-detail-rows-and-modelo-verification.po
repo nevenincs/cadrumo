@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:1
 msgid "ledger evidence, detail rows and modelo verification"
-msgstr ""
+msgstr "evidències del llibre major, files de detall i verificació de modelo"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-147` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-147` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:16
 msgid ""
@@ -137,7 +139,7 @@ msgstr ""
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:26
 msgid "How it works and knowledge"
-msgstr ""
+msgstr "Funcionament i coneixement"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:28
 msgid ""
@@ -174,7 +176,7 @@ msgstr ""
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:34
 msgid ""
@@ -265,67 +267,85 @@ msgid ""
 "modelos/ledger_filing_snapshot.py "
 "(`src/cadrumo/domain/modelos/ledger_filing_snapshot.py`)"
 msgstr ""
+"modelos/ledger_filing_snapshot.py "
+"(`src/cadrumo/domain/modelos/ledger_filing_snapshot.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:51
 msgid ""
 "modelos/m232_row_materialisation.py "
 "(`src/cadrumo/domain/modelos/m232_row_materialisation.py`)"
 msgstr ""
+"modelos/m232_row_materialisation.py "
+"(`src/cadrumo/domain/modelos/m232_row_materialisation.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:52
 msgid ""
 "modelos/modelo_fact_context.py "
 "(`src/cadrumo/domain/modelos/modelo_fact_context.py`)"
 msgstr ""
+"modelos/modelo_fact_context.py "
+"(`src/cadrumo/domain/modelos/modelo_fact_context.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:53
 msgid ""
 "modelos/participation_index.py "
 "(`src/cadrumo/domain/modelos/participation_index.py`)"
 msgstr ""
+"modelos/participation_index.py "
+"(`src/cadrumo/domain/modelos/participation_index.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:54
 msgid ""
 "modelos/perceptor_clave_scope.py "
 "(`src/cadrumo/domain/modelos/perceptor_clave_scope.py`)"
 msgstr ""
+"modelos/perceptor_clave_scope.py "
+"(`src/cadrumo/domain/modelos/perceptor_clave_scope.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:55
 msgid "modelos/protocols.py (`src/cadrumo/domain/modelos/protocols.py`)"
-msgstr ""
+msgstr "modelos/protocols.py (`src/cadrumo/domain/modelos/protocols.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:56
 msgid "modelos/repository.py (`src/cadrumo/domain/modelos/repository.py`)"
-msgstr ""
+msgstr "modelos/repository.py (`src/cadrumo/domain/modelos/repository.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:57
 msgid "modelos/row_models.py (`src/cadrumo/domain/modelos/row_models.py`)"
-msgstr ""
+msgstr "modelos/row_models.py (`src/cadrumo/domain/modelos/row_models.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:58
 msgid ""
 "modelos/sal_reserva_especial.py "
 "(`src/cadrumo/domain/modelos/sal_reserva_especial.py`)"
 msgstr ""
+"modelos/sal_reserva_especial.py "
+"(`src/cadrumo/domain/modelos/sal_reserva_especial.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:59
 msgid ""
 "modelos/verification_report.py "
 "(`src/cadrumo/domain/modelos/verification_report.py`)"
 msgstr ""
+"modelos/verification_report.py "
+"(`src/cadrumo/domain/modelos/verification_report.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:60
 msgid ""
 "modelos/verification_repository.py "
 "(`src/cadrumo/domain/modelos/verification_repository.py`)"
 msgstr ""
+"modelos/verification_repository.py "
+"(`src/cadrumo/domain/modelos/verification_repository.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:61
 msgid "modelos/work_unit.py (`src/cadrumo/domain/modelos/work_unit.py`)"
-msgstr ""
+msgstr "modelos/work_unit.py (`src/cadrumo/domain/modelos/work_unit.py`)"
 
 #: ../../technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.md:62
 msgid ""
 "modelos/work_unit_repository.py "
 "(`src/cadrumo/domain/modelos/work_unit_repository.py`)"
 msgstr ""
+"modelos/work_unit_repository.py "
+"(`src/cadrumo/domain/modelos/work_unit_repository.py`)"

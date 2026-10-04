@@ -15,12 +15,6 @@ required_text = ["modelo 369"]
 # Offsets and lengths read from the bundled design.
 
 [[revisions."esquema-importacion".bindings]]
-id = "modelo-369-importacion-fichero.tipo-y-cierre"
-provider = { kind = "manual_input", record = "modelo-369-importacion-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-
-[[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.regimen"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "regimen", offset = 9, length = 5, data_type = "text" }
 value = { data_type = "text", channel = "text" }

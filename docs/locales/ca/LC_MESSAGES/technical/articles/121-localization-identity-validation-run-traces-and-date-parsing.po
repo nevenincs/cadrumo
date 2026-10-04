@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:1
 msgid "Localization, identity validation, run traces, and date parsing"
-msgstr ""
+msgstr "Localització, validació d’identitat, traces d’execució i anàlisi de dates"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-121` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-121` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:12
 msgid ""
@@ -63,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:14
 msgid "Localization and catalogue freshness"
-msgstr ""
+msgstr "Localització i vigència del catàleg"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:16
 #, python-brace-format
@@ -121,7 +123,7 @@ msgstr ""
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:22
 msgid "Identity and shared parsing"
-msgstr ""
+msgstr "Identitat i anàlisi compartida"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:24
 msgid ""
@@ -187,7 +189,7 @@ msgstr ""
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:32
 msgid "Run recording, persistence, and privacy"
-msgstr ""
+msgstr "Registre d'execucions, persistència i privadesa"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:34
 msgid ""
@@ -282,208 +284,260 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:48
 msgid "i18n/__init__.py (`src/cadrumo/core/i18n/__init__.py`) — lines 1–9"
-msgstr ""
+msgstr "i18n/__init__.py (`src/cadrumo/core/i18n/__init__.py`) — línies 1–9"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:49
 msgid ""
 "i18n/_lazy_catalogue.py (`src/cadrumo/core/i18n/_lazy_catalogue.py`) — "
 "lines 1–322"
 msgstr ""
+"i18n/_lazy_catalogue.py (`src/cadrumo/core/i18n/_lazy_catalogue.py`) — "
+"línies 1–322"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:50
 msgid ""
 "i18n/auth_provider.py (`src/cadrumo/core/i18n/auth_provider.py`) — lines "
 "1–20"
 msgstr ""
+"i18n/auth_provider.py (`src/cadrumo/core/i18n/auth_provider.py`) — línies"
+" 1–20"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:51
 msgid ""
 "i18n/locale_catalogue.py (`src/cadrumo/core/i18n/locale_catalogue.py`) — "
 "lines 1–246"
 msgstr ""
+"i18n/locale_catalogue.py (`src/cadrumo/core/i18n/locale_catalogue.py`) — "
+"línies 1–246"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:52
 msgid "i18n/render.py (`src/cadrumo/core/i18n/render.py`) — lines 1–722"
-msgstr ""
+msgstr "i18n/render.py (`src/cadrumo/core/i18n/render.py`) — línies 1–722"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:53
 msgid "i18n/routing.py (`src/cadrumo/core/i18n/routing.py`) — lines 1–54"
-msgstr ""
+msgstr "i18n/routing.py (`src/cadrumo/core/i18n/routing.py`) — línies 1–54"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:54
 msgid ""
 "i18n/translatable.py (`src/cadrumo/core/i18n/translatable.py`) — lines "
 "1–35"
 msgstr ""
+"i18n/translatable.py (`src/cadrumo/core/i18n/translatable.py`) — línies "
+"1–35"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:55
 msgid "identity/__init__.py (`src/cadrumo/core/identity/__init__.py`) — lines 1–9"
 msgstr ""
+"identity/__init__.py (`src/cadrumo/core/identity/__init__.py`) — línies "
+"1–9"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:56
 msgid ""
 "identity/aeat_box.py (`src/cadrumo/core/identity/aeat_box.py`) — lines "
 "1–16"
 msgstr ""
+"identity/aeat_box.py (`src/cadrumo/core/identity/aeat_box.py`) — línies "
+"1–16"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:57
 msgid ""
 "identity/aeat_certificado.py "
 "(`src/cadrumo/core/identity/aeat_certificado.py`) — lines 1–13"
 msgstr ""
+"identity/aeat_certificado.py "
+"(`src/cadrumo/core/identity/aeat_certificado.py`) — línies 1–13"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:58
 msgid ""
 "identity/aeat_clave_liquidacion.py "
 "(`src/cadrumo/core/identity/aeat_clave_liquidacion.py`) — lines 1–13"
 msgstr ""
+"identity/aeat_clave_liquidacion.py "
+"(`src/cadrumo/core/identity/aeat_clave_liquidacion.py`) — línies 1–13"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:59
 msgid ""
 "identity/aeat_csv.py (`src/cadrumo/core/identity/aeat_csv.py`) — lines "
 "1–23"
 msgstr ""
+"identity/aeat_csv.py (`src/cadrumo/core/identity/aeat_csv.py`) — línies "
+"1–23"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:60
 msgid ""
 "identity/aeat_expediente.py "
 "(`src/cadrumo/core/identity/aeat_expediente.py`) — lines 1–30"
 msgstr ""
+"identity/aeat_expediente.py "
+"(`src/cadrumo/core/identity/aeat_expediente.py`) — línies 1–30"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:61
 msgid ""
 "identity/aeat_presentation.py "
 "(`src/cadrumo/core/identity/aeat_presentation.py`) — lines 1–13"
 msgstr ""
+"identity/aeat_presentation.py "
+"(`src/cadrumo/core/identity/aeat_presentation.py`) — línies 1–13"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:62
 msgid "identity/bucket.py (`src/cadrumo/core/identity/bucket.py`) — lines 1–68"
-msgstr ""
+msgstr "identity/bucket.py (`src/cadrumo/core/identity/bucket.py`) — línies 1–68"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:63
 msgid ""
 "identity/continuidad.py (`src/cadrumo/core/identity/continuidad.py`) — "
 "lines 1–20"
 msgstr ""
+"identity/continuidad.py (`src/cadrumo/core/identity/continuidad.py`) — "
+"línies 1–20"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:64
 msgid "identity/digest.py (`src/cadrumo/core/identity/digest.py`) — lines 1–67"
-msgstr ""
+msgstr "identity/digest.py (`src/cadrumo/core/identity/digest.py`) — línies 1–67"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:65
 msgid ""
 "identity/documents.py (`src/cadrumo/core/identity/documents.py`) — lines "
 "1–430"
 msgstr ""
+"identity/documents.py (`src/cadrumo/core/identity/documents.py`) — línies"
+" 1–430"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:66
 msgid "identity/hex_ids.py (`src/cadrumo/core/identity/hex_ids.py`) — lines 1–41"
-msgstr ""
+msgstr "identity/hex_ids.py (`src/cadrumo/core/identity/hex_ids.py`) — línies 1–41"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:67
 msgid "identity/nif_iva.py (`src/cadrumo/core/identity/nif_iva.py`) — lines 1–103"
 msgstr ""
+"identity/nif_iva.py (`src/cadrumo/core/identity/nif_iva.py`) — línies "
+"1–103"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:68
 msgid "identity/profile.py (`src/cadrumo/core/identity/profile.py`) — lines 1–66"
-msgstr ""
+msgstr "identity/profile.py (`src/cadrumo/core/identity/profile.py`) — línies 1–66"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:69
 msgid ""
 "identity/profile_label.py (`src/cadrumo/core/identity/profile_label.py`) "
 "— lines 1–47"
 msgstr ""
+"identity/profile_label.py (`src/cadrumo/core/identity/profile_label.py`) "
+"— línies 1–47"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:70
 msgid "identity/tax_id.py (`src/cadrumo/core/identity/tax_id.py`) — lines 1–173"
-msgstr ""
+msgstr "identity/tax_id.py (`src/cadrumo/core/identity/tax_id.py`) — línies 1–173"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:71
 msgid ""
 "identity/transaction_ids.py "
 "(`src/cadrumo/core/identity/transaction_ids.py`) — lines 1–18"
 msgstr ""
+"identity/transaction_ids.py "
+"(`src/cadrumo/core/identity/transaction_ids.py`) — línies 1–18"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:72
 msgid "money/__init__.py (`src/cadrumo/core/money/__init__.py`) — lines 1–20"
-msgstr ""
+msgstr "money/__init__.py (`src/cadrumo/core/money/__init__.py`) — línies 1–20"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:73
 msgid "money/rounding.py (`src/cadrumo/core/money/rounding.py`) — lines 1–43"
-msgstr ""
+msgstr "money/rounding.py (`src/cadrumo/core/money/rounding.py`) — línies 1–43"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:74
 msgid ""
 "observability/__init__.py (`src/cadrumo/core/observability/__init__.py`) "
 "— lines 1–8"
 msgstr ""
+"observability/__init__.py (`src/cadrumo/core/observability/__init__.py`) "
+"— línies 1–8"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:75
 msgid ""
 "observability/capture.py (`src/cadrumo/core/observability/capture.py`) — "
 "lines 1–71"
 msgstr ""
+"observability/capture.py (`src/cadrumo/core/observability/capture.py`) — "
+"línies 1–71"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:76
 msgid ""
 "observability/context.py (`src/cadrumo/core/observability/context.py`) — "
 "lines 1–430"
 msgstr ""
+"observability/context.py (`src/cadrumo/core/observability/context.py`) — "
+"línies 1–430"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:77
 msgid ""
 "observability/errors.py (`src/cadrumo/core/observability/errors.py`) — "
 "lines 1–93"
 msgstr ""
+"observability/errors.py (`src/cadrumo/core/observability/errors.py`) — "
+"línies 1–93"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:78
 msgid ""
 "observability/fingerprint.py "
 "(`src/cadrumo/core/observability/fingerprint.py`) — lines 1–255"
 msgstr ""
+"observability/fingerprint.py "
+"(`src/cadrumo/core/observability/fingerprint.py`) — línies 1–255"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:79
 msgid ""
 "observability/models.py (`src/cadrumo/core/observability/models.py`) — "
 "lines 1–393"
 msgstr ""
+"observability/models.py (`src/cadrumo/core/observability/models.py`) — "
+"línies 1–393"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:80
 msgid ""
 "observability/recorder.py (`src/cadrumo/core/observability/recorder.py`) "
 "— lines 1–105"
 msgstr ""
+"observability/recorder.py (`src/cadrumo/core/observability/recorder.py`) "
+"— línies 1–105"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:81
 msgid ""
 "observability/redaction_rules.py "
 "(`src/cadrumo/core/observability/redaction_rules.py`) — lines 1–40"
 msgstr ""
+"observability/redaction_rules.py "
+"(`src/cadrumo/core/observability/redaction_rules.py`) — línies 1–40"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:82
 msgid ""
 "observability/sink.py (`src/cadrumo/core/observability/sink.py`) — lines "
 "1–165"
 msgstr ""
+"observability/sink.py (`src/cadrumo/core/observability/sink.py`) — línies"
+" 1–165"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:83
 msgid ""
 "observability/store.py (`src/cadrumo/core/observability/store.py`) — "
 "lines 1–630"
 msgstr ""
+"observability/store.py (`src/cadrumo/core/observability/store.py`) — "
+"línies 1–630"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:84
 msgid "parsing/__init__.py (`src/cadrumo/core/parsing/__init__.py`) — lines 1–9"
-msgstr ""
+msgstr "parsing/__init__.py (`src/cadrumo/core/parsing/__init__.py`) — línies 1–9"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:85
 msgid "parsing/codes.py (`src/cadrumo/core/parsing/codes.py`) — lines 1–106"
-msgstr ""
+msgstr "parsing/codes.py (`src/cadrumo/core/parsing/codes.py`) — línies 1–106"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:86
 msgid "parsing/dates.py (`src/cadrumo/core/parsing/dates.py`) — lines 1–301"
-msgstr ""
+msgstr "parsing/dates.py (`src/cadrumo/core/parsing/dates.py`) — línies 1–301"
 
 #: ../../technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md:87
 msgid "parsing/utils.py (`src/cadrumo/core/parsing/utils.py`) — lines 1–99"
-msgstr ""
+msgstr "parsing/utils.py (`src/cadrumo/core/parsing/utils.py`) — línies 1–99"

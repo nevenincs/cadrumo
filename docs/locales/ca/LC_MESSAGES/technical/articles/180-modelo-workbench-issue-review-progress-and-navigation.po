@@ -46,10 +46,13 @@ msgid ""
 "**Report:** `STAGE-2-180` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-180` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:12
 msgid ""
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:14
 msgid "Operator capabilities"
-msgstr ""
+msgstr "Capacitats de l'operador"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:16
 msgid ""
@@ -136,7 +139,7 @@ msgstr ""
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:24
 msgid "How it works and what it trusts"
-msgstr ""
+msgstr "Com funciona i en què confia"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:26
 msgid ""
@@ -210,7 +213,7 @@ msgstr ""
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:36
 msgid "Security, quality and unresolved questions"
-msgstr ""
+msgstr "Seguretat, qualitat i qüestions no resoltes"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:38
 msgid ""
@@ -267,6 +270,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`) — "
 "367 lines"
 msgstr ""
+"issue_projection.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`) — "
+"367 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:49
 msgid ""
@@ -274,6 +280,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`) — 370 "
 "lines"
 msgstr ""
+"issue_scale.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`) — 370 "
+"línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:50
 msgid ""
@@ -281,30 +290,42 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_screen_components.py`)"
 " — 248 lines"
 msgstr ""
+"issue_screen_components.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/issue_screen_components.py`)"
+" — 248 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:51
 msgid ""
 "issues.py (`src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`) — "
 "395 lines"
 msgstr ""
+"issues.py (`src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`) — "
+"395 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:52
 msgid ""
 "keys.py (`src/cadrumo/entrypoints/tui/modelo/workbench/keys.py`) — 36 "
 "lines"
 msgstr ""
+"keys.py (`src/cadrumo/entrypoints/tui/modelo/workbench/keys.py`) — 36 "
+"línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:53
 msgid ""
 "legend.py (`src/cadrumo/entrypoints/tui/modelo/workbench/legend.py`) — "
 "242 lines"
 msgstr ""
+"legend.py (`src/cadrumo/entrypoints/tui/modelo/workbench/legend.py`) — "
+"242 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:54
 msgid ""
 "navigator.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`) — 590 lines"
 msgstr ""
+"navigator.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`) — 590 "
+"línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:55
 msgid ""
@@ -312,36 +333,49 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`) — 575 "
 "lines"
 msgstr ""
+"page_items.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`) — 575 "
+"línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:56
 msgid ""
 "ports.py (`src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`) — 219 "
 "lines"
 msgstr ""
+"ports.py (`src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`) — 219 "
+"línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:57
 msgid ""
 "progress.py (`src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`) "
 "— 436 lines"
 msgstr ""
+"progress.py (`src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`) "
+"— 436 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:58
 msgid ""
 "result.py (`src/cadrumo/entrypoints/tui/modelo/workbench/result.py`) — "
 "224 lines"
 msgstr ""
+"result.py (`src/cadrumo/entrypoints/tui/modelo/workbench/result.py`) — "
+"224 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:59
 msgid ""
 "review.py (`src/cadrumo/entrypoints/tui/modelo/workbench/review.py`) — "
 "447 lines"
 msgstr ""
+"review.py (`src/cadrumo/entrypoints/tui/modelo/workbench/review.py`) — "
+"447 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:60
 msgid ""
 "screen.py (`src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`) — "
 "688 lines"
 msgstr ""
+"screen.py (`src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`) — "
+"688 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:61
 msgid ""
@@ -349,6 +383,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_confirmation.py`) —"
 " 174 lines"
 msgstr ""
+"screen_confirmation.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_confirmation.py`) —"
+" 174 línies"
 
 #: ../../technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.md:62
 msgid ""
@@ -356,3 +393,6 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`) — "
 "148 lines"
 msgstr ""
+"screen_constants.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`) — "
+"148 línies"

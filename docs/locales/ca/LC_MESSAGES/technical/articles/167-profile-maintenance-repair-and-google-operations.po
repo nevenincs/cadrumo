@@ -47,6 +47,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-167` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:10
 msgid "Scope"
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:14
 msgid "Profile lifecycle and repair"
-msgstr ""
+msgstr "Cicle de vida i reparació del perfil"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:16
 msgid ""
@@ -208,7 +211,7 @@ msgstr ""
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:30
 msgid "Google, recipients, and external actions"
-msgstr ""
+msgstr "Google, destinataris i accions externes"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:32
 msgid ""
@@ -294,7 +297,7 @@ msgstr ""
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:40
 msgid "Evidence and limits"
-msgstr ""
+msgstr "Evidències i límits"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:42
 msgid ""
@@ -330,7 +333,7 @@ msgstr "Apèndix de cobertura"
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:46
 msgid "All 42 assigned files are linked below."
-msgstr ""
+msgstr "Els 42 fitxers assignats es referencien a continuació."
 
 #: ../../technical/articles/167-profile-maintenance-repair-and-google-operations.md:48
 msgid "`src/cadrumo/entrypoints/cli/config/_profile_delete.py`"

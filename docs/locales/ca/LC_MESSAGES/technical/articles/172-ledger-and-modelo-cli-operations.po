@@ -47,10 +47,13 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-172` · **Tema:** [Interfícies de l’operador, part "
+"2: transport segur i ponts d’operacions](../topics/operator-interfaces-"
+"part-2.md)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:12
 msgid ""
@@ -302,309 +305,413 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:40
 msgid "All 51 assigned modules were fully read at their manifest-specified lines:"
 msgstr ""
+"Es van llegir íntegrament els 51 mòduls assignats en les línies "
+"especificades al manifest:"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:42
 msgid ""
 "`runtime_ledger_evidence_mutation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_mutation.py`)"
 msgstr ""
+"`runtime_ledger_evidence_mutation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_mutation.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:43
 msgid ""
 "`runtime_ledger_evidence_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_read.py`)"
 msgstr ""
+"`runtime_ledger_evidence_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_read.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:44
 msgid ""
 "`runtime_ledger_export_link.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_export_link.py`)"
 msgstr ""
+"`runtime_ledger_export_link.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_export_link.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:45
 msgid ""
 "`runtime_ledger_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_history.py`)"
 msgstr ""
+"`runtime_ledger_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_history.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:46
 msgid ""
 "`runtime_ledger_import.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_import.py`)"
 msgstr ""
+"`runtime_ledger_import.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_import.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:47
 msgid ""
 "`runtime_ledger_inventory.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_inventory.py`)"
 msgstr ""
+"`runtime_ledger_inventory.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_inventory.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:48
 msgid ""
 "`runtime_ledger_invoice_evidence.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_invoice_evidence.py`)"
 msgstr ""
+"`runtime_ledger_invoice_evidence.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_invoice_evidence.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:49
 msgid ""
 "`runtime_ledger_lifecycle.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_lifecycle.py`)"
 msgstr ""
+"`runtime_ledger_lifecycle.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_lifecycle.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:50
 msgid ""
 "`runtime_ledger_list.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_list.py`)"
 msgstr ""
+"`runtime_ledger_list.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_list.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:51
 msgid ""
 "`runtime_ledger_llm_diagnostics.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_llm_diagnostics.py`)"
 msgstr ""
+"`runtime_ledger_llm_diagnostics.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_llm_diagnostics.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:52
 msgid ""
 "`runtime_ledger_merge.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_merge.py`)"
 msgstr ""
+"`runtime_ledger_merge.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_merge.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:53
 msgid ""
 "`runtime_ledger_participation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_participation.py`)"
 msgstr ""
+"`runtime_ledger_participation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_participation.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:54
 msgid ""
 "`runtime_ledger_participation_rebuild.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_participation_rebuild.py`)"
 msgstr ""
+"`runtime_ledger_participation_rebuild.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_participation_rebuild.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:55
 msgid ""
 "`runtime_ledger_prefix.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_prefix.py`)"
 msgstr ""
+"`runtime_ledger_prefix.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_prefix.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:56
 msgid ""
 "`runtime_ledger_prefix_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_prefix_read.py`)"
 msgstr ""
+"`runtime_ledger_prefix_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_prefix_read.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:57
 msgid ""
 "`runtime_ledger_preflight.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_preflight.py`)"
 msgstr ""
+"`runtime_ledger_preflight.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_preflight.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:58
 msgid ""
 "`runtime_ledger_prorrata_register.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_prorrata_register.py`)"
 msgstr ""
+"`runtime_ledger_prorrata_register.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_prorrata_register.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:59
 msgid ""
 "`runtime_ledger_ratios.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_ratios.py`)"
 msgstr ""
+"`runtime_ledger_ratios.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_ratios.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:60
 msgid ""
 "`runtime_ledger_remove.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_remove.py`)"
 msgstr ""
+"`runtime_ledger_remove.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_remove.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:61
 msgid ""
 "`runtime_ledger_reset.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_reset.py`)"
 msgstr ""
+"`runtime_ledger_reset.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_reset.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:62
 msgid ""
 "`runtime_ledger_review.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_review.py`)"
 msgstr ""
+"`runtime_ledger_review.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_review.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:63
 msgid ""
 "`runtime_ledger_rules.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_rules.py`)"
 msgstr ""
+"`runtime_ledger_rules.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_rules.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:64
 msgid ""
 "`runtime_ledger_split.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_split.py`)"
 msgstr ""
+"`runtime_ledger_split.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_split.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:65
 msgid ""
 "`runtime_ledger_status.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_status.py`)"
 msgstr ""
+"`runtime_ledger_status.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_status.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:66
 msgid ""
 "`runtime_ledger_track.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_track.py`)"
 msgstr ""
+"`runtime_ledger_track.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_track.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:67
 msgid ""
 "`runtime_ledger_update.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_update.py`)"
 msgstr ""
+"`runtime_ledger_update.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_update.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:68
 msgid ""
 "`runtime_ledger_view.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_view.py`)"
 msgstr ""
+"`runtime_ledger_view.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_view.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:69
 msgid ""
 "`runtime_live_borrador.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_live_borrador.py`)"
 msgstr ""
+"`runtime_live_borrador.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_live_borrador.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:70
 msgid ""
 "`runtime_modelo_aggregate.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_aggregate.py`)"
 msgstr ""
+"`runtime_modelo_aggregate.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_aggregate.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:71
 msgid ""
 "`runtime_modelo_amendment.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py`)"
 msgstr ""
+"`runtime_modelo_amendment.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:72
 msgid ""
 "`runtime_modelo_attestation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_attestation.py`)"
 msgstr ""
+"`runtime_modelo_attestation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_attestation.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:73
 msgid ""
 "`runtime_modelo_audit.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_audit.py`)"
 msgstr ""
+"`runtime_modelo_audit.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_audit.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:74
 msgid ""
 "`runtime_modelo_calculation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_calculation.py`)"
 msgstr ""
+"`runtime_modelo_calculation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_calculation.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:75
 msgid ""
 "`runtime_modelo_calculation_report_verify.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_calculation_report_verify.py`)"
 msgstr ""
+"`runtime_modelo_calculation_report_verify.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_calculation_report_verify.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:76
 msgid ""
 "`runtime_modelo_dependencies.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_dependencies.py`)"
 msgstr ""
+"`runtime_modelo_dependencies.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_dependencies.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:77
 msgid ""
 "`runtime_modelo_export.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_export.py`)"
 msgstr ""
+"`runtime_modelo_export.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_export.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:78
 msgid ""
 "`runtime_modelo_filing_record_import.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_import.py`)"
 msgstr ""
+"`runtime_modelo_filing_record_import.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_import.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:79
 msgid ""
 "`runtime_modelo_filing_record_list.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_list.py`)"
 msgstr ""
+"`runtime_modelo_filing_record_list.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_list.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:80
 msgid ""
 "`runtime_modelo_filing_record_view.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_view.py`)"
 msgstr ""
+"`runtime_modelo_filing_record_view.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_view.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:81
 msgid ""
 "`runtime_modelo_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_history.py`)"
 msgstr ""
+"`runtime_modelo_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_history.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:82
 msgid ""
 "`runtime_modelo_invoice_withholding.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_invoice_withholding.py`)"
 msgstr ""
+"`runtime_modelo_invoice_withholding.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_invoice_withholding.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:83
 msgid ""
 "`runtime_modelo_iva_wallet_balance.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_balance.py`)"
 msgstr ""
+"`runtime_modelo_iva_wallet_balance.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_balance.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:84
 msgid ""
 "`runtime_modelo_iva_wallet_correction.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_correction.py`)"
 msgstr ""
+"`runtime_modelo_iva_wallet_correction.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_correction.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:85
 msgid ""
 "`runtime_modelo_iva_wallet_override.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_override.py`)"
 msgstr ""
+"`runtime_modelo_iva_wallet_override.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_override.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:86
 msgid ""
 "`runtime_modelo_iva_wallet_seed.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_seed.py`)"
 msgstr ""
+"`runtime_modelo_iva_wallet_seed.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_iva_wallet_seed.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:87
 msgid ""
 "`runtime_modelo_local_observation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_local_observation.py`)"
 msgstr ""
+"`runtime_modelo_local_observation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_local_observation.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:88
 msgid ""
 "`runtime_modelo_m036.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_m036.py`)"
 msgstr ""
+"`runtime_modelo_m036.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_m036.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:89
 msgid ""
 "`runtime_modelo_m145_communication.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_m145_communication.py`)"
 msgstr ""
+"`runtime_modelo_m145_communication.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_m145_communication.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:90
 msgid ""
 "`runtime_modelo_maritime_preview.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_maritime_preview.py`)"
 msgstr ""
+"`runtime_modelo_maritime_preview.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_maritime_preview.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:91
 msgid ""
 "`runtime_modelo_metadata.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_metadata.py`)"
 msgstr ""
+"`runtime_modelo_metadata.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_metadata.py`)"
 
 #: ../../technical/articles/172-ledger-and-modelo-cli-operations.md:92
 msgid ""
 "`runtime_modelo_projection.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_projection.py`)"
 msgstr ""
+"`runtime_modelo_projection.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_projection.py`)"

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:1
 msgid "Renta expense rules and activity-asset amortization"
-msgstr ""
+msgstr "Renta-költségszabályok és tevékenységi eszközök amortizációja"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-149` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-149` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:10
 msgid "Scope"
@@ -60,7 +62,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:16
 msgid ""
@@ -134,7 +136,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:24
 msgid "How it works and knowledge"
-msgstr ""
+msgstr "Működés és tudás"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:26
 msgid ""
@@ -183,7 +185,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:34
 msgid ""

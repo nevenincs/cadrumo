@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:1
 msgid "Reconciliation, filing disposition, and accountant review packages"
-msgstr ""
+msgstr "Egyeztetés, bevallási rendelkezés és könyvelői felülvizsgálati csomagok"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-081` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:10
 msgid ""
@@ -216,7 +219,7 @@ msgstr ""
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:30
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:32
 msgid ""
@@ -275,85 +278,109 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:40
 msgid "All 15 assigned source files were read completely through pages 1–9."
 msgstr ""
+"Mind a 15 kijelölt forrásfájlt teljes egészében elolvastam az 1–9. "
+"oldalakon."
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:42
 msgid ""
 "reconcile_casilla.py "
 "(`src/cadrumo/application/modelo/reconcile_casilla.py`)"
 msgstr ""
+"reconcile_casilla.py "
+"(`src/cadrumo/application/modelo/reconcile_casilla.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:43
 msgid "reconciliation.py (`src/cadrumo/application/modelo/reconciliation.py`)"
-msgstr ""
+msgstr "reconciliation.py (`src/cadrumo/application/modelo/reconciliation.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:44
 msgid ""
 "reconciliation_import_operation.py "
 "(`src/cadrumo/application/modelo/reconciliation_import_operation.py`)"
 msgstr ""
+"reconciliation_import_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_import_operation.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:45
 msgid ""
 "reconciliation_list_operation.py "
 "(`src/cadrumo/application/modelo/reconciliation_list_operation.py`)"
 msgstr ""
+"reconciliation_list_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_list_operation.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:46
 msgid ""
 "reconciliation_parsing.py "
 "(`src/cadrumo/application/modelo/reconciliation_parsing.py`)"
 msgstr ""
+"reconciliation_parsing.py "
+"(`src/cadrumo/application/modelo/reconciliation_parsing.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:47
 msgid ""
 "reconciliation_pull_operation.py "
 "(`src/cadrumo/application/modelo/reconciliation_pull_operation.py`)"
 msgstr ""
+"reconciliation_pull_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_pull_operation.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:48
 msgid ""
 "reconciliation_records.py "
 "(`src/cadrumo/application/modelo/reconciliation_records.py`)"
 msgstr ""
+"reconciliation_records.py "
+"(`src/cadrumo/application/modelo/reconciliation_records.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:49
 msgid ""
 "registry_discovery.py "
 "(`src/cadrumo/application/modelo/registry_discovery.py`)"
 msgstr ""
+"registry_discovery.py "
+"(`src/cadrumo/application/modelo/registry_discovery.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:50
 msgid "required_inputs.py (`src/cadrumo/application/modelo/required_inputs.py`)"
-msgstr ""
+msgstr "required_inputs.py (`src/cadrumo/application/modelo/required_inputs.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:51
 msgid ""
 "result_disposition_resolution.py "
 "(`src/cadrumo/application/modelo/result_disposition_resolution.py`)"
 msgstr ""
+"result_disposition_resolution.py "
+"(`src/cadrumo/application/modelo/result_disposition_resolution.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:52
 msgid "result_summary.py (`src/cadrumo/application/modelo/result_summary.py`)"
-msgstr ""
+msgstr "result_summary.py (`src/cadrumo/application/modelo/result_summary.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:53
 msgid ""
 "result_summary_payload.py "
 "(`src/cadrumo/application/modelo/result_summary_payload.py`)"
 msgstr ""
+"result_summary_payload.py "
+"(`src/cadrumo/application/modelo/result_summary_payload.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:54
 msgid "review_package.py (`src/cadrumo/application/modelo/review_package.py`)"
-msgstr ""
+msgstr "review_package.py (`src/cadrumo/application/modelo/review_package.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:55
 msgid ""
 "review_package_collab_audit.py "
 "(`src/cadrumo/application/modelo/review_package_collab_audit.py`)"
 msgstr ""
+"review_package_collab_audit.py "
+"(`src/cadrumo/application/modelo/review_package_collab_audit.py`)"
 
 #: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:56
 msgid ""
 "review_package_counter_sign.py "
 "(`src/cadrumo/application/modelo/review_package_counter_sign.py`)"
 msgstr ""
+"review_package_counter_sign.py "
+"(`src/cadrumo/application/modelo/review_package_counter_sign.py`)"

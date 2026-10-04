@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:1
 msgid "Operation authority, registry and private input custody"
-msgstr ""
+msgstr "Műveleti felhatalmazás, regiszter és privát bemenetőrzés"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-091` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-091` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:10
 msgid ""
@@ -156,7 +158,7 @@ msgstr ""
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:26
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:28
 msgid ""
@@ -245,83 +247,101 @@ msgid ""
 "All 16 assigned files were read completely across pages 1–6; no portions "
 "were unread."
 msgstr ""
+"Mind a 16 kijelölt fájlt teljes egészében elolvastam az 1–6. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:44
 msgid ""
 "persistence/leases.py "
 "(`src/cadrumo/application/operations/persistence/leases.py`)"
 msgstr ""
+"persistence/leases.py "
+"(`src/cadrumo/application/operations/persistence/leases.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:45
 msgid ""
 "persistence/replay.py "
 "(`src/cadrumo/application/operations/persistence/replay.py`)"
 msgstr ""
+"persistence/replay.py "
+"(`src/cadrumo/application/operations/persistence/replay.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:46
 msgid "profile_guard.py (`src/cadrumo/application/operations/profile_guard.py`)"
-msgstr ""
+msgstr "profile_guard.py (`src/cadrumo/application/operations/profile_guard.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:47
 msgid ""
 "projection_services.py "
 "(`src/cadrumo/application/operations/projection_services.py`)"
 msgstr ""
+"projection_services.py "
+"(`src/cadrumo/application/operations/projection_services.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:48
 msgid "provenance.py (`src/cadrumo/application/operations/provenance.py`)"
-msgstr ""
+msgstr "provenance.py (`src/cadrumo/application/operations/provenance.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:49
 msgid "public_mirror.py (`src/cadrumo/application/operations/public_mirror.py`)"
-msgstr ""
+msgstr "public_mirror.py (`src/cadrumo/application/operations/public_mirror.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:50
 msgid ""
 "public_model_conversion.py "
 "(`src/cadrumo/application/operations/public_model_conversion.py`)"
 msgstr ""
+"public_model_conversion.py "
+"(`src/cadrumo/application/operations/public_model_conversion.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:51
 msgid "public_period.py (`src/cadrumo/application/operations/public_period.py`)"
-msgstr ""
+msgstr "public_period.py (`src/cadrumo/application/operations/public_period.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:52
 msgid "public_scalar.py (`src/cadrumo/application/operations/public_scalar.py`)"
-msgstr ""
+msgstr "public_scalar.py (`src/cadrumo/application/operations/public_scalar.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:53
 msgid "read_capture.py (`src/cadrumo/application/operations/read_capture.py`)"
-msgstr ""
+msgstr "read_capture.py (`src/cadrumo/application/operations/read_capture.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:54
 msgid ""
 "refusal_evidence.py "
 "(`src/cadrumo/application/operations/refusal_evidence.py`)"
 msgstr ""
+"refusal_evidence.py "
+"(`src/cadrumo/application/operations/refusal_evidence.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:55
 msgid "registry.py (`src/cadrumo/application/operations/registry.py`)"
-msgstr ""
+msgstr "registry.py (`src/cadrumo/application/operations/registry.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:56
 msgid ""
 "registry_schema_validation.py "
 "(`src/cadrumo/application/operations/registry_schema_validation.py`)"
 msgstr ""
+"registry_schema_validation.py "
+"(`src/cadrumo/application/operations/registry_schema_validation.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:57
 msgid ""
 "secret_submission.py "
 "(`src/cadrumo/application/operations/secret_submission.py`)"
 msgstr ""
+"secret_submission.py "
+"(`src/cadrumo/application/operations/secret_submission.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:58
 msgid "supervisor.py (`src/cadrumo/application/operations/supervisor.py`)"
-msgstr ""
+msgstr "supervisor.py (`src/cadrumo/application/operations/supervisor.py`)"
 
 #: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:59
 msgid ""
 "supervisor_context.py "
 "(`src/cadrumo/application/operations/supervisor_context.py`)"
 msgstr ""
+"supervisor_context.py "
+"(`src/cadrumo/application/operations/supervisor_context.py`)"

@@ -36,6 +36,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
+from dev._paths import REPO_ROOT
+
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile

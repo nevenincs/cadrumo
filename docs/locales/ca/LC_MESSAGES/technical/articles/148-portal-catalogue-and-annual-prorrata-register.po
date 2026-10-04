@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:1
 msgid "portal catalogue and annual prorrata register"
-msgstr ""
+msgstr "catàleg de portals i registre anual de prorrata"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-148` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-148` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:16
 msgid ""
@@ -126,7 +128,7 @@ msgstr ""
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:24
 msgid "How it works and knowledge"
-msgstr ""
+msgstr "Funcionament i coneixement"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:26
 msgid ""
@@ -177,7 +179,7 @@ msgstr ""
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:34
 msgid ""
@@ -256,312 +258,404 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:48
 msgid "notifications/__init__.py (`src/cadrumo/domain/notifications/__init__.py`)"
-msgstr ""
+msgstr "notifications/__init__.py (`src/cadrumo/domain/notifications/__init__.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:49
 msgid "notifications/sancion.py (`src/cadrumo/domain/notifications/sancion.py`)"
-msgstr ""
+msgstr "notifications/sancion.py (`src/cadrumo/domain/notifications/sancion.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:50
 msgid "portals/__init__.py (`src/cadrumo/domain/portals/__init__.py`)"
-msgstr ""
+msgstr "portals/__init__.py (`src/cadrumo/domain/portals/__init__.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:51
 msgid ""
 "portals/_entries/__init__.py "
 "(`src/cadrumo/domain/portals/_entries/__init__.py`)"
 msgstr ""
+"portals/_entries/__init__.py "
+"(`src/cadrumo/domain/portals/_entries/__init__.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:52
 msgid ""
 "portals/_entries/common.py "
 "(`src/cadrumo/domain/portals/_entries/common.py`)"
 msgstr ""
+"portals/_entries/common.py "
+"(`src/cadrumo/domain/portals/_entries/common.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:53
 msgid ""
 "portals/_entries/portal_calendario_contribuyente.py "
 "(`src/cadrumo/domain/portals/_entries/portal_calendario_contribuyente.py`)"
 msgstr ""
+"portals/_entries/portal_calendario_contribuyente.py "
+"(`src/cadrumo/domain/portals/_entries/portal_calendario_contribuyente.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:54
 msgid ""
 "portals/_entries/portal_cert_selection.py "
 "(`src/cadrumo/domain/portals/_entries/portal_cert_selection.py`)"
 msgstr ""
+"portals/_entries/portal_cert_selection.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_selection.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:55
 msgid ""
 "portals/_entries/portal_cert_validation_rest.py "
 "(`src/cadrumo/domain/portals/_entries/portal_cert_validation_rest.py`)"
 msgstr ""
+"portals/_entries/portal_cert_validation_rest.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_validation_rest.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:56
 msgid ""
 "portals/_entries/portal_clave_gestiones.py "
 "(`src/cadrumo/domain/portals/_entries/portal_clave_gestiones.py`)"
 msgstr ""
+"portals/_entries/portal_clave_gestiones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_gestiones.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:57
 msgid ""
 "portals/_entries/portal_clave_idp_root.py "
 "(`src/cadrumo/domain/portals/_entries/portal_clave_idp_root.py`)"
 msgstr ""
+"portals/_entries/portal_clave_idp_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_idp_root.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:58
 msgid ""
 "portals/_entries/portal_clave_sede_entry.py "
 "(`src/cadrumo/domain/portals/_entries/portal_clave_sede_entry.py`)"
 msgstr ""
+"portals/_entries/portal_clave_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_sede_entry.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:59
 msgid ""
 "portals/_entries/portal_consulta_pagos.py "
 "(`src/cadrumo/domain/portals/_entries/portal_consulta_pagos.py`)"
 msgstr ""
+"portals/_entries/portal_consulta_pagos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_consulta_pagos.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:60
 msgid ""
 "portals/_entries/portal_dnie_sede_entry.py "
 "(`src/cadrumo/domain/portals/_entries/portal_dnie_sede_entry.py`)"
 msgstr ""
+"portals/_entries/portal_dnie_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_dnie_sede_entry.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:61
 msgid ""
 "portals/_entries/portal_domiciliacion_bancaria.py "
 "(`src/cadrumo/domain/portals/_entries/portal_domiciliacion_bancaria.py`)"
 msgstr ""
+"portals/_entries/portal_domiciliacion_bancaria.py "
+"(`src/cadrumo/domain/portals/_entries/portal_domiciliacion_bancaria.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:62
 msgid ""
 "portals/_entries/portal_m036_censal.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m036_censal.py`)"
 msgstr ""
+"portals/_entries/portal_m036_censal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m036_censal.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:63
 msgid ""
 "portals/_entries/portal_m037_censal_simplificada.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`)"
 msgstr ""
+"portals/_entries/portal_m037_censal_simplificada.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:64
 msgid ""
 "portals/_entries/portal_m100_renta.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m100_renta.py`)"
 msgstr ""
+"portals/_entries/portal_m100_renta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m100_renta.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:65
 msgid ""
 "portals/_entries/portal_m111_retenciones_trabajo.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m111_retenciones_trabajo.py`)"
 msgstr ""
+"portals/_entries/portal_m111_retenciones_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m111_retenciones_trabajo.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:66
 msgid ""
 "portals/_entries/portal_m115_retenciones_arrendamientos.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`)"
 msgstr ""
+"portals/_entries/portal_m115_retenciones_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:67
 msgid ""
 "portals/_entries/portal_m123_retenciones_capital.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m123_retenciones_capital.py`)"
 msgstr ""
+"portals/_entries/portal_m123_retenciones_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m123_retenciones_capital.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:68
 msgid ""
 "portals/_entries/portal_m130_pago_fraccionado_ed.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`)"
 msgstr ""
+"portals/_entries/portal_m130_pago_fraccionado_ed.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:69
 msgid ""
 "portals/_entries/portal_m131_pago_fraccionado_eo.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`)"
 msgstr ""
+"portals/_entries/portal_m131_pago_fraccionado_eo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:70
 msgid ""
 "portals/_entries/portal_m180_resumen_arrendamientos.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m180_resumen_arrendamientos.py`)"
 msgstr ""
+"portals/_entries/portal_m180_resumen_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m180_resumen_arrendamientos.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:71
 msgid ""
 "portals/_entries/portal_m190_resumen_trabajo.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m190_resumen_trabajo.py`)"
 msgstr ""
+"portals/_entries/portal_m190_resumen_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m190_resumen_trabajo.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:72
 msgid ""
 "portals/_entries/portal_m193_resumen_capital.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m193_resumen_capital.py`)"
 msgstr ""
+"portals/_entries/portal_m193_resumen_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m193_resumen_capital.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:73
 msgid ""
 "portals/_entries/portal_m200_sociedades_anual.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m200_sociedades_anual.py`)"
 msgstr ""
+"portals/_entries/portal_m200_sociedades_anual.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m200_sociedades_anual.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:74
 msgid ""
 "portals/_entries/portal_m202_sociedades_fraccionado.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m202_sociedades_fraccionado.py`)"
 msgstr ""
+"portals/_entries/portal_m202_sociedades_fraccionado.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m202_sociedades_fraccionado.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:75
 msgid ""
 "portals/_entries/portal_m232_vinculadas.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m232_vinculadas.py`)"
 msgstr ""
+"portals/_entries/portal_m232_vinculadas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m232_vinculadas.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:76
 msgid ""
 "portals/_entries/portal_m303_iva_autoliquidacion.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m303_iva_autoliquidacion.py`)"
 msgstr ""
+"portals/_entries/portal_m303_iva_autoliquidacion.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m303_iva_autoliquidacion.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:77
 msgid ""
 "portals/_entries/portal_m347_operaciones_terceros.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m347_operaciones_terceros.py`)"
 msgstr ""
+"portals/_entries/portal_m347_operaciones_terceros.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m347_operaciones_terceros.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:78
 msgid ""
 "portals/_entries/portal_m349_intracomunitarias.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m349_intracomunitarias.py`)"
 msgstr ""
+"portals/_entries/portal_m349_intracomunitarias.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m349_intracomunitarias.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:79
 msgid ""
 "portals/_entries/portal_m369_oss_ioss.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m369_oss_ioss.py`)"
 msgstr ""
+"portals/_entries/portal_m369_oss_ioss.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m369_oss_ioss.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:80
 msgid ""
 "portals/_entries/portal_m390_resumen_iva.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m390_resumen_iva.py`)"
 msgstr ""
+"portals/_entries/portal_m390_resumen_iva.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m390_resumen_iva.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:81
 msgid ""
 "portals/_entries/portal_m720_bienes_extranjero.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m720_bienes_extranjero.py`)"
 msgstr ""
+"portals/_entries/portal_m720_bienes_extranjero.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m720_bienes_extranjero.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:82
 msgid ""
 "portals/_entries/portal_m840_iae.py "
 "(`src/cadrumo/domain/portals/_entries/portal_m840_iae.py`)"
 msgstr ""
+"portals/_entries/portal_m840_iae.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m840_iae.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:83
 msgid ""
 "portals/_entries/portal_mi_area_personal.py "
 "(`src/cadrumo/domain/portals/_entries/portal_mi_area_personal.py`)"
 msgstr ""
+"portals/_entries/portal_mi_area_personal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mi_area_personal.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:84
 msgid ""
 "portals/_entries/portal_mis_documentos_pendientes_firma.py "
 "(`src/cadrumo/domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`)"
 msgstr ""
+"portals/_entries/portal_mis_documentos_pendientes_firma.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:85
 msgid ""
 "portals/_entries/portal_mis_expedientes.py "
 "(`src/cadrumo/domain/portals/_entries/portal_mis_expedientes.py`)"
 msgstr ""
+"portals/_entries/portal_mis_expedientes.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_expedientes.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:86
 msgid ""
 "portals/_entries/portal_mis_notificaciones.py "
 "(`src/cadrumo/domain/portals/_entries/portal_mis_notificaciones.py`)"
 msgstr ""
+"portals/_entries/portal_mis_notificaciones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_notificaciones.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:87
 msgid ""
 "portals/_entries/portal_pago_autoliquidacion_cuenta.py "
 "(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`)"
 msgstr ""
+"portals/_entries/portal_pago_autoliquidacion_cuenta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:88
 msgid ""
 "portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py "
 "(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`)"
 msgstr ""
+"portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:89
 msgid ""
 "portals/_entries/portal_pago_liquidaciones_deudas.py "
 "(`src/cadrumo/domain/portals/_entries/portal_pago_liquidaciones_deudas.py`)"
 msgstr ""
+"portals/_entries/portal_pago_liquidaciones_deudas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_liquidaciones_deudas.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:90
 msgid ""
 "portals/_entries/portal_pre303_ayuda.py "
 "(`src/cadrumo/domain/portals/_entries/portal_pre303_ayuda.py`)"
 msgstr ""
+"portals/_entries/portal_pre303_ayuda.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pre303_ayuda.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:91
 msgid ""
 "portals/_entries/portal_presentar_consultar_index.py "
 "(`src/cadrumo/domain/portals/_entries/portal_presentar_consultar_index.py`)"
 msgstr ""
+"portals/_entries/portal_presentar_consultar_index.py "
+"(`src/cadrumo/domain/portals/_entries/portal_presentar_consultar_index.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:92
 msgid ""
 "portals/_entries/portal_renta_web_borrador.py "
 "(`src/cadrumo/domain/portals/_entries/portal_renta_web_borrador.py`)"
 msgstr ""
+"portals/_entries/portal_renta_web_borrador.py "
+"(`src/cadrumo/domain/portals/_entries/portal_renta_web_borrador.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:93
 msgid ""
 "portals/_entries/portal_sede_root.py "
 "(`src/cadrumo/domain/portals/_entries/portal_sede_root.py`)"
 msgstr ""
+"portals/_entries/portal_sede_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_sede_root.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:94
 msgid "portals/categories.py (`src/cadrumo/domain/portals/categories.py`)"
-msgstr ""
+msgstr "portals/categories.py (`src/cadrumo/domain/portals/categories.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:95
 msgid "portals/codes.py (`src/cadrumo/domain/portals/codes.py`)"
-msgstr ""
+msgstr "portals/codes.py (`src/cadrumo/domain/portals/codes.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:96
 msgid "portals/errors.py (`src/cadrumo/domain/portals/errors.py`)"
-msgstr ""
+msgstr "portals/errors.py (`src/cadrumo/domain/portals/errors.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:97
 msgid "portals/hosts.py (`src/cadrumo/domain/portals/hosts.py`)"
-msgstr ""
+msgstr "portals/hosts.py (`src/cadrumo/domain/portals/hosts.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:98
 msgid "portals/metadata.py (`src/cadrumo/domain/portals/metadata.py`)"
-msgstr ""
+msgstr "portals/metadata.py (`src/cadrumo/domain/portals/metadata.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:99
 msgid "portals/registry.py (`src/cadrumo/domain/portals/registry.py`)"
-msgstr ""
+msgstr "portals/registry.py (`src/cadrumo/domain/portals/registry.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:100
 msgid ""
 "prorrata_register/__init__.py "
 "(`src/cadrumo/domain/prorrata_register/__init__.py`)"
 msgstr ""
+"prorrata_register/__init__.py "
+"(`src/cadrumo/domain/prorrata_register/__init__.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:101
 msgid ""
 "prorrata_register/protocols.py "
 "(`src/cadrumo/domain/prorrata_register/protocols.py`)"
 msgstr ""
+"prorrata_register/protocols.py "
+"(`src/cadrumo/domain/prorrata_register/protocols.py`)"
 
 #: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:102
 msgid ""
 "prorrata_register/register.py "
 "(`src/cadrumo/domain/prorrata_register/register.py`)"
 msgstr ""
+"prorrata_register/register.py "
+"(`src/cadrumo/domain/prorrata_register/register.py`)"

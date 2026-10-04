@@ -47,6 +47,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-166` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:10
 msgid "Scope"
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:14
 msgid "Command routing, output, and taxpayer identity"
-msgstr ""
+msgstr "Encaminament d'ordres, sortida i identitat del contribuent"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:16
 msgid ""
@@ -117,7 +120,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:22
 msgid "Profile facts, readiness, and censal evidence"
-msgstr ""
+msgstr "Fets del perfil, preparació i evidències censals"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:24
 msgid ""
@@ -166,7 +169,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:28
 msgid "Authentication, representatives, and profile backup"
-msgstr ""
+msgstr "Autenticació, representants i còpia de seguretat del perfil"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:30
 msgid ""
@@ -276,7 +279,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:40
 msgid "Evidence and limits"
-msgstr ""
+msgstr "Evidències i límits"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:42
 msgid ""
@@ -300,7 +303,7 @@ msgstr "Apèndix de cobertura"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:46
 msgid "All 28 assigned files are linked below."
-msgstr ""
+msgstr "Els 28 fitxers assignats es referencien a continuació."
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:48
 msgid "`src/cadrumo/entrypoints/cli/command_suggestions.py`"

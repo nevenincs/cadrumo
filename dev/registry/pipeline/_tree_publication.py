@@ -12,6 +12,7 @@ from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENA
 from ..conformance.manager import reset_conformance_cache
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
     validate_generated_export_tree,
 )
 from .export_fragment_provenance import ExportFragmentProvenanceManifest
@@ -90,6 +91,8 @@ def publish_validated_generated_export_tree(
         )
         if recovered:
             return _already_published(target_export_root)
+        if context.supersession is not None and context.validation.historical_static_source_ref is not None:
+            raise RegistryValidationError("historical static target cannot publish a manual-layout supersession")
         validated, candidate_manifest, candidate_manifest_sha256, staged_candidate_export_root = (
             _validate_and_stage_candidate(
                 context=context,
@@ -102,6 +105,8 @@ def publish_validated_generated_export_tree(
             )
         )
         if context.supersession is not None:
+            if isinstance(validated, ValidatedHistoricalStaticGeneratedExportTree):
+                raise RegistryValidationError("historical static target cannot publish a manual-layout supersession")
             return _publish_superseding_revision_bundle(
                 context=context,
                 target_export_root=target_export_root,
@@ -191,7 +196,12 @@ def _validate_and_stage_candidate(
     rendered: RenderedExportTree,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-) -> tuple[ValidatedGeneratedExportTree, ExportFragmentProvenanceManifest, str, Path]:
+) -> tuple[
+    ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree,
+    ExportFragmentProvenanceManifest,
+    str,
+    Path,
+]:
     # This is the immediate pre-cutover proof, before any journal or export tree changes.
     validated = validate_generated_export_tree(
         context=context.validation,
@@ -222,7 +232,7 @@ def _publish_ordinary_candidate(
     target_export_root: Path,
     transaction_paths: GeneratedExportTransactionPaths,
     journal_path: Path,
-    validated: ValidatedGeneratedExportTree,
+    validated: ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree,
     candidate_manifest: ExportFragmentProvenanceManifest,
     candidate_manifest_sha256: str,
     staged_candidate_export_root: Path,

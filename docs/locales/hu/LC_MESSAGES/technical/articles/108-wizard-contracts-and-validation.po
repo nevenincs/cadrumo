@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:1
 msgid "Wizard contracts and validation"
-msgstr ""
+msgstr "Varázslószerződések és ellenőrzés"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-108` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-108` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:12
 msgid ""
@@ -59,7 +61,7 @@ msgstr ""
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:14
 msgid "Wizard contract and validation"
-msgstr ""
+msgstr "Varázslószerződés és validáció"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:16
 msgid ""
@@ -121,7 +123,7 @@ msgstr ""
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:22
 msgid "Persistence and profile status"
-msgstr ""
+msgstr "Perzisztencia és profilállapot"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:24
 msgid ""
@@ -223,38 +225,40 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:38
 msgid "errors.py (`src/cadrumo/application/wizard/errors.py`)"
-msgstr ""
+msgstr "errors.py (`src/cadrumo/application/wizard/errors.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:39
 msgid "flow_validators.py (`src/cadrumo/application/wizard/flow_validators.py`)"
-msgstr ""
+msgstr "flow_validators.py (`src/cadrumo/application/wizard/flow_validators.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:40
 msgid "models.py (`src/cadrumo/application/wizard/models.py`)"
-msgstr ""
+msgstr "models.py (`src/cadrumo/application/wizard/models.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:41
 msgid "patch_edit.py (`src/cadrumo/application/wizard/patch_edit.py`)"
-msgstr ""
+msgstr "patch_edit.py (`src/cadrumo/application/wizard/patch_edit.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:42
 msgid "persistence.py (`src/cadrumo/application/wizard/persistence.py`)"
-msgstr ""
+msgstr "persistence.py (`src/cadrumo/application/wizard/persistence.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:43
 msgid "results.py (`src/cadrumo/application/wizard/results.py`)"
-msgstr ""
+msgstr "results.py (`src/cadrumo/application/wizard/results.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:44
 msgid ""
 "setup_legal_validators.py "
 "(`src/cadrumo/application/wizard/setup_legal_validators.py`)"
 msgstr ""
+"setup_legal_validators.py "
+"(`src/cadrumo/application/wizard/setup_legal_validators.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:45
 msgid "status.py (`src/cadrumo/application/wizard/status.py`)"
-msgstr ""
+msgstr "status.py (`src/cadrumo/application/wizard/status.py`)"
 
 #: ../../technical/articles/108-wizard-contracts-and-validation.md:46
 msgid "widgets.py (`src/cadrumo/application/wizard/widgets.py`)"
-msgstr ""
+msgstr "widgets.py (`src/cadrumo/application/wizard/widgets.py`)"

@@ -40,10 +40,11 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_legal_references,
 )
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
-from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.resources.bundled_data import bundled_path
 from ....core.toml import load_toml
+from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate

@@ -22,7 +22,7 @@ from .export_field_render_profile_derivation import (
     _render_profile_anchor,
     _render_profile_numeric_derivation,
 )
-from .export_field_schema import _is_required, _schema_field
+from .export_field_schema import _is_required, _is_required_casilla_text, _schema_field
 from .export_fragment_provenance import (
     ExportFieldDerivation,
     ExportFieldDerivationCode,
@@ -569,10 +569,16 @@ def _text_field_derivation(
             export_record_id=export_record_id,
         )
     derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code in _ALPHABETIC_TYPES else "text-an-v1"
+    parser_field = joined_field.parser_field
+    required = (
+        _is_required_casilla_text(parser_field.validation, parser_field.content)
+        if joined_field.semantic_entry.kind is CasillaFieldKind.CASILLA
+        else _is_required(parser_field.validation)
+    )
     return _schema_field(
         joined_field,
         data_type="text",
-        required=_is_required(joined_field.parser_field.validation),
+        required=required,
         padding=ExportPadding.RIGHT_SPACE,
         justification=ExportJustification.LEFT,
         signed=False,

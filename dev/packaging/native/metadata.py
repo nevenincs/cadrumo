@@ -10,14 +10,17 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
+from .identity import identity
 from .layout import backend, load_layout
 
 
-def generate(destination: Path, number: int, date: str, tools: Path) -> None:
+def generate(destination: Path, number: int, date: str, tools: Path, channel: str = "stable") -> None:
     """Project identity, the existing favicon, and package filenames into resources."""
     version = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     layout = load_layout()
+    target = "windows-x86-64" if layout["platform"] == "windows-x64" else layout["platform"]
+    product = identity(target, channel)
     destination.mkdir(parents=True, exist_ok=True)
     metadata = {
         "product": PRODUCT_IDENTITY.display_name,
@@ -26,6 +29,11 @@ def generate(destination: Path, number: int, date: str, tools: Path) -> None:
         "build_date": date,
         "python": python,
         "layout_abi": layout["abi"],
+        "application_id": product.application_id,
+        "publisher": product.publisher,
+        "channel": product.channel,
+        "target": product.target,
+        "compatibility_floor": product.compatibility_floor,
     }
     (destination / "build.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     values = {
@@ -45,5 +53,6 @@ if __name__ == "__main__":
     parser.add_argument("--number", type=int, required=True)
     parser.add_argument("--date", required=True)
     parser.add_argument("--tools", type=Path, required=True)
+    parser.add_argument("--channel", choices=("stable", "preview"), default="stable")
     args = parser.parse_args()
-    generate(args.destination, args.number, args.date, args.tools)
+    generate(args.destination, args.number, args.date, args.tools, args.channel)

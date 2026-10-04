@@ -49,10 +49,13 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-163` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:10
 msgid "Scope and behavior"
-msgstr ""
+msgstr "Abast i comportament"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:12
 msgid ""
@@ -190,7 +193,7 @@ msgstr ""
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:26
 msgid "Findings and limits"
-msgstr ""
+msgstr "Troballes i límits"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:28
 msgid ""
@@ -229,7 +232,7 @@ msgstr "Apèndix de cobertura"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:34
 msgid "All 19 assigned files are represented and linked below."
-msgstr ""
+msgstr "Els 19 fitxers assignats es representen i es referencien a continuació."
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:36
 msgid "`src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`"

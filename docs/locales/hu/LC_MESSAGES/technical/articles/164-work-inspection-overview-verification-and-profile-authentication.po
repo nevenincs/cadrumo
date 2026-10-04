@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:1
 msgid "Work inspection, overview, verification and profile authentication"
-msgstr ""
+msgstr "Munkavizsgálat, áttekintés, ellenőrzés és profilhitelesítés"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-164` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:10
 msgid "Scope"
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:14
 msgid "Work revisions, reports, and filing transitions"
-msgstr ""
+msgstr "Munkaváltozatok, jelentések és bevallási átmenetek"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:16
 msgid ""
@@ -128,7 +131,7 @@ msgstr ""
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:22
 msgid "Overview and related operator surfaces"
-msgstr ""
+msgstr "Áttekintés és kapcsolódó operátori felületek"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:24
 msgid ""
@@ -241,7 +244,7 @@ msgstr "Lefedettségi függelék"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:40
 msgid "All 18 assigned files are linked below."
-msgstr ""
+msgstr "Mind a 18 kijelölt fájl hivatkozása alább található."
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:42
 msgid "`src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`"

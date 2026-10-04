@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:1
 msgid "Revision selection, withholding aggregation, and row provenance"
-msgstr ""
+msgstr "Revízióválasztás, forrásadó-összesítés és sorszármazás"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-137` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-137` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:12
 msgid ""
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:14
 msgid "Temporal revision selection"
-msgstr ""
+msgstr "Időbeli változatválasztás"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:16
 msgid ""
@@ -145,7 +147,7 @@ msgstr ""
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:26
 msgid "Withholding bindings and sensitive row data"
-msgstr ""
+msgstr "Forrásadó-levonási kötések és érzékeny soradatok"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:28
 msgid ""
@@ -207,7 +209,7 @@ msgstr ""
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:34
 msgid "Smaller registry projections"
-msgstr ""
+msgstr "Kisebb regisztervetületek"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:36
 msgid ""
@@ -233,7 +235,7 @@ msgstr ""
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:40
 msgid "Quality, security, and limits"
-msgstr ""
+msgstr "Minőség, biztonság és korlátok"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:42
 msgid ""
@@ -266,12 +268,16 @@ msgid ""
 "All 11 assigned files were read fully across six bounded pages; no unread"
 " ranges remain."
 msgstr ""
+"Mind a 11 kijelölt fájlt teljes egészében elolvastam hat körülhatárolt "
+"oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:50
 msgid ""
 "registry/temporal.py "
 "(`src/cadrumo/domain/calculations/registry/temporal.py`) — 1–919"
 msgstr ""
+"registry/temporal.py "
+"(`src/cadrumo/domain/calculations/registry/temporal.py`) — 1–919"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:51
 msgid ""
@@ -279,6 +285,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/third_party_declaration_roles.py`)"
 " — 1–176"
 msgstr ""
+"registry/third_party_declaration_roles.py "
+"(`src/cadrumo/domain/calculations/registry/third_party_declaration_roles.py`)"
+" — 1–176"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:52
 msgid ""
@@ -286,6 +295,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/travel_agency_mediation.py`) —"
 " 1–159"
 msgstr ""
+"registry/travel_agency_mediation.py "
+"(`src/cadrumo/domain/calculations/registry/travel_agency_mediation.py`) —"
+" 1–159"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:53
 msgid ""
@@ -293,6 +305,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py`)"
 " — 1–205"
 msgstr ""
+"registry/validate_cross_domain_snapshot.py "
+"(`src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py`)"
+" — 1–205"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:54
 msgid ""
@@ -300,6 +315,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/validate_revision_identity.py`)"
 " — 1–237"
 msgstr ""
+"registry/validate_revision_identity.py "
+"(`src/cadrumo/domain/calculations/registry/validate_revision_identity.py`)"
+" — 1–237"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:55
 msgid ""
@@ -307,6 +325,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/verification_tolerance.py`) — "
 "1–27"
 msgstr ""
+"registry/verification_tolerance.py "
+"(`src/cadrumo/domain/calculations/registry/verification_tolerance.py`) — "
+"1–27"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:56
 msgid ""
@@ -314,6 +335,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/withholding296_bindings.py`) —"
 " 1–172"
 msgstr ""
+"registry/withholding296_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/withholding296_bindings.py`) —"
+" 1–172"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:57
 msgid ""
@@ -321,19 +345,26 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/withholding_bindings.py`) — "
 "1–1,165"
 msgstr ""
+"registry/withholding_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/withholding_bindings.py`) — "
+"1–1,165"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:58
 msgid "row_casilla.py (`src/cadrumo/domain/calculations/row_casilla.py`) — 1–35"
-msgstr ""
+msgstr "row_casilla.py (`src/cadrumo/domain/calculations/row_casilla.py`) — 1–35"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:59
 msgid ""
 "row_coordinate.py (`src/cadrumo/domain/calculations/row_coordinate.py`) —"
 " 1–41"
 msgstr ""
+"row_coordinate.py (`src/cadrumo/domain/calculations/row_coordinate.py`) —"
+" 1–41"
 
 #: ../../technical/articles/137-revision-selection-withholding-aggregation-and-row-provenance.md:60
 msgid ""
 "row_source_identity.py "
 "(`src/cadrumo/domain/calculations/row_source_identity.py`) — 1–64"
 msgstr ""
+"row_source_identity.py "
+"(`src/cadrumo/domain/calculations/row_source_identity.py`) — 1–64"

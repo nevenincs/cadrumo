@@ -1,0 +1,31 @@
+{
+  "kind": "bounded_read_only_native_distribution_review",
+  "incoming_commit": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "authority": ".vault/adr/2026-10-04-application-distribution-adr.md at incoming commit",
+  "scope": ["dev/packaging/native/installation.py", "dev/packaging/native/identity.py", "dev/packaging/tests/test_native_installation.py", "native/cmake/distribution/CMakeLists.txt", "native/cmake/distribution/VerifyInstall.cmake.in", "native/cmake/Identity.cmake", "native/desktop/scripts/host.mjs"],
+  "findings": [
+    {
+      "id": "NATIVE-EFB-01",
+      "severity": "high",
+      "owner_path": "dev/packaging/native/installation.py",
+      "symbol": "prepare",
+      "fact": "An existing build/native-install-tree is recursively deleted after path-link checks without checking an earlier owning inventory or refusing modified/unowned entries.",
+      "trigger": "A preexisting unowned file in that generated child is removed on ordinary prepare/reconfigure.",
+      "requested_remedy": "Establish retained staging ownership and exact unchanged inventory before deletion; refuse foreign or modified state."
+    },
+    {
+      "id": "NATIVE-EFB-02",
+      "severity": "high",
+      "owner_path": "dev/packaging/native/installation.py",
+      "symbol": "uninstall",
+      "fact": "Content and path guards run during preflight, followed by a separate unlink loop that does not revalidate file identity/content or parent binding.",
+      "trigger": "A file or parent replaced after preflight can be removed despite now being modified/unowned or redirected outside the checked prefix.",
+      "requested_remedy": "Retain filesystem ownership/bindings through deletion and refuse intervening changes; cover replacement and parent-redirection interleavings."
+    }
+  ],
+  "scoped_observations": ["Canonical product/project/target owners supply identities; channel namespace is distinct from release/build identity.", "Inspected distribution code does not install runtime services/tasks, start a runtime, migrate Settings-owned user storage or add runtime health administration."],
+  "source_mutated": false,
+  "tests_run": false,
+  "native_install_uninstall_or_desktop_success_claimed": false,
+  "disposition": "Root accepted findings; native owner history assigned remediation after actual efb merge. Static scope only, combined verification pending."
+}

@@ -49,10 +49,13 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-173` · **Tema:** [Interfícies de l’operador, part "
+"2: transport segur i ponts d’operacions](../topics/operator-interfaces-"
+"part-2.md)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:12
 msgid ""
@@ -69,7 +72,7 @@ msgstr ""
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:14
 msgid "Product capabilities and flow"
-msgstr ""
+msgstr "Capacitats del producte i flux"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:16
 msgid ""
@@ -288,225 +291,297 @@ msgid ""
 "All 38 assigned modules were fully read at their manifest-specified line "
 "ranges:"
 msgstr ""
+"Es van llegir íntegrament els 38 mòduls assignats en els intervals de "
+"línies especificats al manifest:"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:46
 msgid ""
 "`runtime_modelo_query_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_query_read.py`)"
 msgstr ""
+"`runtime_modelo_query_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_query_read.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:47
 msgid ""
 "`runtime_modelo_reconciliation_import.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_import.py`)"
 msgstr ""
+"`runtime_modelo_reconciliation_import.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_import.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:48
 msgid ""
 "`runtime_modelo_reconciliation_list.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_list.py`)"
 msgstr ""
+"`runtime_modelo_reconciliation_list.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_list.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:49
 msgid ""
 "`runtime_modelo_reconciliation_pull.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_pull.py`)"
 msgstr ""
+"`runtime_modelo_reconciliation_pull.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_pull.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:50
 msgid ""
 "`runtime_modelo_review_package.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py`)"
 msgstr ""
+"`runtime_modelo_review_package.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:51
 msgid ""
 "`runtime_modelo_review_package_exchange.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_review_package_exchange.py`)"
 msgstr ""
+"`runtime_modelo_review_package_exchange.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_review_package_exchange.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:52
 msgid ""
 "`runtime_modelo_revision.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_revision.py`)"
 msgstr ""
+"`runtime_modelo_revision.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_revision.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:53
 msgid ""
 "`runtime_modelo_spreadsheet.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_spreadsheet.py`)"
 msgstr ""
+"`runtime_modelo_spreadsheet.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_spreadsheet.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:54
 msgid ""
 "`runtime_modelo_spreadsheet_push.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_spreadsheet_push.py`)"
 msgstr ""
+"`runtime_modelo_spreadsheet_push.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_spreadsheet_push.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:55
 msgid ""
 "`runtime_modelo_taxation_comparison.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_taxation_comparison.py`)"
 msgstr ""
+"`runtime_modelo_taxation_comparison.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_taxation_comparison.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:56
 msgid ""
 "`runtime_modelo_verification.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`)"
 msgstr ""
+"`runtime_modelo_verification.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:57
 msgid ""
 "`runtime_modelo_verification_report_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_verification_report_read.py`)"
 msgstr ""
+"`runtime_modelo_verification_report_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_verification_report_read.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:58
 msgid ""
 "`runtime_modelo_work_create.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_work_create.py`)"
 msgstr ""
+"`runtime_modelo_work_create.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_work_create.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:59
 msgid ""
 "`runtime_modelo_work_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py`)"
 msgstr ""
+"`runtime_modelo_work_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:60
 msgid ""
 "`runtime_modelo_work_inventory.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py`)"
 msgstr ""
+"`runtime_modelo_work_inventory.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:61
 msgid ""
 "`runtime_modelo_work_review.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_work_review.py`)"
 msgstr ""
+"`runtime_modelo_work_review.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_work_review.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:62
 msgid ""
 "`runtime_modelo_work_wizard.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py`)"
 msgstr ""
+"`runtime_modelo_work_wizard.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:63
 msgid ""
 "`runtime_notification_document_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_notification_document_capture.py`)"
 msgstr ""
+"`runtime_notification_document_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_notification_document_capture.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:64
 msgid ""
 "`runtime_notification_document_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_notification_document_read.py`)"
 msgstr ""
+"`runtime_notification_document_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_notification_document_read.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:65
 msgid ""
 "`runtime_notifications_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_notifications_capture.py`)"
 msgstr ""
+"`runtime_notifications_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_notifications_capture.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:66
 msgid ""
 "`runtime_notifications_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_notifications_read.py`)"
 msgstr ""
+"`runtime_notifications_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_notifications_read.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:67
 msgid "`runtime_overview.py` (`src/cadrumo/entrypoints/cli/runtime_overview.py`)"
-msgstr ""
+msgstr "`runtime_overview.py` (`src/cadrumo/entrypoints/cli/runtime_overview.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:68
 msgid ""
 "`runtime_overview_pipeline.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_overview_pipeline.py`)"
 msgstr ""
+"`runtime_overview_pipeline.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_overview_pipeline.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:69
 msgid ""
 "`runtime_profile_admission.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_profile_admission.py`)"
 msgstr ""
+"`runtime_profile_admission.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_profile_admission.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:70
 msgid ""
 "`runtime_profile_archive.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_profile_archive.py`)"
 msgstr ""
+"`runtime_profile_archive.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_profile_archive.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:71
 msgid ""
 "`runtime_profile_binding.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_profile_binding.py`)"
 msgstr ""
+"`runtime_profile_binding.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_profile_binding.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:72
 msgid ""
 "`runtime_profile_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_profile_history.py`)"
 msgstr ""
+"`runtime_profile_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_profile_history.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:73
 msgid ""
 "`runtime_profile_operation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_profile_operation.py`)"
 msgstr ""
+"`runtime_profile_operation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_profile_operation.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:74
 msgid ""
 "`runtime_quickfile.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_quickfile.py`)"
 msgstr ""
+"`runtime_quickfile.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_quickfile.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:75
 msgid ""
 "`runtime_registered_operation.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_registered_operation.py`)"
 msgstr ""
+"`runtime_registered_operation.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_registered_operation.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:76
 msgid "`runtime_review.py` (`src/cadrumo/entrypoints/cli/runtime_review.py`)"
-msgstr ""
+msgstr "`runtime_review.py` (`src/cadrumo/entrypoints/cli/runtime_review.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:77
 msgid ""
 "`runtime_verify_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_verify_capture.py`)"
 msgstr ""
+"`runtime_verify_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_verify_capture.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:78
 msgid ""
 "`runtime_verify_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_verify_read.py`)"
 msgstr ""
+"`runtime_verify_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_verify_read.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:79
 msgid ""
 "`runtime_workflow_resume.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_workflow_resume.py`)"
 msgstr ""
+"`runtime_workflow_resume.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_workflow_resume.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:80
 msgid ""
 "`runtime_workflow_runs.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_workflow_runs.py`)"
 msgstr ""
+"`runtime_workflow_runs.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_workflow_runs.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:81
 msgid ""
 "`state_projection_support.py` "
 "(`src/cadrumo/entrypoints/cli/state_projection_support.py`)"
 msgstr ""
+"`state_projection_support.py` "
+"(`src/cadrumo/entrypoints/cli/state_projection_support.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:82
 msgid "`tui_launcher.py` (`src/cadrumo/entrypoints/cli/tui_launcher.py`)"
-msgstr ""
+msgstr "`tui_launcher.py` (`src/cadrumo/entrypoints/cli/tui_launcher.py`)"
 
 #: ../../technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md:83
 msgid ""
 "`verb_input_schema.py` "
 "(`src/cadrumo/entrypoints/cli/verb_input_schema.py`)"
 msgstr ""
+"`verb_input_schema.py` "
+"(`src/cadrumo/entrypoints/cli/verb_input_schema.py`)"

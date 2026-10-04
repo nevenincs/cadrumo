@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:1
 msgid "Profile facts, registration, recovery, and session selection"
-msgstr ""
+msgstr "Profiltények, regisztráció, helyreállítás és munkamenet-választás"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-105` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-105` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:12
 msgid ""
@@ -197,7 +199,7 @@ msgstr ""
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:30
 msgid "State, knowledge, and security boundaries"
-msgstr ""
+msgstr "Állapot-, tudás- és biztonsági határok"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:32
 msgid ""
@@ -320,120 +322,148 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:48
 msgid "overview.py (`src/cadrumo/application/user_profile/overview.py`)"
-msgstr ""
+msgstr "overview.py (`src/cadrumo/application/user_profile/overview.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:49
 msgid ""
 "passphrase_rotation.py "
 "(`src/cadrumo/application/user_profile/passphrase_rotation.py`)"
 msgstr ""
+"passphrase_rotation.py "
+"(`src/cadrumo/application/user_profile/passphrase_rotation.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:50
 msgid ""
 "plantilla_media_rows.py "
 "(`src/cadrumo/application/user_profile/plantilla_media_rows.py`)"
 msgstr ""
+"plantilla_media_rows.py "
+"(`src/cadrumo/application/user_profile/plantilla_media_rows.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:51
 msgid "preflight.py (`src/cadrumo/application/user_profile/preflight.py`)"
-msgstr ""
+msgstr "preflight.py (`src/cadrumo/application/user_profile/preflight.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:52
 msgid "presentation.py (`src/cadrumo/application/user_profile/presentation.py`)"
-msgstr ""
+msgstr "presentation.py (`src/cadrumo/application/user_profile/presentation.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:53
 msgid "profile_key.py (`src/cadrumo/application/user_profile/profile_key.py`)"
-msgstr ""
+msgstr "profile_key.py (`src/cadrumo/application/user_profile/profile_key.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:54
 msgid "profile_keys.py (`src/cadrumo/application/user_profile/profile_keys.py`)"
-msgstr ""
+msgstr "profile_keys.py (`src/cadrumo/application/user_profile/profile_keys.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:55
 msgid ""
 "profile_pointer.py "
 "(`src/cadrumo/application/user_profile/profile_pointer.py`)"
 msgstr ""
+"profile_pointer.py "
+"(`src/cadrumo/application/user_profile/profile_pointer.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:56
 msgid ""
 "profile_pointer_ports.py "
 "(`src/cadrumo/application/user_profile/profile_pointer_ports.py`)"
 msgstr ""
+"profile_pointer_ports.py "
+"(`src/cadrumo/application/user_profile/profile_pointer_ports.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:57
 msgid ""
 "profile_read_ports.py "
 "(`src/cadrumo/application/user_profile/profile_read_ports.py`)"
 msgstr ""
+"profile_read_ports.py "
+"(`src/cadrumo/application/user_profile/profile_read_ports.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:58
 msgid ""
 "profile_record_repository.py "
 "(`src/cadrumo/application/user_profile/profile_record_repository.py`)"
 msgstr ""
+"profile_record_repository.py "
+"(`src/cadrumo/application/user_profile/profile_record_repository.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:59
 msgid ""
 "profile_repository.py "
 "(`src/cadrumo/application/user_profile/profile_repository.py`)"
 msgstr ""
+"profile_repository.py "
+"(`src/cadrumo/application/user_profile/profile_repository.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:60
 msgid ""
 "profile_schema_migration.py "
 "(`src/cadrumo/application/user_profile/profile_schema_migration.py`)"
 msgstr ""
+"profile_schema_migration.py "
+"(`src/cadrumo/application/user_profile/profile_schema_migration.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:61
 msgid ""
 "profile_summary.py "
 "(`src/cadrumo/application/user_profile/profile_summary.py`)"
 msgstr ""
+"profile_summary.py "
+"(`src/cadrumo/application/user_profile/profile_summary.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:62
 msgid "projections.py (`src/cadrumo/application/user_profile/projections.py`)"
-msgstr ""
+msgstr "projections.py (`src/cadrumo/application/user_profile/projections.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:63
 msgid ""
 "prospective_password.py "
 "(`src/cadrumo/application/user_profile/prospective_password.py`)"
 msgstr ""
+"prospective_password.py "
+"(`src/cadrumo/application/user_profile/prospective_password.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:64
 msgid ""
 "recovery_custody.py "
 "(`src/cadrumo/application/user_profile/recovery_custody.py`)"
 msgstr ""
+"recovery_custody.py "
+"(`src/cadrumo/application/user_profile/recovery_custody.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:65
 msgid ""
 "recovery_status_operation.py "
 "(`src/cadrumo/application/user_profile/recovery_status_operation.py`)"
 msgstr ""
+"recovery_status_operation.py "
+"(`src/cadrumo/application/user_profile/recovery_status_operation.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:66
 msgid "registration.py (`src/cadrumo/application/user_profile/registration.py`)"
-msgstr ""
+msgstr "registration.py (`src/cadrumo/application/user_profile/registration.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:67
 msgid "repository.py (`src/cadrumo/application/user_profile/repository.py`)"
-msgstr ""
+msgstr "repository.py (`src/cadrumo/application/user_profile/repository.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:68
 msgid "section_rows.py (`src/cadrumo/application/user_profile/section_rows.py`)"
-msgstr ""
+msgstr "section_rows.py (`src/cadrumo/application/user_profile/section_rows.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:69
 msgid ""
 "session_admission.py "
 "(`src/cadrumo/application/user_profile/session_admission.py`)"
 msgstr ""
+"session_admission.py "
+"(`src/cadrumo/application/user_profile/session_admission.py`)"
 
 #: ../../technical/articles/105-profile-facts-registration-recovery-and-session-selection.md:70
 msgid ""
 "session_authority.py "
 "(`src/cadrumo/application/user_profile/session_authority.py`)"
 msgstr ""
+"session_authority.py "
+"(`src/cadrumo/application/user_profile/session_authority.py`)"

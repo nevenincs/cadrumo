@@ -1075,8 +1075,8 @@ def test_work_calculate_value_free_published_iban_refusal(tmp_path: Path) -> Non
 
         created = invoke_as_profile(
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2021", "--period", "0A",
-            "--revision", "2021",
+            "--modelo", "100", "--year", "2022", "--period", "0A",
+            "--revision", "2022",
             output_format="json",
         )  # fmt: skip
         assert created.exit_code == 0, created.output

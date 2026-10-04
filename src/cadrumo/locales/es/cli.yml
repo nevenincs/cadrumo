@@ -360,9 +360,6 @@ cli:
         year_help: Ejercicio fiscal
       invoice:
         add_help: Crea una factura de conciliación vinculable en el catálogo.
-        arrendamiento_local_negocio_help: Marca una factura emitida como arrendamiento
-          de un local de negocio que alquilas; el modelo 347 lo relaciona aparte y
-          en un registro de inmueble (RD 1065/2007 art. 34.1.d).
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'
@@ -408,8 +405,6 @@ cli:
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.
-        referencia_catastral_help: Referencia catastral del local arrendado (hasta
-          25 caracteres).
         remove_help: Elimina una factura del catálogo de conciliación.
         retention_amount_help: Importe de la retención de IRPF retenida por el pagador,
           en euros. Puede indicarse solo, o junto con --retention-rate.
@@ -420,9 +415,6 @@ cli:
         simplificada_tax_id_expected_message: Esta factura simplificada no contiene
           el identificador fiscal de la contraparte, aunque el contexto legal registrado
           lo exige.
-        situacion_inmueble_help: 'Situación del inmueble arrendado según los códigos
-          del modelo 347: 1 España con referencia catastral (salvo País Vasco y Navarra),
-          2 País Vasco o Navarra, 3 sin referencia catastral, 4 en el extranjero.'
         update_help: Actualiza los datos de una factura de negocio
         view_help: Muestra una factura del catálogo de conciliación por identificador
           o prefijo no ambiguo.

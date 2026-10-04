@@ -2,6 +2,26 @@ cadrumo_cargo_command(application_cargo)
 set(application_manifest "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(application_profile "$<IF:$<CONFIG:Debug>,dev,release>")
 set(application_output "${PROJECT_BINARY_DIR}/cargo/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/libcadrumo_application.rlib")
+string(JSON application_layout_abi GET "${package_layout}" abi)
+cadrumo_cargo_command(application_artifact_probe
+  --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
+  --env "CADRUMO_TEST_PACKAGE_PLATFORM=${CADRUMO_PLATFORM}"
+  --env "CADRUMO_TEST_PACKAGE_ABI=${application_layout_abi}")
+list(APPEND application_artifact_probe test --locked --manifest-path "${application_manifest}"
+  --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
+  --features live-package-tests --test live_package -- --nocapture)
+# Serialize argv without shell quoting; the verifier supplies the extracted package root.
+set(probe_json "[]")
+set(probe_index 0)
+foreach(argument IN LISTS application_artifact_probe)
+  string(REPLACE "\\" "\\\\" argument "${argument}")
+  string(REPLACE "\"" "\\\"" argument "${argument}")
+  string(JSON probe_json SET "${probe_json}" ${probe_index} "\"${argument}\"")
+  math(EXPR probe_index "${probe_index} + 1")
+endforeach()
+set(probe_file "${CMAKE_CURRENT_BINARY_DIR}/artifact-probe-$<CONFIG>.json")
+file(GENERATE OUTPUT "${probe_file}" CONTENT "${probe_json}\n")
+set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${probe_file}" PARENT_SCOPE)
 
 # Always ask Cargo to check freshness, including include_str!, lockfile and transitive inputs.
 # The rlib is not a runtime payload and must not be copied into the Python package.
@@ -12,7 +32,6 @@ add_custom_target(rust_application ALL
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 
 if(BUILD_TESTING)
-  string(JSON application_layout_abi GET "${package_layout}" abi)
   set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app"
     CACHE STRING "Package root for Rust compatibility acceptance; defaults to the staged configuration")
   if(NOT IS_ABSOLUTE "${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}")

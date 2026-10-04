@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:1
 msgid "Registry reporting, cross-filing relations, and coverage checks"
 msgstr ""
+"Informes del registre, relacions entre presentacions i comprovacions de "
+"cobertura"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:3
 msgid ""
@@ -46,10 +48,12 @@ msgid ""
 "**Report:** `STAGE-2-133` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-133` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:12
 msgid ""
@@ -63,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:14
 msgid "Registry discovery and filing relationships"
-msgstr ""
+msgstr "Descobriment del registre i relacions de presentació"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:16
 msgid ""
@@ -184,7 +188,7 @@ msgstr ""
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:32
 msgid "Remote-state security"
-msgstr ""
+msgstr "Seguretat de l'estat remot"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:34
 msgid ""
@@ -222,7 +226,7 @@ msgstr ""
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:38
 msgid "Quality and limits"
-msgstr ""
+msgstr "Qualitat i límits"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:40
 msgid ""
@@ -263,18 +267,24 @@ msgid ""
 "All 25 assigned files were read fully across eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Es van llegir íntegrament els 25 fitxers assignats en vuit pàgines "
+"delimitades; no queda cap interval sense llegir."
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:48
 msgid ""
 "registry/queries.py "
 "(`src/cadrumo/domain/calculations/registry/queries.py`) — 1–1479"
 msgstr ""
+"registry/queries.py "
+"(`src/cadrumo/domain/calculations/registry/queries.py`) — 1–1479"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:49
 msgid ""
 "registry/query_reports.py "
 "(`src/cadrumo/domain/calculations/registry/query_reports.py`) — 1–328"
 msgstr ""
+"registry/query_reports.py "
+"(`src/cadrumo/domain/calculations/registry/query_reports.py`) — 1–328"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:50
 msgid ""
@@ -282,6 +292,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/rate_box_partition.py`) — "
 "1–356"
 msgstr ""
+"registry/rate_box_partition.py "
+"(`src/cadrumo/domain/calculations/registry/rate_box_partition.py`) — "
+"1–356"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:51
 msgid ""
@@ -289,18 +302,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/record_design_coverage.py`) — "
 "1–199"
 msgstr ""
+"registry/record_design_coverage.py "
+"(`src/cadrumo/domain/calculations/registry/record_design_coverage.py`) — "
+"1–199"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:52
 msgid ""
 "registry/reference_checker.py "
 "(`src/cadrumo/domain/calculations/registry/reference_checker.py`) — 1–155"
 msgstr ""
+"registry/reference_checker.py "
+"(`src/cadrumo/domain/calculations/registry/reference_checker.py`) — 1–155"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:53
 msgid ""
 "registry/reference_checks.py "
 "(`src/cadrumo/domain/calculations/registry/reference_checks.py`) — 1–271"
 msgstr ""
+"registry/reference_checks.py "
+"(`src/cadrumo/domain/calculations/registry/reference_checks.py`) — 1–271"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:54
 msgid ""
@@ -308,6 +328,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/reference_sections.py`) — "
 "1–124"
 msgstr ""
+"registry/reference_sections.py "
+"(`src/cadrumo/domain/calculations/registry/reference_sections.py`) — "
+"1–124"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:55
 msgid ""
@@ -315,6 +338,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/refund_eligibility.py`) — "
 "1–135"
 msgstr ""
+"registry/refund_eligibility.py "
+"(`src/cadrumo/domain/calculations/registry/refund_eligibility.py`) — "
+"1–135"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:56
 msgid ""
@@ -322,6 +348,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/relation_dependency.py`) — "
 "1–87"
 msgstr ""
+"registry/relation_dependency.py "
+"(`src/cadrumo/domain/calculations/registry/relation_dependency.py`) — "
+"1–87"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:57
 msgid ""
@@ -329,12 +358,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/relation_prefill_bindings.py`)"
 " — 1–129"
 msgstr ""
+"registry/relation_prefill_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/relation_prefill_bindings.py`)"
+" — 1–129"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:58
 msgid ""
 "registry/relations.py "
 "(`src/cadrumo/domain/calculations/registry/relations.py`) — 1–493"
 msgstr ""
+"registry/relations.py "
+"(`src/cadrumo/domain/calculations/registry/relations.py`) — 1–493"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:59
 msgid ""
@@ -342,6 +376,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/remote_state_guard.py`) — "
 "1–582"
 msgstr ""
+"registry/remote_state_guard.py "
+"(`src/cadrumo/domain/calculations/registry/remote_state_guard.py`) — "
+"1–582"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:60
 msgid ""
@@ -349,6 +386,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/renta_codes_catalogue.py`) — "
 "1–257"
 msgstr ""
+"registry/renta_codes_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/renta_codes_catalogue.py`) — "
+"1–257"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:61
 msgid ""
@@ -356,15 +396,22 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/renta_expense_policy.py`) — "
 "1–37"
 msgstr ""
+"registry/renta_expense_policy.py "
+"(`src/cadrumo/domain/calculations/registry/renta_expense_policy.py`) — "
+"1–37"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:62
 msgid ""
 "registry/rental_reduction.py "
 "(`src/cadrumo/domain/calculations/registry/rental_reduction.py`) — 1–118"
 msgstr ""
+"registry/rental_reduction.py "
+"(`src/cadrumo/domain/calculations/registry/rental_reduction.py`) — 1–118"
 
 #: ../../technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md:63
 msgid ""
 "registry/restated_families.py "
 "(`src/cadrumo/domain/calculations/registry/restated_families.py`) — 1–124"
 msgstr ""
+"registry/restated_families.py "
+"(`src/cadrumo/domain/calculations/registry/restated_families.py`) — 1–124"

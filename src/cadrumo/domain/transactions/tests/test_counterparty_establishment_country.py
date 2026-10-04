@@ -32,9 +32,9 @@ from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
-from cadrumo.domain.iva.schema import require_eu_member_state
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
+from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...iva.classification import IvaTerritorialScope
 from ...iva.establishment import StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country
 from ..enums import TransactionDirection

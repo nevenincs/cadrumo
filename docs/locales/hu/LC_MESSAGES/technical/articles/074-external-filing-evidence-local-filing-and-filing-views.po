@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:1
 msgid "External filing evidence, local filing and filing views"
-msgstr ""
+msgstr "Külső bevallási bizonyíték, helyi bevallás és bevallási nézetek"
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-074` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:10
 msgid ""
@@ -189,7 +192,7 @@ msgstr ""
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:26
 msgid "Knowledge, security, and quality"
-msgstr ""
+msgstr "Tudás, biztonság és minőség"
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:28
 msgid ""
@@ -222,7 +225,7 @@ msgstr ""
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:32
 msgid "Full file coverage"
-msgstr ""
+msgstr "Teljes fájllefedettség"
 
 #: ../../technical/articles/074-external-filing-evidence-local-filing-and-filing-views.md:34
 msgid ""

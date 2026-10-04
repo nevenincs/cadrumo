@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:1
 msgid "Overview explain, Home, pipeline, and registered read projections"
 msgstr ""
+"Áttekintő magyarázat, Kezdőlap, feldolgozási lánc és regisztrált olvasási"
+" vetületek"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:3
 msgid ""
@@ -44,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-094` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-094` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:10
 msgid ""
@@ -151,7 +155,7 @@ msgstr ""
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:24
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:26
 msgid ""
@@ -241,93 +245,121 @@ msgid ""
 "All 16 assigned files were read fully across pages 1–6; no portions "
 "remain unread."
 msgstr ""
+"Mind a 16 kijelölt fájlt teljes egészében elolvastam az 1–6. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:44
 msgid "overview/explain.py (`src/cadrumo/application/overview/explain.py`)"
-msgstr ""
+msgstr "overview/explain.py (`src/cadrumo/application/overview/explain.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:45
 msgid "overview/home.py (`src/cadrumo/application/overview/home.py`)"
-msgstr ""
+msgstr "overview/home.py (`src/cadrumo/application/overview/home.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:46
 msgid ""
 "overview/next_actions.py "
 "(`src/cadrumo/application/overview/next_actions.py`)"
 msgstr ""
+"overview/next_actions.py "
+"(`src/cadrumo/application/overview/next_actions.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:47
 msgid ""
 "overview/pipeline_health.py "
 "(`src/cadrumo/application/overview/pipeline_health.py`)"
 msgstr ""
+"overview/pipeline_health.py "
+"(`src/cadrumo/application/overview/pipeline_health.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:48
 msgid ""
 "overview/pipeline_operation.py "
 "(`src/cadrumo/application/overview/pipeline_operation.py`)"
 msgstr ""
+"overview/pipeline_operation.py "
+"(`src/cadrumo/application/overview/pipeline_operation.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:49
 msgid ""
 "overview/pipeline_projection.py "
 "(`src/cadrumo/application/overview/pipeline_projection.py`)"
 msgstr ""
+"overview/pipeline_projection.py "
+"(`src/cadrumo/application/overview/pipeline_projection.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:50
 msgid ""
 "overview/pipeline_read_ports.py "
 "(`src/cadrumo/application/overview/pipeline_read_ports.py`)"
 msgstr ""
+"overview/pipeline_read_ports.py "
+"(`src/cadrumo/application/overview/pipeline_read_ports.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:51
 msgid ""
 "overview/read_calendar_item_projection.py "
 "(`src/cadrumo/application/overview/read_calendar_item_projection.py`)"
 msgstr ""
+"overview/read_calendar_item_projection.py "
+"(`src/cadrumo/application/overview/read_calendar_item_projection.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:52
 msgid ""
 "overview/read_calendar_projection.py "
 "(`src/cadrumo/application/overview/read_calendar_projection.py`)"
 msgstr ""
+"overview/read_calendar_projection.py "
+"(`src/cadrumo/application/overview/read_calendar_projection.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:53
 msgid ""
 "overview/read_operation.py "
 "(`src/cadrumo/application/overview/read_operation.py`)"
 msgstr ""
+"overview/read_operation.py "
+"(`src/cadrumo/application/overview/read_operation.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:54
 msgid ""
 "overview/read_payload.py "
 "(`src/cadrumo/application/overview/read_payload.py`)"
 msgstr ""
+"overview/read_payload.py "
+"(`src/cadrumo/application/overview/read_payload.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:55
 msgid "overview/read_ports.py (`src/cadrumo/application/overview/read_ports.py`)"
-msgstr ""
+msgstr "overview/read_ports.py (`src/cadrumo/application/overview/read_ports.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:56
 msgid ""
 "overview/read_projection.py "
 "(`src/cadrumo/application/overview/read_projection.py`)"
 msgstr ""
+"overview/read_projection.py "
+"(`src/cadrumo/application/overview/read_projection.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:57
 msgid ""
 "overview/read_request.py "
 "(`src/cadrumo/application/overview/read_request.py`)"
 msgstr ""
+"overview/read_request.py "
+"(`src/cadrumo/application/overview/read_request.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:58
 msgid ""
 "overview/read_result.py "
 "(`src/cadrumo/application/overview/read_result.py`)"
 msgstr ""
+"overview/read_result.py "
+"(`src/cadrumo/application/overview/read_result.py`)"
 
 #: ../../technical/articles/094-overview-explain-home-pipeline-and-registered-read-projections.md:59
 msgid ""
 "overview/status_report.py "
 "(`src/cadrumo/application/overview/status_report.py`)"
 msgstr ""
+"overview/status_report.py "
+"(`src/cadrumo/application/overview/status_report.py`)"

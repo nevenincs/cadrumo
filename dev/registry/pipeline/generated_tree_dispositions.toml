@@ -64,12 +64,23 @@ reason = '''The committed layout represents the official Pág. 0 variable envelo
 reconsideration_condition = 'Retire this row once the published layout reproduces the complete source-pinned filing envelope and the fresh comparison reports no record drift. Reassess if the official source hash, Pág. 0 prefix geometry, body order, closer or total rule, or any page-record bytes change.'
 
 [[dispositions]]
-kind = 'below_floor'
+kind = 'record_drift'
 modelo = '232'
 revision = '2016-2017'
 source_ref = 'aeat-dr-232-2016'
 source_sha256 = 'fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad'
-supported_filing_years_floor = 2022
-revision_last_filing_year = 2017
-reason = '''Every filing year this revision declares (2016 and 2017) lies below the registry-wide supported-filing-years floor of 2022 declared in the legal tree's supported-filing-years declaration, so revision selection admits no coordinate for it: the publisher refuses with "modelo 232: no revision for year=... period='0A' revision='2016-2017'" before it renders or compares anything. Its shipped records still quote binding identifier spellings that were re-spelled to drop record-design span and offset segments - the identifiers are semantic and the record layout, offsets and widths are unchanged - but that difference cannot be regenerated away while the revision is unreachable, so it is a listed non-issue rather than an unexplained one.'''
-reconsideration_condition = 'The supported-filing-years floor is lowered to admit this revision, or the revision is retired.'
+remedy = 'republish'
+differing_records = 4
+reason = '''The committed 2016 layout calls official DR23200 an auxiliary header and its three record fragments across two body-record identities carry 140 obsolete position-inclusive binding identifiers, whereas the source-pinned typed model has the same 140 stable authored bindings. Official DR23200 is a Total:Variable envelope with a 328-byte prefix, an 18-byte closer and an explicit two-byte CRLF terminator. The fresh static render differs in the layout and three record fragments, with no added or removed files. This source-only target correction does not lower the 2022 runtime filing floor or admit a historical filing snapshot.'''
+reconsideration_condition = 'Retire immediately after the exact 2016 static target reproduces its official-source render, its generated form is current, and ordinary runtime selection still refuses filing years below 2022.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '232'
+revision = '2018-y-siguientes'
+source_ref = 'aeat-dr-232-2018'
+source_sha256 = 'a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff'
+remedy = 'republish'
+differing_records = 1
+reason = '''The committed 2018 generated layout describes official DR23200 as a fixed auxiliary header. The exact 2018 official source instead declares a Total:Variable envelope with the same 328-byte prefix and 18-byte closer and no CRLF terminator. The current source-pinned render differs in the layout record only; both body record files reproduce and no files are added or removed.'''
+reconsideration_condition = 'Retire immediately after the exact 2018 target reproduces its current official-source render and supported-frame target-current passes.'

@@ -27,6 +27,7 @@ from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
     validate_generated_export_tree,
 )
 from .export_fragment_provenance import (
@@ -80,7 +81,7 @@ class GeneratedExportTreeCheckContext:
 class CheckedGeneratedExportTree:
     """The independently validated candidate and the matching target evidence."""
 
-    candidate: ValidatedGeneratedExportTree
+    candidate: ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree
     rendered: RenderedExportTree
     published_layout: ExportLayoutDefinition
     published_manifest: ExportFragmentProvenanceManifest

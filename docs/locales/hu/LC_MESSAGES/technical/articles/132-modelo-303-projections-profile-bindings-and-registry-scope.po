@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:1
 msgid "Modelo 303 projections, profile bindings, and registry scope"
-msgstr ""
+msgstr "Modelo 303-vetületek, profilkötések és regiszterhatókör"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-132` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-132` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:14
 msgid "Filing projection and authority"
-msgstr ""
+msgstr "Bevallási vetület és mérvadó forrás"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:16
 msgid ""
@@ -126,7 +128,7 @@ msgstr ""
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:24
 msgid "Scope, presentation, and filing continuity"
-msgstr ""
+msgstr "Hatókör, megjelenítés és bevallási folytonosság"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:26
 msgid ""
@@ -201,7 +203,7 @@ msgstr ""
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:36
 msgid "Shared registry mechanics and prorrata knowledge"
-msgstr ""
+msgstr "Közös regisztermechanizmusok és arányosítási ismeretek"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:38
 msgid ""
@@ -276,7 +278,7 @@ msgstr ""
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:46
 msgid "Security, quality, and follow-up"
-msgstr ""
+msgstr "Biztonság, minőség és további vizsgálatok"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:48
 msgid ""
@@ -319,6 +321,8 @@ msgid ""
 "All 25 assigned files were fully read across eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Mind a 25 kijelölt fájlt teljes egészében elolvastam nyolc körülhatárolt "
+"oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:56
 msgid ""
@@ -326,6 +330,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`)"
 " — 1–384"
 msgstr ""
+"registry/m303_regimen_simplificado_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`)"
+" — 1–384"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:57
 msgid ""
@@ -333,12 +340,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_schema_vocabulary.py`) — "
 "1–439"
 msgstr ""
+"registry/m303_schema_vocabulary.py "
+"(`src/cadrumo/domain/calculations/registry/m303_schema_vocabulary.py`) — "
+"1–439"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:58
 msgid ""
 "registry/m347_threshold.py "
 "(`src/cadrumo/domain/calculations/registry/m347_threshold.py`) — 1–155"
 msgstr ""
+"registry/m347_threshold.py "
+"(`src/cadrumo/domain/calculations/registry/m347_threshold.py`) — 1–155"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:59
 msgid ""
@@ -346,12 +358,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/manual_input_selector.py`) — "
 "1–180"
 msgstr ""
+"registry/manual_input_selector.py "
+"(`src/cadrumo/domain/calculations/registry/manual_input_selector.py`) — "
+"1–180"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:60
 msgid ""
 "registry/modelo_inception.py "
 "(`src/cadrumo/domain/calculations/registry/modelo_inception.py`) — 1–138"
 msgstr ""
+"registry/modelo_inception.py "
+"(`src/cadrumo/domain/calculations/registry/modelo_inception.py`) — 1–138"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:61
 msgid ""
@@ -359,6 +376,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/modelo_localization.py`) — "
 "1–410"
 msgstr ""
+"registry/modelo_localization.py "
+"(`src/cadrumo/domain/calculations/registry/modelo_localization.py`) — "
+"1–410"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:62
 msgid ""
@@ -366,6 +386,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`) —"
 " 1–147"
 msgstr ""
+"registry/modelo_obligation_scope.py "
+"(`src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`) —"
+" 1–147"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:63
 msgid ""
@@ -373,24 +396,33 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/modelo_pending_orden.py`) — "
 "1–125"
 msgstr ""
+"registry/modelo_pending_orden.py "
+"(`src/cadrumo/domain/calculations/registry/modelo_pending_orden.py`) — "
+"1–125"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:64
 msgid ""
 "registry/modelo_rendering.py "
 "(`src/cadrumo/domain/calculations/registry/modelo_rendering.py`) — 1–49"
 msgstr ""
+"registry/modelo_rendering.py "
+"(`src/cadrumo/domain/calculations/registry/modelo_rendering.py`) — 1–49"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:65
 msgid ""
 "registry/nif_iva_catalogue.py "
 "(`src/cadrumo/domain/calculations/registry/nif_iva_catalogue.py`) — 1–174"
 msgstr ""
+"registry/nif_iva_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/nif_iva_catalogue.py`) — 1–174"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:66
 msgid ""
 "registry/observation_fold.py "
 "(`src/cadrumo/domain/calculations/registry/observation_fold.py`) — 1–184"
 msgstr ""
+"registry/observation_fold.py "
+"(`src/cadrumo/domain/calculations/registry/observation_fold.py`) — 1–184"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:67
 msgid ""
@@ -398,12 +430,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/orden_applicability.py`) — "
 "1–193"
 msgstr ""
+"registry/orden_applicability.py "
+"(`src/cadrumo/domain/calculations/registry/orden_applicability.py`) — "
+"1–193"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:68
 msgid ""
 "registry/period_offset_math.py "
 "(`src/cadrumo/domain/calculations/registry/period_offset_math.py`) — 1–82"
 msgstr ""
+"registry/period_offset_math.py "
+"(`src/cadrumo/domain/calculations/registry/period_offset_math.py`) — 1–82"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:69
 msgid ""
@@ -411,6 +448,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/period_selector_match.py`) — "
 "1–47"
 msgstr ""
+"registry/period_selector_match.py "
+"(`src/cadrumo/domain/calculations/registry/period_selector_match.py`) — "
+"1–47"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:70
 msgid ""
@@ -418,18 +458,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/period_selector_overlap.py`) —"
 " 1–101"
 msgstr ""
+"registry/period_selector_overlap.py "
+"(`src/cadrumo/domain/calculations/registry/period_selector_overlap.py`) —"
+" 1–101"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:71
 msgid ""
 "registry/profile_bindings.py "
 "(`src/cadrumo/domain/calculations/registry/profile_bindings.py`) — 1–108"
 msgstr ""
+"registry/profile_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/profile_bindings.py`) — 1–108"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:72
 msgid ""
 "registry/profile_grounding.py "
 "(`src/cadrumo/domain/calculations/registry/profile_grounding.py`) — 1–160"
 msgstr ""
+"registry/profile_grounding.py "
+"(`src/cadrumo/domain/calculations/registry/profile_grounding.py`) — 1–160"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:73
 msgid ""
@@ -437,12 +484,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/prorrata_exclusions.py`) — "
 "1–164"
 msgstr ""
+"registry/prorrata_exclusions.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_exclusions.py`) — "
+"1–164"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:74
 msgid ""
 "registry/prorrata_regime.py "
 "(`src/cadrumo/domain/calculations/registry/prorrata_regime.py`) — 1–125"
 msgstr ""
+"registry/prorrata_regime.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_regime.py`) — 1–125"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:75
 msgid ""
@@ -450,6 +502,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py`)"
 " — 1–381"
 msgstr ""
+"registry/prorrata_register_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py`)"
+" — 1–381"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:76
 msgid ""
@@ -457,6 +512,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/prorrata_register_models.py`) "
 "— 1–258"
 msgstr ""
+"registry/prorrata_register_models.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_register_models.py`) "
+"— 1–258"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:77
 msgid ""
@@ -464,6 +522,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py`)"
 " — 1–115"
 msgstr ""
+"registry/prorrata_regularizacion_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py`)"
+" — 1–115"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:78
 msgid ""
@@ -471,12 +532,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/prorrata_vocabulary.py`) — "
 "1–363"
 msgstr ""
+"registry/prorrata_vocabulary.py "
+"(`src/cadrumo/domain/calculations/registry/prorrata_vocabulary.py`) — "
+"1–363"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:79
 msgid ""
 "registry/provenance.py "
 "(`src/cadrumo/domain/calculations/registry/provenance.py`) — 1–16"
 msgstr ""
+"registry/provenance.py "
+"(`src/cadrumo/domain/calculations/registry/provenance.py`) — 1–16"
 
 #: ../../technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md:80
 msgid ""
@@ -484,3 +550,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/quantity_screen_enrolment.py`)"
 " — 1–110"
 msgstr ""
+"registry/quantity_screen_enrolment.py "
+"(`src/cadrumo/domain/calculations/registry/quantity_screen_enrolment.py`)"
+" — 1–110"

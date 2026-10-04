@@ -33,6 +33,7 @@ class ProductIdentity(NamedTuple):
     environment_prefix: str
     companion_distributions: tuple[str, str]
     companion_namespace: str
+    application_id: str
 
     @property
     def cohort_distributions(self) -> tuple[str, ...]:
@@ -51,6 +52,7 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     environment_prefix="CADRUMO_",
     companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
     companion_namespace="cadrumo_data",
+    application_id="md.neve.cadrumo",
 )
 
 #: Short legal name retained only for the external tax authority referent.

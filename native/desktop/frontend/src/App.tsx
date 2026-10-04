@@ -1,9 +1,9 @@
-import { identity } from "virtual:desktop-content";
+import { TerminalPane } from "./TerminalPane";
 
 export function App() {
   return (
-    <main className="front-page">
-      <h1>{identity.display_name}</h1>
+    <main className="terminal-page">
+      <TerminalPane />
     </main>
   );
 }

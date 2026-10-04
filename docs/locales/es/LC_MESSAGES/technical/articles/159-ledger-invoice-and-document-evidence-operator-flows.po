@@ -48,6 +48,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-159` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:10
 msgid "Scope and capability"
@@ -267,79 +270,105 @@ msgstr "Cobertura completa de los archivos asignados"
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:44
 msgid "All 13 manifest files are linked below; every assigned line was read."
 msgstr ""
+"Los 13 archivos del manifiesto se referencian a continuación; se leyó "
+"cada línea asignada."
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:46
 msgid ""
 "_filing_chain_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_filing_chain_payloads.py`)"
 msgstr ""
+"_filing_chain_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_filing_chain_payloads.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:47
 msgid ""
 "_framework_localisation.py "
 "(`src/cadrumo/entrypoints/cli/_framework_localisation.py`)"
 msgstr ""
+"_framework_localisation.py "
+"(`src/cadrumo/entrypoints/cli/_framework_localisation.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:48
 msgid "_ledger.py (`src/cadrumo/entrypoints/cli/_ledger.py`)"
-msgstr ""
+msgstr "_ledger.py (`src/cadrumo/entrypoints/cli/_ledger.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:49
 msgid ""
 "_ledger_business_invoice_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`)"
 msgstr ""
+"_ledger_business_invoice_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:50
 msgid ""
 "_ledger_catalogue_invoice_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`)"
 msgstr ""
+"_ledger_catalogue_invoice_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:51
 msgid ""
 "_ledger_classify_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_classify_cli.py`)"
 msgstr ""
+"_ledger_classify_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_classify_cli.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:52
 msgid ""
 "_ledger_counterparty_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py`)"
 msgstr ""
+"_ledger_counterparty_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:53
 msgid ""
 "_ledger_counterparty_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_counterparty_payloads.py`)"
 msgstr ""
+"_ledger_counterparty_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_counterparty_payloads.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:54
 msgid ""
 "_ledger_evidence_batch_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py`)"
 msgstr ""
+"_ledger_evidence_batch_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:55
 msgid ""
 "_ledger_evidence_batch_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_batch_payloads.py`)"
 msgstr ""
+"_ledger_evidence_batch_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_batch_payloads.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:56
 msgid ""
 "_ledger_evidence_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`)"
 msgstr ""
+"_ledger_evidence_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:57
 msgid ""
 "_ledger_evidence_confirm_notices.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_confirm_notices.py`)"
 msgstr ""
+"_ledger_evidence_confirm_notices.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_confirm_notices.py`)"
 
 #: ../../technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.md:58
 msgid ""
 "_ledger_evidence_consent_cli.py "
 "(`src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`)"
 msgstr ""
+"_ledger_evidence_consent_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`)"

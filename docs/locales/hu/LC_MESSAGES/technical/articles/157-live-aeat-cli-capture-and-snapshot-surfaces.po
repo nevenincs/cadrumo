@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:1
 msgid "Live AEAT CLI capture and snapshot surfaces"
-msgstr ""
+msgstr "Élő AEAT CLI-rögzítés és pillanatképfelületek"
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-157` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:10
 msgid "Scope"
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:16
 msgid ""
@@ -199,7 +202,7 @@ msgstr ""
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:34
 msgid ""

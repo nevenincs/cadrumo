@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:1
 msgid "Workflow results, snapshots, and history disclosure"
-msgstr ""
+msgstr "Resultats de fluxos de treball, instantànies i divulgació d’historial"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-110` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Informe:** `STAGE-2-110` · **Tema:** [Operacions, perfils i fluxos de "
+"treball](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:14
 msgid "Recorded workflow results and disclosure"
-msgstr ""
+msgstr "Resultats registrats de fluxos de treball i divulgació"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:16
 msgid ""
@@ -115,7 +117,7 @@ msgstr ""
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:22
 msgid "Run-history operations and profile boundary"
-msgstr ""
+msgstr "Operacions d'historial d'execucions i límit del perfil"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:24
 msgid ""
@@ -173,7 +175,7 @@ msgstr ""
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:30
 msgid "Operator workflow state and assessment"
-msgstr ""
+msgstr "Estat del flux de treball de l'operador i avaluació"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:32
 msgid ""
@@ -215,27 +217,37 @@ msgid ""
 "run_models.py (`src/cadrumo/application/workflow/run_models.py`) — lines "
 "1–690"
 msgstr ""
+"run_models.py (`src/cadrumo/application/workflow/run_models.py`) — línies"
+" 1–690"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:39
 msgid ""
 "run_projection.py (`src/cadrumo/application/workflow/run_projection.py`) "
 "— lines 1–356"
 msgstr ""
+"run_projection.py (`src/cadrumo/application/workflow/run_projection.py`) "
+"— línies 1–356"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:40
 msgid ""
 "run_read_operation.py "
 "(`src/cadrumo/application/workflow/run_read_operation.py`) — lines 1–367"
 msgstr ""
+"run_read_operation.py "
+"(`src/cadrumo/application/workflow/run_read_operation.py`) — línies 1–367"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:41
 msgid ""
 "run_read_ports.py (`src/cadrumo/application/workflow/run_read_ports.py`) "
 "— lines 1–37"
 msgstr ""
+"run_read_ports.py (`src/cadrumo/application/workflow/run_read_ports.py`) "
+"— línies 1–37"
 
 #: ../../technical/articles/110-workflow-results-snapshots-and-history-disclosure.md:42
 msgid ""
 "state_models.py (`src/cadrumo/application/workflow/state_models.py`) — "
 "lines 1–96"
 msgstr ""
+"state_models.py (`src/cadrumo/application/workflow/state_models.py`) — "
+"línies 1–96"

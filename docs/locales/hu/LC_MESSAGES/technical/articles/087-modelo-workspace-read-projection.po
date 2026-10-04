@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 2: verification, workbench and workspace](../topics"
 "/modelo-work-and-revision-lifecycle-part-2.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-087` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 2. rész: ellenőrzés, munkafelület és munkatér](../topics"
+"/modelo-work-and-revision-lifecycle-part-2.md)"
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:10
 msgid ""
@@ -174,7 +177,7 @@ msgstr ""
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:26
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:28
 msgid ""
@@ -263,17 +266,21 @@ msgid ""
 "All three assigned files were read completely across pages 1–8; no "
 "portions were unread."
 msgstr ""
+"Mind a három kijelölt fájlt teljes egészében elolvastam az 1–8. "
+"oldalakon; nem maradt olvasatlan rész."
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:42
 msgid "workspace.py (`src/cadrumo/application/modelo/workspace.py`)"
-msgstr ""
+msgstr "workspace.py (`src/cadrumo/application/modelo/workspace.py`)"
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:43
 msgid ""
 "workspace_manifest.py "
 "(`src/cadrumo/application/modelo/workspace_manifest.py`)"
 msgstr ""
+"workspace_manifest.py "
+"(`src/cadrumo/application/modelo/workspace_manifest.py`)"
 
 #: ../../technical/articles/087-modelo-workspace-read-projection.md:44
 msgid "workspace_models.py (`src/cadrumo/application/modelo/workspace_models.py`)"
-msgstr ""
+msgstr "workspace_models.py (`src/cadrumo/application/modelo/workspace_models.py`)"

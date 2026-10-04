@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-205` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-205` · **Tema:** [Coneixement inclòs i "
+"localització](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:12
 msgid ""
@@ -70,10 +72,29 @@ msgid ""
 "received semantic reading. Syntax parsing does not validate translations,"
 " tax meaning, consumer behavior, or current law."
 msgstr ""
+"Aquest fragment de dades de referència conté 166 fragments de conceptes "
+"TOML en un directori, amb un total de 266,021 bytes. Vaig llegir 18 "
+"mostres completes i estratificades (39,758 bytes): conceptes bàsics "
+"(`aeat`, `barrido-rag`, `binding`, `casilla`, `fichero-boe`, `irpf`); "
+"tres règims d’IVA; quatre formularis de declaració (036, 100, 200, 303); "
+"dos codis de període; dos esbossos de tema; i `work-unit`. La passada de "
+"mostreig original va estimar aproximadament 10,000 tokens a partir dels "
+"bytes. Una mesura posterior del coordinador estableix un límit superior "
+"conservador de **10,436 tokens o200k_base**, per sota del sostre de "
+"24,000 tokens: mesura les 14 mostres identificades específicament i els "
+"dos fitxers de període i els dos de tema més grans possibles. Les notes "
+"originals no identificaven exactament aquests quatre esbossos, de manera "
+"que és un límit superior i no un recompte exacte de la mostra; vegeu "
+"l’[auditoria del límit de la mostra](../evidence/terminology-sample-"
+"bound.json). Els 166 fitxers es van analitzar com a TOML amb la "
+"biblioteca estàndard de Python per obtenir metadades d’inventari, però "
+"només les mostres indicades van rebre lectura semàntica. L’anàlisi "
+"sintàctica no valida les traduccions, el significat fiscal, el "
+"comportament dels consumidors ni el dret vigent."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:14
 msgid "What the corpus provides"
-msgstr ""
+msgstr "Què proporciona el corpus"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:16
 msgid ""
@@ -89,6 +110,18 @@ msgid ""
 "deprecated, and 19 retired; these are editorial states, not proof that a "
 "runtime loader filters or prioritizes entries."
 msgstr ""
+"Cada fragment és informació terminològica estructurada: un identificador "
+"de concepte, domini i cicle de vida, relacions opcionals i referències "
+"legals o de domini, seguits de resums, definicions, citacions de fonts i "
+"termes preferits, admesos o prohibits localitzats. El corpus cobreix "
+"modelos, períodes, règims d’IVA, conceptes de presentació, termes de "
+"fluxos de treball interns i altre vocabulari fiscal. Les metadades "
+"d’inventari compten 75 fitxers `modelo-*`, 25 `iva-*`, 21 `periodo-*`, 14"
+" `tema-*` i 31 amb altres noms. Els valors analitzats de `concept.domain`"
+" són 74 `modelo`, 24 `regimen`, 21 `periodo`, 46 `concepto` i un "
+"`casilla-namespace`. Les etiquetes de cicle de vida són 49 aprovats, 87 "
+"esborranys, 11 obsolets i 19 retirats; són estats editorials, no una "
+"prova que un carregador d’execució filtri o prioritzi les entrades."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:18
 msgid ""
@@ -105,6 +138,19 @@ msgid ""
 "recorded in handbook text, not verification of the filing/export "
 "implementation."
 msgstr ""
+"Els camps localitzats poden donar suport a la consulta d’un glossari o de"
+" terminologia i explicar conceptes del producte en castellà, anglès, "
+"català i hongarès. Una entrada aprovada de la mostra defineix l’AEAT, "
+"cita l’agència i una font legal i distingeix l’autoritat de l’aplicació; "
+"la prosa diu que els contribuents presenten davant l’AEAT i que "
+"l’aplicació mai no presenta en nom seu (aeat.toml "
+"(`src/cadrumo/_data/terminology/concepts/aeat.toml`)). Una altra entrada "
+"descriu la generació d’un fitxer de registres BOE d’amplada fixa perquè "
+"la persona el pugi ella mateixa (fichero-boe.toml "
+"(`src/cadrumo/_data/terminology/concepts/fichero-boe.toml`)). Són "
+"afirmacions i límits previstos del producte registrats al text del "
+"manual, no una verificació de la implementació de presentació i "
+"exportació."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:20
 msgid ""
@@ -132,6 +178,31 @@ msgid ""
 "general-21.toml`)). Lifecycle and replacement metadata therefore matter "
 "to any display or retrieval consumer."
 msgstr ""
+"Els conceptes estan relacionats i no són només traduccions aïllades. "
+"`irpf` enllaça amb Renta i conceptes de modelos concrets i distingeix "
+"l’impost sobre la renda de les persones físiques dels impostos sobre "
+"societats i no residents; les entrades dels Modelos 100 i 303 descriuen "
+"les declaracions anuals d’IRPF i les periòdiques d’IVA en règim general, "
+"mentre que el Modelo 036 cobreix l’alta, les modificacions i la baixa "
+"censals (irpf.toml (`src/cadrumo/_data/terminology/concepts/irpf.toml`), "
+"modelo-100.toml "
+"(`src/cadrumo/_data/terminology/concepts/modelo-100.toml`), "
+"modelo-303.toml "
+"(`src/cadrumo/_data/terminology/concepts/modelo-303.toml`), "
+"modelo-036.toml "
+"(`src/cadrumo/_data/terminology/concepts/modelo-036.toml`)). Les entrades"
+" de règims d’IVA distingeixen la inversió del subjecte passiu interior i "
+"l’adquisició intracomunitària d’un concepte interior al tipus general. "
+"Aquesta entrada de tipus general està retirada i assenyala `iva-domestic-"
+"general` com a substituta, mentre que el seu text en castellà és un "
+"marcador explícit d’esborrany pendent de curació (iva-domestic-reverse-"
+"charge.toml (`src/cadrumo/_data/terminology/concepts/iva-domestic-"
+"reverse-charge.toml`), iva-intra-community-acquisition-reverse-"
+"charge.toml (`src/cadrumo/_data/terminology/concepts/iva-intra-community-"
+"acquisition-reverse-charge.toml`), iva-domestic-general-21.toml "
+"(`src/cadrumo/_data/terminology/concepts/iva-domestic-general-21.toml`))."
+" Per tant, les metadades de cicle de vida i substitució importen a "
+"qualsevol consumidor de visualització o recuperació."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:22
 msgid ""
@@ -150,10 +221,26 @@ msgid ""
 "separation of editorial/build-time concepts from live product behavior, "
 "but this corpus cannot establish that pipeline."
 msgstr ""
+"Alguns conceptes documenten vocabulari intern d’implementació en lloc de "
+"termes destinats al contribuent. `binding` descriu una regla del registre"
+" que associa una dada del llibre o del perfil amb una casella del "
+"formulari i es marca explícitament com a obsoleta i fora del glossari "
+"públic; `work-unit` descriu un identificador de càlcul per modelo, "
+"exercici, període i revisió i també es caracteritza com a concepte intern"
+" del RAG de desenvolupament (binding.toml "
+"(`src/cadrumo/_data/terminology/concepts/binding.toml`), work-unit.toml "
+"(`src/cadrumo/_data/terminology/concepts/work-unit.toml`)). `barrido-rag`"
+" descriu un procés de compilació que consulta un servei RAG resident i "
+"desa objectius revisables perquè la CI no hagi d’executar recuperacions "
+"en directe; també està obsolet (barrido-rag.toml "
+"(`src/cadrumo/_data/terminology/concepts/barrido-rag.toml`)). Aquestes "
+"entrades exposen el vocabulari i la separació prevista entre conceptes "
+"editorials o de compilació i el comportament del producte en directe, "
+"però aquest corpus no pot acreditar aquesta cadena de processos."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:24
 msgid "Provenance, coverage, and quality"
-msgstr ""
+msgstr "Procedència, cobertura i qualitat"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:26
 msgid ""
@@ -165,6 +252,15 @@ msgid ""
 "pointers, not independently checked authority or evidence that cited law "
 "is applicable today. This report performs no external legal validation."
 msgstr ""
+"Les metadades sovint registren classes d’autoritat i citacions com ara "
+"AEAT, BOE o `other`, a més de `legal_refs`, `domain_refs`, dates de "
+"creació i actualització, conceptes relacionats i destinacions de "
+"substitució. L’anàlisi va trobar referències legals en 46 entrades, "
+"referències de domini en 135, enllaços relacionats en 49 i indicadors de "
+"substitució en 19. Són indicadors de procedència aportats pels autors, no"
+" autoritat comprovada independentment ni evidència que la normativa "
+"citada sigui aplicable avui. Aquest informe no fa cap validació legal "
+"externa."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:28
 msgid ""
@@ -181,6 +277,20 @@ msgid ""
 "any user-facing glossary or multilingual RAG should honor lifecycle "
 "status, avoid placeholder text, and have a clear fallback policy."
 msgstr ""
+"La presència de taules de llengua és àmplia, però la completesa no: els "
+"166 fitxers contenen dades en castellà, i 165 en contenen en cadascuna de"
+" les llengües anglesa, catalana i hongaresa. Només 60 entrades de cada "
+"llengua tenen una `definition`; moltes altres només tenen una descripció "
+"breu. A les dades en castellà, 106 entrades no tenen definició, i les "
+"entrades mostrejades de període, tema i tipus retirat inclouen marcadors "
+"`(sin curar) draft pendiente de definicion`. Les taules de llengua també "
+"inclouen 108 files de termes en castellà, 27 en anglès, 3 en català i 3 "
+"en hongarès. Aquests recomptes mostren que la presència d’una llengua no "
+"implica una profunditat ni una cobertura de sinònims equivalents. Que "
+"això sigui un defecte depèn de les llengües i els camps que prometin els "
+"consumidors; qualsevol glossari adreçat a l’usuari o RAG multilingüe "
+"hauria de respectar l’estat del cicle de vida, evitar textos de marcador "
+"i tenir una política clara d’alternatives."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:30
 msgid ""
@@ -195,6 +305,18 @@ msgid ""
 "of this chunk; successful TOML parsing alone cannot show those checks "
 "run."
 msgstr ""
+"La capçalera compartida diu que el carregador estricte "
+"`dev.docs.terminology_handbook` compila fragments en objectes "
+"`ConceptRecord` congelats, que la prosa s’edita a mà i que `narrower` es "
+"deriva de `broader` en lloc de redactar-se aquí. Són comentaris del "
+"corpus sobre les eines previstes, no garanties del carregador "
+"inspeccionades. La barreja d’estats d’esborrany, obsolet i retirat i les "
+"traduccions desiguals de les metadades mostrejades fan que el filtratge "
+"conscient del cicle de vida, les comprovacions d’integritat de "
+"referències i les de completesa per llengua siguin punts importants de "
+"verificació. Aquest fragment no inclou proves ni codi consumidor; una "
+"anàlisi TOML correcta, per si sola, no pot mostrar que aquestes "
+"comprovacions s’executin."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:32
 msgid "Dependencies and follow-up"
@@ -209,6 +331,13 @@ msgid ""
 "and `replaced_by` references are validated, and whether source/date "
 "metadata is surfaced with appropriate freshness limits."
 msgstr ""
+"La síntesi hauria de connectar aquestes dades amb el carregador i la CLI "
+"del manual terminològic, qualsevol glossari compilat o índex de cerca, "
+"l’escombratge RAG durant la compilació i les alternatives de llengua de "
+"la interfície. Hauria de confirmar com es filtren els conceptes no "
+"aprovats i les cadenes de marcador, com es validen les referències "
+"`broader`/`narrower`, `related` i `replaced_by`, i si les metadades de "
+"font i data es mostren amb límits de vigència adequats."
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:36
 msgid "Complete assigned-file inventory"
@@ -216,740 +345,816 @@ msgstr "Inventari complet dels fitxers assignats"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:38
 msgid "`src/cadrumo/_data/terminology/concepts/aeat.toml` — 2,690 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/aeat.toml` — 2,690 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:39
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/autoliquidacion.toml` — 2,300 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/autoliquidacion.toml` — 2,300 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:40
 msgid "`src/cadrumo/_data/terminology/concepts/barrido-rag.toml` — 2,938 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/barrido-rag.toml` — 2,938 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:41
 msgid "`src/cadrumo/_data/terminology/concepts/binding.toml` — 2,904 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/binding.toml` — 2,904 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:42
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/borrador-vs-presentado.toml` — "
 "2,398 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/borrador-vs-presentado.toml` — "
+"2,398 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:43
 msgid "`src/cadrumo/_data/terminology/concepts/borrador.toml` — 2,363 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/borrador.toml` — 2,363 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:44
 msgid "`src/cadrumo/_data/terminology/concepts/casilla.toml` — 4,032 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/casilla.toml` — 4,032 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:45
 msgid "`src/cadrumo/_data/terminology/concepts/censo.toml` — 2,500 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/censo.toml` — 2,500 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:46
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/clases-registro-busqueda.toml` — "
 "2,845 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/clases-registro-busqueda.toml` — "
+"2,845 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:47
 msgid "`src/cadrumo/_data/terminology/concepts/declaracion.toml` — 2,659 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/declaracion.toml` — 2,659 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:48
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/depuracion-licencia.toml` — 3,716"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/depuracion-licencia.toml` — 3,716"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:49
 msgid "`src/cadrumo/_data/terminology/concepts/expediente.toml` — 2,389 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/expediente.toml` — 2,389 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:50
 msgid "`src/cadrumo/_data/terminology/concepts/fichero-boe.toml` — 3,159 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/fichero-boe.toml` — 3,159 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:51
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/gancho-preprocesado.toml` — 3,516"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/gancho-preprocesado.toml` — 3,516"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:52
 msgid "`src/cadrumo/_data/terminology/concepts/irpf.toml` — 4,103 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/irpf.toml` — 4,103 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:53
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-exempt.toml` — 852 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-exempt.toml` — 852 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:54
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-general-21.toml` — "
 "950 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-general-21.toml` — "
+"950 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:55
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-general.toml` — "
 "1,110 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-general.toml` — "
+"1,110 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:56
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-not-subject.toml` — "
 "890 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-not-subject.toml` — "
+"890 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:57
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-reduced-10.toml` — "
 "951 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-reduced-10.toml` — "
+"951 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:58
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-reduced.toml` — "
 "1,093 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-reduced.toml` — "
+"1,093 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:59
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-reverse-charge.toml`"
 " — 2,372 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-reverse-charge.toml`"
+" — 2,372 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:60
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-super-"
 "reduced-4.toml` — 986 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-super-"
+"reduced-4.toml` — 986 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:61
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-super-reduced.toml` "
 "— 1,197 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-super-reduced.toml` "
+"— 1,197 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:62
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-domestic-zero.toml` — 885 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-domestic-zero.toml` — 885 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:63
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-erroneous-invoice.toml` — 887"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-erroneous-invoice.toml` — 887"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:64
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-export-assimilated-zero-"
 "rated.toml` — 932 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-export-assimilated-zero-"
+"rated.toml` — 932 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:65
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-export-third-country-zero-"
 "rated.toml` — 935 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-export-third-country-zero-"
+"rated.toml` — 935 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:66
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-import-third-country.toml` — "
 "936 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-import-third-country.toml` — "
+"936 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:67
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-intra-community-acquisition-"
 "reverse-charge.toml` — 998 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-intra-community-acquisition-"
+"reverse-charge.toml` — 998 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:68
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-intra-community-service-"
 "acquisition-reverse-charge.toml` — 1,044 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-intra-community-service-"
+"acquisition-reverse-charge.toml` — 1,044 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:69
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-intra-community-service-"
 "supply.toml` — 903 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-intra-community-service-"
+"supply.toml` — 903 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:70
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-intra-community-supply.toml` "
 "— 879 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-intra-community-supply.toml` "
+"— 879 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:71
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-intra-community-"
 "triangulation.toml` — 899 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-intra-community-"
+"triangulation.toml` — 899 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:72
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-operacion-no-sujeta.toml` — "
 "863 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-operacion-no-sujeta.toml` — "
+"863 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:73
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-reagp-compensation.toml` — "
 "646 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-reagp-compensation.toml` — "
+"646 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:74
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-recargo-equivalencia.toml` — "
 "2,496 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-recargo-equivalencia.toml` — "
+"2,496 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:75
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/iva-regimen-simplificado.toml` — "
 "2,289 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/iva-regimen-simplificado.toml` — "
+"2,289 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:76
 msgid "`src/cadrumo/_data/terminology/concepts/iva-unknown.toml` — 882 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/iva-unknown.toml` — 882 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:77
 msgid "`src/cadrumo/_data/terminology/concepts/iva.toml` — 3,907 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/iva.toml` — 3,907 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:78
 msgid "`src/cadrumo/_data/terminology/concepts/justificante.toml` — 2,493 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/justificante.toml` — 2,493 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:79
 msgid "`src/cadrumo/_data/terminology/concepts/ledger.toml` — 2,713 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/ledger.toml` — 2,713 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:80
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/manual-terminologia.toml` — 2,939"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/manual-terminologia.toml` — 2,939"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:81
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/mapa-relevancia.toml` — 3,164 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/mapa-relevancia.toml` — 3,164 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:82
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-036.toml` — 2,258 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-036.toml` — 2,258 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:83
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-037.toml` — 1,128 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-037.toml` — 1,128 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:84
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-038.toml` — 1,041 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-038.toml` — 1,041 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:85
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-100.toml` — 2,024 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-100.toml` — 2,024 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:86
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-111.toml` — 2,261 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-111.toml` — 2,261 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:87
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-115.toml` — 2,278 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-115.toml` — 2,278 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:88
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-117.toml` — 1,092 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-117.toml` — 1,092 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:89
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-121.toml` — 1,051 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-121.toml` — 1,051 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:90
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-122.toml` — 1,014 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-122.toml` — 1,014 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:91
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-123.toml` — 2,204 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-123.toml` — 2,204 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:92
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-126.toml` — 977 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-126.toml` — 977 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:93
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-128.toml` — 1,050 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-128.toml` — 1,050 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:94
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-130.toml` — 2,303 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-130.toml` — 2,303 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:95
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-131.toml` — 2,117 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-131.toml` — 2,117 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:96
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-136.toml` — 977 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-136.toml` — 977 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:97
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-140.toml` — 959 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-140.toml` — 959 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:98
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-143.toml` — 1,063 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-143.toml` — 1,063 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:99
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-145.toml` — 1,003 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-145.toml` — 1,003 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:100
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-151.toml` — 1,080 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-151.toml` — 1,080 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:101
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-156.toml` — 1,059 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-156.toml` — 1,059 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:102
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-165.toml` — 1,005 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-165.toml` — 1,005 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:103
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-179.toml` — 1,043 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-179.toml` — 1,043 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:104
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-180.toml` — 2,406 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-180.toml` — 2,406 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:105
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-181.toml` — 1,042 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-181.toml` — 1,042 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:106
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-182.toml` — 956 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-182.toml` — 956 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:107
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-184.toml` — 2,248 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-184.toml` — 2,248 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:108
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-185.toml` — 1,014 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-185.toml` — 1,014 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:109
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-186.toml` — 933 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-186.toml` — 933 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:110
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-187.toml` — 1,044 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-187.toml` — 1,044 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:111
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-188.toml` — 1,010 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-188.toml` — 1,010 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:112
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-189.toml` — 971 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-189.toml` — 971 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:113
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-190.toml` — 2,458 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-190.toml` — 2,458 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:114
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-193.toml` — 2,347 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-193.toml` — 2,347 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:115
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-194.toml` — 1,040 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-194.toml` — 1,040 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:116
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-200.toml` — 2,202 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-200.toml` — 2,202 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:117
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-202.toml` — 2,189 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-202.toml` — 2,189 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:118
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-210.toml` — 2,213 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-210.toml` — 2,213 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:119
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-216.toml` — 1,042 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-216.toml` — 1,042 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:120
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-220.toml` — 981 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-220.toml` — 981 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:121
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-222.toml` — 995 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-222.toml` — 995 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:122
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-231.toml` — 880 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-231.toml` — 880 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:123
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-232.toml` — 2,228 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-232.toml` — 2,228 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:124
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-233.toml` — 1,066 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-233.toml` — 1,066 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:125
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-234.toml` — 950 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-234.toml` — 950 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:126
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-238.toml` — 929 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-238.toml` — 929 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:127
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-270.toml` — 1,033 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-270.toml` — 1,033 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:128
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-280.toml` — 952 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-280.toml` — 952 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:129
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-289.toml` — 1,065 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-289.toml` — 1,065 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:130
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-296.toml` — 1,045 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-296.toml` — 1,045 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:131
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-303.toml` — 2,275 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-303.toml` — 2,275 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:132
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-308.toml` — 1,032 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-308.toml` — 1,032 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:133
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-309.toml` — 2,120 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-309.toml` — 2,120 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:134
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-322.toml` — 1,924 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-322.toml` — 1,924 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:135
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-341.toml` — 1,086 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-341.toml` — 1,086 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:136
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-345.toml` — 1,049 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-345.toml` — 1,049 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:137
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-347.toml` — 2,097 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-347.toml` — 2,097 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:138
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-349.toml` — 2,261 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-349.toml` — 2,261 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:139
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-353.toml` — 2,059 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-353.toml` — 2,059 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:140
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-360.toml` — 1,104 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-360.toml` — 1,104 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:141
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-361.toml` — 1,090 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-361.toml` — 1,090 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:142
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-369.toml` — 2,134 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-369.toml` — 2,134 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:143
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-379.toml` — 944 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-379.toml` — 944 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:144
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-380.toml` — 969 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-380.toml` — 969 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:145
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-390.toml` — 2,123 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-390.toml` — 2,123 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:146
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-490.toml` — 927 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-490.toml` — 927 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:147
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-576.toml` — 965 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-576.toml` — 965 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:148
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-592.toml` — 1,017 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-592.toml` — 1,017 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:149
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-604.toml` — 923 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-604.toml` — 923 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:150
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-714.toml` — 964 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-714.toml` — 964 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:151
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-720.toml` — 2,315 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-720.toml` — 2,315 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:152
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-721.toml` — 948 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-721.toml` — 948 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:153
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-763.toml` — 1,017 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-763.toml` — 1,017 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:154
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-840.toml` — 1,038 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-840.toml` — 1,038 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:155
 msgid "`src/cadrumo/_data/terminology/concepts/modelo-848.toml` — 1,019 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo-848.toml` — 1,019 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:156
 msgid "`src/cadrumo/_data/terminology/concepts/modelo.toml` — 4,205 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/modelo.toml` — 4,205 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:157
 msgid "`src/cadrumo/_data/terminology/concepts/nif.toml` — 4,272 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/nif.toml` — 4,272 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:158
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-01.toml` — 832 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-01.toml` — 832 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:159
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-02.toml` — 835 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-02.toml` — 835 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:160
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-03.toml` — 831 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-03.toml` — 831 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:161
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-04.toml` — 831 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-04.toml` — 831 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:162
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-05.toml` — 826 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-05.toml` — 826 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:163
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-06.toml` — 828 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-06.toml` — 828 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:164
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-07.toml` — 830 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-07.toml` — 830 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:165
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-08.toml` — 833 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-08.toml` — 833 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:166
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-09.toml` — 840 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-09.toml` — 840 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:167
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-0a.toml` — 819 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-0a.toml` — 819 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:168
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-10.toml` — 835 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-10.toml` — 835 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:169
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-11.toml` — 837 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-11.toml` — 837 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:170
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-12.toml` — 837 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-12.toml` — 837 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:171
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-1p.toml` — 861 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-1p.toml` — 861 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:172
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-1t.toml` — 824 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-1t.toml` — 824 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:173
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-2p.toml` — 864 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-2p.toml` — 864 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:174
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-2t.toml` — 827 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-2t.toml` — 827 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:175
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-3p.toml` — 864 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-3p.toml` — 864 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:176
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-3t.toml` — 827 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-3t.toml` — 827 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:177
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-4p.toml` — 864 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-4p.toml` — 864 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:178
 msgid "`src/cadrumo/_data/terminology/concepts/periodo-4t.toml` — 827 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/periodo-4t.toml` — 827 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:179
 msgid "`src/cadrumo/_data/terminology/concepts/preflight.toml` — 3,238 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/preflight.toml` — 3,238 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:180
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/prorrata-especial.toml` — 3,177 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/prorrata-especial.toml` — 3,177 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:181
 msgid "`src/cadrumo/_data/terminology/concepts/prorrata.toml` — 4,652 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/prorrata.toml` — 4,652 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:182
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/proyeccion-busqueda.toml` — 3,138"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/proyeccion-busqueda.toml` — 3,138"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:183
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/recargo-equivalencia.toml` — "
 "2,579 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/recargo-equivalencia.toml` — "
+"2,579 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:184
 msgid "`src/cadrumo/_data/terminology/concepts/renta.toml` — 3,658 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/renta.toml` — 3,658 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:185
 msgid "`src/cadrumo/_data/terminology/concepts/revision.toml` — 3,309 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/revision.toml` — 3,309 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:186
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/sede-electronica.toml` — 2,469 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/sede-electronica.toml` — 2,469 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:187
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/tema-authentication.toml` — 985 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/tema-authentication.toml` — 985 "
+"bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:188
 msgid "`src/cadrumo/_data/terminology/concepts/tema-calendar.toml` — 947 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-calendar.toml` — 947 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:189
 msgid "`src/cadrumo/_data/terminology/concepts/tema-casilla.toml` — 922 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-casilla.toml` — 922 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:190
 msgid "`src/cadrumo/_data/terminology/concepts/tema-formats.toml` — 926 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-formats.toml` — 926 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:191
 msgid "`src/cadrumo/_data/terminology/concepts/tema-irpf-regime.toml` — 918 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-irpf-regime.toml` — 918 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:192
 msgid "`src/cadrumo/_data/terminology/concepts/tema-iva-regime.toml` — 875 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-iva-regime.toml` — 875 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:193
 msgid "`src/cadrumo/_data/terminology/concepts/tema-modelos.toml` — 898 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-modelos.toml` — 898 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:194
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/tema-pago-fraccionado.toml` — 948"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/tema-pago-fraccionado.toml` — 948"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:195
 msgid "`src/cadrumo/_data/terminology/concepts/tema-profile.toml` — 940 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-profile.toml` — 940 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:196
 msgid "`src/cadrumo/_data/terminology/concepts/tema-providers.toml` — 953 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-providers.toml` — 953 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:197
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/tema-recargo-extemporaneo.toml` —"
 " 976 bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/tema-recargo-extemporaneo.toml` —"
+" 976 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:198
 msgid "`src/cadrumo/_data/terminology/concepts/tema-regimens.toml` — 928 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-regimens.toml` — 928 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:199
 msgid "`src/cadrumo/_data/terminology/concepts/tema-sii.toml` — 937 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-sii.toml` — 937 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:200
 msgid "`src/cadrumo/_data/terminology/concepts/tema-verifactu.toml` — 958 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/tema-verifactu.toml` — 958 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:201
 msgid ""
 "`src/cadrumo/_data/terminology/concepts/verificado-completo.toml` — 3,540"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/terminology/concepts/verificado-completo.toml` — 3,540"
+" bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:202
 msgid "`src/cadrumo/_data/terminology/concepts/vies.toml` — 3,663 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/vies.toml` — 3,663 bytes"
 
 #: ../../technical/articles/205-terminology-concept-corpus.md:203
 msgid "`src/cadrumo/_data/terminology/concepts/work-unit.toml` — 3,209 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/terminology/concepts/work-unit.toml` — 3,209 bytes"

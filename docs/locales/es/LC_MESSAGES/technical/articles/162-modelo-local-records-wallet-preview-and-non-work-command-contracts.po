@@ -48,6 +48,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-162` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md:10
 msgid "Scope"
@@ -233,7 +236,7 @@ msgstr "Apéndice de cobertura"
 
 #: ../../technical/articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md:36
 msgid "All 24 assigned files are linked below."
-msgstr ""
+msgstr "Los 24 archivos asignados se referencian a continuación."
 
 #: ../../technical/articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md:38
 msgid "`src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py`"

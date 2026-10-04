@@ -45,10 +45,13 @@ msgid ""
 "**Report:** `STAGE-2-187` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-187` · **Tema:** [Entorno de ejecución instalado, "
+"entorno de trabajo de terminal e infraestructura de agentes](../topics"
+"/runtime-tui-and-agent-harness.md)"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Ámbito y método"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:12
 msgid ""
@@ -337,149 +340,181 @@ msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-309/SKILL.md` — 109 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-309/SKILL.md` — 109 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:53
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-322/reference/casillas.md` — 57 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-322/reference/casillas.md` — 57 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:54
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-322/SKILL.md` — 105 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-322/SKILL.md` — 105 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:55
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-349/reference/casillas.md` — 82 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-349/reference/casillas.md` — 82 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:56
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-349/SKILL.md` — 135 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-349/SKILL.md` — 135 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:57
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-353/reference/casillas.md` — 75 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-353/reference/casillas.md` — 75 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:58
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-353/SKILL.md` — 126 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-353/SKILL.md` — 126 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:59
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-369/reference/casillas.md` — 67 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-369/reference/casillas.md` — 67 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:60
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-369/SKILL.md` — 113 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-369/SKILL.md` — 113 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:61
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-390/SKILL.md` — 94 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-390/SKILL.md` — 94 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:62
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-pyme-sociedad/SKILL.md` —"
 " 80 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-pyme-sociedad/SKILL.md` —"
+" 80 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:63
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md` — "
 "40 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md` — "
+"40 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:64
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-"
 "declaracion/SKILL.md` — 90 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-"
+"declaracion/SKILL.md` — 90 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:65
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-regularizar-"
 "atrasos/SKILL.md` — 110 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-regularizar-"
+"atrasos/SKILL.md` — 110 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:66
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-resumen-anual/SKILL.md` —"
 " 83 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-resumen-anual/SKILL.md` —"
+" 83 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:67
 msgid ""
 "`src/cadrumo_harness/_data/agent/skills/cadrumo-retenedor-"
 "empleador/SKILL.md` — 90 lines"
 msgstr ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-retenedor-"
+"empleador/SKILL.md` — 90 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:68
 msgid "`src/cadrumo_harness/_resources.py` — 33 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/_resources.py` — 33 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:69
 msgid "`src/cadrumo_harness/_skill_metadata.py` — 328 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/_skill_metadata.py` — 328 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:70
 msgid "`src/cadrumo_harness/_workspace.py` — 746 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/_workspace.py` — 746 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:71
 msgid "`src/cadrumo_harness/mcp/__init__.py` — 3 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/__init__.py` — 3 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:72
 msgid "`src/cadrumo_harness/mcp/admitted_operations.py` — 298 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/admitted_operations.py` — 298 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:73
 msgid "`src/cadrumo_harness/mcp/authority_query.py` — 106 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/authority_query.py` — 106 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:74
 msgid "`src/cadrumo_harness/mcp/main.py` — 39 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/main.py` — 39 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:75
 msgid "`src/cadrumo_harness/mcp/protocol_contract.py` — 238 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/protocol_contract.py` — 238 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:76
 msgid "`src/cadrumo_harness/mcp/runtime_adapter.py` — 338 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/runtime_adapter.py` — 338 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:77
 msgid "`src/cadrumo_harness/mcp/runtime_admission.py` — 45 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/runtime_admission.py` — 45 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:78
 msgid "`src/cadrumo_harness/mcp/runtime_cleanup.py` — 155 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/runtime_cleanup.py` — 155 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:79
 msgid "`src/cadrumo_harness/mcp/server.py` — 74 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/mcp/server.py` — 74 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:80
 msgid "`src/cadrumo_harness/py.typed` — 0 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/py.typed` — 0 líneas"
 
 #: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:81
 msgid "`src/cadrumo_harness/resources.py` — 105 lines"
-msgstr ""
+msgstr "`src/cadrumo_harness/resources.py` — 105 líneas"

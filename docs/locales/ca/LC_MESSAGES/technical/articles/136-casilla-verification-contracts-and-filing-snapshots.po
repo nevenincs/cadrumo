@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:1
 msgid "Casilla verification contracts and filing snapshots"
-msgstr ""
+msgstr "Contractes de verificació de caselles i instantànies de presentació"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-136` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-136` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:14
 msgid "Casillas and verification"
-msgstr ""
+msgstr "Caselles i verificació"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:16
 msgid ""
@@ -140,7 +142,7 @@ msgstr ""
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:24
 msgid "Snapshot authority and temporal evidence"
-msgstr ""
+msgstr "Autoritat d'instantànies i evidències temporals"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:26
 msgid ""
@@ -203,7 +205,7 @@ msgstr ""
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:32
 msgid "Registry-backed projections"
-msgstr ""
+msgstr "Projeccions sustentades en el registre"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:34
 msgid ""
@@ -248,7 +250,7 @@ msgstr ""
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:38
 msgid "Security, quality, and limits"
-msgstr ""
+msgstr "Seguretat, qualitat i límits"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:40
 msgid ""
@@ -283,12 +285,16 @@ msgid ""
 "All 12 assigned files were read fully across nine bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Es van llegir íntegrament els 12 fitxers assignats en nou pàgines "
+"delimitades; no queda cap interval sense llegir."
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:48
 msgid ""
 "registry/schema_surfaces.py "
 "(`src/cadrumo/domain/calculations/registry/schema_surfaces.py`) — 1–719"
 msgstr ""
+"registry/schema_surfaces.py "
+"(`src/cadrumo/domain/calculations/registry/schema_surfaces.py`) — 1–719"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:49
 msgid ""
@@ -296,6 +302,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/schema_verification.py`) — "
 "1–1,397"
 msgstr ""
+"registry/schema_verification.py "
+"(`src/cadrumo/domain/calculations/registry/schema_verification.py`) — "
+"1–1,397"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:50
 msgid ""
@@ -303,6 +312,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/setup_profile_bindings.py`) — "
 "1–123"
 msgstr ""
+"registry/setup_profile_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/setup_profile_bindings.py`) — "
+"1–123"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:51
 msgid ""
@@ -310,6 +322,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/situacion_familiar_catalogue.py`)"
 " — 1–167"
 msgstr ""
+"registry/situacion_familiar_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/situacion_familiar_catalogue.py`)"
+" — 1–167"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:52
 msgid ""
@@ -317,12 +332,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/situacion_familiar_m145_catalogue.py`)"
 " — 1–140"
 msgstr ""
+"registry/situacion_familiar_m145_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/situacion_familiar_m145_catalogue.py`)"
+" — 1–140"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:53
 msgid ""
 "registry/snapshot.py "
 "(`src/cadrumo/domain/calculations/registry/snapshot.py`) — 1–1,179"
 msgstr ""
+"registry/snapshot.py "
+"(`src/cadrumo/domain/calculations/registry/snapshot.py`) — 1–1,179"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:54
 msgid ""
@@ -330,30 +350,41 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/source_byte_availability.py`) "
 "— 1–100"
 msgstr ""
+"registry/source_byte_availability.py "
+"(`src/cadrumo/domain/calculations/registry/source_byte_availability.py`) "
+"— 1–100"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:55
 msgid ""
 "registry/static_inspection.py "
 "(`src/cadrumo/domain/calculations/registry/static_inspection.py`) — 1–405"
 msgstr ""
+"registry/static_inspection.py "
+"(`src/cadrumo/domain/calculations/registry/static_inspection.py`) — 1–405"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:56
 msgid ""
 "registry/support_matrix.py "
 "(`src/cadrumo/domain/calculations/registry/support_matrix.py`) — 1–330"
 msgstr ""
+"registry/support_matrix.py "
+"(`src/cadrumo/domain/calculations/registry/support_matrix.py`) — 1–330"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:57
 msgid ""
 "registry/tax_id_format.py "
 "(`src/cadrumo/domain/calculations/registry/tax_id_format.py`) — 1–205"
 msgstr ""
+"registry/tax_id_format.py "
+"(`src/cadrumo/domain/calculations/registry/tax_id_format.py`) — 1–205"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:58
 msgid ""
 "registry/tax_id_runtime.py "
 "(`src/cadrumo/domain/calculations/registry/tax_id_runtime.py`) — 1–29"
 msgstr ""
+"registry/tax_id_runtime.py "
+"(`src/cadrumo/domain/calculations/registry/tax_id_runtime.py`) — 1–29"
 
 #: ../../technical/articles/136-casilla-verification-contracts-and-filing-snapshots.md:59
 msgid ""
@@ -361,3 +392,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/tax_identity_admission.py`) — "
 "1–72"
 msgstr ""
+"registry/tax_identity_admission.py "
+"(`src/cadrumo/domain/calculations/registry/tax_identity_admission.py`) — "
+"1–72"

@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:1
 msgid "Error contracts, renderers, and record-fault projection"
 msgstr ""
+"Contractes d’errors, generadors de sortida i projecció de fallades de "
+"registres"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:3
 msgid ""
@@ -46,10 +48,12 @@ msgid ""
 "**Report:** `STAGE-2-119` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-119` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:12
 msgid ""
@@ -65,7 +69,7 @@ msgstr ""
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:14
 msgid "Registered error contracts"
-msgstr ""
+msgstr "Contractes d'error registrats"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:16
 msgid ""
@@ -137,7 +141,7 @@ msgstr ""
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:24
 msgid "Rendering and exception flow"
-msgstr ""
+msgstr "Renderització i flux d'excepcions"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:26
 msgid ""
@@ -211,7 +215,7 @@ msgstr ""
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:34
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:36
 msgid ""
@@ -268,69 +272,89 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:44
 msgid "errors/__init__.py (`src/cadrumo/core/errors/__init__.py`) — lines 1–8"
-msgstr ""
+msgstr "errors/__init__.py (`src/cadrumo/core/errors/__init__.py`) — línies 1–8"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:45
 msgid ""
 "errors/error_codes.py (`src/cadrumo/core/errors/error_codes.py`) — lines "
 "1–651"
 msgstr ""
+"errors/error_codes.py (`src/cadrumo/core/errors/error_codes.py`) — línies"
+" 1–651"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:46
 msgid "errors/hierarchy.py (`src/cadrumo/core/errors/hierarchy.py`) — lines 1–402"
 msgstr ""
+"errors/hierarchy.py (`src/cadrumo/core/errors/hierarchy.py`) — línies "
+"1–402"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:47
 msgid "errors/not_found.py (`src/cadrumo/core/errors/not_found.py`) — lines 1–25"
-msgstr ""
+msgstr "errors/not_found.py (`src/cadrumo/core/errors/not_found.py`) — línies 1–25"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:48
 msgid ""
 "errors/record_fault.py (`src/cadrumo/core/errors/record_fault.py`) — "
 "lines 1–245"
 msgstr ""
+"errors/record_fault.py (`src/cadrumo/core/errors/record_fault.py`) — "
+"línies 1–245"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:49
 msgid ""
 "errors/registry/__init__.py "
 "(`src/cadrumo/core/errors/registry/__init__.py`) — lines 1–11"
 msgstr ""
+"errors/registry/__init__.py "
+"(`src/cadrumo/core/errors/registry/__init__.py`) — línies 1–11"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:50
 msgid ""
 "errors/registry/_adapters.py "
 "(`src/cadrumo/core/errors/registry/_adapters.py`) — lines 1–22"
 msgstr ""
+"errors/registry/_adapters.py "
+"(`src/cadrumo/core/errors/registry/_adapters.py`) — línies 1–22"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:51
 msgid ""
 "errors/registry/_adapters_part1.py "
 "(`src/cadrumo/core/errors/registry/_adapters_part1.py`) — lines 1–560"
 msgstr ""
+"errors/registry/_adapters_part1.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part1.py`) — línies 1–560"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:52
 msgid ""
 "errors/registry/_adapters_part2.py "
 "(`src/cadrumo/core/errors/registry/_adapters_part2.py`) — lines 1–683"
 msgstr ""
+"errors/registry/_adapters_part2.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part2.py`) — línies 1–683"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:53
 msgid ""
 "errors/registry/_adapters_part3.py "
 "(`src/cadrumo/core/errors/registry/_adapters_part3.py`) — lines 1–110"
 msgstr ""
+"errors/registry/_adapters_part3.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part3.py`) — línies 1–110"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:54
 msgid ""
 "errors/registry/_application.py "
 "(`src/cadrumo/core/errors/registry/_application.py`) — lines 1–26"
 msgstr ""
+"errors/registry/_application.py "
+"(`src/cadrumo/core/errors/registry/_application.py`) — línies 1–26"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:55
 msgid ""
 "errors/registry/_application_part1.py "
 "(`src/cadrumo/core/errors/registry/_application_part1.py`) — lines 1–950"
 msgstr ""
+"errors/registry/_application_part1.py "
+"(`src/cadrumo/core/errors/registry/_application_part1.py`) — línies 1–950"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:56
 msgid ""
@@ -338,6 +362,9 @@ msgid ""
 "(`src/cadrumo/core/errors/registry/_application_part2.py`) — lines "
 "1–1,573"
 msgstr ""
+"errors/registry/_application_part2.py "
+"(`src/cadrumo/core/errors/registry/_application_part2.py`) — línies "
+"1–1,573"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:57
 msgid ""
@@ -345,6 +372,9 @@ msgid ""
 "(`src/cadrumo/core/errors/registry/_application_part3a1.py`) — lines "
 "1–296"
 msgstr ""
+"errors/registry/_application_part3a1.py "
+"(`src/cadrumo/core/errors/registry/_application_part3a1.py`) — línies "
+"1–296"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:58
 msgid ""
@@ -352,12 +382,18 @@ msgid ""
 "(`src/cadrumo/core/errors/registry/_application_part3a2.py`) — lines "
 "1–120"
 msgstr ""
+"errors/registry/_application_part3a2.py "
+"(`src/cadrumo/core/errors/registry/_application_part3a2.py`) — línies "
+"1–120"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:59
 msgid ""
 "errors/registry/_application_part3b.py "
 "(`src/cadrumo/core/errors/registry/_application_part3b.py`) — lines 1–380"
 msgstr ""
+"errors/registry/_application_part3b.py "
+"(`src/cadrumo/core/errors/registry/_application_part3b.py`) — línies "
+"1–380"
 
 #: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:60
 msgid ""
@@ -365,3 +401,6 @@ msgid ""
 "(`src/cadrumo/core/errors/registry/_application_profile_bundle.py`) — "
 "lines 1–36"
 msgstr ""
+"errors/registry/_application_profile_bundle.py "
+"(`src/cadrumo/core/errors/registry/_application_profile_bundle.py`) — "
+"línies 1–36"

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76dc8296a26338b541fc7b6b16547414a5dbbba5e307762cd072a3fd38c77a11'
+body_hash: 'sha256:a5e83aaf1f78b82463852578384d0d5e95eec8b5e8c08bbd942289cd050fb804'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -88,6 +88,14 @@ After explicit CC/AR/INCLUDE projection, both Rust crates build in Release; the 
 ### cargo-reuse | low | Identical CMake builds reuse artifacts but CTest transitions can rebuild native dependencies
 
 The first CMake build immediately after standalone CTest rebuilt ring and downstream crates, so its attempted unchanged-artifact assertion failed. Both invocations project the pinned tools and SDK paths, but Cargo also observes ambient MSBuild/CTest build-script environment differences. No fingerprint was bypassed. A subsequent identical CMake invocation completed Cargo in 0.11 seconds and preserved both the application rlib timestamp and SHA256. Reuse is demonstrated for repeated identical build invocations; optimal reuse across CTest/MSBuild environments is not claimed. Further normalization of non-toolchain build-script environment remains an improvement, not a passing performance claim.
+
+### zip-probe-gate | low | Rust compatibility now participates in actual ZIP acceptance
+
+Reviewed the CMake-generated argv projection, existing artifact verifier and new real-subprocess regressions. CMake remains the compiler/target/configuration owner; generated JSON preserves argument boundaries including Windows LIB lists. The artifact verifier supplies the extracted root rather than the staged-root cache setting, runs the fixed Rust test command after Python acceptance and refuses a passing result on failure. Reports distinguish passed application verification from standalone Python-only verification where it was not requested. The original archive and manifest hashes are rechecked before acceptance. Four artifact-identity tests pass, including probe rejection and manifest mutation; adjacent storage-contract checks remain passing. Ruff and CMake generation pass. Independent review found no concrete defect. Live combined verification is pending in build/windows-x64/application-cmake/archive-fixture, using the prior pinned ZIP rather than a freshly built package. The new fresh build attempt again failed the existing Modelo 232 registry bindings; no validation was bypassed.
+
+### zip-probe-final | low | Combined Python and Rust verification passes on the pinned ZIP
+
+The real artifact verifier passed existing Python relocation/native-library checks and the CMake-generated Rust command against one fresh extraction of the prior pinned Release ZIP. The Rust probe matched CPython 3.13.11 and all 80 distributions, returned MissingDependency for Playwright and preserved the original inventory. The result at build/windows-x64/application-cmake/archive-fixture/verification/Release/result.json records application_probe=passed with archive and manifest hashes. A final independent hash comparison confirms both original locator values. The final manifest-recheck assertion was added after the live process started; its failure behavior passed the real mutation regression and its success condition passed the post-run hash comparison. All changed Python files pass Ruff and formatting. Verdict: PASS for ZIP-bound probe integration; current-source package acceptance remains PENDING following the recorded authority compiler failure. Concurrent shared-branch commits captured the implementation; no merge history was rewritten.
 
 ## Recommendations
 

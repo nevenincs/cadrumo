@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-all-mcp-integration'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ae762a9edc0bb578c277e3ea1e3e5f5e569b81a6b830ff5a160db1c3bcd25db'
+body_hash: 'sha256:41b91566b0cd2046e29d665f727f4478a70b9ab34b90966dcb024070854a52c8'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -94,6 +94,22 @@ Open diagnosis and native dependency. The final-cut Mac cohort passes14 containm
 ### windows-package-and-custody | medium | Artifact proof passes while protected-session admission still lacks its required host context
 
 Scoped artifact verification passes on4d source: all6 configured CMake tests, actual ZIP hash verification and hostile relocation, and application readiness from the actual extracted Unicode-path ZIP. The subsequent shipping-source repairs require a refreshed final artifact before a current-package claim. This runner is elevated and lacks an interactive desktop, so it cannot establish positive protected-storage or installed grant/reconnect acceptance under the strict policy. An existing suitable Windows host is requested; no scheduled task, desktop bridge or provider-policy weakening is used.
+
+### later-tui-53f-reconciliation | low | Defining owners reconcile the immutable later cut while preserving current MCP behavior
+
+The actual merge uses integration checkpoint dd69ed8c349 and committed TUI53f01bc87b against original base a8a7fb7d26. All729 conflicted paths have source resolutions:652 catalogue conflicts preserve31,487 completed translations and4 individually reviewed existing translations;30 assigned product/runtime conflict paths plus the remaining shared/source/vault ownership are recorded separately. Existing historical record restoration preserves delegated acceptance, additive receipts and the committed binding-plan retirement; it authors no new decision or checkbox. Exact original-base binary deltas and resolved tree evidence account for all4858 incoming paths. Generated9 targets/forms retain current valid committed bytes as bootstrap until newer interpreting inputs settle; this is not final reproduction proof.
+
+### current-startup-contracts | high | Automatic merge regressions repaired without weakening authority or schema admission
+
+Three incoming clean merges lost current behavior: invoice models/payload normalization removed the M347 leased-premises family still required by real consumers, and evidence-followup DTOs introduced a custom UTC schema that the closed operation registry correctly refused. The restored current fields, canonical cadastral normalization and plain datetime/UTC validators preserve the intended semantics while retaining direct canonical EU imports. Actual collection now succeeds for339 cases, including272 unique primary operation identities and54 supplementary variants. Three pure completeness/duplicate/installer-environment cases pass;44 surviving product paths pass AST, style, format and type checks. These startup defects are resolved at source/collection scope; fresh behavioral replay remains required after final inputs settle.
+
+### desktop-terminal-cleanup | high | Incoming detached workers and unbounded shutdown replaced by retained bounded settlement
+
+The incoming Desktop preview spawned reader, writer and ConPTY closer threads without retaining handles, waited for its child without a deadline, and dropped Session ownership before checking cleanup. Current source retains each JoinHandle, polls child exit and finished joins under one3-second deadline, retains Session on explicit failure, preserves primary failure through retry and refuses normal window closure until settlement. Source review and pinned Rust formatting pass. The two meaningful worker tests and actual packaged PTY/Desktop execution are pending. Unexpected OS/process destruction is explicitly not certified as joined cleanup. This introduces no runtime manager, persistent service or scheduled task.
+
+### live-destination-preservation | low | Later active writer state captured independently without changing its checkout
+
+The live destination advanced to efb85a8a5b and remains dirty. Immutable snapshot66b785a1418 preserves248 later working paths against that original head. Original index SHA256 is unchanged at61e6120a68ab41d15a102258e02866e73de78c924bcddc3958a67d265f88ebc4. Two capture trees differ only at the registry-health audit, so the preservation is explicitly a time window. Six active source/catalogue lock paths have named transient dispositions and are not transplanted. Native layout/uninstall changes and captured M232 form/static interpretation changes require their own semantic reconciliation before a single final generation pass. The live worktree has not been updated or landed.
 
 ## Recommendations
 

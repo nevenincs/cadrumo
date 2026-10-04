@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:1
 msgid "CLI command contracts and operator surfaces"
-msgstr ""
+msgstr "CLI-parancsszerződések és kezelői felületek"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-156` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:10
 msgid "Scope"
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:16
 msgid ""
@@ -188,7 +191,7 @@ msgstr ""
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:32
 msgid "Security and safety assessment"
-msgstr ""
+msgstr "Biztonsági és biztonságossági értékelés"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:34
 msgid ""

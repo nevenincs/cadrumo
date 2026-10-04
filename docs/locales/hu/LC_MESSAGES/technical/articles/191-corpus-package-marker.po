@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/191-corpus-package-marker.md:1
 msgid "Corpus package marker"
-msgstr ""
+msgstr "A korpusz csomagjelölője"
 
 #: ../../technical/articles/191-corpus-package-marker.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-191` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-191` · **Téma:** [Csomagolt tudás és "
+"lokalizáció](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/191-corpus-package-marker.md:10
 msgid "Scope and assessment"
-msgstr ""
+msgstr "Hatókör és értékelés"
 
 #: ../../technical/articles/191-corpus-package-marker.md:12
 msgid ""
@@ -59,6 +61,14 @@ msgid ""
 "authoritative, current, or used by product code; those properties belong "
 "to the corpus inventory and its consumers."
 msgstr ""
+"Ez a részlet egy nulla bájtos fájlt tartalmaz: "
+"`src/cadrumo/_data/corpus/__init__.py`. Nincsenek benne végrehajtható "
+"utasítások, deklarációk, korpuszindex vagy validációs logika. Szerepe a "
+"`corpus` könyvtár Python-csomagként való megjelölésére korlátozódik a "
+"csomagolás és az erőforrás-elérés számára. Nem állapítja meg, mely "
+"forrásdokumentumok vannak jelen, mérvadók, naprakészek vagy használatosak"
+" a termékkódban; ezek a tulajdonságok a korpusz leltárához és "
+"fogyasztóihoz tartoznak."
 
 #: ../../technical/articles/191-corpus-package-marker.md:14
 msgid ""
@@ -66,6 +76,9 @@ msgid ""
 " security finding is supported by this empty marker; this is static "
 "inspection, not a package-resource runtime test."
 msgstr ""
+"A teljes, egyfájlos leltárt megvizsgáltam. Ez az üres jelölő nem támaszt "
+"alá viselkedési, minőségi vagy biztonsági megállapítást; ez statikus "
+"vizsgálat, nem a csomagerőforrások futásidejű tesztje."
 
 #: ../../technical/articles/191-corpus-package-marker.md:16
 msgid "Complete assigned-file coverage"
@@ -76,3 +89,5 @@ msgid ""
 "`src/cadrumo/_data/corpus/__init__.py` — 0 bytes, 0 lines; fully "
 "inspected."
 msgstr ""
+"`src/cadrumo/_data/corpus/__init__.py` — 0 bájt, 0 sor; teljes egészében "
+"megvizsgálva."

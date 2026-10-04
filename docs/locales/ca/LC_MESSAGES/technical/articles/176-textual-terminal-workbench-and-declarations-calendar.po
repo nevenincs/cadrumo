@@ -46,10 +46,13 @@ msgid ""
 "**Report:** `STAGE-2-176` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-176` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:12
 msgid ""
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:14
 msgid "Operator capabilities"
-msgstr ""
+msgstr "Capacitats de l'operador"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:16
 msgid ""
@@ -122,7 +125,7 @@ msgstr ""
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:22
 msgid "How the TUI works"
-msgstr ""
+msgstr "Com funciona la TUI"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:24
 msgid ""
@@ -174,7 +177,7 @@ msgstr ""
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:30
 msgid "Knowledge, trust, and safety"
-msgstr ""
+msgstr "Coneixement, confiança i seguretat"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:32
 msgid ""
@@ -280,97 +283,123 @@ msgstr ""
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:50
 msgid "tui/__init__.py (`src/cadrumo/entrypoints/tui/__init__.py`) — 10 lines"
-msgstr ""
+msgstr "tui/__init__.py (`src/cadrumo/entrypoints/tui/__init__.py`) — 10 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:51
 msgid "tui/__main__.py (`src/cadrumo/entrypoints/tui/__main__.py`) — 37 lines"
-msgstr ""
+msgstr "tui/__main__.py (`src/cadrumo/entrypoints/tui/__main__.py`) — 37 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:52
 msgid "tui/account.py (`src/cadrumo/entrypoints/tui/account.py`) — 172 lines"
-msgstr ""
+msgstr "tui/account.py (`src/cadrumo/entrypoints/tui/account.py`) — 172 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:53
 msgid ""
 "tui/action_target.py (`src/cadrumo/entrypoints/tui/action_target.py`) — "
 "16 lines"
 msgstr ""
+"tui/action_target.py (`src/cadrumo/entrypoints/tui/action_target.py`) — "
+"16 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:54
 msgid ""
 "aeat_sync/__init__.py "
 "(`src/cadrumo/entrypoints/tui/aeat_sync/__init__.py`) — 1 line"
 msgstr ""
+"aeat_sync/__init__.py "
+"(`src/cadrumo/entrypoints/tui/aeat_sync/__init__.py`) — 1 línia"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:55
 msgid ""
 "aeat_sync/controller.py "
 "(`src/cadrumo/entrypoints/tui/aeat_sync/controller.py`) — 177 lines"
 msgstr ""
+"aeat_sync/controller.py "
+"(`src/cadrumo/entrypoints/tui/aeat_sync/controller.py`) — 177 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:56
 msgid ""
 "aeat_sync/models.py (`src/cadrumo/entrypoints/tui/aeat_sync/models.py`) —"
 " 109 lines"
 msgstr ""
+"aeat_sync/models.py (`src/cadrumo/entrypoints/tui/aeat_sync/models.py`) —"
+" 109 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:57
 msgid ""
 "aeat_sync/routes.py (`src/cadrumo/entrypoints/tui/aeat_sync/routes.py`) —"
 " 113 lines"
 msgstr ""
+"aeat_sync/routes.py (`src/cadrumo/entrypoints/tui/aeat_sync/routes.py`) —"
+" 113 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:58
 msgid ""
 "aeat_sync/runtime_handoff.py "
 "(`src/cadrumo/entrypoints/tui/aeat_sync/runtime_handoff.py`) — 541 lines"
 msgstr ""
+"aeat_sync/runtime_handoff.py "
+"(`src/cadrumo/entrypoints/tui/aeat_sync/runtime_handoff.py`) — 541 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:59
 msgid ""
 "aeat_sync/screens.py (`src/cadrumo/entrypoints/tui/aeat_sync/screens.py`)"
 " — 822 lines"
 msgstr ""
+"aeat_sync/screens.py (`src/cadrumo/entrypoints/tui/aeat_sync/screens.py`)"
+" — 822 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:60
 msgid "tui/app.py (`src/cadrumo/entrypoints/tui/app.py`) — 931 lines"
-msgstr ""
+msgstr "tui/app.py (`src/cadrumo/entrypoints/tui/app.py`) — 931 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:61
 msgid ""
 "tui/bound_session.py (`src/cadrumo/entrypoints/tui/bound_session.py`) — "
 "70 lines"
 msgstr ""
+"tui/bound_session.py (`src/cadrumo/entrypoints/tui/bound_session.py`) — "
+"70 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:62
 msgid ""
 "components/__init__.py "
 "(`src/cadrumo/entrypoints/tui/components/__init__.py`) — 5 lines"
 msgstr ""
+"components/__init__.py "
+"(`src/cadrumo/entrypoints/tui/components/__init__.py`) — 5 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:63
 msgid ""
 "components/account_chrome.py "
 "(`src/cadrumo/entrypoints/tui/components/account_chrome.py`) — 236 lines"
 msgstr ""
+"components/account_chrome.py "
+"(`src/cadrumo/entrypoints/tui/components/account_chrome.py`) — 236 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:64
 msgid ""
 "components/app_access.py "
 "(`src/cadrumo/entrypoints/tui/components/app_access.py`) — 33 lines"
 msgstr ""
+"components/app_access.py "
+"(`src/cadrumo/entrypoints/tui/components/app_access.py`) — 33 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:65
 msgid ""
 "components/cell_text.py "
 "(`src/cadrumo/entrypoints/tui/components/cell_text.py`) — 60 lines"
 msgstr ""
+"components/cell_text.py "
+"(`src/cadrumo/entrypoints/tui/components/cell_text.py`) — 60 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:66
 msgid ""
 "components/dialogs.py "
 "(`src/cadrumo/entrypoints/tui/components/dialogs.py`) — 68 lines"
 msgstr ""
+"components/dialogs.py "
+"(`src/cadrumo/entrypoints/tui/components/dialogs.py`) — 68 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:67
 msgid ""
@@ -378,51 +407,70 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/components/filing_year_route.py`) — 46 "
 "lines"
 msgstr ""
+"components/filing_year_route.py "
+"(`src/cadrumo/entrypoints/tui/components/filing_year_route.py`) — 46 "
+"línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:68
 msgid ""
 "components/host.py (`src/cadrumo/entrypoints/tui/components/host.py`) — "
 "50 lines"
 msgstr ""
+"components/host.py (`src/cadrumo/entrypoints/tui/components/host.py`) — "
+"50 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:69
 msgid ""
 "components/status.py (`src/cadrumo/entrypoints/tui/components/status.py`)"
 " — 143 lines"
 msgstr ""
+"components/status.py (`src/cadrumo/entrypoints/tui/components/status.py`)"
+" — 143 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:70
 msgid ""
 "components/theme.py (`src/cadrumo/entrypoints/tui/components/theme.py`) —"
 " 490 lines"
 msgstr ""
+"components/theme.py (`src/cadrumo/entrypoints/tui/components/theme.py`) —"
+" 490 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:71
 msgid ""
 "components/widgets.py "
 "(`src/cadrumo/entrypoints/tui/components/widgets.py`) — 473 lines"
 msgstr ""
+"components/widgets.py "
+"(`src/cadrumo/entrypoints/tui/components/widgets.py`) — 473 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:72
 msgid ""
 "components/workspace_host.py "
 "(`src/cadrumo/entrypoints/tui/components/workspace_host.py`) — 61 lines"
 msgstr ""
+"components/workspace_host.py "
+"(`src/cadrumo/entrypoints/tui/components/workspace_host.py`) — 61 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:73
 msgid ""
 "declarations/__init__.py "
 "(`src/cadrumo/entrypoints/tui/declarations/__init__.py`) — 1 line"
 msgstr ""
+"declarations/__init__.py "
+"(`src/cadrumo/entrypoints/tui/declarations/__init__.py`) — 1 línia"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:74
 msgid ""
 "declarations/action_guards.py "
 "(`src/cadrumo/entrypoints/tui/declarations/action_guards.py`) — 61 lines"
 msgstr ""
+"declarations/action_guards.py "
+"(`src/cadrumo/entrypoints/tui/declarations/action_guards.py`) — 61 línies"
 
 #: ../../technical/articles/176-textual-terminal-workbench-and-declarations-calendar.md:75
 msgid ""
 "declarations/calendar.py "
 "(`src/cadrumo/entrypoints/tui/declarations/calendar.py`) — 416 lines"
 msgstr ""
+"declarations/calendar.py "
+"(`src/cadrumo/entrypoints/tui/declarations/calendar.py`) — 416 línies"

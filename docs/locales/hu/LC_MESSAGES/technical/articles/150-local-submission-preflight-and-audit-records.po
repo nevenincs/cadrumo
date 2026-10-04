@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:1
 msgid "Local submission preflight and audit records"
-msgstr ""
+msgstr "Helyi beküldési előellenőrzés és auditrekordok"
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-150` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-150` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:16
 msgid ""
@@ -98,7 +100,7 @@ msgstr ""
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:20
 msgid "Mechanism and encoded knowledge"
-msgstr ""
+msgstr "Mechanizmus és kódolt tudás"
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:22
 msgid ""
@@ -147,7 +149,7 @@ msgstr ""
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:28
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Biztonsági és minőségi értékelés"
 
 #: ../../technical/articles/150-local-submission-preflight-and-audit-records.md:30
 msgid ""

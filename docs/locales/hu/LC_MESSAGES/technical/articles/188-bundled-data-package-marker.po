@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:1
 msgid "Bundled data package marker"
-msgstr ""
+msgstr "A csomagolt adatok csomagjelölője"
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-188` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-188` · **Téma:** [Csomagolt tudás és "
+"lokalizáció](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:10
 msgid "Scope and assessment"
-msgstr ""
+msgstr "Hatókör és értékelés"
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:12
 msgid ""
@@ -59,6 +61,15 @@ msgid ""
 "enforces no validation or trust policy. This is a static conclusion from "
 "the complete one-file inventory, not a package build/runtime test."
 msgstr ""
+"Ez a referenciaadat-részlet egy fájlt tartalmaz: a nulla bájtos "
+"`src/cadrumo/_data/__init__.py` fájlt. Nincsenek benne elemezhető "
+"végrehajtható utasítások, deklarációk, metaadatok vagy a csomagolt "
+"adatokhoz kapcsolódó viselkedések. Jelenléte a Python-csomagolás és az "
+"erőforrások bejárása számára importálható csomagkönyvtárként jelöli az "
+"`_data` könyvtárat; maga a fájl nem biztosít képességeket, és nem "
+"kényszerít ki validációs vagy bizalmi szabályzatot. Ez a teljes, "
+"egyfájlos leltárból levont statikus következtetés, nem a csomag build- "
+"vagy futásidejű tesztje."
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:14
 msgid ""
@@ -68,6 +79,11 @@ msgid ""
 "this empty marker alone. There are no substantive implementation or "
 "security findings in this chunk."
 msgstr ""
+"A csomag tényleges adatelérési mechanizmusa máshol valósul meg (például a"
+" keretrendszer és a termék erőforrás-elérőiben), ezért pusztán ebből az "
+"üres jelölőből nem következtetünk arra, hogy minden adatrészfa bekerül-e "
+"a csomagba, vagy hogyan viselkedik az importlib. Ebben a részletben "
+"nincsenek érdemi implementációs vagy biztonsági megállapítások."
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:16
 msgid "Complete assigned-file coverage"
@@ -76,3 +92,5 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/188-bundled-data-package-marker.md:18
 msgid "`src/cadrumo/_data/__init__.py` — 0 bytes, 0 lines; fully inspected."
 msgstr ""
+"`src/cadrumo/_data/__init__.py` — 0 bájt, 0 sor; teljes egészében "
+"megvizsgálva."

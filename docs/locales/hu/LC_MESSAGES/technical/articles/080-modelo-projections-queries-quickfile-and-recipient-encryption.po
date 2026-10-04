@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:1
 msgid "Modelo projections, queries, quickfile, and recipient encryption"
-msgstr ""
+msgstr "Modelo-vetületek, lekérdezések, quickfile és címzetti titkosítás"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-080` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:10
 msgid ""
@@ -232,7 +235,7 @@ msgstr ""
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:32
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:34
 msgid ""
@@ -300,71 +303,93 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:44
 msgid "All 12 assigned source files were read completely through pages 1–9."
 msgstr ""
+"Mind a 12 kijelölt forrásfájlt teljes egészében elolvastam az 1–9. "
+"oldalakon."
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:46
 msgid "projection.py (`src/cadrumo/application/modelo/projection.py`)"
-msgstr ""
+msgstr "projection.py (`src/cadrumo/application/modelo/projection.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:47
 msgid ""
 "projection_migration_ports.py "
 "(`src/cadrumo/application/modelo/projection_migration_ports.py`)"
 msgstr ""
+"projection_migration_ports.py "
+"(`src/cadrumo/application/modelo/projection_migration_ports.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:48
 msgid ""
 "projection_operation.py "
 "(`src/cadrumo/application/modelo/projection_operation.py`)"
 msgstr ""
+"projection_operation.py "
+"(`src/cadrumo/application/modelo/projection_operation.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:49
 msgid ""
 "prorrata_regularizacion_advisory.py "
 "(`src/cadrumo/application/modelo/prorrata_regularizacion_advisory.py`)"
 msgstr ""
+"prorrata_regularizacion_advisory.py "
+"(`src/cadrumo/application/modelo/prorrata_regularizacion_advisory.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:50
 msgid ""
 "pulled_filing_reconcile.py "
 "(`src/cadrumo/application/modelo/pulled_filing_reconcile.py`)"
 msgstr ""
+"pulled_filing_reconcile.py "
+"(`src/cadrumo/application/modelo/pulled_filing_reconcile.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:51
 msgid ""
 "query_read_operation.py "
 "(`src/cadrumo/application/modelo/query_read_operation.py`)"
 msgstr ""
+"query_read_operation.py "
+"(`src/cadrumo/application/modelo/query_read_operation.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:52
 msgid "quickfile.py (`src/cadrumo/application/modelo/quickfile.py`)"
-msgstr ""
+msgstr "quickfile.py (`src/cadrumo/application/modelo/quickfile.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:53
 msgid ""
 "quickfile_operation.py "
 "(`src/cadrumo/application/modelo/quickfile_operation.py`)"
 msgstr ""
+"quickfile_operation.py "
+"(`src/cadrumo/application/modelo/quickfile_operation.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:54
 msgid ""
 "quickfile_operation_contracts.py "
 "(`src/cadrumo/application/modelo/quickfile_operation_contracts.py`)"
 msgstr ""
+"quickfile_operation_contracts.py "
+"(`src/cadrumo/application/modelo/quickfile_operation_contracts.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:55
 msgid ""
 "quickfile_operation_ports.py "
 "(`src/cadrumo/application/modelo/quickfile_operation_ports.py`)"
 msgstr ""
+"quickfile_operation_ports.py "
+"(`src/cadrumo/application/modelo/quickfile_operation_ports.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:56
 msgid ""
 "quickfile_operation_projections.py "
 "(`src/cadrumo/application/modelo/quickfile_operation_projections.py`)"
 msgstr ""
+"quickfile_operation_projections.py "
+"(`src/cadrumo/application/modelo/quickfile_operation_projections.py`)"
 
 #: ../../technical/articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md:57
 msgid ""
 "recipient_encryption.py "
 "(`src/cadrumo/application/modelo/recipient_encryption.py`)"
 msgstr ""
+"recipient_encryption.py "
+"(`src/cadrumo/application/modelo/recipient_encryption.py`)"

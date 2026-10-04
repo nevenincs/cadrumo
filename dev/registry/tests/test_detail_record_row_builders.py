@@ -14,10 +14,12 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from cadrumo.core.foreign_asset_obligation import M720AssetClassCode
+from cadrumo.domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
 from cadrumo.domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -36,6 +38,7 @@ from cadrumo.domain.foreign_assets.register import (
 )
 from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 
+from ..compiler.loader import load_modelo_directory
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -44,6 +47,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _modelos():
     modelos, _catalogues = _committed_registry_tree()
     return modelos
+
+
+def _modelo720_revision():
+    root = Path(__file__).resolve().parents[3]
+    return load_modelo_directory(root / "src/cadrumo/_data/registry/aeat/modelos/720").revisions["2013-y-siguientes"]
 
 
 def _valued(
@@ -93,7 +101,7 @@ def _valued(
 
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
-    revision = next(m for m in _modelos() if m.id == "720").revisions["2013-y-siguientes"]
+    revision = _modelo720_revision()
     rows = (
         _valued("a1", M720AssetClassCode.CUENTA, "DE", "DE-bank-001", date(2022, 6, 1), "60000"),
         _valued("a2", M720AssetClassCode.VALOR, "CH", "ZCH", date(2020, 1, 1), "120000"),
@@ -108,7 +116,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
 
 
 def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_values() -> None:
-    revision = next(m for m in _modelos() if m.id == "720").revisions["2013-y-siguientes"]
+    revision = _modelo720_revision()
     rows = (_valued("a1", M720AssetClassCode.CUENTA, "CH", "CH-iban-001", date(2020, 1, 1), "120000"),)
 
     resolved = resolve_foreign_asset_binding_row_values(revision, rows)
@@ -116,6 +124,16 @@ def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_value
     # The per-row mapping covers every foreign-asset column modelo 720 declares.
     declared = {binding.id for binding in revision.bindings if binding.source == "foreign_asset"}
     assert {key[0] for key in resolved if key[1] == 1} == declared
+    consumers = binding_consumers(revision)
+    assert all(
+        any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in consumers[binding_id])
+        for binding_id in declared
+    )
+    assert all(
+        not any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in consumers[binding.id])
+        for binding in revision.bindings
+        if binding.source != "foreign_asset"
+    )
     assert resolved[("modelo-720-asset-row-country", 1)] == "CH"
     assert resolved[("modelo-720-asset-row-valuation", 1)] == Decimal("120000")
     assert resolved[("modelo-720-asset-row-currency", 1)] == "EUR"

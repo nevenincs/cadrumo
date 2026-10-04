@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 from .ids import BindingId
@@ -109,6 +110,9 @@ class BindingConsumerKind(StrEnum):
     resolves it for a declared period and records it on the revision.
     """
 
+    APPLICATION_ROW_VALUE = "application_row_value"
+    """The application carries a provider's indexed source rows into the calculation revision."""
+
 
 @dataclass(frozen=True, slots=True)
 class BindingConsumerRef:
@@ -122,10 +126,11 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
     """Return every declared binding mapped to its typed consumers in one revision.
 
     The reverse of the forward references the compiler already closes: a
-    binding is *referenced* when a bound casilla, a formula operand, an export
-    field or record. Bindings with no entry at all are
-    returned as an empty tuple rather than omitted, so an orphan is a value in
-    the mapping rather than a missing key a caller has to infer.
+    binding is *referenced* when a bound casilla, formula operand, export field
+    or record, relation evidence, or the enrolled foreign-asset application
+    row route consumes it. Bindings with no entry at all are returned as an
+    empty tuple rather than omitted, so an orphan is a value in the mapping
+    rather than a missing key a caller has to infer.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -159,7 +164,37 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
             record(binding_id, BindingConsumerKind.FORMULA_DATE_OPERAND, str(formula.id))
     _record_export_consumers(revision, record)
     _record_relation_evidence_consumers(revision, record)
+    _record_foreign_asset_row_consumers(revision, record)
     return {binding_id: tuple(refs) for binding_id, refs in consumers.items()}
+
+
+def _record_foreign_asset_row_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
+    """Index the row source that ``foreign_assets._row_resolution`` persists.
+
+    That application route calls ``resolve_foreign_asset_binding_row_values``;
+    the domain resolver emits every valid foreign-asset row binding, including
+    fields that are not independent slots of the AEAT type-2 export record.
+    The shared typed row selector admits exactly the rows this route can carry.
+    Other row providers do not acquire a consumer from this rule.
+    """
+    from .binding_selector_utils import binding_row_set_selector
+
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.FOREIGN_ASSET:
+            continue
+        try:
+            selector = binding_row_set_selector(binding)
+        except RegistryValidationError:
+            # The provider validator reports the malformed declaration. It
+            # cannot earn a consumer by failing to name a usable row field.
+            continue
+        if selector is not None:
+            record(
+                binding.id, BindingConsumerKind.APPLICATION_ROW_VALUE, f"foreign_asset_row_values.{selector.row_field}"
+            )
 
 
 def _record_relation_evidence_consumers(

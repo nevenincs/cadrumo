@@ -17,7 +17,7 @@ from .layout import backend, load_layout
 from .verify import verify
 
 
-def check(build: Path, configuration: str) -> None:
+def check(build: Path, configuration: str, application_probe: list[str] | None = None) -> None:
     """Extract a fresh artifact and test the shipped interpreter, not the development venv."""
     build = build.resolve(strict=True)
     artifacts = json.loads((build / f"artifacts-{configuration}.json").read_text(encoding="utf-8"))
@@ -77,8 +77,17 @@ def check(build: Path, configuration: str) -> None:
                     if str(manifest["build"][key]) not in result.stdout:
                         raise AssertionError(f"Missing interpreter banner metadata: {key}")
     verify(package, destination=Path("acceptance"), product=True, build_root=destination)
+    if application_probe:
+        probe_environment = dict(os.environ)
+        probe_environment["CADRUMO_TEST_PACKAGE_ROOT"] = str(package.resolve())
+        result = run_command(application_probe, cwd=REPO_ROOT, environment=probe_environment, timeout_seconds=900)
+        if result.returncode:
+            raise AssertionError("Rust package compatibility failed:\n" + result.stdout + result.stderr)
+        print(result.stdout)
     if digest(archive_path) != archive_hash:
         raise AssertionError("ZIP changed during verification")
+    if digest(manifest_path) != artifacts["manifest_sha256"]:
+        raise AssertionError("ZIP manifest changed during verification")
     (destination / "result.json").write_text(
         json.dumps(
             {
@@ -87,6 +96,8 @@ def check(build: Path, configuration: str) -> None:
                 "manifest_sha256": digest(manifest_path),
                 "build": manifest["build"],
                 "interpreters": [p.name for p in executables],
+                "package_root": str(package.resolve()),
+                "application_probe": "passed" if application_probe else "not_requested",
                 "passed": True,
             },
             indent=2,
@@ -100,5 +111,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--config", choices=("Debug", "Release"), required=True)
+    parser.add_argument("--application-probe-command", type=Path, help="CMake-generated JSON argv for the Rust probe")
     args = parser.parse_args()
-    check(args.build, args.config)
+    command = None
+    if args.application_probe_command is not None:
+        command = json.loads(args.application_probe_command.read_text(encoding="utf-8"))
+        if not isinstance(command, list) or not command or any(not isinstance(arg, str) or not arg for arg in command):
+            parser.error("application probe command must be a non-empty JSON array of non-empty strings")
+    check(args.build, args.config, command)

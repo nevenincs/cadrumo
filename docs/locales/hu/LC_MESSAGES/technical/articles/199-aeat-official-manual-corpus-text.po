@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:1
 msgid "AEAT official manual corpus text"
-msgstr ""
+msgstr "Hivatalos AEAT-kézikönyvkorpusz szövege"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-199` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-199` · **Téma:** [Csomagolt tudás és "
+"lokalizáció](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:10
 msgid "Scope"
@@ -62,6 +64,16 @@ msgid ""
 "every extraction, inspect the source PDFs, or validate the instructions "
 "against current law."
 msgstr ""
+"A kijelölt csoport 121 JSON-szövegkinyerést tartalmaz, összesen 8,600,208"
+" bájt méretben. Teljes leltára: 5 éves adózói naptár (588,756 bájt), 105 "
+"bevallásirekord-terv (7,635,581 bájt), 2 közzétett üres nyomtatvány "
+"(36,684 bájt) és 9 útmutató vagy segéddokumentum (339,187 bájt). Mind a "
+"`manual_corpus_text/aeat_official` alatt található; ebben a részletben "
+"nincsenek eredeti PDF-ek. Minden fájl közös metaadatszerkezetét "
+"feldolgoztam, és körülhatárolt szövegmintákat használtam naptárakból, "
+"több modellelrendezésből, útmutatókból és üres nyomtatványokból. Nem "
+"vizsgáltam felül szemantikailag minden kinyerést, nem vizsgáltam meg a "
+"forrás-PDF-eket, és nem validáltam az útmutatókat a hatályos jog alapján."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:14
 msgid "Capabilities and represented knowledge"
@@ -88,6 +100,26 @@ msgid ""
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_303/files/07-303"
 "-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf.corpus_text.json`))."
 msgstr ""
+"Ezek a fájlok dokumentumalapú bemenetek olyan munkafolyamatokhoz, "
+"amelyeknek határidőket kell kikeresniük, mezőket vagy "
+"rekordelrendezéseket kell azonosítaniuk, vagy egy megnevezett AEAT-"
+"nyomtatvány kitöltését kell elmagyarázniuk. Önmagukban nem töltenek ki, "
+"validálnak, írnak alá, nyújtanak be vagy kérnek le bevallást. A csoport "
+"friss éves anyagokat és történeti specifikációkat egyaránt tartalmaz: a "
+"naptárak 2022-től 2026-ig terjednek; a mintavételezett Modelo 100 és 200 "
+"rekordtervek a 2009–2014-es, illetve 2010–2014-es évekre vonatkoznak; a "
+"Modelo 303 mintavételezett specifikációja egy 2008-as rendelet, amelyet "
+"2012-es címkéjű szöveg frissít; a Modelo 202 útmutatói 2018-tól kezdődő "
+"időszakokat írnak le; a Modelo 190 útmutatói pedig 2025-ös címkéjűek. "
+"Ezért év-/modellválasztás nélkül nem lenne biztonságos a könyvtárat "
+"egységesen aktuális szabálykészletként kezelni (2026-os adózói naptár "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2026.pdf.corpus_text.json`), Modelo 200 2014-es"
+" terv "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588"
+"-kb-pdf.pdf.corpus_text.json`), Modelo 303 specifikáció "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_303/files/07-303"
+"-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:18
 msgid ""
@@ -104,6 +136,19 @@ msgid ""
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2026.pdf.corpus_text.json`))."
 msgstr ""
+"A 2026-os naptárkinyerés éves/havi indexszel kezdődik, és olyan témákat "
+"címkéz, mint a bevallási kötelezettség, a benyújtási módok, a banki "
+"beszedés határidői, a munkaszüneti napokra vonatkozó szabályok és a "
+"jövedelemadó-/vagyonadó-kampány dátumai. Széles referenciafelületet ad a "
+"dátumhoz kötött kötelezettségekhez, míg a tényleges dátumtáblák és "
+"feltételek a forráskinyerésben maradnak. A naptár évspecifikus "
+"szövegrögzítés: bevezetője 2026. február 9-i dokumentumdátumot azonosít. "
+"A fogyasztónak továbbra is figyelembe kell vennie a releváns adót, "
+"modellt, adózót és későbbi módosításokat; ezek az adatok önmagukban nem "
+"igazolják, hogy egy határidő alkalmazandó-e egy adott felhasználóra "
+"(2026-os naptár "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2026.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:20
 msgid ""
@@ -124,6 +169,24 @@ msgid ""
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588"
 "-kb-pdf.pdf.corpus_text.json`))."
 msgstr ""
+"A rekordterv-kategória különösen működésközeli. A mintavételezett Modelo "
+"303 elrendezés rögzített pozíciójú mezőket ír le mezőszámmal, "
+"kezdőpozícióval, hosszal, típussal, leírással, validációval és "
+"használattal. Mezői között szerepel a bevalló azonosítása, az adóév és "
+"időszak, az áfaalapok/-kulcsok/-összegek, levonások, eredmény, "
+"fizetési/visszatérítési és bankszámlapozíciók, valamint rekordvégi "
+"jelölők. A mintavételezett Modelo 200 dokumentum hasonlóan "
+"rögzített/változó rekordrészeket, megkülönböztetőket és rekordlezárást "
+"határoz meg. Az ilyen specifikációk támogathatják a fájlformátumok "
+"kikeresését vagy a feldolgozó megvalósítását, de ebben a könyvtárban nem "
+"végrehajtható validátorok, és a mintavételezett változatok régiek. A "
+"naprakészségi és kiválasztási logika máshová tartozik (Modelo 303 "
+"rekordterv "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_303/files/07-303"
+"-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf.corpus_text.json`), Modelo 200 "
+"rekordterv "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588"
+"-kb-pdf.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:22
 msgid ""
@@ -141,6 +204,20 @@ msgid ""
 " Modelo 202 instructions 2018–2022 "
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf.corpus_text.json`))."
 msgstr ""
+"Az útmutatók adózói kötelezettségeket és benyújtási útmutatást adnak "
+"hozzá. A mintavételezett 2025-ös Modelo 190 szöveg tárgyalja, kinek kell "
+"bevallást benyújtania és milyen jövedelemtípusokat kell jelenteni, "
+"előírja a pénzösszegek euróban, két tizedesjeggyel történő megadását, és "
+"megkülönbözteti a kiegészítő/helyettesítő bevallásokat. A mintavételezett"
+" Modelo 202 szöveg kimondja, hogy a benyújtás elektronikus, és tárgyalja "
+"a bevalló azonosítását, az adóidőszakokat, a bevallási és számítási "
+"mezőket, külön kezeléssel a részben baszk vagy navarrai forális szabályok"
+" szerint bevalló entitások számára. Ezek átírt útmutatók, nem "
+"bizonyítják, hogy a termék ugyanezeket a szabályokat kényszeríti ki, vagy"
+" jelenleg támogatja e bevallásokat (Modelo 190 útmutató 2025 "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_190/files/modelo-190-instrucciones-2025.pdf.corpus_text.json`),"
+" Modelo 202 útmutató 2018–2022 "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:24
 msgid ""
@@ -163,6 +240,26 @@ msgid ""
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_840/files/01-840"
 "-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.corpus_text.json`))."
 msgstr ""
+"Egy kiegészítő Modelo 369 fájlelrendezési dokumentum az uniós, külső és "
+"importrendszerek elektronikus szövegfájl-szerkezetét írja le, beleértve "
+"az időszak-/fizetési kódokat, a kötelező és választható rekordoldalakat, "
+"valamint azt a szabályt, hogy a túlméretes lista kiegészítő oldalt "
+"használhat. Kimondja, hogy minden fájl egy bevallót és egy rendszert "
+"tartalmaz. A dokumentum külön Excel-rekordterv-specifikáció "
+"munkalapfüleire hivatkozik, amely nem része ennek a kijelölt csoportnak, "
+"ezért a kiegészítő szöveg önmagában nem biztosítja a teljes mezősémát "
+"(Modelo 369 fájlelrendezési segédlet "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf.corpus_text.json`))."
+" A közzétett Modelo 145 és 840 nyomtatványok szintén üres mezőcímkéket és"
+" bevallási szerkezetet adnak: a 145 olyan adatokat gyűjt, amelyeket a "
+"kifizető a munkaviszonyból származó jövedelem IRPF-levonásához használ, "
+"míg a 840 a gazdasági tevékenység nyilvántartásba vételét, változását és "
+"megszűnését fedi le. A mintavételezett dokumentumok üres sablonok, nem "
+"kitöltött adózói rekordok (Modelo 145 üres nyomtatvány "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_145/files/mod145_es_es.pdf.corpus_text.json`),"
+" Modelo 840 üres nyomtatvány "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_840/files/01-840"
+"-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:26
 msgid "Data shape, provenance and quality"
@@ -180,6 +277,16 @@ msgid ""
 "hash is a useful intended binding to a source path, but it does not by "
 "itself establish that source's identity or official status."
 msgstr ""
+"Mind a 121 fájl ugyanazt az öt kulcsot tartalmazza: 2-es sémaverzió, "
+"logikai `corpus_path`, `source_sha256`, `extraction_platform` és egy "
+"`normalised_text` karakterlánc. Minden fájl `win32` értéket deklarál; a "
+"kivonatmezők érvényes, 64 karakteres kisbetűs hexadecimális "
+"karakterláncok. A normalizált szöveg hossza 1,299 és 543,801 karakter "
+"között van, 32,646-os mediánnal. A kijelölt fájlok nem tartalmaznak "
+"forrás-PDF-bájtokat, beszerzési URL-t vagy letöltési időbélyeget, ezért "
+"itt nem tudtam ellenőrizni a forráshasheket vagy a naprakészséget. A hash"
+" hasznos, tervezett kötés egy forrásútvonalhoz, de önmagában nem igazolja"
+" a forrás azonosságát vagy hivatalos státuszát."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:30
 msgid ""
@@ -203,10 +310,31 @@ msgid ""
 " Modelo 222 instructions "
 "(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`))."
 msgstr ""
+"A normalizálás elhagyja a mintavételezett spanyol szavak ékezeteit "
+"(`presentacion`, `declaracion`, `ano`), és egyetlen szövegmezőbe lapítja "
+"az elrendezést. Ez megkönnyíti az átfogó szövegkeresést, miközben "
+"gyengíti a pontos tipográfiát, az oldalhatárokat és egyes táblázati "
+"kapcsolatokat. Egy célzott keresés 12 kinyerésben összesen 25 beágyazott "
+"U+FFFE karaktert talált; a mintavételezett környezetek között szerepel a "
+"`know￾how`, a `cumpl￾mente` és a `declaraciones￾liquidaciones`. Ezek "
+"igazolt kinyerési hibajelenségek a kereshető szövegben, és szó szerinti "
+"felhasználás esetén megbonthatják a pontos karakterlánc-egyezést vagy "
+"összekapcsolhatnak szavakat; hatásuk a későbbi indexeléstől vagy "
+"feldolgozástól függ. Egy Modelo 222 útmutató magánhasználatú karaktereket"
+" is megőriz egy nyomtatott képlet körül, így annak megjelenített "
+"operátorai ebben a reprezentációban bizonytalanok. A szövegek nem "
+"hordoznak oldalszintű szerkezetet, amellyel az elrendezési illeszkedést "
+"ellenőrizni lehetne (Modelo 840 kinyerés U+FFFE-mintával "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_840/files/01-840"
+"-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.corpus_text.json`), "
+"Modelo 296 kinyert szöveg "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_296/files/01-296-ejercicio-2024.pdf.corpus_text.json`),"
+" Modelo 222 útmutató "
+"(`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`))."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:32
 msgid "Security and follow-up"
-msgstr ""
+msgstr "Biztonság és további vizsgálatok"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:34
 msgid ""
@@ -224,6 +352,21 @@ msgid ""
 "defects are handled. No runtime, tests, filing connection or consumer "
 "code is part of this chunk."
 msgstr ""
+"A megvizsgált erőforrások nyilvános közigazgatási útmutatók és üres "
+"nyomtatványszerkezetek; a mintákban nem találtam kitöltött "
+"ügyfélbeadványokat. A 145-ös modell mezőutasításai személyes, családi és "
+"munkaviszonyhoz kapcsolódó forrásadó-levonási részletekre vonatkoznak, "
+"ezért minden olyan termékfolyamat, amely ezekre válaszokat gyűjt, külön "
+"adatvédelmi/tárolási felülvizsgálatot igényelne. Magának a korpusznak "
+"nincs bemenetkezelése, jogosultságkezelése, hálózati hozzáférése vagy "
+"benyújtási működése. Releváns biztonságossági határa az, hogy az "
+"alkalmazás aktuális útmutatásként vagy géppel olvasható igazságként "
+"használ-e egy szövegkinyerést az adóévre, modellváltozatra és forrásra "
+"vonatkozó fenntartások megőrzése nélkül. Az összegzésnek nyomon kell "
+"követnie, ki tölti be ezeket a fájlokat, elérhető-e számára forrás-PDF "
+"vagy eredetjegyzék, és hogyan kezelik a változatválasztást és a kinyerési"
+" hibákat. Ez a részlet nem tartalmaz futtatást, teszteket, bevallási "
+"kapcsolatot vagy fogyasztó kódot."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:36
 msgid "Complete assigned-file coverage"
@@ -235,36 +378,49 @@ msgid ""
 "inventory; only the bounded samples described above received semantic "
 "review."
 msgstr ""
+"A függelék a kijelölt jegyzék minden útvonalára hivatkozik. Teljes "
+"leltár; szemantikai felülvizsgálatban csak a fent leírt körülhatárolt "
+"minták részesültek."
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:40
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2022.pdf.corpus_text.json` — 89,654 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2022.pdf.corpus_text.json` — 89,654 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:41
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2023.pdf.corpus_text.json` — 109,015 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2023.pdf.corpus_text.json` — 109,015 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:42
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2024.pdf.corpus_text.json` — 121,592 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2024.pdf.corpus_text.json` — 121,592 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:43
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2025.pdf.corpus_text.json` — 128,004 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2025.pdf.corpus_text.json` — 128,004 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:44
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
 "/calendario-contribuyente-2026.pdf.corpus_text.json` — 140,491 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/calendars/files"
+"/calendario-contribuyente-2026.pdf.corpus_text.json` — 140,491 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:45
 msgid ""
@@ -272,6 +428,9 @@ msgid ""
 "-diseno-de-registro-actualizado-28-06-2024.pdf.corpus_text.json` — 3,151 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_038/files/01-038"
+"-diseno-de-registro-actualizado-28-06-2024.pdf.corpus_text.json` — 3,151 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:46
 msgid ""
@@ -279,54 +438,73 @@ msgid ""
 "-orden-hac-66-2002-de-15-de-enero-"
 "actualizado-a-18-01-2012.pdf.corpus_text.json` — 3,115 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_038/files/02-038"
+"-orden-hac-66-2002-de-15-de-enero-"
+"actualizado-a-18-01-2012.pdf.corpus_text.json` — 3,115 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:47
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/14-100-ejercicio-2009-205"
 "-kb-pdf.pdf.corpus_text.json` — 213,129 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/14-100-ejercicio-2009-205"
+"-kb-pdf.pdf.corpus_text.json` — 213,129 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:48
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/15-100-ejercicio-2010-357"
 "-kb-pdf.pdf.corpus_text.json` — 223,873 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/15-100-ejercicio-2010-357"
+"-kb-pdf.pdf.corpus_text.json` — 223,873 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:49
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/16-100-ejercicio-2011-359"
 "-kb-pdf.pdf.corpus_text.json` — 234,237 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/16-100-ejercicio-2011-359"
+"-kb-pdf.pdf.corpus_text.json` — 234,237 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:50
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/17-100-ejercicio-2012-379"
 "-kb-pdf.pdf.corpus_text.json` — 254,702 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/17-100-ejercicio-2012-379"
+"-kb-pdf.pdf.corpus_text.json` — 254,702 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:51
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/18-100-ejercicio-2013-376"
 "-kb-pdf.pdf.corpus_text.json` — 261,074 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/18-100-ejercicio-2013-376"
+"-kb-pdf.pdf.corpus_text.json` — 261,074 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:52
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417"
 "-kb-pdf.pdf.corpus_text.json` — 286,508 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417"
+"-kb-pdf.pdf.corpus_text.json` — 286,508 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:53
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/02-111-ejercicios-2004-a-2009-49"
 "-kb-pdf.pdf.corpus_text.json` — 4,513 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/02-111-ejercicios-2004-a-2009-49"
+"-kb-pdf.pdf.corpus_text.json` — 4,513 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:54
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/03-111-ejercicios-2010-a-2011-32"
 "-kb-pdf.pdf.corpus_text.json` — 5,750 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/03-111-ejercicios-2010-a-2011-32"
+"-kb-pdf.pdf.corpus_text.json` — 5,750 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:55
 msgid ""
@@ -334,6 +512,9 @@ msgid ""
 "-ejercicios-anteriores-al-2001-65-kb-pdf.pdf.corpus_text.json` — 2,699 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/04-111"
+"-ejercicios-anteriores-al-2001-65-kb-pdf.pdf.corpus_text.json` — 2,699 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:56
 msgid ""
@@ -341,6 +522,9 @@ msgid ""
 "-orden-eha-3127-2009-ejercicios-2012-a-2015-35-kb-"
 "pdf.pdf.corpus_text.json` — 5,919 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_111/files/05-111"
+"-orden-eha-3127-2009-ejercicios-2012-a-2015-35-kb-"
+"pdf.pdf.corpus_text.json` — 5,919 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:57
 msgid ""
@@ -348,6 +532,9 @@ msgid ""
 "-orden-eha-3435-2007-ejercicios-2014-y-anteriores-30-kb-"
 "pdf.pdf.corpus_text.json` — 3,443 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_115/files/02-115"
+"-orden-eha-3435-2007-ejercicios-2014-y-anteriores-30-kb-"
+"pdf.pdf.corpus_text.json` — 3,443 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:58
 msgid ""
@@ -355,6 +542,9 @@ msgid ""
 "-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-"
 "pdf.pdf.corpus_text.json` — 3,439 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_123/files/03-123"
+"-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-"
+"pdf.pdf.corpus_text.json` — 3,439 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:59
 msgid ""
@@ -362,6 +552,9 @@ msgid ""
 "-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf.corpus_text.json` — 5,622"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_126/files/02-126"
+"-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf.corpus_text.json` — 5,622"
+" bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:60
 msgid ""
@@ -369,18 +562,25 @@ msgid ""
 "-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf.corpus_text.json` — 4,952"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_128/files/02-128"
+"-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf.corpus_text.json` — 4,952"
+" bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:61
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008"
 "-primer-trimestre-48-kb-pdf.pdf.corpus_text.json` — 4,336 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008"
+"-primer-trimestre-48-kb-pdf.pdf.corpus_text.json` — 4,336 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:62
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_130/files/03-130-ejercicio-2008"
 "-trimestre-2o-3o-y-4o-30-kb-pdf.pdf.corpus_text.json` — 4,915 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_130/files/03-130-ejercicio-2008"
+"-trimestre-2o-3o-y-4o-30-kb-pdf.pdf.corpus_text.json` — 4,915 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:63
 msgid ""
@@ -388,24 +588,33 @@ msgid ""
 "-orden-eha-580-2009-ejercicios-2009-a-2014-36-kb-"
 "pdf.pdf.corpus_text.json` — 5,160 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_130/files/04-130"
+"-orden-eha-580-2009-ejercicios-2009-a-2014-36-kb-"
+"pdf.pdf.corpus_text.json` — 5,160 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:64
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/02-131-ejercicio-2008"
 "-primer-trimestre-49-kb-pdf.pdf.corpus_text.json` — 6,648 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/02-131-ejercicio-2008"
+"-primer-trimestre-49-kb-pdf.pdf.corpus_text.json` — 6,648 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:65
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/03-131-ejercicio-2008"
 "-trimestre-2o-3o-y-4o-31-kb-pdf.pdf.corpus_text.json` — 6,836 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/03-131-ejercicio-2008"
+"-trimestre-2o-3o-y-4o-31-kb-pdf.pdf.corpus_text.json` — 6,836 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:66
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/04-131-ejercicios-2015-2016-2017-y-2018-29-8"
 "-kb-pdf.pdf.corpus_text.json` — 9,051 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/04-131-ejercicios-2015-2016-2017-y-2018-29-8"
+"-kb-pdf.pdf.corpus_text.json` — 9,051 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:67
 msgid ""
@@ -413,18 +622,25 @@ msgid ""
 "-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-"
 "pdf.pdf.corpus_text.json` — 7,165 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_131/files/08-131"
+"-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-"
+"pdf.pdf.corpus_text.json` — 7,165 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:68
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf.corpus_text.json`"
 " — 5,766 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf.corpus_text.json`"
+" — 5,766 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:69
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_156/files/01-156"
 "-diseno-de-registro-vigente.pdf.corpus_text.json` — 17,878 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_156/files/01-156"
+"-diseno-de-registro-vigente.pdf.corpus_text.json` — 17,878 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:70
 msgid ""
@@ -432,12 +648,17 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 12,793 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/01-165"
+"-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 12,793 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:71
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165"
 "-orden-hap-2455-2013.pdf.corpus_text.json` — 12,262 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165"
+"-orden-hap-2455-2013.pdf.corpus_text.json` — 12,262 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:72
 msgid ""
@@ -445,6 +666,9 @@ msgid ""
 "-orden-hap-2455-2013-actualizado-por-orden-"
 "hfp-1822-2016.pdf.corpus_text.json` — 12,247 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165"
+"-orden-hap-2455-2013-actualizado-por-orden-"
+"hfp-1822-2016.pdf.corpus_text.json` — 12,247 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:73
 msgid ""
@@ -452,6 +676,9 @@ msgid ""
 "-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-"
 "noviembre-251-kb-pdf.pdf.corpus_text.json` — 22,009 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180"
+"-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-"
+"noviembre-251-kb-pdf.pdf.corpus_text.json` — 22,009 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:74
 msgid ""
@@ -459,6 +686,9 @@ msgid ""
 "-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf.corpus_text.json` — 3,096"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/02-180"
+"-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf.corpus_text.json` — 3,096"
+" bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:75
 msgid ""
@@ -466,6 +696,9 @@ msgid ""
 "-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf.corpus_text.json`"
 " — 21,738 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/03-180"
+"-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf.corpus_text.json`"
+" — 21,738 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:76
 msgid ""
@@ -473,18 +706,25 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2022.pdf.corpus_text.json` — 54,316 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/01-181"
+"-diseno-de-registro-actualizado-en-2022.pdf.corpus_text.json` — 54,316 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:77
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/02-181"
 "-orden-eha-3514-2009.pdf.corpus_text.json` — 47,024 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/02-181"
+"-orden-eha-3514-2009.pdf.corpus_text.json` — 47,024 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:78
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/03-181"
 "-orden-eha-3514-2009-ejercicio-2017.pdf.corpus_text.json` — 48,999 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/03-181"
+"-orden-eha-3514-2009-ejercicio-2017.pdf.corpus_text.json` — 48,999 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:79
 msgid ""
@@ -492,18 +732,25 @@ msgid ""
 "-orden-eha-3514-2009-actualizado-por-orden-"
 "hfp-1923-2016.pdf.corpus_text.json` — 46,401 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_181/files/04-181"
+"-orden-eha-3514-2009-actualizado-por-orden-"
+"hfp-1923-2016.pdf.corpus_text.json` — 46,401 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:80
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.corpus_text.json`"
 " — 23,134 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.corpus_text.json`"
+" — 23,134 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:81
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.corpus_text.json`"
 " — 22,988 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.corpus_text.json`"
+" — 22,988 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:82
 msgid ""
@@ -511,6 +758,9 @@ msgid ""
 "-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-"
 "diciembre.pdf.corpus_text.json` — 23,074 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182"
+"-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-"
+"diciembre.pdf.corpus_text.json` — 23,074 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:83
 msgid ""
@@ -518,6 +768,9 @@ msgid ""
 "-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-"
 "diciembre-365-kb.pdf.corpus_text.json` — 102,699 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y"
+"-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-"
+"diciembre-365-kb.pdf.corpus_text.json` — 102,699 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:84
 msgid ""
@@ -525,6 +778,9 @@ msgid ""
 "-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-"
 "noviembre-263-kb-pdf.pdf.corpus_text.json` — 102,001 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/02-184"
+"-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-"
+"noviembre-263-kb-pdf.pdf.corpus_text.json` — 102,001 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:85
 msgid ""
@@ -532,6 +788,8 @@ msgid ""
 "-orden-hap-2250-2015-boe-a-2015-11596.pdf.corpus_text.json` — 98,215 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/03-184"
+"-orden-hap-2250-2015-boe-a-2015-11596.pdf.corpus_text.json` — 98,215 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:86
 msgid ""
@@ -539,6 +797,9 @@ msgid ""
 "-orden-hfp-1923-2016-boe-a-2016-12114.pdf.corpus_text.json` — 116,657 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/04-184"
+"-orden-hfp-1923-2016-boe-a-2016-12114.pdf.corpus_text.json` — 116,657 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:87
 msgid ""
@@ -546,6 +807,8 @@ msgid ""
 "-orden-hac-1276-2019-boe-a-2019-18752.pdf.corpus_text.json` — 65,978 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/05-184"
+"-orden-hac-1276-2019-boe-a-2019-18752.pdf.corpus_text.json` — 65,978 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:88
 msgid ""
@@ -553,6 +816,8 @@ msgid ""
 "-orden-hfp-1192-2022-boe-a-2022-20274.pdf.corpus_text.json` — 52,421 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/06-184"
+"-orden-hfp-1192-2022-boe-a-2022-20274.pdf.corpus_text.json` — 52,421 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:89
 msgid ""
@@ -560,12 +825,17 @@ msgid ""
 "-orden-hfp-1284-2023-boe-a-2023-24412.pdf.corpus_text.json` — 125,338 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/07-184"
+"-orden-hfp-1284-2023-boe-a-2023-24412.pdf.corpus_text.json` — 125,338 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:90
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf.corpus_text.json`"
 " — 11,542 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf.corpus_text.json`"
+" — 11,542 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:91
 msgid ""
@@ -573,6 +843,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2022.pdf.corpus_text.json` — 46,803 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_187/files/01-187"
+"-diseno-de-registro-actualizado-en-2022.pdf.corpus_text.json` — 46,803 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:92
 msgid ""
@@ -580,6 +853,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 23,848 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_188/files/01-188"
+"-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 23,848 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:93
 msgid ""
@@ -587,6 +863,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 21,673 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/01-189"
+"-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 21,673 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:94
 msgid ""
@@ -594,6 +873,9 @@ msgid ""
 "-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-"
 "hfp-115-2022-de-23-de-febrero.pdf.corpus_text.json` — 21,019 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189"
+"-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-"
+"hfp-115-2022-de-23-de-febrero.pdf.corpus_text.json` — 21,019 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:95
 msgid ""
@@ -601,6 +883,9 @@ msgid ""
 "-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
 "hac-1431-2025-de-3-de-dicie.pdf.corpus_text.json` — 110,933 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/01-190"
+"-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
+"hac-1431-2025-de-3-de-dicie.pdf.corpus_text.json` — 110,933 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:96
 msgid ""
@@ -608,6 +893,9 @@ msgid ""
 "-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-"
 "pdf.pdf.corpus_text.json` — 89,104 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/02-190"
+"-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-"
+"pdf.pdf.corpus_text.json` — 89,104 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:97
 msgid ""
@@ -615,6 +903,9 @@ msgid ""
 "-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
 "hac-1432-2024-de-11-de-dici.pdf.corpus_text.json` — 107,355 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/03-190"
+"-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
+"hac-1432-2024-de-11-de-dici.pdf.corpus_text.json` — 107,355 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:98
 msgid ""
@@ -622,6 +913,9 @@ msgid ""
 "-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
 "hfp-1286-2023-de-28-de-novi.pdf.corpus_text.json` — 104,720 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/04-190"
+"-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-"
+"hfp-1286-2023-de-28-de-novi.pdf.corpus_text.json` — 104,720 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:99
 msgid ""
@@ -629,6 +923,9 @@ msgid ""
 "-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-"
 "diciembre-357-kb-pdf.pdf.corpus_text.json` — 68,347 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/01-193"
+"-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-"
+"diciembre-357-kb-pdf.pdf.corpus_text.json` — 68,347 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:100
 msgid ""
@@ -636,6 +933,9 @@ msgid ""
 "-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-"
 "diciembre-352-kb-pdf.pdf.corpus_text.json` — 67,979 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/02-193"
+"-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-"
+"diciembre-352-kb-pdf.pdf.corpus_text.json` — 67,979 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:101
 msgid ""
@@ -643,6 +943,9 @@ msgid ""
 "-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-"
 "pdf.pdf.corpus_text.json` — 67,822 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/03-193"
+"-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-"
+"pdf.pdf.corpus_text.json` — 67,822 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:102
 msgid ""
@@ -650,6 +953,9 @@ msgid ""
 "-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.corpus_text.json` — "
 "65,816 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/04-193"
+"-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.corpus_text.json` — "
+"65,816 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:103
 msgid ""
@@ -657,6 +963,9 @@ msgid ""
 "-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-"
 "pdf.pdf.corpus_text.json` — 55,351 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/05-193"
+"-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-"
+"pdf.pdf.corpus_text.json` — 55,351 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:104
 msgid ""
@@ -664,6 +973,9 @@ msgid ""
 "-orden-eha-3377-2011-actualizado-por-orden-hfp-1822-2016-185-kb-"
 "pdf.pdf.corpus_text.json` — 56,045 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/06-193"
+"-orden-eha-3377-2011-actualizado-por-orden-hfp-1822-2016-185-kb-"
+"pdf.pdf.corpus_text.json` — 56,045 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:105
 msgid ""
@@ -671,6 +983,9 @@ msgid ""
 "-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf.corpus_text.json` —"
 " 57,908 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/07-193"
+"-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf.corpus_text.json` —"
+" 57,908 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:106
 msgid ""
@@ -678,6 +993,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2024.pdf.corpus_text.json` — 33,151 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_194/files/01-194"
+"-diseno-de-registro-actualizado-en-2024.pdf.corpus_text.json` — 33,151 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:107
 msgid ""
@@ -685,6 +1003,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 33,032 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_194/files/02-194"
+"-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 33,032 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:108
 msgid ""
@@ -692,36 +1013,49 @@ msgid ""
 "-orden-de-18-de-enero-de-1999-actualizado-por-orden-"
 "hac-1276-2019.pdf.corpus_text.json` — 30,945 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_194/files/03-194"
+"-orden-de-18-de-enero-de-1999-actualizado-por-orden-"
+"hac-1276-2019.pdf.corpus_text.json` — 30,945 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:109
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/02-200-ejercicio-2010-472"
 "-kb-pdf.pdf.corpus_text.json` — 439,308 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/02-200-ejercicio-2010-472"
+"-kb-pdf.pdf.corpus_text.json` — 439,308 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:110
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522"
 "-kb-pdf.pdf.corpus_text.json` — 507,065 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522"
+"-kb-pdf.pdf.corpus_text.json` — 507,065 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:111
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539"
 "-kb-pdf.pdf.corpus_text.json` — 526,744 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539"
+"-kb-pdf.pdf.corpus_text.json` — 526,744 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:112
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/05-200-ejercicio-2013-actualizado-a-27-06-2014-548"
 "-kb-pdf.pdf.corpus_text.json` — 537,281 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/05-200-ejercicio-2013-actualizado-a-27-06-2014-548"
+"-kb-pdf.pdf.corpus_text.json` — 537,281 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:113
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588"
 "-kb-pdf.pdf.corpus_text.json` — 544,912 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588"
+"-kb-pdf.pdf.corpus_text.json` — 544,912 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:114
 msgid ""
@@ -729,18 +1063,25 @@ msgid ""
 "-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-"
 "pdf.pdf.corpus_text.json` — 415,241 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_200/files/17-200"
+"-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-"
+"pdf.pdf.corpus_text.json` — 415,241 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:115
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009"
 "-orden-eha-3435-2007-32-kb-pdf.pdf.corpus_text.json` — 5,252 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009"
+"-orden-eha-3435-2007-32-kb-pdf.pdf.corpus_text.json` — 5,252 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:116
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/08-202"
 "-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf.corpus_text.json` — 9,712 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/08-202"
+"-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf.corpus_text.json` — 9,712 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:117
 msgid ""
@@ -748,12 +1089,17 @@ msgid ""
 "-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-"
 "pdf.pdf.corpus_text.json` — 10,940 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/09-202"
+"-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-"
+"pdf.pdf.corpus_text.json` — 10,940 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:118
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/12-202"
 "-orden-hap-636-2013-v3-3-39-kb-pdf.pdf.corpus_text.json` — 9,833 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/12-202"
+"-orden-hap-636-2013-v3-3-39-kb-pdf.pdf.corpus_text.json` — 9,833 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:119
 msgid ""
@@ -761,12 +1107,17 @@ msgid ""
 "-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-"
 "pdf.pdf.corpus_text.json` — 5,918 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_202/files/14-202"
+"-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-"
+"pdf.pdf.corpus_text.json` — 5,918 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:120
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf.corpus_text.json`"
 " — 18,330 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf.corpus_text.json`"
+" — 18,330 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:121
 msgid ""
@@ -774,6 +1125,9 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 24,958 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_270/files/01-270"
+"-diseno-de-registro-actualizado-en-2023.pdf.corpus_text.json` — 24,958 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:122
 msgid ""
@@ -781,30 +1135,40 @@ msgid ""
 "-orden-hap-2368-2013-boe-a-2013-13228.pdf.corpus_text.json` — 52,544 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_270/files/02-270"
+"-orden-hap-2368-2013-boe-a-2013-13228.pdf.corpus_text.json` — 52,544 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:123
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_280/files/DR_280_2022.pdf.corpus_text.json`"
 " — 20,646 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_280/files/DR_280_2022.pdf.corpus_text.json`"
+" — 20,646 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:124
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_296/files/01-296-ejercicio-2024.pdf.corpus_text.json`"
 " — 71,295 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_296/files/01-296-ejercicio-2024.pdf.corpus_text.json`"
+" — 71,295 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:125
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_296/files/02-296-ejercicio-2023.pdf.corpus_text.json`"
 " — 45,996 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_296/files/02-296-ejercicio-2023.pdf.corpus_text.json`"
+" — 45,996 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:126
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_303/files/07-303"
 "-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf.corpus_text.json` — 8,964 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_303/files/07-303"
+"-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf.corpus_text.json` — 8,964 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:127
 msgid ""
@@ -812,6 +1176,9 @@ msgid ""
 "-orden-eha-1033-2011-ejercicios-2011-julio-a-2015.pdf.corpus_text.json` —"
 " 3,570 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_308/files/03-308"
+"-orden-eha-1033-2011-ejercicios-2011-julio-a-2015.pdf.corpus_text.json` —"
+" 3,570 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:128
 msgid ""
@@ -819,6 +1186,9 @@ msgid ""
 "-orden-eha-3212-2004-ejercicios-hasta-2015.pdf.corpus_text.json` — 5,365 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_309/files/02-309"
+"-orden-eha-3212-2004-ejercicios-hasta-2015.pdf.corpus_text.json` — 5,365 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:129
 msgid ""
@@ -826,18 +1196,25 @@ msgid ""
 "-orden-eha-3212-2004-ejercicios-hasta-2015.pdf.corpus_text.json` — 1,788 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_341/files/02-341"
+"-orden-eha-3212-2004-ejercicios-hasta-2015.pdf.corpus_text.json` — 1,788 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:130
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf.corpus_text.json`"
 " — 50,084 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf.corpus_text.json`"
+" — 50,084 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:131
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/02-345-ejercicio-2023-y-siguientes.pdf.corpus_text.json`"
 " — 50,268 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/02-345-ejercicio-2023-y-siguientes.pdf.corpus_text.json`"
+" — 50,268 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:132
 msgid ""
@@ -845,6 +1222,9 @@ msgid ""
 "-orden-de-actualizacion-del-ejercicio-2023.pdf.corpus_text.json` — 50,019"
 " bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/03-345"
+"-orden-de-actualizacion-del-ejercicio-2023.pdf.corpus_text.json` — 50,019"
+" bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:133
 msgid ""
@@ -852,12 +1232,17 @@ msgid ""
 "-diseno-de-registro-actualizado-en-2024.pdf.corpus_text.json` — 50,169 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/04-345"
+"-diseno-de-registro-actualizado-en-2024.pdf.corpus_text.json` — 50,169 "
+"bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:134
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/05-345"
 "-orden-hfp-823-2022-boe-a-2022-14168.pdf.corpus_text.json` — 61,445 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_345/files/05-345"
+"-orden-hfp-823-2022-boe-a-2022-14168.pdf.corpus_text.json` — 61,445 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:135
 msgid ""
@@ -865,12 +1250,17 @@ msgid ""
 "-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-"
 "diciembre-332-kb.pdf.corpus_text.json` — 47,096 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y"
+"-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-"
+"diciembre-332-kb.pdf.corpus_text.json` — 47,096 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:136
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30"
 "-kb-pdf.pdf.corpus_text.json` — 7,861 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30"
+"-kb-pdf.pdf.corpus_text.json` — 7,861 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:137
 msgid ""
@@ -878,6 +1268,9 @@ msgid ""
 "-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf.corpus_text.json` — "
 "35,285 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/03-347"
+"-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf.corpus_text.json` — "
+"35,285 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:138
 msgid ""
@@ -885,6 +1278,9 @@ msgid ""
 "-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.corpus_text.json` —"
 " 48,596 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/04-347"
+"-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.corpus_text.json` —"
+" 48,596 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:139
 msgid ""
@@ -892,54 +1288,73 @@ msgid ""
 "-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-"
 "pdf.pdf.corpus_text.json` — 33,763 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/01-349"
+"-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-"
+"pdf.pdf.corpus_text.json` — 33,763 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:140
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/03-349"
 "-orden-hac-360-2002-28-kb-pdf.pdf.corpus_text.json` — 5,973 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/03-349"
+"-orden-hac-360-2002-28-kb-pdf.pdf.corpus_text.json` — 5,973 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:141
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_353/files/03-353"
 "-orden-eha-3434-2007.pdf.corpus_text.json` — 13,381 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_353/files/03-353"
+"-orden-eha-3434-2007.pdf.corpus_text.json` — 13,381 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:142
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_353/files/04-353"
 "-orden-eha-3786-2008.pdf.corpus_text.json` — 13,781 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_353/files/04-353"
+"-orden-eha-3786-2008.pdf.corpus_text.json` — 13,781 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:143
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_360/files/01-360"
 "-orden-eha-789-2010.pdf.corpus_text.json` — 27,972 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_360/files/01-360"
+"-orden-eha-789-2010.pdf.corpus_text.json` — 27,972 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:144
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103"
 "-kb-pdf.pdf.corpus_text.json` — 73,272 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103"
+"-kb-pdf.pdf.corpus_text.json` — 73,272 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:145
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_604/files/01-604"
 "-diseno-de-registro-atf-en-espanol.pdf.corpus_text.json` — 25,665 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_604/files/01-604"
+"-diseno-de-registro-atf-en-espanol.pdf.corpus_text.json` — 25,665 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:146
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_604/files/02-604"
 "-diseno-de-registro-atf-en-ingles.pdf.corpus_text.json` — 22,755 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_604/files/02-604"
+"-diseno-de-registro-atf-en-ingles.pdf.corpus_text.json` — 22,755 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:147
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_720/files/01-720-599"
 "-kb-pdf.pdf.corpus_text.json` — 39,794 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_720/files/01-720-599"
+"-kb-pdf.pdf.corpus_text.json` — 39,794 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:148
 msgid ""
@@ -947,18 +1362,25 @@ msgid ""
 "-orden-eha-1881-2011-ejercicios-2t-"
 "3t-2012-2013-y-2014.pdf.corpus_text.json` — 14,130 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_763/files/02-763"
+"-orden-eha-1881-2011-ejercicios-2t-"
+"3t-2012-2013-y-2014.pdf.corpus_text.json` — 14,130 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:149
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_840/files/01-840"
 "-orden-hac-2572-2003-99-kb-pdf.pdf.corpus_text.json` — 27,946 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_840/files/01-840"
+"-orden-hac-2572-2003-99-kb-pdf.pdf.corpus_text.json` — 27,946 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:150
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_145/files/mod145_es_es.pdf.corpus_text.json`"
 " — 19,525 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_145/files/mod145_es_es.pdf.corpus_text.json`"
+" — 19,525 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:151
 msgid ""
@@ -966,57 +1388,78 @@ msgid ""
 "-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.corpus_text.json` — "
 "17,159 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/formularios_publicados/modelo_840/files/01-840"
+"-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.corpus_text.json` — "
+"17,159 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:152
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_036/files/Folleto_Censos.pdf.corpus_text.json`"
 " — 1,552 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_036/files/Folleto_Censos.pdf.corpus_text.json`"
+" — 1,552 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:153
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_136/files/BOE-A-2018-10064-modelo-136"
 "-current-form.pdf.corpus_text.json` — 38,686 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_136/files/BOE-A-2018-10064-modelo-136"
+"-current-form.pdf.corpus_text.json` — 38,686 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:154
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_190/files/modelo-190-instrucciones-2025.pdf.corpus_text.json`"
 " — 18,357 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_190/files/modelo-190-instrucciones-2025.pdf.corpus_text.json`"
+" — 18,357 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:155
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_193/files/modelo-193-296"
 "-nota-informativa-2025.pdf.corpus_text.json` — 49,958 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_193/files/modelo-193-296"
+"-nota-informativa-2025.pdf.corpus_text.json` — 49,958 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:156
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf.corpus_text.json`"
 " — 62,031 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf.corpus_text.json`"
+" — 62,031 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:157
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`"
 " — 74,365 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`"
+" — 74,365 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:158
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_232/files/Instrucciones_Modelo_232.pdf.corpus_text.json`"
 " — 20,486 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_232/files/Instrucciones_Modelo_232.pdf.corpus_text.json`"
+" — 20,486 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:159
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf.corpus_text.json`"
 " — 67,826 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf.corpus_text.json`"
+" — 67,826 bájt"
 
 #: ../../technical/articles/199-aeat-official-manual-corpus-text.md:160
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf.corpus_text.json`"
 " — 5,926 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf.corpus_text.json`"
+" — 5,926 bájt"

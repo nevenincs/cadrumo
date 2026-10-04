@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -678,25 +679,43 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     )
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
-    require_republication_eligibility(
-        GeneratedTreeInvocation(
-            explained.modelo,
-            explained.revision,
-            explained.source_ref,
-            2024,
-            "0A",
-            digest,
-        ),
-        state,
-        RenderComparison(
-            modelo=explained.modelo,
-            revision=explained.revision,
-            layout_id=f"generated-modelo-{explained.modelo}-{explained.revision}-fichero",
-            files_compared=3,
-            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0001-record.toml"),
-            only_committed=(),
-            only_rendered=(),
-            serialization_only=(),
-        ),
-        dispositions=(explained,),
+    invocation = GeneratedTreeInvocation(explained.modelo, explained.revision, explained.source_ref, 2024, "0A", digest)
+    comparison = RenderComparison(
+        modelo=explained.modelo,
+        revision=explained.revision,
+        layout_id=f"generated-modelo-{explained.modelo}-{explained.revision}-fichero",
+        files_compared=3,
+        differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0001-record.toml"),
+        only_committed=(),
+        only_rendered=(),
+        serialization_only=(),
     )
+    require_republication_eligibility(invocation, state, comparison, source_sha256="b" * 64, dispositions=(explained,))
+    with pytest.raises(ValueError, match="source ref/SHA"):
+        require_republication_eligibility(
+            invocation, state, comparison, source_sha256="c" * 64, dispositions=(explained,)
+        )
+    with pytest.raises(ValueError, match="source ref/SHA"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            comparison,
+            source_sha256="b" * 64,
+            dispositions=(explained.model_copy(update={"source_ref": "aeat-dr-other"}),),
+        )
+    with pytest.raises(ValueError, match="explains 2 differing record"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            comparison,
+            source_sha256="b" * 64,
+            dispositions=(explained.model_copy(update={"differing_records": 2}),),
+        )
+    with pytest.raises(ValueError, match="added or removed"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            replace(comparison, only_rendered=("0002-unreviewed.toml",)),
+            source_sha256="b" * 64,
+            dispositions=(explained,),
+        )

@@ -46,10 +46,13 @@ msgid ""
 "**Report:** `STAGE-2-177` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-177` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:12
 msgid ""
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:16
 msgid ""
@@ -138,7 +141,7 @@ msgstr ""
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:24
 msgid "How data and effects move"
-msgstr ""
+msgstr "Com es mouen les dades i els efectes"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:26
 msgid ""
@@ -283,12 +286,16 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:48
 msgid "All 25 manifest files and their complete declared line ranges were read."
 msgstr ""
+"Es van llegir els 25 fitxers del manifest i els seus intervals de línies "
+"declarats complets."
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:50
 msgid ""
 "declarations/controller.py "
 "(`src/cadrumo/entrypoints/tui/declarations/controller.py`) — 530 lines"
 msgstr ""
+"declarations/controller.py "
+"(`src/cadrumo/entrypoints/tui/declarations/controller.py`) — 530 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:51
 msgid ""
@@ -296,6 +303,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/declarations/external_details.py`) — 74 "
 "lines"
 msgstr ""
+"declarations/external_details.py "
+"(`src/cadrumo/entrypoints/tui/declarations/external_details.py`) — 74 "
+"línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:52
 msgid ""
@@ -303,30 +313,41 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/declarations/filing_history.py`) — 194 "
 "lines"
 msgstr ""
+"declarations/filing_history.py "
+"(`src/cadrumo/entrypoints/tui/declarations/filing_history.py`) — 194 "
+"línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:53
 msgid ""
 "declarations/grouped.py "
 "(`src/cadrumo/entrypoints/tui/declarations/grouped.py`) — 327 lines"
 msgstr ""
+"declarations/grouped.py "
+"(`src/cadrumo/entrypoints/tui/declarations/grouped.py`) — 327 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:54
 msgid ""
 "declarations/models.py "
 "(`src/cadrumo/entrypoints/tui/declarations/models.py`) — 148 lines"
 msgstr ""
+"declarations/models.py "
+"(`src/cadrumo/entrypoints/tui/declarations/models.py`) — 148 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:55
 msgid ""
 "declarations/overview.py "
 "(`src/cadrumo/entrypoints/tui/declarations/overview.py`) — 25 lines"
 msgstr ""
+"declarations/overview.py "
+"(`src/cadrumo/entrypoints/tui/declarations/overview.py`) — 25 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:56
 msgid ""
 "declarations/picker.py "
 "(`src/cadrumo/entrypoints/tui/declarations/picker.py`) — 164 lines"
 msgstr ""
+"declarations/picker.py "
+"(`src/cadrumo/entrypoints/tui/declarations/picker.py`) — 164 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:57
 msgid ""
@@ -334,6 +355,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/declarations/portfolio_interactions.py`) — "
 "38 lines"
 msgstr ""
+"declarations/portfolio_interactions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_interactions.py`) — "
+"38 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:58
 msgid ""
@@ -341,95 +365,127 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`) — 194"
 " lines"
 msgstr ""
+"declarations/portfolio_rendering.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`) — 194"
+" línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:59
 msgid ""
 "declarations/portfolio_rows.py "
 "(`src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`) — 97 lines"
 msgstr ""
+"declarations/portfolio_rows.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`) — 97 "
+"línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:60
 msgid ""
 "declarations/revisions.py "
 "(`src/cadrumo/entrypoints/tui/declarations/revisions.py`) — 86 lines"
 msgstr ""
+"declarations/revisions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/revisions.py`) — 86 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:61
 msgid ""
 "declarations/routes.py "
 "(`src/cadrumo/entrypoints/tui/declarations/routes.py`) — 193 lines"
 msgstr ""
+"declarations/routes.py "
+"(`src/cadrumo/entrypoints/tui/declarations/routes.py`) — 193 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:62
 msgid ""
 "declarations/row_words.py "
 "(`src/cadrumo/entrypoints/tui/declarations/row_words.py`) — 136 lines"
 msgstr ""
+"declarations/row_words.py "
+"(`src/cadrumo/entrypoints/tui/declarations/row_words.py`) — 136 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:63
 msgid ""
 "destination_alias.py (`src/cadrumo/entrypoints/tui/destination_alias.py`)"
 " — 14 lines"
 msgstr ""
+"destination_alias.py (`src/cadrumo/entrypoints/tui/destination_alias.py`)"
+" — 14 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:64
 msgid "home.py (`src/cadrumo/entrypoints/tui/home.py`) — 500 lines"
-msgstr ""
+msgstr "home.py (`src/cadrumo/entrypoints/tui/home.py`) — 500 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:65
 msgid ""
 "installed_session.py (`src/cadrumo/entrypoints/tui/installed_session.py`)"
 " — 267 lines"
 msgstr ""
+"installed_session.py (`src/cadrumo/entrypoints/tui/installed_session.py`)"
+" — 267 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:66
 msgid "launcher.py (`src/cadrumo/entrypoints/tui/launcher.py`) — 103 lines"
-msgstr ""
+msgstr "launcher.py (`src/cadrumo/entrypoints/tui/launcher.py`) — 103 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:67
 msgid ""
 "ledger/__init__.py (`src/cadrumo/entrypoints/tui/ledger/__init__.py`) — 1"
 " line"
 msgstr ""
+"ledger/__init__.py (`src/cadrumo/entrypoints/tui/ledger/__init__.py`) — 1"
+" línia"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:68
 msgid ""
 "ledger/action_guards.py "
 "(`src/cadrumo/entrypoints/tui/ledger/action_guards.py`) — 74 lines"
 msgstr ""
+"ledger/action_guards.py "
+"(`src/cadrumo/entrypoints/tui/ledger/action_guards.py`) — 74 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:69
 msgid ""
 "ledger/actividad_asset.py "
 "(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`) — 241 lines"
 msgstr ""
+"ledger/actividad_asset.py "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`) — 241 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:70
 msgid ""
 "ledger/classification.py "
 "(`src/cadrumo/entrypoints/tui/ledger/classification.py`) — 262 lines"
 msgstr ""
+"ledger/classification.py "
+"(`src/cadrumo/entrypoints/tui/ledger/classification.py`) — 262 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:71
 msgid ""
 "ledger/controller.py (`src/cadrumo/entrypoints/tui/ledger/controller.py`)"
 " — 791 lines"
 msgstr ""
+"ledger/controller.py (`src/cadrumo/entrypoints/tui/ledger/controller.py`)"
+" — 791 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:72
 msgid ""
 "ledger/entries.py (`src/cadrumo/entrypoints/tui/ledger/entries.py`) — 208"
 " lines"
 msgstr ""
+"ledger/entries.py (`src/cadrumo/entrypoints/tui/ledger/entries.py`) — 208"
+" línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:73
 msgid ""
 "ledger/evidence.py (`src/cadrumo/entrypoints/tui/ledger/evidence.py`) — "
 "153 lines"
 msgstr ""
+"ledger/evidence.py (`src/cadrumo/entrypoints/tui/ledger/evidence.py`) — "
+"153 línies"
 
 #: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:74
 msgid ""
 "ledger/evidence_draft.py "
 "(`src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`) — 292 lines"
 msgstr ""
+"ledger/evidence_draft.py "
+"(`src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`) — 292 línies"

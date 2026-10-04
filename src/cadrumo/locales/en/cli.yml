@@ -337,9 +337,6 @@ cli:
         year_help: Tax year
       invoice:
         add_help: Create a linkable reconciliation invoice in the catalogue.
-        arrendamiento_local_negocio_help: Mark an issued invoice as the lease of business
-          premises (arrendamiento de local de negocio) you let; Modelo 347 relates
-          it apart and in an inmueble record (RD 1065/2007 art. 34.1.d).
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both informativas, so it is never assumed.'
         euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
@@ -380,8 +377,6 @@ cli:
         recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA art.
           161). It rides inside the invoice total, unlike a retencion.
         rectifies_help: Number of the invoice this rectificativa corrects.
-        referencia_catastral_help: Referencia catastral of the leased premises (up
-          to 25 characters).
         remove_help: Delete one reconciliation catalogue invoice.
         retention_amount_help: Amount of IRPF retención withheld by the payer, in
           euros. May be supplied alone, or alongside --retention-rate.
@@ -391,10 +386,6 @@ cli:
         series_help: Invoice numbering series, when the issuer uses one.
         simplificada_tax_id_expected_message: This simplified invoice has no counterparty
           tax identifier even though the recorded legal context expects one.
-        situacion_inmueble_help: 'Situación del inmueble of the leased premises, in
-          the Modelo 347 codes: 1 Spain with referencia catastral (outside País Vasco
-          and Navarra), 2 País Vasco or Navarra, 3 without referencia catastral, 4
-          abroad.'
         update_help: Update business invoice details
         view_help: Show one reconciliation catalogue invoice by id or unambiguous
           prefix.

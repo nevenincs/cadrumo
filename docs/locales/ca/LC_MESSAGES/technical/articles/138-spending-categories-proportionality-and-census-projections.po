@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:1
 msgid "Spending categories, proportionality, and census projections"
-msgstr ""
+msgstr "Categories de despesa, proporcionalitat i projeccions censals"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-138` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-138` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:16
 msgid ""
@@ -135,7 +137,7 @@ msgstr ""
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:24
 msgid "How the projections work"
-msgstr ""
+msgstr "Com funcionen les projeccions"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:26
 msgid ""
@@ -171,7 +173,7 @@ msgstr ""
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:30
 msgid "Knowledge, provenance, and trust boundaries"
-msgstr ""
+msgstr "Coneixement, procedència i límits de confiança"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:32
 msgid ""
@@ -204,7 +206,7 @@ msgstr ""
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:36
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:38
 msgid ""
@@ -268,59 +270,73 @@ msgid ""
 "All 11 assigned files were read fully across four bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Es van llegir íntegrament els 11 fitxers assignats en quatre pàgines "
+"delimitades; no queda cap interval sense llegir."
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:50
 msgid "categories/__init__.py (`src/cadrumo/domain/categories/__init__.py`) — 1–8"
-msgstr ""
+msgstr "categories/__init__.py (`src/cadrumo/domain/categories/__init__.py`) — 1–8"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:51
 msgid "categories/errors.py (`src/cadrumo/domain/categories/errors.py`) — 1–18"
-msgstr ""
+msgstr "categories/errors.py (`src/cadrumo/domain/categories/errors.py`) — 1–18"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:52
 msgid ""
 "categories/iva_hint.py (`src/cadrumo/domain/categories/iva_hint.py`) — "
 "1–108"
 msgstr ""
+"categories/iva_hint.py (`src/cadrumo/domain/categories/iva_hint.py`) — "
+"1–108"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:53
 msgid "categories/profile.py (`src/cadrumo/domain/categories/profile.py`) — 1–56"
-msgstr ""
+msgstr "categories/profile.py (`src/cadrumo/domain/categories/profile.py`) — 1–56"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:54
 msgid ""
 "categories/proportionality.py "
 "(`src/cadrumo/domain/categories/proportionality.py`) — 1–919"
 msgstr ""
+"categories/proportionality.py "
+"(`src/cadrumo/domain/categories/proportionality.py`) — 1–919"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:55
 msgid ""
 "categories/proportionality_catalogue.py "
 "(`src/cadrumo/domain/categories/proportionality_catalogue.py`) — 1–176"
 msgstr ""
+"categories/proportionality_catalogue.py "
+"(`src/cadrumo/domain/categories/proportionality_catalogue.py`) — 1–176"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:56
 msgid ""
 "categories/registry.py (`src/cadrumo/domain/categories/registry.py`) — "
 "1–287"
 msgstr ""
+"categories/registry.py (`src/cadrumo/domain/categories/registry.py`) — "
+"1–287"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:57
 msgid ""
 "categories/spending_category.py "
 "(`src/cadrumo/domain/categories/spending_category.py`) — 1–169"
 msgstr ""
+"categories/spending_category.py "
+"(`src/cadrumo/domain/categories/spending_category.py`) — 1–169"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:58
 msgid ""
 "categories/spending_category_catalogue.py "
 "(`src/cadrumo/domain/categories/spending_category_catalogue.py`) — 1–181"
 msgstr ""
+"categories/spending_category_catalogue.py "
+"(`src/cadrumo/domain/categories/spending_category_catalogue.py`) — 1–181"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:59
 msgid "censo/__init__.py (`src/cadrumo/domain/censo/__init__.py`) — 1–8"
-msgstr ""
+msgstr "censo/__init__.py (`src/cadrumo/domain/censo/__init__.py`) — 1–8"
 
 #: ../../technical/articles/138-spending-categories-proportionality-and-census-projections.md:60
 msgid "censo/certificado.py (`src/cadrumo/domain/censo/certificado.py`) — 1–144"
-msgstr ""
+msgstr "censo/certificado.py (`src/cadrumo/domain/censo/certificado.py`) — 1–144"

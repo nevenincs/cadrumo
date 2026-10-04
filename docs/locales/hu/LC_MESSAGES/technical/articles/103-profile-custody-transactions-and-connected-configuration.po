@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:1
 msgid "Profile custody transactions and connected configuration"
-msgstr ""
+msgstr "Profilőrzési tranzakciók és kapcsolt beállítások"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-103` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-103` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:10
 msgid ""
@@ -192,7 +194,7 @@ msgstr ""
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:28
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:30
 msgid ""
@@ -276,93 +278,121 @@ msgid ""
 "All 16 assigned files were read fully across pages 1–9; no portions "
 "remain unread."
 msgstr ""
+"Mind a 16 kijelölt fájlt teljes egészében elolvastam az 1–9. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:44
 msgid "custody_hold.py (`src/cadrumo/application/user_profile/custody_hold.py`)"
-msgstr ""
+msgstr "custody_hold.py (`src/cadrumo/application/user_profile/custody_hold.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:45
 msgid ""
 "custody_hold_models.py "
 "(`src/cadrumo/application/user_profile/custody_hold_models.py`)"
 msgstr ""
+"custody_hold_models.py "
+"(`src/cadrumo/application/user_profile/custody_hold_models.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:46
 msgid "custody_ports.py (`src/cadrumo/application/user_profile/custody_ports.py`)"
-msgstr ""
+msgstr "custody_ports.py (`src/cadrumo/application/user_profile/custody_ports.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:47
 msgid ""
 "custody_repository.py "
 "(`src/cadrumo/application/user_profile/custody_repository.py`)"
 msgstr ""
+"custody_repository.py "
+"(`src/cadrumo/application/user_profile/custody_repository.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:48
 msgid ""
 "custody_service.py "
 "(`src/cadrumo/application/user_profile/custody_service.py`)"
 msgstr ""
+"custody_service.py "
+"(`src/cadrumo/application/user_profile/custody_service.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:49
 msgid ""
 "custody_transactions.py "
 "(`src/cadrumo/application/user_profile/custody_transactions.py`)"
 msgstr ""
+"custody_transactions.py "
+"(`src/cadrumo/application/user_profile/custody_transactions.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:50
 msgid ""
 "descendant_rows.py "
 "(`src/cadrumo/application/user_profile/descendant_rows.py`)"
 msgstr ""
+"descendant_rows.py "
+"(`src/cadrumo/application/user_profile/descendant_rows.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:51
 msgid "fact_write.py (`src/cadrumo/application/user_profile/fact_write.py`)"
-msgstr ""
+msgstr "fact_write.py (`src/cadrumo/application/user_profile/fact_write.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:52
 msgid ""
 "filing_baseline.py "
 "(`src/cadrumo/application/user_profile/filing_baseline.py`)"
 msgstr ""
+"filing_baseline.py "
+"(`src/cadrumo/application/user_profile/filing_baseline.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:53
 msgid ""
 "google_configuration_executor.py "
 "(`src/cadrumo/application/user_profile/google_configuration_executor.py`)"
 msgstr ""
+"google_configuration_executor.py "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:54
 msgid ""
 "google_configuration_operation.py "
 "(`src/cadrumo/application/user_profile/google_configuration_operation.py`)"
 msgstr ""
+"google_configuration_operation.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:55
 msgid ""
 "google_configuration_operation_contracts.py "
 "(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`)"
 msgstr ""
+"google_configuration_operation_contracts.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:56
 msgid ""
 "google_configuration_operation_ports.py "
 "(`src/cadrumo/application/user_profile/google_configuration_operation_ports.py`)"
 msgstr ""
+"google_configuration_operation_ports.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_ports.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:57
 msgid ""
 "google_configuration_operation_refusal.py "
 "(`src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`)"
 msgstr ""
+"google_configuration_operation_refusal.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:58
 msgid ""
 "google_configuration_result_projection.py "
 "(`src/cadrumo/application/user_profile/google_configuration_result_projection.py`)"
 msgstr ""
+"google_configuration_result_projection.py "
+"(`src/cadrumo/application/user_profile/google_configuration_result_projection.py`)"
 
 #: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:59
 msgid ""
 "history_contracts.py "
 "(`src/cadrumo/application/user_profile/history_contracts.py`)"
 msgstr ""
+"history_contracts.py "
+"(`src/cadrumo/application/user_profile/history_contracts.py`)"

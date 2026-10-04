@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:1
 msgid "Ephemeral cross-workbench search"
-msgstr ""
+msgstr "Rövid életű keresés munkafelületek között"
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-097` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-097` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:10
 msgid ""
@@ -143,7 +145,7 @@ msgstr ""
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:24
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:26
 msgid ""
@@ -238,14 +240,16 @@ msgstr ""
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:42
 msgid "search/__init__.py (`src/cadrumo/application/search/__init__.py`)"
-msgstr ""
+msgstr "search/__init__.py (`src/cadrumo/application/search/__init__.py`)"
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:43
 msgid ""
 "search/installed_workbench.py "
 "(`src/cadrumo/application/search/installed_workbench.py`)"
 msgstr ""
+"search/installed_workbench.py "
+"(`src/cadrumo/application/search/installed_workbench.py`)"
 
 #: ../../technical/articles/097-ephemeral-cross-workbench-search.md:44
 msgid "search/workbench.py (`src/cadrumo/application/search/workbench.py`)"
-msgstr ""
+msgstr "search/workbench.py (`src/cadrumo/application/search/workbench.py`)"

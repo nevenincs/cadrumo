@@ -62,6 +62,8 @@ from .export_tree_models import RenderedExportTree
 from .generated_export_inheritance import select_generated_export_inheritance
 from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
+from .historical_static_repair import validated_historical_repair_source
+from .m232_form_bridge import M232FormBridge, prepare_m232_form_bridge
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -245,7 +247,21 @@ def prepare_generated_tree_invocation(
             modelo=invocation.modelo,
             revision=invocation.revision,
         )
-        authority = compiled_bundled_authority()
+        try:
+            authority = compiled_bundled_authority()
+        except RegistryValidationError:
+            # The exact reviewed historical target may itself be the one stale
+            # export preventing whole-source compilation. Its structural render
+            # is admitted only after a one-target whole-registry overlay passes
+            # complete validation; every other compile refusal remains closed.
+            authority = validated_historical_repair_source(
+                modelo=invocation.modelo,
+                revision=invocation.revision,
+                source_ref=invocation.source_ref,
+                filing_year=invocation.filing_year,
+                period=invocation.period,
+                expected_manifest_sha256=invocation.expected_manifest_sha256,
+            )
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     source = next(
         (item for ref, item in authority.catalogues.sources.items() if str(ref) == invocation.source_ref),
@@ -341,6 +357,11 @@ def prepare_generated_tree_invocation(
             revision=invocation.revision,
         ),
         inheritance=inheritance,
+        historical_static_source_ref=(
+            inputs.transport_profile.source_ref
+            if invocation.filing_year < authority.catalogues.require_supported_filing_years().floor
+            else None
+        ),
     )
     return PreparedGeneratedTreeInvocation(
         invocation=invocation,
@@ -583,6 +604,8 @@ def publish_prepared_invocation(
     prepared: PreparedGeneratedTreeInvocation,
     rendered: RenderedExportTree,
     target_state: GeneratedExportTreeTargetStateReceipt,
+    *,
+    m232_form_bridge: M232FormBridge | None = None,
 ) -> None:
     """Publish the exact prepared candidate the read-only check just validated."""
     publish_validated_generated_export_tree(
@@ -593,7 +616,11 @@ def publish_prepared_invocation(
             target_export_root=prepared.target_export_root,
             expected_target_state=target_state,
             supersession=prepared.supersession,
-            final_live_validator=lambda: _validate_final_live_target(prepared),
+            final_live_validator=(
+                (lambda: m232_form_bridge.require_export_cutover(prepared.target_root))
+                if m232_form_bridge is not None
+                else (lambda: _validate_final_live_target(prepared))
+            ),
         ),
         joined=prepared.inputs.joined,
         semantic_map=prepared.inputs.semantic_map,
@@ -631,6 +658,7 @@ def require_republication_eligibility(
     target_state: GeneratedExportTreeTargetStateReceipt,
     comparison: RenderComparison,
     *,
+    source_sha256: str | None = None,
     dispositions: tuple[GeneratedTreeRecordDriftDisposition, ...] | None = None,
 ) -> None:
     """Admit one explicitly digest-bound manifest repair and nothing broader.
@@ -644,7 +672,7 @@ def require_republication_eligibility(
     _require_republication_target_binding(invocation, target_state, comparison)
     if comparison.disposition_class == "provenance_only":
         return
-    _require_republication_record_disposition(invocation, comparison, dispositions)
+    _require_republication_record_disposition(invocation, comparison, dispositions, source_sha256=source_sha256)
 
 
 def _require_republication_target_binding(
@@ -670,6 +698,8 @@ def _require_republication_record_disposition(
     invocation: GeneratedTreeInvocation,
     comparison: RenderComparison,
     dispositions: tuple[GeneratedTreeRecordDriftDisposition, ...] | None,
+    *,
+    source_sha256: str | None,
 ) -> None:
     if comparison.disposition_class != "record_drift":
         raise ValueError(
@@ -709,6 +739,15 @@ def _require_republication_record_disposition(
             f"and the inputs wrong (remedy={disposition.remedy!r}). Regenerating would ship the "
             "defect. Repair the inputs and retire the row instead",
         )
+    if disposition.source_ref != invocation.source_ref or disposition.source_sha256 != source_sha256:
+        raise ValueError("republish disposition source ref/SHA differs from the exact selected design")
+    if comparison.only_committed or comparison.only_rendered:
+        raise ValueError("republish disposition does not admit added or removed target files")
+    if disposition.differing_records != len(comparison.record_differing):
+        raise ValueError(
+            f"republish disposition explains {disposition.differing_records} differing record(s), "
+            f"but the exact comparison has {len(comparison.record_differing)}"
+        )
 
 
 def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
@@ -737,11 +776,49 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
+    m232_form_bridge = None
     if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
         _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
     else:
-        require_republication_eligibility(prepared.invocation, target_state, comparison)
-    publish_prepared_invocation(prepared, rendered, target_state)
+        require_republication_eligibility(
+            prepared.invocation,
+            target_state,
+            comparison,
+            source_sha256=str(prepared.inputs.transport_profile.source_sha256),
+        )
+    if prepared.invocation.modelo == "232" and prepared.invocation.revision in {"2016-2017", "2018-y-siguientes"}:
+        m232_form_bridge = prepare_m232_form_bridge(
+            registry_root=prepared.target_root,
+            candidate_root=prepared.candidate_root,
+            revision=prepared.invocation.revision,
+            source_ref=prepared.invocation.source_ref,
+            source_sha256=str(prepared.inputs.transport_profile.source_sha256),
+            expected_manifest_sha256=prepared.invocation.expected_manifest_sha256,
+        )
+    publish_prepared_invocation(prepared, rendered, target_state, m232_form_bridge=m232_form_bridge)
+    if m232_form_bridge is not None:
+        _finish_m232_republication(
+            prepared.target_root,
+            m232_form_bridge,
+            final_live_validator=lambda: _validate_final_live_target(prepared),
+        )
+
+
+def _finish_m232_republication(
+    registry_root: Path,
+    bridge: M232FormBridge,
+    *,
+    final_live_validator: Callable[[], None],
+) -> None:
+    """Report the separate-owner interval as incomplete until full live proof."""
+    try:
+        bridge.finish_with_form_owner(registry_root, bundled_path())
+        final_live_validator()
+    except (OSError, RegistryError, ValueError) as error:
+        raise RegistryValidationError(
+            "M232 export source was installed but companion/currentness closure is incomplete; "
+            f"repair through the canonical form owner: {error}"
+        ) from error
 
 
 def _require_storage_equivalent_republication(

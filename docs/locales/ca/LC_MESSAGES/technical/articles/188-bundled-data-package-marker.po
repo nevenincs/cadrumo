@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-188` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-188` · **Tema:** [Coneixement inclòs i "
+"localització](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:10
 msgid "Scope and assessment"
-msgstr ""
+msgstr "Abast i avaluació"
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:12
 msgid ""
@@ -61,6 +63,15 @@ msgid ""
 "enforces no validation or trust policy. This is a static conclusion from "
 "the complete one-file inventory, not a package build/runtime test."
 msgstr ""
+"Aquest fragment de dades de referència conté un fitxer: "
+"`src/cadrumo/_data/__init__.py`, de zero bytes. No té instruccions "
+"executables, declaracions, metadades ni comportament de dades incloses "
+"per analitzar. La seva presència marca `_data` com un directori de paquet"
+" importable per a l’empaquetament de Python i el recorregut de recursos; "
+"el fitxer per si mateix no concedeix capacitats ni imposa polítiques de "
+"validació o confiança. Aquesta és una conclusió estàtica de l’inventari "
+"complet d’un fitxer, no una prova de construcció ni d’execució del "
+"paquet."
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:14
 msgid ""
@@ -70,6 +81,12 @@ msgid ""
 "this empty marker alone. There are no substantive implementation or "
 "security findings in this chunk."
 msgstr ""
+"El mecanisme real d’accés a les dades del paquet s’implementa en un altre"
+" lloc (per exemple, els accessors de recursos de la infraestructura "
+"d’agents i del producte), de manera que no s’infereixen afirmacions sobre"
+" la inclusió de tots els subarbres de dades ni sobre el comportament "
+"d’importlib a partir d’aquest marcador buit per si sol. Aquest fragment "
+"no presenta troballes substancials d’implementació ni de seguretat."
 
 #: ../../technical/articles/188-bundled-data-package-marker.md:16
 msgid "Complete assigned-file coverage"
@@ -78,3 +95,5 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/188-bundled-data-package-marker.md:18
 msgid "`src/cadrumo/_data/__init__.py` — 0 bytes, 0 lines; fully inspected."
 msgstr ""
+"`src/cadrumo/_data/__init__.py` — 0 bytes, 0 línies; inspeccionat per "
+"complet."

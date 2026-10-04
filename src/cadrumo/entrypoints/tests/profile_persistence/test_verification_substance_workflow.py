@@ -241,6 +241,7 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "any_nonzero": 'any_nonzero(["01", "02"])',
         "at_most_one_positive": 'at_most_one_positive(["01", "02"])',
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
+        "positive_application_le_present_stock": ('positive_application_le_present_stock(["DP200014:00547", "00670"])'),
         "advisory_when_positive": 'advisory_when_positive(["0527"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
         "equals": 'equals(["27", "iva.cuota-devengada-total"])',

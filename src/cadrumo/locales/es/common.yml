@@ -871,7 +871,6 @@ sheets:
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
       block: Bloque
-      business_premises_lease_mark: Arrendamiento de local de negocio
       cadastral_reference: Referencia catastral
       cash_accounting_mark: Criterio de caja
       clave: Clave
@@ -990,7 +989,6 @@ sheets:
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
       portal: Portal
       postal_code: Código postal
-      premises_address: Dirección del inmueble arrendado
       province_code: Provincia
       provincia_code: Código de provincia
       recipient_province_code: Código de provincia del perceptor
@@ -1978,7 +1976,6 @@ tui:
         hasta que se añada un tipo.
       failure: La factura no se ha registrado.
       field:
-        arrendamiento_local_negocio: Arrendamiento de local de negocio (facturas emitidas)
         counterparty_name: Nombre de la contraparte
         counterparty_nif: NIF de la contraparte
         country_code: País de la contraparte (dos letras)
@@ -1995,18 +1992,13 @@ tui:
         operation_type: Clave de operación del modelo 349
         recargo_amount: Importe del recargo de equivalencia
         rectifies_invoice_number: Número de la factura que rectifica
-        referencia_catastral: Referencia catastral del local arrendado
         retention_amount: Importe de la retención de IRPF
         retention_rate: Tipo de retención de IRPF (%)
         series: Serie
-        situacion_inmueble: Situación del inmueble arrendado
         taxable_base: Base imponible
       kind:
         issued: Emitida
         received: Recibida
-      lease:
-        'no': No es un arrendamiento de local de negocio
-        'yes': Arrendamiento de un local de negocio que alquilas
       line:
         add: Añadir línea
         field:
@@ -2040,20 +2032,12 @@ tui:
       prompt: Introduce la factura tal como está impresa. Se comprueba y se registra
         solo después de revisarla.
       review: Revisar
-      situacion:
-        '1': 1 · España con referencia catastral (salvo País Vasco y Navarra)
-        '2': 2 · País Vasco o Navarra
-        '3': 3 · Sin referencia catastral
-        '4': 4 · En el extranjero
-      situacion_none: Sin indicar
       success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
         {currency}.'
       summary:
         amounts: Base imponible {base} {currency} · tipo de IVA {rate}
         counterparty: 'Contraparte: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} con fecha {date}
-        lease: Arrendamiento de local de negocio · situación {situacion} · referencia
-          catastral {referencia}
         operation: Clave del modelo 349 {code} · fecha de la operación {date}
         recargo: Recargo de equivalencia {amount} {currency}
         rectifies: Rectifica la factura {number}

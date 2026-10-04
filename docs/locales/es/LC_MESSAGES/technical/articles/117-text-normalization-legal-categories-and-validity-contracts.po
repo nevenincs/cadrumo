@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:1
 msgid "Text normalization, legal categories, and validity contracts"
-msgstr ""
+msgstr "Normalización de texto, categorías legales y contratos de validez"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:3
 msgid ""
@@ -45,10 +45,12 @@ msgid ""
 "**Report:** `STAGE-2-117` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-117` · **Tema:** [Autoridad central y controles "
+"compartidos](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Ámbito y método"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:12
 msgid ""
@@ -58,10 +60,16 @@ msgid ""
 "tables, and boundary helpers were not exercised, and I did not load "
 "application code or validate external legal sources."
 msgstr ""
+"Este bloque contiene 12 módulos del núcleo con un total de 1,674 líneas, "
+"61,851 bytes y 17,728 tokens de aproximación medidos. Leí íntegramente "
+"las cuatro páginas asignadas. Solo inspección estática; no se ejercitaron"
+" el comportamiento de ida y vuelta TOML, las tablas Unicode ni las "
+"funciones auxiliares de límites, y no cargué código de aplicación ni "
+"validé fuentes legales externas."
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:14
 msgid "Text, legal categories, and validity"
-msgstr ""
+msgstr "Texto, categorías legales y validez"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:16
 msgid ""
@@ -79,6 +87,22 @@ msgid ""
 "and matching folds (`src/cadrumo/core/text_fold.py`) ASCII slugging "
 "(`src/cadrumo/core/text_fold.py`)"
 msgstr ""
+"`text_fold.py` proporciona a quienes comparan texto un conjunto "
+"determinista de transformaciones Unicode: eliminación NFKD de acentos "
+"frente a una tabla de marcas combinantes Unicode 15.1 incluida en el "
+"repositorio; normalización de frases que unifica mayúsculas y minúsculas,"
+" elimina acentos, colapsa espacios y conserva puntuación; una función "
+"auxiliar de composición NFKC que conserva acentos y puntuación; y un "
+"generador separado de identificadores ASCII. Quienes llaman pueden elegir"
+" la operación adecuada a su necesidad en lugar de tratar transliteración,"
+" comparación insensible a acentos y composición canónica como la misma "
+"tarea. La lista fijada de marcas mantiene estables los caracteres "
+"asignados entre cambios de base de datos Unicode del intérprete; los "
+"caracteres asignados después siguen heredando el comportamiento de "
+"descomposición del entorno. Normalización de acentos y tabla fijada "
+"(`src/cadrumo/core/text_fold.py`) Normalización de frases y coincidencias"
+" (`src/cadrumo/core/text_fold.py`) Generación de identificadores ASCII "
+"(`src/cadrumo/core/text_fold.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:18
 msgid ""
@@ -91,6 +115,15 @@ msgid ""
 "the registry's legal partition logic. Activity codes "
 "(`src/cadrumo/core/tipos_actividad.py`)"
 msgstr ""
+"`TipoActividad` proporciona los códigos cerrados de actividad del Modelo "
+"036 que separan clasificaciones de actividades de las series A y B. El "
+"código explica por qué importa para declaraciones sensibles a la "
+"actividad y particiones de retenciones y deja explícitamente fuera de "
+"este conjunto de códigos la subdivisión ganadera de engorde de porcino y "
+"avicultura; la correspondencia del registro está vacía en lugar de ser "
+"supuesta. La enumeración es un vocabulario de tipos, no la lógica de "
+"partición legal del registro. Códigos de actividad "
+"(`src/cadrumo/core/tipos_actividad.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:20
 msgid ""
@@ -104,10 +137,20 @@ msgid ""
 "(`src/cadrumo/core/validity_window.py`) Year union/intersection "
 "(`src/cadrumo/core/validity_window.py`)"
 msgstr ""
+"`ValidityWindow` exige ambos extremos inclusivos, rechaza intervalos "
+"invertidos y no tiene fecha actual implícita. Quienes llaman pueden "
+"preguntar si una fecha o alguna parte de un año está cubierta, unir años "
+"cubiertos por intervalos o intersectar cobertura entre grupos de "
+"evidencia. Esto modela una afirmación de fundamentación acotada en el "
+"tiempo, no «vigente hasta que cambie»; las afirmaciones de validez de "
+"orígenes siguen dependiendo de los registros y evidencia proporcionados. "
+"Validación y cobertura de intervalos "
+"(`src/cadrumo/core/validity_window.py`) Unión e intersección de años "
+"(`src/cadrumo/core/validity_window.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:22
 msgid "Parsing, boundary declarations, and shared guards"
-msgstr ""
+msgstr "Análisis, declaraciones de límites y protecciones compartidas"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:24
 msgid ""
@@ -123,6 +166,20 @@ msgid ""
 "Strict committed-file bridge (`src/cadrumo/core/toml.py`) TOML renderer "
 "(`src/cadrumo/core/toml.py`)"
 msgstr ""
+"`toml.py` centraliza el análisis TOML mediante `rtoml`, traduce fallos de"
+" sintaxis o lectura mediante una factoría de errores proporcionada por "
+"quien llama en límites de entradas confirmadas, convierte claves de "
+"tablas a cadenas solo después de validarlas y congela recursivamente "
+"matrices analizadas en tuplas para esquemas estrictos e inmutables. Su "
+"representador trata tablas anidadas, matrices de tablas, correspondencias"
+" y secuencias en línea, claves y cadenas entrecomilladas, comentarios y "
+"notaciones TOML de números de coma flotante. Es una utilidad de análisis "
+"y representación, no un validador del esquema del dominio: los cargadores"
+" de registros y perfiles deben seguir imponiendo su propio contrato "
+"tipado. Límites de análisis, lectura y congelación "
+"(`src/cadrumo/core/toml.py`) Puente estricto de archivos confirmados "
+"(`src/cadrumo/core/toml.py`) Representador TOML "
+"(`src/cadrumo/core/toml.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:26
 msgid ""
@@ -135,6 +192,15 @@ msgid ""
 "declarations and its checks. Transport axes "
 "(`src/cadrumo/core/transport_locus.py`)"
 msgstr ""
+"`TransportLocus`, `TransportShape` y `TransportRole` hacen explícitas las"
+" propiedades de transporte de argumentos CLI. Distinguen ausencia de "
+"transporte, entrada o salida local e identificador remoto; estructuras de"
+" archivo, directorio y raíz; y rutas principales y auxiliares. Esto "
+"proporciona a las auditorías de la superficie del operador declaraciones "
+"que inspeccionar en lugar de suposiciones basadas en tipos Python o "
+"escritura de opciones. Un control solo puede ser tan completo como las "
+"declaraciones de sus autores y sus comprobaciones. Ejes de transporte "
+"(`src/cadrumo/core/transport_locus.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:28
 msgid ""
@@ -150,6 +216,19 @@ msgid ""
 "(`src/cadrumo/core/type_adapters.py`) Object-container guards "
 "(`src/cadrumo/core/type_guards.py`)"
 msgstr ""
+"Las funciones auxiliares TTY responden falso en lugar de generar errores "
+"ante flujos ausentes, cerrados o fallidos. La documentación limita "
+"correctamente su afirmación: `isatty()` es necesario, pero puede ser "
+"insuficiente en Windows (`NUL` o un anfitrión sin consola pueden informar"
+" verdadero), por lo que quienes recojan secretos deben combinarlo con un "
+"sondeo de consola real. Los adaptadores y protecciones compartidos de "
+"tipos ofrecen validación estándar o estricta de diccionarios, conversión "
+"a tuplas y delimitación precisa en ejecución de correspondencias, listas "
+"y conjuntos no confiables sin fingir que sus entradas ya tienen tipos del"
+" dominio. Sondeo seguro de terminal (`src/cadrumo/core/tty.py`) "
+"Adaptadores reutilizables (`src/cadrumo/core/type_adapters.py`) "
+"Protecciones de contenedores de objetos "
+"(`src/cadrumo/core/type_guards.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:30
 msgid ""
@@ -162,6 +241,16 @@ msgid ""
 " Proportion and score types (`src/cadrumo/core/unit_proportion.py`) HTTP "
 "URL adapter and distinction (`src/cadrumo/core/url_validation.py`)"
 msgstr ""
+"`UnitProportion` y `UnitFraction` codifican límites inclusivos 0–1 y "
+"mantienen separadas las proporciones financieras Decimal de las "
+"puntuaciones de clasificadores en coma flotante. `ANY_HTTP_URL_ADAPTER` "
+"consolida la validación compartida Pydantic de URL absolutas HTTP(S); el "
+"módulo también advierte de que este adaptador no impone el límite de "
+"longitud del distinto `HttpUrl` de Pydantic, por lo que el código que "
+"necesite esa regla más estricta debe seguir utilizando el validador más "
+"fuerte. Tipos de proporciones y puntuaciones "
+"(`src/cadrumo/core/unit_proportion.py`) Adaptador URL HTTP y distinción "
+"(`src/cadrumo/core/url_validation.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:32
 msgid ""
@@ -177,6 +266,19 @@ msgid ""
 " Shared formula refusal (`src/cadrumo/core/workbook.py`) First formula-"
 "cell location (`src/cadrumo/core/workbook.py`)"
 msgstr ""
+"El clasificador de contención de Windows reconoce los errores 5 y 32, "
+"pero el código indica que también pueden proceder de condiciones de ACL o"
+" solo lectura. El presupuesto de reintentos de quien llama, no solo el "
+"código, debe distinguir contención transitoria por manejadores abiertos "
+"de rechazo permanente; fuera de Windows nunca se absorben errores. La "
+"política de libros utiliza un protocolo estructural `data_type` e "
+"identifica fórmulas para que todos los lectores las rechacen en lugar de "
+"aceptar resultados obsoletos en caché. Ambas funciones centralizan una "
+"regla compartida de rechazo y dejan recuperación y presentación de "
+"errores específicas de quien llama fuera del núcleo. Códigos de "
+"contención de Windows (`src/cadrumo/core/windows_contention.py`) Rechazo "
+"compartido de fórmulas (`src/cadrumo/core/workbook.py`) Ubicación de la "
+"primera celda con fórmula (`src/cadrumo/core/workbook.py`)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:34
 msgid "Assessment and follow-up"
@@ -194,6 +296,18 @@ msgid ""
 "actual secret collection, and that the validity window's evidence is "
 "current. No runtime or test behavior was verified here."
 msgstr ""
+"Este bloque es principalmente código fundamental, no flujos de usuario "
+"final. Su contribución más sólida son límites explícitos: distintas "
+"transformaciones de normalización permanecen separadas; la pertenencia "
+"legal o al corpus queda en la capa de autoridad; los datos TOML se "
+"vuelven inmutables antes de la validación estricta; las propiedades de "
+"transporte CLI se hacen inspeccionables; y las cachés de fórmulas no "
+"pueden convertirse silenciosamente en entradas de presentación. El "
+"seguimiento clave es verificar que quienes llaman elijan la normalización"
+" y el validador URL adecuados, que se utilice un sondeo de consola real "
+"para recoger secretos y que la evidencia del intervalo de validez esté "
+"actualizada. Aquí no se verificó comportamiento de ejecución ni de "
+"pruebas."
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:38
 msgid "Complete assigned-file coverage"
@@ -201,50 +315,52 @@ msgstr "Cobertura completa de los archivos asignados"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:40
 msgid "text_fold.py (`src/cadrumo/core/text_fold.py`) — lines 1–530"
-msgstr ""
+msgstr "text_fold.py (`src/cadrumo/core/text_fold.py`) — líneas 1–530"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:41
 msgid "tipos_actividad.py (`src/cadrumo/core/tipos_actividad.py`) — lines 1–82"
-msgstr ""
+msgstr "tipos_actividad.py (`src/cadrumo/core/tipos_actividad.py`) — líneas 1–82"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:42
 msgid "toml.py (`src/cadrumo/core/toml.py`) — lines 1–352"
-msgstr ""
+msgstr "toml.py (`src/cadrumo/core/toml.py`) — líneas 1–352"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:43
 msgid "transport_locus.py (`src/cadrumo/core/transport_locus.py`) — lines 1–119"
-msgstr ""
+msgstr "transport_locus.py (`src/cadrumo/core/transport_locus.py`) — líneas 1–119"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:44
 msgid "tty.py (`src/cadrumo/core/tty.py`) — lines 1–83"
-msgstr ""
+msgstr "tty.py (`src/cadrumo/core/tty.py`) — líneas 1–83"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:45
 msgid "type_adapters.py (`src/cadrumo/core/type_adapters.py`) — lines 1–55"
-msgstr ""
+msgstr "type_adapters.py (`src/cadrumo/core/type_adapters.py`) — líneas 1–55"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:46
 msgid "type_guards.py (`src/cadrumo/core/type_guards.py`) — lines 1–101"
-msgstr ""
+msgstr "type_guards.py (`src/cadrumo/core/type_guards.py`) — líneas 1–101"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:47
 msgid "unit_proportion.py (`src/cadrumo/core/unit_proportion.py`) — lines 1–59"
-msgstr ""
+msgstr "unit_proportion.py (`src/cadrumo/core/unit_proportion.py`) — líneas 1–59"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:48
 msgid "url_validation.py (`src/cadrumo/core/url_validation.py`) — lines 1–27"
-msgstr ""
+msgstr "url_validation.py (`src/cadrumo/core/url_validation.py`) — líneas 1–27"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:49
 msgid "validity_window.py (`src/cadrumo/core/validity_window.py`) — lines 1–140"
-msgstr ""
+msgstr "validity_window.py (`src/cadrumo/core/validity_window.py`) — líneas 1–140"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:50
 msgid ""
 "windows_contention.py (`src/cadrumo/core/windows_contention.py`) — lines "
 "1–47"
 msgstr ""
+"windows_contention.py (`src/cadrumo/core/windows_contention.py`) — líneas"
+" 1–47"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:51
 msgid "workbook.py (`src/cadrumo/core/workbook.py`) — lines 1–79"
-msgstr ""
+msgstr "workbook.py (`src/cadrumo/core/workbook.py`) — líneas 1–79"

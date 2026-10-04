@@ -45,6 +45,8 @@ msgid ""
 "**Report:** `STAGE-2-202` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-202` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/202-normative-pdf-text-corpus.md:10
 msgid "Scope"
@@ -166,21 +168,29 @@ msgid ""
 "`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf.corpus_text.json`"
 " — 34,058 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf.corpus_text.json`"
+" — 34,058 bytes"
 
 #: ../../technical/articles/202-normative-pdf-text-corpus.md:33
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2023-17429-modelo-721-layout.pdf.corpus_text.json`"
 " — 21,200 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2023-17429-modelo-721-layout.pdf.corpus_text.json`"
+" — 21,200 bytes"
 
 #: ../../technical/articles/202-normative-pdf-text-corpus.md:34
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2024-27528-modelo-721"
 "-layout-amendment.pdf.corpus_text.json` — 88,905 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2024-27528-modelo-721"
+"-layout-amendment.pdf.corpus_text.json` — 88,905 bytes"
 
 #: ../../technical/articles/202-normative-pdf-text-corpus.md:35
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`"
 " — 146,412 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`"
+" — 146,412 bytes"

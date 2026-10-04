@@ -1,8 +1,9 @@
-"""Real ledger intake, export, derivation and unavailable-reader settlement cases."""
+"""Synthetic ledger rows for conformance scenarios, seeded through the production repositories."""
 
 from __future__ import annotations
 
 import csv
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -20,6 +21,7 @@ from ...application.invoices.catalogue_intake_contracts import (
     InvoiceWizardOutcome,
     InvoiceWizardRequest,
 )
+from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchProjection,
@@ -37,6 +39,7 @@ from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaReques
 from ...core.config_support import LLMProvider
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.time.clock import now
 from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -51,8 +54,56 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
+SEED_ACTOR = "registered-executor-conformance"
 
-def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
+
+def ledger_action_ports(context: ConformanceFamilyContext) -> LedgerActionPorts:
+    """Compose the production ledger persistence for the enrolled profile and its pinned authority."""
+    return compose_ledger_action_ports(bucket_id=str(context.profile_id), operation=context.operation)
+
+
+def seed_manual_transaction(
+    context: ConformanceFamilyContext,
+    *,
+    booked_date: date,
+    amount: Decimal,
+    description: str,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
+    business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
+) -> str:
+    """Persist one manual ledger row through the production writer and return its transaction id."""
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=str(context.profile_id),
+            booked_date=booked_date,
+            amount=amount,
+            direction=direction,
+            description=description,
+            business_classification=business_classification,
+            actor=SEED_ACTOR,
+        ),
+        ports=ledger_action_ports(context),
+        occurred_at=now(),
+    )
+    return created.ref.transaction_id
+
+
+def ledger_unchanged_verifier(context: ConformanceFamilyContext) -> Callable[[ConformanceOutcome], None]:
+    """Capture the ledger now and return the check that a refused operation left it untouched."""
+    before = ledger_action_ports(context)
+    transactions_before = before.transaction_repository.load()
+    events_before = before.bucket_event_repository.load()
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        del outcome
+        after = ledger_action_ports(context)
+        assert after.transaction_repository.load() == transactions_before
+        assert after.bucket_event_repository.load() == events_before
+
+    return verify
+
+
+def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
     definition_id = context.definition.definition_id
     transactions = TransactionCatalogueRepository(bucket_id=profile)
@@ -160,14 +211,14 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert actual_row is not None
             if definition_id == "ledger.classify.iva-derive":
                 result = outcome.resolve_result(LedgerOperatorIvaResult)
-                assert result.outcome == "derived" and result.derivable and result.transaction_id == transaction_id
+                assert result.outcome == "derived" and result.derivable and (result.transaction_id == transaction_id)
                 assert Decimal(result.iva_rate or "-1") == Decimal("0.21")
                 assert Decimal(result.taxable_base or "-1") == Decimal("100")
                 assert Decimal(result.iva_amount or "-1") == Decimal("21")
                 assert actual_row.taxable_base == Decimal("100") and actual_row.iva_amount == Decimal("21")
-                assert actual_row.raw.model_dump(exclude={"provenance", "raw_fields"}) == (
-                    seeded.transaction.raw.model_dump(exclude={"provenance", "raw_fields"})
-                )
+                assert actual_row.raw.model_dump(
+                    exclude={"provenance", "raw_fields"}
+                ) == seeded.transaction.raw.model_dump(exclude={"provenance", "raw_fields"})
                 assert actual_row.business_classification is BusinessClassification.BUSINESS
                 assert actual_row.raw.provenance.source_format == seeded.transaction.raw.provenance.source_format
                 assert Decimal(actual_row.raw.raw_fields["taxable_base"]) == Decimal("100")
@@ -184,7 +235,9 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 output = Path(result.output_path)
                 payload = output.read_bytes()
                 assert (
-                    result.row_count == 1 and result.byte_size == len(payload) and result.sha256 == sha256_hex(payload)
+                    result.row_count == 1
+                    and result.byte_size == len(payload)
+                    and (result.sha256 == sha256_hex(payload))
                 )
                 with output.open(encoding="utf-8", newline="") as handle:
                     rows = tuple(csv.DictReader(handle))
@@ -245,11 +298,11 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
 
         def verify(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(InvoiceImportProjection)
-            assert result.rows == 2 and result.created == 1 and result.skipped_duplicate == 0
+            assert result.rows == 2 and result.created == 1 and (result.skipped_duplicate == 0)
             assert (
                 len(result.refused) == 1
                 and result.refused[0].row_number == 3
-                and result.refused[0].field == "invoice_date"
+                and (result.refused[0].field == "invoice_date")
             )
             stored = invoices.load().invoices
             assert len(stored) == 1 and result.created_invoice_ids == tuple(stored)
@@ -285,7 +338,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         def verify(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(InvoiceWizardOutcome)
             assert result.outcome == "succeeded" and result.result is not None
-            assert not result.result.already_existed and not result.result.euro_value_pending
+            assert not result.result.already_existed and (not result.result.euro_value_pending)
             stored = invoices.load().invoices
             assert len(stored) == 1
             invoice = next(iter(stored.values()))
@@ -325,7 +378,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     raise AssertionError(definition_id)
 
 
-LEDGER_EXTENDED_CONFORMANCE_FAMILY = ConformanceFamily(
+LEDGER_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
         RegisteredExecutorConformanceCase(
             "ledger.classify.iva-derive",
@@ -388,6 +441,6 @@ LEDGER_EXTENDED_CONFORMANCE_FAMILY = ConformanceFamily(
             ("ledger.llm-diagnostics",),
         ),
     ),
-    prepare=_prepare,
+    prepare=_retained_ledger_prepare,
     closes_model_runtime=True,
 )

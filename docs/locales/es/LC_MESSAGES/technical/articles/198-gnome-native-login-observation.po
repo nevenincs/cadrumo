@@ -45,6 +45,8 @@ msgid ""
 "**Report:** `STAGE-2-198` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-198` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/198-gnome-native-login-observation.md:10
 msgid "Scope"
@@ -180,8 +182,8 @@ msgstr "Cobertura completa de los archivos asignados"
 
 #: ../../technical/articles/198-gnome-native-login-observation.md:34
 msgid "`src/cadrumo/_data/local_runtime/gnome_login/extension.js` — 3,957 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/local_runtime/gnome_login/extension.js` — 3,957 bytes"
 
 #: ../../technical/articles/198-gnome-native-login-observation.md:35
 msgid "`src/cadrumo/_data/local_runtime/gnome_login/metadata.json` — 267 bytes"
-msgstr ""
+msgstr "`src/cadrumo/_data/local_runtime/gnome_login/metadata.json` — 267 bytes"

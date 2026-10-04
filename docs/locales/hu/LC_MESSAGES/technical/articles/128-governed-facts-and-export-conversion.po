@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:1
 msgid "Governed facts and export conversion"
-msgstr ""
+msgstr "Szabályozott tények és exportátalakítás"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-128` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-128` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:12
 msgid ""
@@ -60,7 +62,7 @@ msgstr ""
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:14
 msgid "Governed-fact model and resolution"
-msgstr ""
+msgstr "Szabályozott tények modellje és feloldása"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:16
 msgid ""
@@ -129,7 +131,7 @@ msgstr ""
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:24
 msgid "Export parsing, rendering and value semantics"
-msgstr ""
+msgstr "Exportfeldolgozás, előállítás és értékszemantika"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:26
 msgid ""
@@ -207,7 +209,7 @@ msgstr ""
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:34
 msgid "Calculation seeds and obligation taxonomy"
-msgstr ""
+msgstr "Számítási kiindulóértékek és kötelezettségtaxonómia"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:36
 msgid ""
@@ -241,7 +243,7 @@ msgstr ""
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:40
 msgid "Security, quality and limits"
-msgstr ""
+msgstr "Biztonság, minőség és korlátok"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:42
 msgid ""
@@ -273,18 +275,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/export_literal_fact.py`) — "
 "1–84"
 msgstr ""
+"registry/export_literal_fact.py "
+"(`src/cadrumo/domain/calculations/registry/export_literal_fact.py`) — "
+"1–84"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:49
 msgid ""
 "registry/export_parse.py "
 "(`src/cadrumo/domain/calculations/registry/export_parse.py`) — 1–590"
 msgstr ""
+"registry/export_parse.py "
+"(`src/cadrumo/domain/calculations/registry/export_parse.py`) — 1–590"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:50
 msgid ""
 "registry/export_semantics.py "
 "(`src/cadrumo/domain/calculations/registry/export_semantics.py`) — 1–67"
 msgstr ""
+"registry/export_semantics.py "
+"(`src/cadrumo/domain/calculations/registry/export_semantics.py`) — 1–67"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:51
 msgid ""
@@ -292,6 +301,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/export_value_policy.py`) — "
 "1–485"
 msgstr ""
+"registry/export_value_policy.py "
+"(`src/cadrumo/domain/calculations/registry/export_value_policy.py`) — "
+"1–485"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:52
 msgid ""
@@ -304,6 +316,8 @@ msgid ""
 "registry/facts/atoms.py "
 "(`src/cadrumo/domain/calculations/registry/facts/atoms.py`) — 1–97"
 msgstr ""
+"registry/facts/atoms.py "
+"(`src/cadrumo/domain/calculations/registry/facts/atoms.py`) — 1–97"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:54
 msgid ""
@@ -311,24 +325,33 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/facts/declared_token.py`) — "
 "1–41"
 msgstr ""
+"registry/facts/declared_token.py "
+"(`src/cadrumo/domain/calculations/registry/facts/declared_token.py`) — "
+"1–41"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:55
 msgid ""
 "registry/facts/payloads.py "
 "(`src/cadrumo/domain/calculations/registry/facts/payloads.py`) — 1–249"
 msgstr ""
+"registry/facts/payloads.py "
+"(`src/cadrumo/domain/calculations/registry/facts/payloads.py`) — 1–249"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:56
 msgid ""
 "registry/facts/resolution.py "
 "(`src/cadrumo/domain/calculations/registry/facts/resolution.py`) — 1–539"
 msgstr ""
+"registry/facts/resolution.py "
+"(`src/cadrumo/domain/calculations/registry/facts/resolution.py`) — 1–539"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:57
 msgid ""
 "registry/facts/schema.py "
 "(`src/cadrumo/domain/calculations/registry/facts/schema.py`) — 1–256"
 msgstr ""
+"registry/facts/schema.py "
+"(`src/cadrumo/domain/calculations/registry/facts/schema.py`) — 1–256"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:58
 msgid ""
@@ -336,18 +359,25 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/facts/string_mapping.py`) — "
 "1–200"
 msgstr ""
+"registry/facts/string_mapping.py "
+"(`src/cadrumo/domain/calculations/registry/facts/string_mapping.py`) — "
+"1–200"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:59
 msgid ""
 "registry/facts/variants.py "
 "(`src/cadrumo/domain/calculations/registry/facts/variants.py`) — 1–129"
 msgstr ""
+"registry/facts/variants.py "
+"(`src/cadrumo/domain/calculations/registry/facts/variants.py`) — 1–129"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:60
 msgid ""
 "registry/fixed_width_codec.py "
 "(`src/cadrumo/domain/calculations/registry/fixed_width_codec.py`) — 1–693"
 msgstr ""
+"registry/fixed_width_codec.py "
+"(`src/cadrumo/domain/calculations/registry/fixed_width_codec.py`) — 1–693"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:61
 msgid ""
@@ -355,6 +385,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/fixed_width_parser.py`) — "
 "1–191"
 msgstr ""
+"registry/fixed_width_parser.py "
+"(`src/cadrumo/domain/calculations/registry/fixed_width_parser.py`) — "
+"1–191"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:62
 msgid ""
@@ -362,6 +395,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/foreign_asset_obligation_catalogue.py`)"
 " — 1–161"
 msgstr ""
+"registry/foreign_asset_obligation_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/foreign_asset_obligation_catalogue.py`)"
+" — 1–161"
 
 #: ../../technical/articles/128-governed-facts-and-export-conversion.md:63
 msgid ""
@@ -369,3 +405,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/formula_initial_values.py`) — "
 "1–460"
 msgstr ""
+"registry/formula_initial_values.py "
+"(`src/cadrumo/domain/calculations/registry/formula_initial_values.py`) — "
+"1–460"

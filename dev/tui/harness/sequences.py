@@ -33,6 +33,8 @@ from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
+from dev._paths import prepare_temporary_directory
+
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot

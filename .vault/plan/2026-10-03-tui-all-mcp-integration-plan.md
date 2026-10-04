@@ -10,7 +10,9 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
-modified: '2026-10-03'
+  - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
+  - '[[2026-10-04-application-distribution-adr]]'
+modified: '2026-10-04'
 body_schema: body-v2
 body_hash: 'sha256:1968093002008e671fbb93fd667090af82b6c413d3dec670544db6e5c5898185'
 ---

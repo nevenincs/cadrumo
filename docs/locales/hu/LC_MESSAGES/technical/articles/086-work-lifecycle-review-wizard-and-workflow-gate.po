@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 2: verification, workbench and workspace](../topics"
 "/modelo-work-and-revision-lifecycle-part-2.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-086` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 2. rész: ellenőrzés, munkafelület és munkatér](../topics"
+"/modelo-work-and-revision-lifecycle-part-2.md)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:10
 msgid ""
@@ -221,7 +224,7 @@ msgstr ""
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:34
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:36
 msgid ""
@@ -276,78 +279,92 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:46
 msgid "All 15 assigned files were read completely through pages 1–8."
-msgstr ""
+msgstr "Mind a 15 kijelölt fájlt teljes egészében elolvastam az 1–8. oldalakon."
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:48
 msgid "work_lifecycle.py (`src/cadrumo/application/modelo/work_lifecycle.py`)"
-msgstr ""
+msgstr "work_lifecycle.py (`src/cadrumo/application/modelo/work_lifecycle.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:49
 msgid ""
 "work_lifecycle_ports.py "
 "(`src/cadrumo/application/modelo/work_lifecycle_ports.py`)"
 msgstr ""
+"work_lifecycle_ports.py "
+"(`src/cadrumo/application/modelo/work_lifecycle_ports.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:50
 msgid ""
 "work_missing_input.py "
 "(`src/cadrumo/application/modelo/work_missing_input.py`)"
 msgstr ""
+"work_missing_input.py "
+"(`src/cadrumo/application/modelo/work_missing_input.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:51
 msgid "work_plazo.py (`src/cadrumo/application/modelo/work_plazo.py`)"
-msgstr ""
+msgstr "work_plazo.py (`src/cadrumo/application/modelo/work_plazo.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:52
 msgid "work_profile.py (`src/cadrumo/application/modelo/work_profile.py`)"
-msgstr ""
+msgstr "work_profile.py (`src/cadrumo/application/modelo/work_profile.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:53
 msgid "work_review.py (`src/cadrumo/application/modelo/work_review.py`)"
-msgstr ""
+msgstr "work_review.py (`src/cadrumo/application/modelo/work_review.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:54
 msgid ""
 "work_review_operation.py "
 "(`src/cadrumo/application/modelo/work_review_operation.py`)"
 msgstr ""
+"work_review_operation.py "
+"(`src/cadrumo/application/modelo/work_review_operation.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:55
 msgid "work_selection.py (`src/cadrumo/application/modelo/work_selection.py`)"
-msgstr ""
+msgstr "work_selection.py (`src/cadrumo/application/modelo/work_selection.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:56
 msgid ""
 "work_unit_repository.py "
 "(`src/cadrumo/application/modelo/work_unit_repository.py`)"
 msgstr ""
+"work_unit_repository.py "
+"(`src/cadrumo/application/modelo/work_unit_repository.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:57
 msgid "work_wizard.py (`src/cadrumo/application/modelo/work_wizard.py`)"
-msgstr ""
+msgstr "work_wizard.py (`src/cadrumo/application/modelo/work_wizard.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:58
 msgid ""
 "workbench_operations.py "
 "(`src/cadrumo/application/modelo/workbench_operations.py`)"
 msgstr ""
+"workbench_operations.py "
+"(`src/cadrumo/application/modelo/workbench_operations.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:59
 msgid ""
 "workbench_projection.py "
 "(`src/cadrumo/application/modelo/workbench_projection.py`)"
 msgstr ""
+"workbench_projection.py "
+"(`src/cadrumo/application/modelo/workbench_projection.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:60
 msgid "workbench_read.py (`src/cadrumo/application/modelo/workbench_read.py`)"
-msgstr ""
+msgstr "workbench_read.py (`src/cadrumo/application/modelo/workbench_read.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:61
 msgid "workflow_gate.py (`src/cadrumo/application/modelo/workflow_gate.py`)"
-msgstr ""
+msgstr "workflow_gate.py (`src/cadrumo/application/modelo/workflow_gate.py`)"
 
 #: ../../technical/articles/086-work-lifecycle-review-wizard-and-workflow-gate.md:62
 msgid ""
 "workflow_gate_ports.py "
 "(`src/cadrumo/application/modelo/workflow_gate_ports.py`)"
 msgstr ""
+"workflow_gate_ports.py "
+"(`src/cadrumo/application/modelo/workflow_gate_ports.py`)"

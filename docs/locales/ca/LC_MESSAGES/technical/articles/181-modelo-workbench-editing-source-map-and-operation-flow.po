@@ -46,10 +46,13 @@ msgid ""
 "**Report:** `STAGE-2-181` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-181` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:12
 msgid ""
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:16
 msgid ""
@@ -237,6 +240,8 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:42
 msgid "All 20 manifest files and their complete declared line ranges were read."
 msgstr ""
+"Es van llegir els 20 fitxers del manifest i els seus intervals de línies "
+"declarats complets."
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:44
 msgid ""
@@ -244,6 +249,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_editor.py`) — 213 "
 "lines"
 msgstr ""
+"screen_editor.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_editor.py`) — 213 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:45
 msgid ""
@@ -251,6 +259,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_footer.py`) — 249 "
 "lines"
 msgstr ""
+"screen_footer.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_footer.py`) — 249 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:46
 msgid ""
@@ -258,6 +269,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_help.py`) — 167 "
 "lines"
 msgstr ""
+"screen_help.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_help.py`) — 167 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:47
 msgid ""
@@ -265,6 +279,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`) —"
 " 146 lines"
 msgstr ""
+"screen_help_content.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`) —"
+" 146 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:48
 msgid ""
@@ -272,6 +289,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_navigation.py`) — "
 "186 lines"
 msgstr ""
+"screen_navigation.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_navigation.py`) — "
+"186 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:49
 msgid ""
@@ -279,6 +299,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`) — "
 "253 lines"
 msgstr ""
+"screen_next_step.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`) — "
+"253 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:50
 msgid ""
@@ -286,6 +309,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`) — "
 "318 lines"
 msgstr ""
+"screen_operation.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`) — "
+"318 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:51
 msgid ""
@@ -293,6 +319,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_presentation.py`) —"
 " 279 lines"
 msgstr ""
+"screen_presentation.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_presentation.py`) —"
+" 279 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:52
 msgid ""
@@ -300,6 +329,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_review.py`) — 168 "
 "lines"
 msgstr ""
+"screen_review.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_review.py`) — 168 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:53
 msgid ""
@@ -307,36 +339,50 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_widgets.py`) — 35 "
 "lines"
 msgstr ""
+"screen_widgets.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/screen_widgets.py`) — 35 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:54
 msgid ""
 "search.py (`src/cadrumo/entrypoints/tui/modelo/workbench/search.py`) — "
 "336 lines"
 msgstr ""
+"search.py (`src/cadrumo/entrypoints/tui/modelo/workbench/search.py`) — "
+"336 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:55
 msgid ""
 "session.py (`src/cadrumo/entrypoints/tui/modelo/workbench/session.py`) — "
 "281 lines"
 msgstr ""
+"session.py (`src/cadrumo/entrypoints/tui/modelo/workbench/session.py`) — "
+"281 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:56
 msgid ""
 "sorting.py (`src/cadrumo/entrypoints/tui/modelo/workbench/sorting.py`) — "
 "192 lines"
 msgstr ""
+"sorting.py (`src/cadrumo/entrypoints/tui/modelo/workbench/sorting.py`) — "
+"192 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:57
 msgid ""
 "sources.py (`src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`) — "
 "795 lines"
 msgstr ""
+"sources.py (`src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`) — "
+"795 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:58
 msgid ""
 "status_bar.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/status_bar.py`) — 45 lines"
 msgstr ""
+"status_bar.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/status_bar.py`) — 45 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:59
 msgid ""
@@ -344,25 +390,34 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`) — 775 "
 "lines"
 msgstr ""
+"vocabulary.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`) — 775 "
+"línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:60
 msgid ""
 "wording.py (`src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`) — "
 "90 lines"
 msgstr ""
+"wording.py (`src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`) — "
+"90 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:61
 msgid "navigation.py (`src/cadrumo/entrypoints/tui/navigation.py`) — 461 lines"
-msgstr ""
+msgstr "navigation.py (`src/cadrumo/entrypoints/tui/navigation.py`) — 461 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:62
 msgid ""
 "operations/__init__.py "
 "(`src/cadrumo/entrypoints/tui/operations/__init__.py`) — 5 lines"
 msgstr ""
+"operations/__init__.py "
+"(`src/cadrumo/entrypoints/tui/operations/__init__.py`) — 5 línies"
 
 #: ../../technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.md:63
 msgid ""
 "operations/controller_port.py "
 "(`src/cadrumo/entrypoints/tui/operations/controller_port.py`) — 98 lines"
 msgstr ""
+"operations/controller_port.py "
+"(`src/cadrumo/entrypoints/tui/operations/controller_port.py`) — 98 línies"

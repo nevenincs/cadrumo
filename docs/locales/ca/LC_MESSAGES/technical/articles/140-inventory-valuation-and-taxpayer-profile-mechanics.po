@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:1
 msgid "inventory valuation and taxpayer-profile mechanics"
-msgstr ""
+msgstr "valoració d’inventari i mecànica del perfil del contribuent"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-140` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-140` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:10
 msgid "Scope"
@@ -66,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:16
 msgid ""
@@ -323,47 +325,57 @@ msgid ""
 "inventory/_anexo_d_records.py "
 "(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)"
 msgstr ""
+"inventory/_anexo_d_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:57
 msgid ""
 "inventory/closing_authority_records.py "
 "(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`)"
 msgstr ""
+"inventory/closing_authority_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:58
 msgid ""
 "inventory/records.py "
 "(`src/cadrumo/domain/contribuyente/inventory/records.py`)"
 msgstr ""
+"inventory/records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:59
 msgid ""
 "inventory/valuation.py "
 "(`src/cadrumo/domain/contribuyente/inventory/valuation.py`)"
 msgstr ""
+"inventory/valuation.py "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:60
 msgid "marriage_facts.py (`src/cadrumo/domain/contribuyente/marriage_facts.py`)"
-msgstr ""
+msgstr "marriage_facts.py (`src/cadrumo/domain/contribuyente/marriage_facts.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:61
 msgid "meses_trabajo.py (`src/cadrumo/domain/contribuyente/meses_trabajo.py`)"
-msgstr ""
+msgstr "meses_trabajo.py (`src/cadrumo/domain/contribuyente/meses_trabajo.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:62
 msgid "normalise.py (`src/cadrumo/domain/contribuyente/normalise.py`)"
-msgstr ""
+msgstr "normalise.py (`src/cadrumo/domain/contribuyente/normalise.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:63
 msgid "renta_codes.py (`src/cadrumo/domain/contribuyente/renta_codes.py`)"
-msgstr ""
+msgstr "renta_codes.py (`src/cadrumo/domain/contribuyente/renta_codes.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:64
 msgid ""
 "seguro_enfermedad_insured.py "
 "(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`)"
 msgstr ""
+"seguro_enfermedad_insured.py "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`)"
 
 #: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:65
 msgid "tax_residence.py (`src/cadrumo/domain/contribuyente/tax_residence.py`)"
-msgstr ""
+msgstr "tax_residence.py (`src/cadrumo/domain/contribuyente/tax_residence.py`)"

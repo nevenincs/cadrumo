@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:1
 msgid "Entrypoint adapter composition"
-msgstr ""
+msgstr "Belépésipont-adapterek összeállítása"
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-154` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:10
 msgid "Scope"
@@ -63,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:16
 msgid ""
@@ -136,7 +139,7 @@ msgstr ""
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:24
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Biztonsági és minőségi értékelés"
 
 #: ../../technical/articles/154-entrypoint-adapter-composition.md:26
 msgid ""

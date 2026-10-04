@@ -47,6 +47,9 @@ msgid ""
 "**Report:** `STAGE-2-178` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-178` · **Tema:** [Entorno de ejecución instalado, "
+"entorno de trabajo de terminal e infraestructura de agentes](../topics"
+"/runtime-tui-and-agent-harness.md)"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:10
 msgid "Scope and limits"
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:14
 msgid "Operator capabilities"
-msgstr ""
+msgstr "Capacidades del operador"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:16
 msgid ""
@@ -172,7 +175,7 @@ msgstr ""
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:30
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Valoración de seguridad e implementación"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:32
 msgid ""
@@ -263,24 +266,32 @@ msgid ""
 "ledger/evidence_records.py "
 "(`src/cadrumo/entrypoints/tui/ledger/evidence_records.py`) — 274 lines"
 msgstr ""
+"ledger/evidence_records.py "
+"(`src/cadrumo/entrypoints/tui/ledger/evidence_records.py`) — 274 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:49
 msgid ""
 "ledger/import_flow.py "
 "(`src/cadrumo/entrypoints/tui/ledger/import_flow.py`) — 323 lines"
 msgstr ""
+"ledger/import_flow.py "
+"(`src/cadrumo/entrypoints/tui/ledger/import_flow.py`) — 323 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:50
 msgid ""
 "ledger/invoice_entry.py "
 "(`src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`) — 568 lines"
 msgstr ""
+"ledger/invoice_entry.py "
+"(`src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`) — 568 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:51
 msgid ""
 "ledger/models.py (`src/cadrumo/entrypoints/tui/ledger/models.py`) — 594 "
 "lines"
 msgstr ""
+"ledger/models.py (`src/cadrumo/entrypoints/tui/ledger/models.py`) — 594 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:52
 msgid ""
@@ -288,36 +299,49 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/ledger/models_actividad_asset.py`) — 75 "
 "lines"
 msgstr ""
+"ledger/models_actividad_asset.py "
+"(`src/cadrumo/entrypoints/tui/ledger/models_actividad_asset.py`) — 75 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:53
 msgid ""
 "ledger/overview.py (`src/cadrumo/entrypoints/tui/ledger/overview.py`) — "
 "93 lines"
 msgstr ""
+"ledger/overview.py (`src/cadrumo/entrypoints/tui/ledger/overview.py`) — "
+"93 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:54
 msgid ""
 "ledger/reconciliation.py "
 "(`src/cadrumo/entrypoints/tui/ledger/reconciliation.py`) — 276 lines"
 msgstr ""
+"ledger/reconciliation.py "
+"(`src/cadrumo/entrypoints/tui/ledger/reconciliation.py`) — 276 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:55
 msgid ""
 "ledger/record_views.py "
 "(`src/cadrumo/entrypoints/tui/ledger/record_views.py`) — 238 lines"
 msgstr ""
+"ledger/record_views.py "
+"(`src/cadrumo/entrypoints/tui/ledger/record_views.py`) — 238 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:56
 msgid ""
 "ledger/review.py (`src/cadrumo/entrypoints/tui/ledger/review.py`) — 189 "
 "lines"
 msgstr ""
+"ledger/review.py (`src/cadrumo/entrypoints/tui/ledger/review.py`) — 189 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:57
 msgid ""
 "ledger/routes.py (`src/cadrumo/entrypoints/tui/ledger/routes.py`) — 218 "
 "lines"
 msgstr ""
+"ledger/routes.py (`src/cadrumo/entrypoints/tui/ledger/routes.py`) — 218 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:58
 msgid ""
@@ -325,30 +349,42 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/ledger/runtime_actividad_asset.py`) — 343 "
 "lines"
 msgstr ""
+"ledger/runtime_actividad_asset.py "
+"(`src/cadrumo/entrypoints/tui/ledger/runtime_actividad_asset.py`) — 343 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:59
 msgid ""
 "ledger/runtime_evidence.py "
 "(`src/cadrumo/entrypoints/tui/ledger/runtime_evidence.py`) — 364 lines"
 msgstr ""
+"ledger/runtime_evidence.py "
+"(`src/cadrumo/entrypoints/tui/ledger/runtime_evidence.py`) — 364 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:60
 msgid ""
 "ledger/runtime_invoice_add.py "
 "(`src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py`) — 229 lines"
 msgstr ""
+"ledger/runtime_invoice_add.py "
+"(`src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py`) — 229 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:61
 msgid ""
 "ledger/transaction_views.py "
 "(`src/cadrumo/entrypoints/tui/ledger/transaction_views.py`) — 143 lines"
 msgstr ""
+"ledger/transaction_views.py "
+"(`src/cadrumo/entrypoints/tui/ledger/transaction_views.py`) — 143 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:62
 msgid ""
 "ledger/workspace_injection.py "
 "(`src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`) — 89 lines"
 msgstr ""
+"ledger/workspace_injection.py "
+"(`src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`) — 89 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:63
 msgid ""
@@ -356,33 +392,46 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/ledger/workspace_presentation.py`) — 114 "
 "lines"
 msgstr ""
+"ledger/workspace_presentation.py "
+"(`src/cadrumo/entrypoints/tui/ledger/workspace_presentation.py`) — 114 "
+"líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:64
 msgid ""
 "modelo/__init__.py (`src/cadrumo/entrypoints/tui/modelo/__init__.py`) — 5"
 " lines"
 msgstr ""
+"modelo/__init__.py (`src/cadrumo/entrypoints/tui/modelo/__init__.py`) — 5"
+" líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:65
 msgid ""
 "modelo/export_result.py "
 "(`src/cadrumo/entrypoints/tui/modelo/export_result.py`) — 221 lines"
 msgstr ""
+"modelo/export_result.py "
+"(`src/cadrumo/entrypoints/tui/modelo/export_result.py`) — 221 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:66
 msgid ""
 "modelo/lifecycle.py (`src/cadrumo/entrypoints/tui/modelo/lifecycle.py`) —"
 " 331 lines"
 msgstr ""
+"modelo/lifecycle.py (`src/cadrumo/entrypoints/tui/modelo/lifecycle.py`) —"
+" 331 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:67
 msgid ""
 "modelo/m303_evidence.py "
 "(`src/cadrumo/entrypoints/tui/modelo/m303_evidence.py`) — 196 lines"
 msgstr ""
+"modelo/m303_evidence.py "
+"(`src/cadrumo/entrypoints/tui/modelo/m303_evidence.py`) — 196 líneas"
 
 #: ../../technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md:68
 msgid ""
 "modelo/runtime_lifecycle.py "
 "(`src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`) — 294 lines"
 msgstr ""
+"modelo/runtime_lifecycle.py "
+"(`src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`) — 294 líneas"

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:1
 msgid "IVA rates, settlement and statutory projections"
-msgstr ""
+msgstr "IVA-kulcsok, elszámolás és törvényi vetületek"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-144` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-144` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:10
 msgid "Scope"
@@ -60,7 +62,7 @@ msgstr ""
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:16
 msgid ""
@@ -301,70 +303,76 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:56
 msgid "iva/legend_derivation.py (`src/cadrumo/domain/iva/legend_derivation.py`)"
-msgstr ""
+msgstr "iva/legend_derivation.py (`src/cadrumo/domain/iva/legend_derivation.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:57
 msgid "iva/lookup.py (`src/cadrumo/domain/iva/lookup.py`)"
-msgstr ""
+msgstr "iva/lookup.py (`src/cadrumo/domain/iva/lookup.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:58
 msgid "iva/m303_settlement.py (`src/cadrumo/domain/iva/m303_settlement.py`)"
-msgstr ""
+msgstr "iva/m303_settlement.py (`src/cadrumo/domain/iva/m303_settlement.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:59
 msgid "iva/oss.py (`src/cadrumo/domain/iva/oss.py`)"
-msgstr ""
+msgstr "iva/oss.py (`src/cadrumo/domain/iva/oss.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:60
 msgid "iva/place_of_supply.py (`src/cadrumo/domain/iva/place_of_supply.py`)"
-msgstr ""
+msgstr "iva/place_of_supply.py (`src/cadrumo/domain/iva/place_of_supply.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:61
 msgid "iva/prorrata.py (`src/cadrumo/domain/iva/prorrata.py`)"
-msgstr ""
+msgstr "iva/prorrata.py (`src/cadrumo/domain/iva/prorrata.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:62
 msgid ""
 "iva/prorrata_especial_parameters.py "
 "(`src/cadrumo/domain/iva/prorrata_especial_parameters.py`)"
 msgstr ""
+"iva/prorrata_especial_parameters.py "
+"(`src/cadrumo/domain/iva/prorrata_especial_parameters.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:63
 msgid "iva/rates.py (`src/cadrumo/domain/iva/rates.py`)"
-msgstr ""
+msgstr "iva/rates.py (`src/cadrumo/domain/iva/rates.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:64
 msgid ""
 "iva/recargo_equivalencia.py "
 "(`src/cadrumo/domain/iva/recargo_equivalencia.py`)"
 msgstr ""
+"iva/recargo_equivalencia.py "
+"(`src/cadrumo/domain/iva/recargo_equivalencia.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:65
 msgid "iva/refund_eligibility.py (`src/cadrumo/domain/iva/refund_eligibility.py`)"
-msgstr ""
+msgstr "iva/refund_eligibility.py (`src/cadrumo/domain/iva/refund_eligibility.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:66
 msgid "iva/regime_legend.py (`src/cadrumo/domain/iva/regime_legend.py`)"
-msgstr ""
+msgstr "iva/regime_legend.py (`src/cadrumo/domain/iva/regime_legend.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:67
 msgid ""
 "iva/regimen_simplificado_rows.py "
 "(`src/cadrumo/domain/iva/regimen_simplificado_rows.py`)"
 msgstr ""
+"iva/regimen_simplificado_rows.py "
+"(`src/cadrumo/domain/iva/regimen_simplificado_rows.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:68
 msgid "iva/saturation.py (`src/cadrumo/domain/iva/saturation.py`)"
-msgstr ""
+msgstr "iva/saturation.py (`src/cadrumo/domain/iva/saturation.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:69
 msgid "iva/schema.py (`src/cadrumo/domain/iva/schema.py`)"
-msgstr ""
+msgstr "iva/schema.py (`src/cadrumo/domain/iva/schema.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:70
 msgid "iva/sepa_marca.py (`src/cadrumo/domain/iva/sepa_marca.py`)"
-msgstr ""
+msgstr "iva/sepa_marca.py (`src/cadrumo/domain/iva/sepa_marca.py`)"
 
 #: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:71
 msgid "iva/supply_nature.py (`src/cadrumo/domain/iva/supply_nature.py`)"
-msgstr ""
+msgstr "iva/supply_nature.py (`src/cadrumo/domain/iva/supply_nature.py`)"

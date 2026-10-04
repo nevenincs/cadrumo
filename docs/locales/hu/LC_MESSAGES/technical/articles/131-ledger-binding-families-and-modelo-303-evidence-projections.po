@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:1
 msgid "Ledger binding families and Modelo 303 evidence projections"
-msgstr ""
+msgstr "Főkönyvi kötéscsaládok és Modelo 303-bizonyítékvetületek"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-131` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-131` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:14
 msgid "Ledger aggregation and safeguards"
-msgstr ""
+msgstr "Főkönyvi összesítés és védelmi intézkedések"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:16
 msgid ""
@@ -178,7 +180,7 @@ msgstr ""
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:28
 msgid "Legal authority, continuity, and filing projections"
-msgstr ""
+msgstr "Mérvadó jogforrások, folytonosság és bevallási vetületek"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:30
 msgid ""
@@ -272,7 +274,7 @@ msgstr ""
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:42
 msgid "Security, quality, and follow-up"
-msgstr ""
+msgstr "Biztonság, minőség és további vizsgálatok"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:44
 msgid ""
@@ -314,6 +316,8 @@ msgid ""
 "All 15 assigned files were fully read across nine bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Mind a 15 kijelölt fájlt teljes egészében elolvastam kilenc körülhatárolt"
+" oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:52
 msgid ""
@@ -321,6 +325,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) — "
 "1–1399"
 msgstr ""
+"registry/ledger_iva_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) — "
+"1–1399"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:53
 msgid ""
@@ -328,6 +335,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`) — "
 "1–327"
 msgstr ""
+"registry/ledger_oss_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`) — "
+"1–327"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:54
 msgid ""
@@ -335,6 +345,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`)"
 " — 1–253"
 msgstr ""
+"registry/ledger_renta_gastos_estimacion_directa_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`)"
+" — 1–253"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:55
 msgid ""
@@ -342,6 +355,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`)"
 " — 1–259"
 msgstr ""
+"registry/ledger_renta_gastos_pago_fraccionado_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`)"
+" — 1–259"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:56
 msgid ""
@@ -349,12 +365,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
 " — 1–684"
 msgstr ""
+"registry/ledger_renta_income_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" — 1–684"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:57
 msgid ""
 "registry/legal.py (`src/cadrumo/domain/calculations/registry/legal.py`) —"
 " 1–54"
 msgstr ""
+"registry/legal.py (`src/cadrumo/domain/calculations/registry/legal.py`) —"
+" 1–54"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:58
 msgid ""
@@ -362,12 +383,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/lineage_attestation.py`) — "
 "1–282"
 msgstr ""
+"registry/lineage_attestation.py "
+"(`src/cadrumo/domain/calculations/registry/lineage_attestation.py`) — "
+"1–282"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:59
 msgid ""
 "registry/lorca_reduction.py "
 "(`src/cadrumo/domain/calculations/registry/lorca_reduction.py`) — 1–151"
 msgstr ""
+"registry/lorca_reduction.py "
+"(`src/cadrumo/domain/calculations/registry/lorca_reduction.py`) — 1–151"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:60
 msgid ""
@@ -375,6 +401,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`)"
 " — 1–282"
 msgstr ""
+"registry/m303_differentiated_deduction_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`)"
+" — 1–282"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:61
 msgid ""
@@ -382,6 +411,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`)"
 " — 1–127"
 msgstr ""
+"registry/m303_exonerado_390_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`)"
+" — 1–127"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:62
 msgid ""
@@ -389,6 +421,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_orden_constants.py`) — "
 "1–161"
 msgstr ""
+"registry/m303_orden_constants.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_constants.py`) — "
+"1–161"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:63
 msgid ""
@@ -396,6 +431,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`)"
 " — 1–417"
 msgstr ""
+"registry/m303_orden_projection_models.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`)"
+" — 1–417"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:64
 msgid ""
@@ -403,6 +441,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`) — "
 "1–126"
 msgstr ""
+"registry/m303_orden_resolution.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`) — "
+"1–126"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:65
 msgid ""
@@ -410,6 +451,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py`)"
 " — 1–118"
 msgstr ""
+"registry/m303_prorrata_activity_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py`)"
+" — 1–118"
 
 #: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:66
 msgid ""
@@ -417,3 +461,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`)"
 " — 1–252"
 msgstr ""
+"registry/m303_regimen_simplificado_annual_summary_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`)"
+" — 1–252"

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:1
 msgid "Shared CLI transport and profile configuration surfaces"
-msgstr ""
+msgstr "Közös CLI-átvitel és profilbeállítási felületek"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-166` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:10
 msgid "Scope"
@@ -63,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:14
 msgid "Command routing, output, and taxpayer identity"
-msgstr ""
+msgstr "Parancsirányítás, kimenet és adózói személyazonosság"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:16
 msgid ""
@@ -115,7 +118,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:22
 msgid "Profile facts, readiness, and censal evidence"
-msgstr ""
+msgstr "Profiltények, készültség és nyilvántartási bizonyítékok"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:24
 msgid ""
@@ -164,7 +167,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:28
 msgid "Authentication, representatives, and profile backup"
-msgstr ""
+msgstr "Hitelesítés, képviselők és profilmentés"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:30
 msgid ""
@@ -274,7 +277,7 @@ msgstr ""
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:40
 msgid "Evidence and limits"
-msgstr ""
+msgstr "Bizonyítékok és korlátok"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:42
 msgid ""
@@ -298,7 +301,7 @@ msgstr "Lefedettségi függelék"
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:46
 msgid "All 28 assigned files are linked below."
-msgstr ""
+msgstr "Mind a 28 kijelölt fájl hivatkozása alább található."
 
 #: ../../technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.md:48
 msgid "`src/cadrumo/entrypoints/cli/command_suggestions.py`"

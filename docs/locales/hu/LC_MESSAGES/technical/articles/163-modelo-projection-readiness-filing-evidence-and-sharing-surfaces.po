@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:1
 msgid "Modelo projection, readiness, filing evidence and sharing surfaces"
-msgstr ""
+msgstr "Modelo-vetület, készenlét, bevallási bizonyíték és megosztási felületek"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:3
 msgid ""
@@ -45,10 +45,13 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-163` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:10
 msgid "Scope and behavior"
-msgstr ""
+msgstr "Hatókör és működés"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:12
 msgid ""
@@ -186,7 +189,7 @@ msgstr ""
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:26
 msgid "Findings and limits"
-msgstr ""
+msgstr "Megállapítások és korlátok"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:28
 msgid ""
@@ -225,7 +228,7 @@ msgstr "Lefedettségi függelék"
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:34
 msgid "All 19 assigned files are represented and linked below."
-msgstr ""
+msgstr "Mind a 19 kijelölt fájl szerepel, és hivatkozása alább található."
 
 #: ../../technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md:36
 msgid "`src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`"

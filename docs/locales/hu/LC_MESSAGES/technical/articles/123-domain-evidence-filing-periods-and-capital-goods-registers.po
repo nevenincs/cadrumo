@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:1
 msgid "Domain evidence, filing periods, and capital-goods registers"
 msgstr ""
+"Szakterületi bizonyítékok, bevallási időszakok és beruházásijavak-"
+"nyilvántartások"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:3
 msgid ""
@@ -44,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-123` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-123` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:12
 msgid ""
@@ -62,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:14
 msgid "Domain evidence, identifiers, and filing periods"
-msgstr ""
+msgstr "Szakterületi bizonyítékok, azonosítók és bevallási időszakok"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:16
 msgid ""
@@ -97,7 +101,7 @@ msgstr ""
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:20
 msgid "Attachment custody and apoderamiento scope"
-msgstr ""
+msgstr "Mellékletőrzés és apoderamiento-hatókör"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:22
 msgid ""
@@ -157,7 +161,7 @@ msgstr ""
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:28
 msgid "Capital-goods IVA regularisation"
-msgstr ""
+msgstr "Tárgyi eszközök IVA-kiigazítása"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:30
 #, python-format
@@ -219,7 +223,7 @@ msgstr ""
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:36
 msgid "Bucket event history"
-msgstr ""
+msgstr "Tárolóesemény-előzmények"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:38
 msgid ""
@@ -291,95 +295,119 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:48
 msgid "domain/__init__.py (`src/cadrumo/domain/__init__.py`) — lines 1–5"
-msgstr ""
+msgstr "domain/__init__.py (`src/cadrumo/domain/__init__.py`) — 1–5. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:49
 msgid "domain/errors.py (`src/cadrumo/domain/errors.py`) — lines 1–20"
-msgstr ""
+msgstr "domain/errors.py (`src/cadrumo/domain/errors.py`) — 1–20. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:50
 msgid ""
 "domain/filing_evidence.py (`src/cadrumo/domain/filing_evidence.py`) — "
 "lines 1–30"
 msgstr ""
+"domain/filing_evidence.py (`src/cadrumo/domain/filing_evidence.py`) — "
+"1–30. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:51
 msgid "domain/identifiers.py (`src/cadrumo/domain/identifiers.py`) — lines 1–77"
-msgstr ""
+msgstr "domain/identifiers.py (`src/cadrumo/domain/identifiers.py`) — 1–77. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:52
 msgid "domain/period.py (`src/cadrumo/domain/period.py`) — lines 1–155"
-msgstr ""
+msgstr "domain/period.py (`src/cadrumo/domain/period.py`) — 1–155. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:53
 msgid ""
 "attachments/__init__.py (`src/cadrumo/domain/attachments/__init__.py`) — "
 "lines 1–8"
 msgstr ""
+"attachments/__init__.py (`src/cadrumo/domain/attachments/__init__.py`) — "
+"1–8. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:54
 msgid ""
 "attachments/enums.py (`src/cadrumo/domain/attachments/enums.py`) — lines "
 "1–95"
 msgstr ""
+"attachments/enums.py (`src/cadrumo/domain/attachments/enums.py`) — 1–95. "
+"sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:55
 msgid ""
 "attachments/errors.py (`src/cadrumo/domain/attachments/errors.py`) — "
 "lines 1–44"
 msgstr ""
+"attachments/errors.py (`src/cadrumo/domain/attachments/errors.py`) — "
+"1–44. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:56
 msgid ""
 "attachments/m303_filing_evidence.py "
 "(`src/cadrumo/domain/attachments/m303_filing_evidence.py`) — lines 1–108"
 msgstr ""
+"attachments/m303_filing_evidence.py "
+"(`src/cadrumo/domain/attachments/m303_filing_evidence.py`) — 1–108. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:57
 msgid ""
 "attachments/models.py (`src/cadrumo/domain/attachments/models.py`) — "
 "lines 1–279"
 msgstr ""
+"attachments/models.py (`src/cadrumo/domain/attachments/models.py`) — "
+"1–279. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:58
 msgid ""
 "attachments/protocols.py (`src/cadrumo/domain/attachments/protocols.py`) "
 "— lines 1–60"
 msgstr ""
+"attachments/protocols.py (`src/cadrumo/domain/attachments/protocols.py`) "
+"— 1–60. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:59
 msgid ""
 "attachments/service.py (`src/cadrumo/domain/attachments/service.py`) — "
 "lines 1–242"
 msgstr ""
+"attachments/service.py (`src/cadrumo/domain/attachments/service.py`) — "
+"1–242. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:60
 msgid "auth/__init__.py (`src/cadrumo/domain/auth/__init__.py`) — lines 1–20"
-msgstr ""
+msgstr "auth/__init__.py (`src/cadrumo/domain/auth/__init__.py`) — 1–20. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:61
 msgid ""
 "auth/apoderamientos/__init__.py "
 "(`src/cadrumo/domain/auth/apoderamientos/__init__.py`) — lines 1–29"
 msgstr ""
+"auth/apoderamientos/__init__.py "
+"(`src/cadrumo/domain/auth/apoderamientos/__init__.py`) — 1–29. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:62
 msgid ""
 "auth/apoderamientos/catalogue.py "
 "(`src/cadrumo/domain/auth/apoderamientos/catalogue.py`) — lines 1–215"
 msgstr ""
+"auth/apoderamientos/catalogue.py "
+"(`src/cadrumo/domain/auth/apoderamientos/catalogue.py`) — 1–215. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:63
 msgid ""
 "bienes_inversion/__init__.py "
 "(`src/cadrumo/domain/bienes_inversion/__init__.py`) — lines 1–45"
 msgstr ""
+"bienes_inversion/__init__.py "
+"(`src/cadrumo/domain/bienes_inversion/__init__.py`) — 1–45. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:64
 msgid ""
 "bienes_inversion/register.py "
 "(`src/cadrumo/domain/bienes_inversion/register.py`) — lines 1–1,118"
 msgstr ""
+"bienes_inversion/register.py "
+"(`src/cadrumo/domain/bienes_inversion/register.py`) — 1–1,118. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:65
 msgid ""
@@ -387,33 +415,42 @@ msgid ""
 "(`src/cadrumo/domain/bienes_inversion/regularizacion_parameters.py`) — "
 "lines 1–268"
 msgstr ""
+"bienes_inversion/regularizacion_parameters.py "
+"(`src/cadrumo/domain/bienes_inversion/regularizacion_parameters.py`) — "
+"1–268. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:66
 msgid ""
 "bienes_inversion/vocabulary.py "
 "(`src/cadrumo/domain/bienes_inversion/vocabulary.py`) — lines 1–25"
 msgstr ""
+"bienes_inversion/vocabulary.py "
+"(`src/cadrumo/domain/bienes_inversion/vocabulary.py`) — 1–25. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:67
 msgid "buckets/__init__.py (`src/cadrumo/domain/buckets/__init__.py`) — lines 1–8"
-msgstr ""
+msgstr "buckets/__init__.py (`src/cadrumo/domain/buckets/__init__.py`) — 1–8. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:68
 msgid "buckets/errors.py (`src/cadrumo/domain/buckets/errors.py`) — lines 1–77"
-msgstr ""
+msgstr "buckets/errors.py (`src/cadrumo/domain/buckets/errors.py`) — 1–77. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:69
 msgid "buckets/event.py (`src/cadrumo/domain/buckets/event.py`) — lines 1–544"
-msgstr ""
+msgstr "buckets/event.py (`src/cadrumo/domain/buckets/event.py`) — 1–544. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:70
 msgid ""
 "buckets/event_repository.py "
 "(`src/cadrumo/domain/buckets/event_repository.py`) — lines 1–331"
 msgstr ""
+"buckets/event_repository.py "
+"(`src/cadrumo/domain/buckets/event_repository.py`) — 1–331. sor"
 
 #: ../../technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md:71
 msgid ""
 "buckets/protocols.py (`src/cadrumo/domain/buckets/protocols.py`) — lines "
 "1–69"
 msgstr ""
+"buckets/protocols.py (`src/cadrumo/domain/buckets/protocols.py`) — 1–69. "
+"sor"

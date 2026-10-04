@@ -15,8 +15,8 @@ from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
+from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import require_iva_territorial_scope
-from ...domain.iva.schema import require_eu_member_state
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest

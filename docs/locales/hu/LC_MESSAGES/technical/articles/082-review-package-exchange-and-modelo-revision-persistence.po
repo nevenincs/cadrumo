@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:1
 msgid "Review-package exchange and Modelo revision persistence"
-msgstr ""
+msgstr "Felülvizsgálaticsomag-csere és Modelo-revíziótárolás"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-082` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:10
 msgid ""
@@ -253,7 +256,7 @@ msgstr ""
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:34
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:36
 msgid ""
@@ -291,93 +294,125 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:42
 msgid "All 15 assigned source files were read completely through pages 1–9."
 msgstr ""
+"Mind a 15 kijelölt forrásfájlt teljes egészében elolvastam az 1–9. "
+"oldalakon."
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:44
 msgid ""
 "review_package_exchange_operation.py "
 "(`src/cadrumo/application/modelo/review_package_exchange_operation.py`)"
 msgstr ""
+"review_package_exchange_operation.py "
+"(`src/cadrumo/application/modelo/review_package_exchange_operation.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:45
 msgid ""
 "review_package_exchange_operation_ports.py "
 "(`src/cadrumo/application/modelo/review_package_exchange_operation_ports.py`)"
 msgstr ""
+"review_package_exchange_operation_ports.py "
+"(`src/cadrumo/application/modelo/review_package_exchange_operation_ports.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:46
 msgid ""
 "review_package_feedback.py "
 "(`src/cadrumo/application/modelo/review_package_feedback.py`)"
 msgstr ""
+"review_package_feedback.py "
+"(`src/cadrumo/application/modelo/review_package_feedback.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:47
 msgid ""
 "review_package_operation.py "
 "(`src/cadrumo/application/modelo/review_package_operation.py`)"
 msgstr ""
+"review_package_operation.py "
+"(`src/cadrumo/application/modelo/review_package_operation.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:48
 msgid ""
 "review_package_recipient_encryption.py "
 "(`src/cadrumo/application/modelo/review_package_recipient_encryption.py`)"
 msgstr ""
+"review_package_recipient_encryption.py "
+"(`src/cadrumo/application/modelo/review_package_recipient_encryption.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:49
 msgid ""
 "review_package_recipient_operations.py "
 "(`src/cadrumo/application/modelo/review_package_recipient_operations.py`)"
 msgstr ""
+"review_package_recipient_operations.py "
+"(`src/cadrumo/application/modelo/review_package_recipient_operations.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:50
 msgid ""
 "review_package_recipient_registry.py "
 "(`src/cadrumo/application/modelo/review_package_recipient_registry.py`)"
 msgstr ""
+"review_package_recipient_registry.py "
+"(`src/cadrumo/application/modelo/review_package_recipient_registry.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:51
 msgid ""
 "review_package_recipient_registry_ports.py "
 "(`src/cadrumo/application/modelo/review_package_recipient_registry_ports.py`)"
 msgstr ""
+"review_package_recipient_registry_ports.py "
+"(`src/cadrumo/application/modelo/review_package_recipient_registry_ports.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:52
 msgid ""
 "review_package_signing.py "
 "(`src/cadrumo/application/modelo/review_package_signing.py`)"
 msgstr ""
+"review_package_signing.py "
+"(`src/cadrumo/application/modelo/review_package_signing.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:53
 msgid ""
 "review_package_signing_ports.py "
 "(`src/cadrumo/application/modelo/review_package_signing_ports.py`)"
 msgstr ""
+"review_package_signing_ports.py "
+"(`src/cadrumo/application/modelo/review_package_signing_ports.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:54
 msgid ""
 "review_package_text.py "
 "(`src/cadrumo/application/modelo/review_package_text.py`)"
 msgstr ""
+"review_package_text.py "
+"(`src/cadrumo/application/modelo/review_package_text.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:55
 msgid ""
 "revision_inventory_operation.py "
 "(`src/cadrumo/application/modelo/revision_inventory_operation.py`)"
 msgstr ""
+"revision_inventory_operation.py "
+"(`src/cadrumo/application/modelo/revision_inventory_operation.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:56
 msgid ""
 "revision_operation_access.py "
 "(`src/cadrumo/application/modelo/revision_operation_access.py`)"
 msgstr ""
+"revision_operation_access.py "
+"(`src/cadrumo/application/modelo/revision_operation_access.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:57
 msgid ""
 "revision_persistence.py "
 "(`src/cadrumo/application/modelo/revision_persistence.py`)"
 msgstr ""
+"revision_persistence.py "
+"(`src/cadrumo/application/modelo/revision_persistence.py`)"
 
 #: ../../technical/articles/082-review-package-exchange-and-modelo-revision-persistence.md:58
 msgid ""
 "revision_replay_inputs.py "
 "(`src/cadrumo/application/modelo/revision_replay_inputs.py`)"
 msgstr ""
+"revision_replay_inputs.py "
+"(`src/cadrumo/application/modelo/revision_replay_inputs.py`)"

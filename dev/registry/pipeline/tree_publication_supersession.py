@@ -18,6 +18,7 @@ from ..conformance.manager import reset_conformance_cache
 from ..form_layout.serialization import FORM_LAYOUT_DIRECTORY, FORM_LAYOUT_FRAGMENT
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
 )
 from .bootstrap_construct_retarget import retarget_bootstrap_constructs_in_revision
 from .bootstrap_supersession import (
@@ -61,7 +62,7 @@ def _publish_superseding_revision_bundle(
     target_export_root: Path,
     candidate_export_root: Path,
     staged_candidate_export_root: Path,
-    validated: ValidatedGeneratedExportTree,
+    validated: ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree,
     candidate_manifest: ExportFragmentProvenanceManifest,
     candidate_manifest_sha256: str,
     joined: JoinedRecordDesign,

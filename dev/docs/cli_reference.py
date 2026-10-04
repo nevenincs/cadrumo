@@ -54,7 +54,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from dev._paths import AUTHORITY_ROOT_ENV
+from dev._paths import AUTHORITY_ROOT_ENV, prepare_temporary_directory
 from dev.product_environment import ambient_product_settings_removed
 
 from ._locale_chrome import docs_chrome

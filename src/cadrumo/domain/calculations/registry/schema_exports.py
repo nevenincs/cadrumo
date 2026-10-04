@@ -295,6 +295,9 @@ class FilingEnvelopeDefinition(RegistryModel):
     product_identity_requirement: Literal["aeat-product-software-identity-v1"] | None = None
     closer_derivation: FilingEnvelopeCloserDerivationValue
     total_derivation: FilingEnvelopeTotalDerivationValue
+    # Only an exact source-reviewed trailing record marker may set this.
+    # Absence serialises to the existing envelope grammar without an extra key.
+    record_terminator: Literal["crlf"] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -378,7 +381,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     """Static total-less page-zero header declaration carried by a generated layout.
 
     The fixed 328-byte header that opens a design whose records are fixed
-    (Modelo 232's ``DR23200``; Modelo 390's page zero). It shares the filing
+    (Modelo 390's page zero). It shares the filing
     envelope's prefix grammar -- the same thirteen roles in canonical order and
     the same emitted literals -- and declares no body, closer or total: the
     layout's records are the payload.
@@ -844,7 +847,7 @@ class ExportLayoutDefinition(RegistryModel):
     """Total-less 328-byte page-zero header emitted before this layout's records.
 
     Absent for every layout whose design declares no such header. Present where
-    the design prints one (Modelo 232's ``DR23200``; Modelo 390's page zero):
+    the design prints one (Modelo 390's page zero):
     the records remain the payload and the header is emitted as their prefix.
     A layout declaring both this and a filing envelope is refused, since no
     design composes a variable body behind a total-less page-zero header.

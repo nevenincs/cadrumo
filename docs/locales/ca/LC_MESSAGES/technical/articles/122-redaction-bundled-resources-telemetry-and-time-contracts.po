@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:1
 msgid "Redaction, bundled resources, telemetry, and time contracts"
-msgstr ""
+msgstr "Ocultació de dades, recursos inclosos, telemetria i contractes de temps"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-122` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-122` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:14
 msgid "Redaction and bundled resources"
-msgstr ""
+msgstr "Ocultació de dades i recursos inclosos"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:16
 msgid ""
@@ -137,7 +139,7 @@ msgstr ""
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:24
 msgid "Optional telemetry"
-msgstr ""
+msgstr "Telemetria opcional"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:26
 msgid ""
@@ -210,7 +212,7 @@ msgstr ""
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:36
 msgid "Time contracts and assessment"
-msgstr ""
+msgstr "Contractes temporals i avaluació"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:38
 msgid ""
@@ -251,81 +253,101 @@ msgid ""
 "redaction/__init__.py (`src/cadrumo/core/redaction/__init__.py`) — lines "
 "1–61"
 msgstr ""
+"redaction/__init__.py (`src/cadrumo/core/redaction/__init__.py`) — línies"
+" 1–61"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:45
 msgid "redaction/rules.py (`src/cadrumo/core/redaction/rules.py`) — lines 1–1,438"
 msgstr ""
+"redaction/rules.py (`src/cadrumo/core/redaction/rules.py`) — línies "
+"1–1,438"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:46
 msgid ""
 "redaction/tax_identity_admission.py "
 "(`src/cadrumo/core/redaction/tax_identity_admission.py`) — lines 1–72"
 msgstr ""
+"redaction/tax_identity_admission.py "
+"(`src/cadrumo/core/redaction/tax_identity_admission.py`) — línies 1–72"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:47
 msgid ""
 "resources/__init__.py (`src/cadrumo/core/resources/__init__.py`) — lines "
 "1–10"
 msgstr ""
+"resources/__init__.py (`src/cadrumo/core/resources/__init__.py`) — línies"
+" 1–10"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:48
 msgid ""
 "resources/bundled_data.py (`src/cadrumo/core/resources/bundled_data.py`) "
 "— lines 1–288"
 msgstr ""
+"resources/bundled_data.py (`src/cadrumo/core/resources/bundled_data.py`) "
+"— línies 1–288"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:49
 msgid ""
 "telemetry/__init__.py (`src/cadrumo/core/telemetry/__init__.py`) — lines "
 "1–43"
 msgstr ""
+"telemetry/__init__.py (`src/cadrumo/core/telemetry/__init__.py`) — línies"
+" 1–43"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:50
 msgid ""
 "telemetry/consent.py (`src/cadrumo/core/telemetry/consent.py`) — lines "
 "1–65"
 msgstr ""
+"telemetry/consent.py (`src/cadrumo/core/telemetry/consent.py`) — línies "
+"1–65"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:51
 msgid "telemetry/emit.py (`src/cadrumo/core/telemetry/emit.py`) — lines 1–94"
-msgstr ""
+msgstr "telemetry/emit.py (`src/cadrumo/core/telemetry/emit.py`) — línies 1–94"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:52
 msgid "telemetry/errors.py (`src/cadrumo/core/telemetry/errors.py`) — lines 1–35"
-msgstr ""
+msgstr "telemetry/errors.py (`src/cadrumo/core/telemetry/errors.py`) — línies 1–35"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:53
 msgid ""
 "telemetry/http_sink.py (`src/cadrumo/core/telemetry/http_sink.py`) — "
 "lines 1–135"
 msgstr ""
+"telemetry/http_sink.py (`src/cadrumo/core/telemetry/http_sink.py`) — "
+"línies 1–135"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:54
 msgid "telemetry/schema.py (`src/cadrumo/core/telemetry/schema.py`) — lines 1–292"
 msgstr ""
+"telemetry/schema.py (`src/cadrumo/core/telemetry/schema.py`) — línies "
+"1–292"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:55
 msgid "telemetry/tier.py (`src/cadrumo/core/telemetry/tier.py`) — lines 1–43"
-msgstr ""
+msgstr "telemetry/tier.py (`src/cadrumo/core/telemetry/tier.py`) — línies 1–43"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:56
 msgid ""
 "telemetry/workspace.py (`src/cadrumo/core/telemetry/workspace.py`) — "
 "lines 1–43"
 msgstr ""
+"telemetry/workspace.py (`src/cadrumo/core/telemetry/workspace.py`) — "
+"línies 1–43"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:57
 msgid "time/__init__.py (`src/cadrumo/core/time/__init__.py`) — lines 1–26"
-msgstr ""
+msgstr "time/__init__.py (`src/cadrumo/core/time/__init__.py`) — línies 1–26"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:58
 msgid "time/clock.py (`src/cadrumo/core/time/clock.py`) — lines 1–139"
-msgstr ""
+msgstr "time/clock.py (`src/cadrumo/core/time/clock.py`) — línies 1–139"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:59
 msgid "time/date_range.py (`src/cadrumo/core/time/date_range.py`) — lines 1–71"
-msgstr ""
+msgstr "time/date_range.py (`src/cadrumo/core/time/date_range.py`) — línies 1–71"
 
 #: ../../technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md:60
 msgid "time/utc.py (`src/cadrumo/core/time/utc.py`) — lines 1–103"
-msgstr ""
+msgstr "time/utc.py (`src/cadrumo/core/time/utc.py`) — línies 1–103"

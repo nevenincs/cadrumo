@@ -46,6 +46,9 @@ msgid ""
 "**Report:** `STAGE-2-186` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-186` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:10
 msgid "Scope"
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:14
 msgid "Product capabilities described by the assets"
-msgstr ""
+msgstr "Capacitats del producte descrites pels recursos"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:16
 msgid ""
@@ -176,7 +179,7 @@ msgstr ""
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:28
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:30
 msgid ""
@@ -253,13 +256,15 @@ msgstr ""
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:42
 msgid "__init__.py (`src/cadrumo_harness/__init__.py`) — 3 lines"
-msgstr ""
+msgstr "__init__.py (`src/cadrumo_harness/__init__.py`) — 3 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:43
 msgid ""
 "personas/cadrumo-classifier.md (`src/cadrumo_harness/_data/agent/personas"
 "/cadrumo-classifier.md`) — 33 lines"
 msgstr ""
+"personas/cadrumo-classifier.md (`src/cadrumo_harness/_data/agent/personas"
+"/cadrumo-classifier.md`) — 33 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:44
 msgid ""
@@ -267,6 +272,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/personas/cadrumo-coordinator.md`) — 42 "
 "lines"
 msgstr ""
+"personas/cadrumo-coordinator.md "
+"(`src/cadrumo_harness/_data/agent/personas/cadrumo-coordinator.md`) — 42 "
+"línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:45
 msgid ""
@@ -274,6 +282,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/personas/cadrumo-ledger-groomer.md`) — "
 "38 lines"
 msgstr ""
+"personas/cadrumo-ledger-groomer.md "
+"(`src/cadrumo_harness/_data/agent/personas/cadrumo-ledger-groomer.md`) — "
+"38 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:46
 msgid ""
@@ -281,24 +292,33 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/personas/cadrumo-modelo-preparer.md`) —"
 " 45 lines"
 msgstr ""
+"personas/cadrumo-modelo-preparer.md "
+"(`src/cadrumo_harness/_data/agent/personas/cadrumo-modelo-preparer.md`) —"
+" 45 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:47
 msgid ""
 "personas/cadrumo-onboarding.md (`src/cadrumo_harness/_data/agent/personas"
 "/cadrumo-onboarding.md`) — 33 lines"
 msgstr ""
+"personas/cadrumo-onboarding.md (`src/cadrumo_harness/_data/agent/personas"
+"/cadrumo-onboarding.md`) — 33 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:48
 msgid ""
 "personas/cadrumo-reconciler.md (`src/cadrumo_harness/_data/agent/personas"
 "/cadrumo-reconciler.md`) — 34 lines"
 msgstr ""
+"personas/cadrumo-reconciler.md (`src/cadrumo_harness/_data/agent/personas"
+"/cadrumo-reconciler.md`) — 34 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:49
 msgid ""
 "personas/cadrumo-verifier.md (`src/cadrumo_harness/_data/agent/personas"
 "/cadrumo-verifier.md`) — 61 lines"
 msgstr ""
+"personas/cadrumo-verifier.md (`src/cadrumo_harness/_data/agent/personas"
+"/cadrumo-verifier.md`) — 61 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:50
 msgid ""
@@ -306,6 +326,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-"
 "reading.md`) — 112 lines"
 msgstr ""
+"rules/cadrumo-operator-envelope-reading.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-"
+"reading.md`) — 112 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:51
 msgid ""
@@ -313,6 +336,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-grounding.md`) —"
 " 39 lines"
 msgstr ""
+"rules/cadrumo-operator-grounding.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-grounding.md`) —"
+" 39 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:52
 msgid ""
@@ -320,6 +346,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-honest-"
 "declaration.md`) — 33 lines"
 msgstr ""
+"rules/cadrumo-operator-honest-declaration.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-honest-"
+"declaration.md`) — 33 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:53
 msgid ""
@@ -327,6 +356,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-"
 "ordering.md`) — 45 lines"
 msgstr ""
+"rules/cadrumo-operator-lifecycle-ordering.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-"
+"ordering.md`) — 45 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:54
 msgid ""
@@ -334,6 +366,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-"
 "rules.md`) — 64 lines"
 msgstr ""
+"rules/cadrumo-operator-operating-rules.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-"
+"rules.md`) — 64 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:55
 msgid ""
@@ -341,6 +376,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-"
 "routing.md`) — 132 lines"
 msgstr ""
+"rules/cadrumo-operator-orientation-routing.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-"
+"routing.md`) — 132 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:56
 msgid ""
@@ -348,6 +386,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-"
 "handoff.md`) — 41 lines"
 msgstr ""
+"rules/cadrumo-operator-safety-handoff.md "
+"(`src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-"
+"handoff.md`) — 41 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:57
 msgid ""
@@ -355,6 +396,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-alta-"
 "contribuyente/SKILL.md`) — 37 lines"
 msgstr ""
+"skills/cadrumo-alta-contribuyente/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-alta-"
+"contribuyente/SKILL.md`) — 37 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:58
 msgid ""
@@ -362,6 +406,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-arrendador/SKILL.md`) — "
 "82 lines"
 msgstr ""
+"skills/cadrumo-arrendador/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-arrendador/SKILL.md`) — "
+"82 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:59
 msgid ""
@@ -369,6 +416,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-autonomo-estimacion-"
 "directa/SKILL.md`) — 78 lines"
 msgstr ""
+"skills/cadrumo-autonomo-estimacion-directa/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-autonomo-estimacion-"
+"directa/SKILL.md`) — 78 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:60
 msgid ""
@@ -376,6 +426,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-autonomo-"
 "modulos/SKILL.md`) — 77 lines"
 msgstr ""
+"skills/cadrumo-autonomo-modulos/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-autonomo-"
+"modulos/SKILL.md`) — 77 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:61
 msgid ""
@@ -383,6 +436,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-cese-"
 "actividad/SKILL.md`) — 90 lines"
 msgstr ""
+"skills/cadrumo-cese-actividad/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-cese-"
+"actividad/SKILL.md`) — 90 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:62
 msgid ""
@@ -390,6 +446,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-cierre-"
 "trimestre/SKILL.md`) — 80 lines"
 msgstr ""
+"skills/cadrumo-cierre-trimestre/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-cierre-"
+"trimestre/SKILL.md`) — 80 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:63
 msgid ""
@@ -397,6 +456,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-clasificar/SKILL.md`) — "
 "40 lines"
 msgstr ""
+"skills/cadrumo-clasificar/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-clasificar/SKILL.md`) — "
+"40 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:64
 msgid ""
@@ -404,6 +466,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-exportar-"
 "declaracion/SKILL.md`) — 41 lines"
 msgstr ""
+"skills/cadrumo-exportar-declaracion/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-exportar-"
+"declaracion/SKILL.md`) — 41 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:65
 msgid ""
@@ -411,6 +476,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-inicio-"
 "actividad/SKILL.md`) — 90 lines"
 msgstr ""
+"skills/cadrumo-inicio-actividad/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-inicio-"
+"actividad/SKILL.md`) — 90 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:66
 msgid ""
@@ -418,6 +486,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-intra-community-"
 "operator/SKILL.md`) — 94 lines"
 msgstr ""
+"skills/cadrumo-intra-community-operator/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-intra-community-"
+"operator/SKILL.md`) — 94 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:67
 msgid ""
@@ -425,6 +496,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-llevar-libro/SKILL.md`) "
 "— 39 lines"
 msgstr ""
+"skills/cadrumo-llevar-libro/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-llevar-libro/SKILL.md`) "
+"— 39 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:68
 msgid ""
@@ -432,6 +506,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-100/reference/casillas.md`) — 80 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-100/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-100/reference/casillas.md`) — 80 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:69
 msgid ""
@@ -439,6 +516,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-100/SKILL.md`) — 163 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-100/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-100/SKILL.md`) — 163 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:70
 msgid ""
@@ -446,6 +526,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-111/reference/casillas.md`) — 62 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-111/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-111/reference/casillas.md`) — 62 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:71
 msgid ""
@@ -453,6 +536,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-111/SKILL.md`) — 112 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-111/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-111/SKILL.md`) — 112 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:72
 msgid ""
@@ -460,6 +546,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-115/reference/casillas.md`) — 55 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-115/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-115/reference/casillas.md`) — 55 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:73
 msgid ""
@@ -467,6 +556,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-115/SKILL.md`) — 109 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-115/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-115/SKILL.md`) — 109 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:74
 msgid ""
@@ -474,6 +566,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-130/reference/casillas.md`) — 43 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-130/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-130/reference/casillas.md`) — 43 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:75
 msgid ""
@@ -481,6 +576,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-130/SKILL.md`) — 76 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-130/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-130/SKILL.md`) — 76 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:76
 msgid ""
@@ -488,6 +586,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-131/reference/casillas.md`) — 122 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-131/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-131/reference/casillas.md`) — 122 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:77
 msgid ""
@@ -495,6 +596,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-131/SKILL.md`) — 101 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-131/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-131/SKILL.md`) — 101 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:78
 msgid ""
@@ -502,6 +606,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-180/reference/casillas.md`) — 65 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-180/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-180/reference/casillas.md`) — 65 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:79
 msgid ""
@@ -509,6 +616,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-180/SKILL.md`) — 127 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-180/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-180/SKILL.md`) — 127 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:80
 msgid ""
@@ -516,6 +626,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-190/reference/casillas.md`) — 65 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-190/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-190/reference/casillas.md`) — 65 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:81
 msgid ""
@@ -523,6 +636,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-190/SKILL.md`) — 133 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-190/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-190/SKILL.md`) — 133 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:82
 msgid ""
@@ -530,6 +646,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-193/reference/casillas.md`) — 56 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-193/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-193/reference/casillas.md`) — 56 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:83
 msgid ""
@@ -537,6 +656,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-193/SKILL.md`) — 130 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-193/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-193/SKILL.md`) — 130 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:84
 msgid ""
@@ -544,6 +666,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-200/reference/casillas.md`) — 87 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-200/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-200/reference/casillas.md`) — 87 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:85
 msgid ""
@@ -551,6 +676,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-200/SKILL.md`) — 220 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-200/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-200/SKILL.md`) — 220 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:86
 msgid ""
@@ -558,6 +686,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-202/reference/casillas.md`) — 91 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-202/reference/casillas.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-202/reference/casillas.md`) — 91 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:87
 msgid ""
@@ -565,6 +696,9 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-202/SKILL.md`) — 191 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-202/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-202/SKILL.md`) — 191 línies"
 
 #: ../../technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md:88
 msgid ""
@@ -572,3 +706,6 @@ msgid ""
 "(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
 "modelo-303/SKILL.md`) — 83 lines"
 msgstr ""
+"skills/cadrumo-preparar-modelo-303/SKILL.md "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-303/SKILL.md`) — 83 línies"

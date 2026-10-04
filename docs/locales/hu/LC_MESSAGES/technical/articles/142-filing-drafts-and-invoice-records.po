@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:1
 msgid "filing drafts and invoice records"
-msgstr ""
+msgstr "Bevallástervezetek és számlarekordok"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-142` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-142` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:16
 msgid ""
@@ -348,80 +350,88 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:62
 msgid "filing/__init__.py (`src/cadrumo/domain/filing/__init__.py`)"
-msgstr ""
+msgstr "filing/__init__.py (`src/cadrumo/domain/filing/__init__.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:63
 msgid "filing/errors.py (`src/cadrumo/domain/filing/errors.py`)"
-msgstr ""
+msgstr "filing/errors.py (`src/cadrumo/domain/filing/errors.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:64
 msgid "filing/protocols.py (`src/cadrumo/domain/filing/protocols.py`)"
-msgstr ""
+msgstr "filing/protocols.py (`src/cadrumo/domain/filing/protocols.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:65
 msgid ""
 "filing/reconciliation/__init__.py "
 "(`src/cadrumo/domain/filing/reconciliation/__init__.py`)"
 msgstr ""
+"filing/reconciliation/__init__.py "
+"(`src/cadrumo/domain/filing/reconciliation/__init__.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:66
 msgid ""
 "filing/reconciliation/errors.py "
 "(`src/cadrumo/domain/filing/reconciliation/errors.py`)"
 msgstr ""
+"filing/reconciliation/errors.py "
+"(`src/cadrumo/domain/filing/reconciliation/errors.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:67
 msgid "filing/schema.py (`src/cadrumo/domain/filing/schema.py`)"
-msgstr ""
+msgstr "filing/schema.py (`src/cadrumo/domain/filing/schema.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:68
 msgid ""
 "filing/software_identity.py "
 "(`src/cadrumo/domain/filing/software_identity.py`)"
 msgstr ""
+"filing/software_identity.py "
+"(`src/cadrumo/domain/filing/software_identity.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:69
 msgid "filing/validator.py (`src/cadrumo/domain/filing/validator.py`)"
-msgstr ""
+msgstr "filing/validator.py (`src/cadrumo/domain/filing/validator.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:70
 msgid "invoices/__init__.py (`src/cadrumo/domain/invoices/__init__.py`)"
-msgstr ""
+msgstr "invoices/__init__.py (`src/cadrumo/domain/invoices/__init__.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:71
 msgid ""
 "invoices/_payload_normalisation.py "
 "(`src/cadrumo/domain/invoices/_payload_normalisation.py`)"
 msgstr ""
+"invoices/_payload_normalisation.py "
+"(`src/cadrumo/domain/invoices/_payload_normalisation.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:72
 msgid "invoices/decomposition.py (`src/cadrumo/domain/invoices/decomposition.py`)"
-msgstr ""
+msgstr "invoices/decomposition.py (`src/cadrumo/domain/invoices/decomposition.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:73
 msgid "invoices/enums.py (`src/cadrumo/domain/invoices/enums.py`)"
-msgstr ""
+msgstr "invoices/enums.py (`src/cadrumo/domain/invoices/enums.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:74
 msgid "invoices/errors.py (`src/cadrumo/domain/invoices/errors.py`)"
-msgstr ""
+msgstr "invoices/errors.py (`src/cadrumo/domain/invoices/errors.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:75
 msgid "invoices/models.py (`src/cadrumo/domain/invoices/models.py`)"
-msgstr ""
+msgstr "invoices/models.py (`src/cadrumo/domain/invoices/models.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:76
 msgid "invoices/normalization.py (`src/cadrumo/domain/invoices/normalization.py`)"
-msgstr ""
+msgstr "invoices/normalization.py (`src/cadrumo/domain/invoices/normalization.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:77
 msgid "invoices/protocols.py (`src/cadrumo/domain/invoices/protocols.py`)"
-msgstr ""
+msgstr "invoices/protocols.py (`src/cadrumo/domain/invoices/protocols.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:78
 msgid "invoices/service.py (`src/cadrumo/domain/invoices/service.py`)"
-msgstr ""
+msgstr "invoices/service.py (`src/cadrumo/domain/invoices/service.py`)"
 
 #: ../../technical/articles/142-filing-drafts-and-invoice-records.md:79
 msgid "invoices/validators.py (`src/cadrumo/domain/invoices/validators.py`)"
-msgstr ""
+msgstr "invoices/validators.py (`src/cadrumo/domain/invoices/validators.py`)"

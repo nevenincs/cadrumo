@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:1
 msgid "Modelo reconciliation, advisories, and work projections"
-msgstr ""
+msgstr "Modelo-egyeztetés, figyelmeztetések és munkavetületek"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:3
 msgid ""
@@ -45,10 +45,13 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-068` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:12
 msgid ""
@@ -63,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:16
 msgid ""
@@ -183,7 +186,7 @@ msgstr ""
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:30
 msgid "Mechanisms and trust boundaries"
-msgstr ""
+msgstr "Mechanizmusok és bizalmi határok"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:32
 msgid ""
@@ -203,7 +206,7 @@ msgstr ""
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:34
 msgid "Quality, security, and unresolved questions"
-msgstr ""
+msgstr "Minőség, biztonság és nyitott kérdések"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:36
 msgid ""
@@ -266,30 +269,40 @@ msgid ""
 "All 19 assigned files were read fully across eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Mind a 19 kijelölt fájlt teljes egészében elolvastam nyolc körülhatárolt "
+"oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:48
 msgid ""
 "modelo/_m210_rate.py (`src/cadrumo/application/modelo/_m210_rate.py`) — "
 "1–208"
 msgstr ""
+"modelo/_m210_rate.py (`src/cadrumo/application/modelo/_m210_rate.py`) — "
+"1–208"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:49
 msgid ""
 "modelo/_m303_m349_reconcile.py "
 "(`src/cadrumo/application/modelo/_m303_m349_reconcile.py`) — 1–321"
 msgstr ""
+"modelo/_m303_m349_reconcile.py "
+"(`src/cadrumo/application/modelo/_m303_m349_reconcile.py`) — 1–321"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:50
 msgid ""
 "modelo/_m349_ledger_guard.py "
 "(`src/cadrumo/application/modelo/_m349_ledger_guard.py`) — 1–104"
 msgstr ""
+"modelo/_m349_ledger_guard.py "
+"(`src/cadrumo/application/modelo/_m349_ledger_guard.py`) — 1–104"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:51
 msgid ""
 "modelo/_m720_redeclaration_gate.py "
 "(`src/cadrumo/application/modelo/_m720_redeclaration_gate.py`) — 1–112"
 msgstr ""
+"modelo/_m720_redeclaration_gate.py "
+"(`src/cadrumo/application/modelo/_m720_redeclaration_gate.py`) — 1–112"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:52
 msgid ""
@@ -297,6 +310,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`) — "
 "1–971"
 msgstr ""
+"modelo/_minimo_descendientes_advisory.py "
+"(`src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`) — "
+"1–971"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:53
 msgid ""
@@ -304,64 +320,85 @@ msgid ""
 "(`src/cadrumo/application/modelo/_objective_estimation_advisory.py`) — "
 "1–377"
 msgstr ""
+"modelo/_objective_estimation_advisory.py "
+"(`src/cadrumo/application/modelo/_objective_estimation_advisory.py`) — "
+"1–377"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:54
 msgid ""
 "modelo/_official_box_advisory.py "
 "(`src/cadrumo/application/modelo/_official_box_advisory.py`) — 1–111"
 msgstr ""
+"modelo/_official_box_advisory.py "
+"(`src/cadrumo/application/modelo/_official_box_advisory.py`) — 1–111"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:55
 msgid ""
 "modelo/_operator_override_advisory.py "
 "(`src/cadrumo/application/modelo/_operator_override_advisory.py`) — 1–96"
 msgstr ""
+"modelo/_operator_override_advisory.py "
+"(`src/cadrumo/application/modelo/_operator_override_advisory.py`) — 1–96"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:56
 msgid "modelo/_ports.py (`src/cadrumo/application/modelo/_ports.py`) — 1–75"
-msgstr ""
+msgstr "modelo/_ports.py (`src/cadrumo/application/modelo/_ports.py`) — 1–75"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:57
 msgid ""
 "modelo/_rate_box_advisory.py "
 "(`src/cadrumo/application/modelo/_rate_box_advisory.py`) — 1–87"
 msgstr ""
+"modelo/_rate_box_advisory.py "
+"(`src/cadrumo/application/modelo/_rate_box_advisory.py`) — 1–87"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:58
 msgid ""
 "modelo/_reconcile_population.py "
 "(`src/cadrumo/application/modelo/_reconcile_population.py`) — 1–274"
 msgstr ""
+"modelo/_reconcile_population.py "
+"(`src/cadrumo/application/modelo/_reconcile_population.py`) — 1–274"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:59
 msgid ""
 "modelo/_registry_helpers.py "
 "(`src/cadrumo/application/modelo/_registry_helpers.py`) — 1–663"
 msgstr ""
+"modelo/_registry_helpers.py "
+"(`src/cadrumo/application/modelo/_registry_helpers.py`) — 1–663"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:60
 msgid ""
 "modelo/_registry_resources.py "
 "(`src/cadrumo/application/modelo/_registry_resources.py`) — 1–89"
 msgstr ""
+"modelo/_registry_resources.py "
+"(`src/cadrumo/application/modelo/_registry_resources.py`) — 1–89"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:61
 msgid ""
 "modelo/_required_binding_gate.py "
 "(`src/cadrumo/application/modelo/_required_binding_gate.py`) — 1–238"
 msgstr ""
+"modelo/_required_binding_gate.py "
+"(`src/cadrumo/application/modelo/_required_binding_gate.py`) — 1–238"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:62
 msgid ""
 "modelo/_row_source_identity_replay.py "
 "(`src/cadrumo/application/modelo/_row_source_identity_replay.py`) — 1–145"
 msgstr ""
+"modelo/_row_source_identity_replay.py "
+"(`src/cadrumo/application/modelo/_row_source_identity_replay.py`) — 1–145"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:63
 msgid ""
 "modelo/_settlement_grade_advisory.py "
 "(`src/cadrumo/application/modelo/_settlement_grade_advisory.py`) — 1–105"
 msgstr ""
+"modelo/_settlement_grade_advisory.py "
+"(`src/cadrumo/application/modelo/_settlement_grade_advisory.py`) — 1–105"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:64
 msgid ""
@@ -369,15 +406,22 @@ msgid ""
 "(`src/cadrumo/application/modelo/_transaction_catalogue_cache.py`) — "
 "1–104"
 msgstr ""
+"modelo/_transaction_catalogue_cache.py "
+"(`src/cadrumo/application/modelo/_transaction_catalogue_cache.py`) — "
+"1–104"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:65
 msgid ""
 "modelo/_work_review_assembly.py "
 "(`src/cadrumo/application/modelo/_work_review_assembly.py`) — 1–589"
 msgstr ""
+"modelo/_work_review_assembly.py "
+"(`src/cadrumo/application/modelo/_work_review_assembly.py`) — 1–589"
 
 #: ../../technical/articles/068-modelo-reconciliation-advisories-and-work-projections.md:66
 msgid ""
 "modelo/_workspace_model_validation.py "
 "(`src/cadrumo/application/modelo/_workspace_model_validation.py`) — 1–200"
 msgstr ""
+"modelo/_workspace_model_validation.py "
+"(`src/cadrumo/application/modelo/_workspace_model_validation.py`) — 1–200"

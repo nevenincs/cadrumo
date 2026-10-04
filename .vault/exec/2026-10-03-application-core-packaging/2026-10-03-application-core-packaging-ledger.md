@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d07cf7391610105ae34f83c408b9781b7dd771615bcb2862a2ef4aa297517974'
+body_hash: 'sha256:8adb15cdc079bb206d36f5e5bd6650f09bcaa52059647fe49ee66a326b8f943d'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -81,6 +81,16 @@ related:
 - `S10` `verify:` `Prior release manifest excludes rlibs Cargo manifests and dev packaging tooling` -> `pass`
 - `S10` `verify:` `CMake build immediately after standalone CTest preserves artifact timestamp` -> `fail`
 - `S10` `verify:` `Repeated identical CMake Release rust_application build preserves rlib timestamp and SHA256` -> `pass`
+- `S10` `M` `native/application/CMakeLists.txt`
+- `S10` `M` `dev/packaging/native/artifact_verify.py`
+- `S10` `M` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S10` `verify:` `CMake configure with generated profile-specific artifact-probe JSON argv` -> `pass`
+- `S10` `verify:` `pytest dev/packaging/tests/test_native_artifact_identity.py (4 tests including real subprocess failure and mutation)` -> `pass`
+- `S10` `verify:` `Adjacent native storage/environment contract tests` -> `pass`
+- `S10` `verify:` `Ruff check and format --check for changed Python files` -> `pass`
+- `S10` `verify:` `Real artifact_verify with CMake-generated Release command and pinned prior ZIP; Python relocation plus Rust exact80distribution probe` -> `pass`
+- `S10` `verify:` `Post-run archive and extracted manifest hash comparison against fixture locator` -> `pass`
+- `S10` `verify:` `Fresh CMake Release bundle retry; existing Modelo2322016-2017 authority bindings refused` -> `fail`
 
 ## Notes
 
@@ -99,3 +109,6 @@ related:
 - `S10` Package CTest used the immutable prior Release archive SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b via absolute `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT;` canonical expected platform ABI and manifest location still come from current layout. This does not establish fresh bundle success.
 - `S10` Fresh product/ready and stage/Release/ready were not produced. No registry validation guard bypass, registry source edits, or build-only rlib installation. S10 remains open.
 - `S10` Cross-CTest/MSBuild Cargo rebuild behavior remains recorded; no cache fingerprint bypass. All final correctness tests passed.
+- `S10` The live combined verifier used build/windows-x64/application-cmake/archive-fixture and prior ZIP SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b. It is not a fresh source-build acceptance. result.json records `application_probe=passed.`
+- `S10` The live process started before the final manifest recheck assertion was added; that assertion is covered by a real manifest-mutation regression and the successful post-run comparison against the original locator.
+- `S10` Concurrent shared-branch merge commits captured the implementation during verification; source remains intact. This checkpoint records verification without rewriting those commits. No registry source changes or validation bypass. Full S10/S11 remain open.

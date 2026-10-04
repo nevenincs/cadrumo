@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:1
 msgid "Text normalization, legal categories, and validity contracts"
-msgstr ""
+msgstr "Szövegnormalizálás, jogi kategóriák és érvényességi szerződések"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-117` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-117` · **Téma:** [Alapvető felhatalmazás és közös "
+"ellenőrzések](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:12
 msgid ""
@@ -60,7 +62,7 @@ msgstr ""
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:14
 msgid "Text, legal categories, and validity"
-msgstr ""
+msgstr "Szöveg, jogi kategóriák és érvényesség"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:16
 msgid ""
@@ -106,7 +108,7 @@ msgstr ""
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:22
 msgid "Parsing, boundary declarations, and shared guards"
-msgstr ""
+msgstr "Feldolgozás, határdeklarációk és közös őrök"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:24
 msgid ""
@@ -200,50 +202,52 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:40
 msgid "text_fold.py (`src/cadrumo/core/text_fold.py`) — lines 1–530"
-msgstr ""
+msgstr "text_fold.py (`src/cadrumo/core/text_fold.py`) — 1–530. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:41
 msgid "tipos_actividad.py (`src/cadrumo/core/tipos_actividad.py`) — lines 1–82"
-msgstr ""
+msgstr "tipos_actividad.py (`src/cadrumo/core/tipos_actividad.py`) — 1–82. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:42
 msgid "toml.py (`src/cadrumo/core/toml.py`) — lines 1–352"
-msgstr ""
+msgstr "toml.py (`src/cadrumo/core/toml.py`) — 1–352. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:43
 msgid "transport_locus.py (`src/cadrumo/core/transport_locus.py`) — lines 1–119"
-msgstr ""
+msgstr "transport_locus.py (`src/cadrumo/core/transport_locus.py`) — 1–119. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:44
 msgid "tty.py (`src/cadrumo/core/tty.py`) — lines 1–83"
-msgstr ""
+msgstr "tty.py (`src/cadrumo/core/tty.py`) — 1–83. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:45
 msgid "type_adapters.py (`src/cadrumo/core/type_adapters.py`) — lines 1–55"
-msgstr ""
+msgstr "type_adapters.py (`src/cadrumo/core/type_adapters.py`) — 1–55. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:46
 msgid "type_guards.py (`src/cadrumo/core/type_guards.py`) — lines 1–101"
-msgstr ""
+msgstr "type_guards.py (`src/cadrumo/core/type_guards.py`) — 1–101. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:47
 msgid "unit_proportion.py (`src/cadrumo/core/unit_proportion.py`) — lines 1–59"
-msgstr ""
+msgstr "unit_proportion.py (`src/cadrumo/core/unit_proportion.py`) — 1–59. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:48
 msgid "url_validation.py (`src/cadrumo/core/url_validation.py`) — lines 1–27"
-msgstr ""
+msgstr "url_validation.py (`src/cadrumo/core/url_validation.py`) — 1–27. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:49
 msgid "validity_window.py (`src/cadrumo/core/validity_window.py`) — lines 1–140"
-msgstr ""
+msgstr "validity_window.py (`src/cadrumo/core/validity_window.py`) — 1–140. sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:50
 msgid ""
 "windows_contention.py (`src/cadrumo/core/windows_contention.py`) — lines "
 "1–47"
 msgstr ""
+"windows_contention.py (`src/cadrumo/core/windows_contention.py`) — 1–47. "
+"sor"
 
 #: ../../technical/articles/117-text-normalization-legal-categories-and-validity-contracts.md:51
 msgid "workbook.py (`src/cadrumo/core/workbook.py`) — lines 1–79"
-msgstr ""
+msgstr "workbook.py (`src/cadrumo/core/workbook.py`) — 1–79. sor"

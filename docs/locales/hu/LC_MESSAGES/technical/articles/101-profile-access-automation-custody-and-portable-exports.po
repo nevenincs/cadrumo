@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:1
 msgid "Profile access, automation custody, and portable exports"
-msgstr ""
+msgstr "Profilhozzáférés, automatizálási őrzés és hordozható exportok"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-101` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-101` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:10
 msgid ""
@@ -227,7 +229,7 @@ msgstr ""
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:32
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:34
 msgid ""
@@ -317,151 +319,201 @@ msgid ""
 "All 25 assigned files were read fully across pages 1–9; no portions "
 "remain unread."
 msgstr ""
+"Mind a 25 kijelölt fájlt teljes egészében elolvastam az 1–9. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:50
 msgid ""
 "user_profile/__init__.py "
 "(`src/cadrumo/application/user_profile/__init__.py`)"
 msgstr ""
+"user_profile/__init__.py "
+"(`src/cadrumo/application/user_profile/__init__.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:51
 msgid ""
 "user_profile/access_administration.py "
 "(`src/cadrumo/application/user_profile/access_administration.py`)"
 msgstr ""
+"user_profile/access_administration.py "
+"(`src/cadrumo/application/user_profile/access_administration.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:52
 msgid ""
 "user_profile/access_contracts.py "
 "(`src/cadrumo/application/user_profile/access_contracts.py`)"
 msgstr ""
+"user_profile/access_contracts.py "
+"(`src/cadrumo/application/user_profile/access_contracts.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:53
 msgid ""
 "user_profile/access_errors.py "
 "(`src/cadrumo/application/user_profile/access_errors.py`)"
 msgstr ""
+"user_profile/access_errors.py "
+"(`src/cadrumo/application/user_profile/access_errors.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:54
 msgid ""
 "user_profile/access_policy.py "
 "(`src/cadrumo/application/user_profile/access_policy.py`)"
 msgstr ""
+"user_profile/access_policy.py "
+"(`src/cadrumo/application/user_profile/access_policy.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:55
 msgid ""
 "user_profile/access_projections.py "
 "(`src/cadrumo/application/user_profile/access_projections.py`)"
 msgstr ""
+"user_profile/access_projections.py "
+"(`src/cadrumo/application/user_profile/access_projections.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:56
 msgid ""
 "user_profile/acquisition_sources.py "
 "(`src/cadrumo/application/user_profile/acquisition_sources.py`)"
 msgstr ""
+"user_profile/acquisition_sources.py "
+"(`src/cadrumo/application/user_profile/acquisition_sources.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:57
 msgid ""
 "user_profile/aggregate.py "
 "(`src/cadrumo/application/user_profile/aggregate.py`)"
 msgstr ""
+"user_profile/aggregate.py "
+"(`src/cadrumo/application/user_profile/aggregate.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:58
 msgid ""
 "user_profile/archive_operation.py "
 "(`src/cadrumo/application/user_profile/archive_operation.py`)"
 msgstr ""
+"user_profile/archive_operation.py "
+"(`src/cadrumo/application/user_profile/archive_operation.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:59
 msgid ""
 "user_profile/archive_operation_ports.py "
 "(`src/cadrumo/application/user_profile/archive_operation_ports.py`)"
 msgstr ""
+"user_profile/archive_operation_ports.py "
+"(`src/cadrumo/application/user_profile/archive_operation_ports.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:60
 msgid ""
 "user_profile/authentication.py "
 "(`src/cadrumo/application/user_profile/authentication.py`)"
 msgstr ""
+"user_profile/authentication.py "
+"(`src/cadrumo/application/user_profile/authentication.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:61
 msgid ""
 "user_profile/automation_administration.py "
 "(`src/cadrumo/application/user_profile/automation_administration.py`)"
 msgstr ""
+"user_profile/automation_administration.py "
+"(`src/cadrumo/application/user_profile/automation_administration.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:62
 msgid ""
 "user_profile/automation_administration_service.py "
 "(`src/cadrumo/application/user_profile/automation_administration_service.py`)"
 msgstr ""
+"user_profile/automation_administration_service.py "
+"(`src/cadrumo/application/user_profile/automation_administration_service.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:63
 msgid ""
 "user_profile/automation_approval_session.py "
 "(`src/cadrumo/application/user_profile/automation_approval_session.py`)"
 msgstr ""
+"user_profile/automation_approval_session.py "
+"(`src/cadrumo/application/user_profile/automation_approval_session.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:64
 msgid ""
 "user_profile/automation_custody_port.py "
 "(`src/cadrumo/application/user_profile/automation_custody_port.py`)"
 msgstr ""
+"user_profile/automation_custody_port.py "
+"(`src/cadrumo/application/user_profile/automation_custody_port.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:65
 msgid ""
 "user_profile/automation_enrollment.py "
 "(`src/cadrumo/application/user_profile/automation_enrollment.py`)"
 msgstr ""
+"user_profile/automation_enrollment.py "
+"(`src/cadrumo/application/user_profile/automation_enrollment.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:66
 msgid ""
 "user_profile/automation_execution.py "
 "(`src/cadrumo/application/user_profile/automation_execution.py`)"
 msgstr ""
+"user_profile/automation_execution.py "
+"(`src/cadrumo/application/user_profile/automation_execution.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:67
 msgid ""
 "user_profile/automation_lifecycle.py "
 "(`src/cadrumo/application/user_profile/automation_lifecycle.py`)"
 msgstr ""
+"user_profile/automation_lifecycle.py "
+"(`src/cadrumo/application/user_profile/automation_lifecycle.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:68
 msgid ""
 "user_profile/automation_lifecycle_service.py "
 "(`src/cadrumo/application/user_profile/automation_lifecycle_service.py`)"
 msgstr ""
+"user_profile/automation_lifecycle_service.py "
+"(`src/cadrumo/application/user_profile/automation_lifecycle_service.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:69
 msgid ""
 "user_profile/automation_operations.py "
 "(`src/cadrumo/application/user_profile/automation_operations.py`)"
 msgstr ""
+"user_profile/automation_operations.py "
+"(`src/cadrumo/application/user_profile/automation_operations.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:70
 msgid ""
 "user_profile/automation_password.py "
 "(`src/cadrumo/application/user_profile/automation_password.py`)"
 msgstr ""
+"user_profile/automation_password.py "
+"(`src/cadrumo/application/user_profile/automation_password.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:71
 msgid "user_profile/bundle.py (`src/cadrumo/application/user_profile/bundle.py`)"
-msgstr ""
+msgstr "user_profile/bundle.py (`src/cadrumo/application/user_profile/bundle.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:72
 msgid ""
 "user_profile/bundle_encryption.py "
 "(`src/cadrumo/application/user_profile/bundle_encryption.py`)"
 msgstr ""
+"user_profile/bundle_encryption.py "
+"(`src/cadrumo/application/user_profile/bundle_encryption.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:73
 msgid ""
 "user_profile/bundle_export.py "
 "(`src/cadrumo/application/user_profile/bundle_export.py`)"
 msgstr ""
+"user_profile/bundle_export.py "
+"(`src/cadrumo/application/user_profile/bundle_export.py`)"
 
 #: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:74
 msgid ""
 "user_profile/bundle_export_contracts.py "
 "(`src/cadrumo/application/user_profile/bundle_export_contracts.py`)"
 msgstr ""
+"user_profile/bundle_export_contracts.py "
+"(`src/cadrumo/application/user_profile/bundle_export_contracts.py`)"

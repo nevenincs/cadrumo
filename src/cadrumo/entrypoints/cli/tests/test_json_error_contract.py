@@ -23,6 +23,12 @@ flag probe cannot recognise the JSON request (e.g. ``--format`` with no
 value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
+The text-mode domain-refusal companion lives in
+:mod:`cadrumo.entrypoints.cli.tests.test_runtime_ledger_prefix_refusals_native`.
+It enrolls and admits a real private profile before requesting the malformed
+ledger prefix, so its human-rendering assertions reach the registered boundary.
+The session-only fixture here cannot establish that runtime admission.
+
 Real-behavior only: the real ``cadrumo`` app object through
 the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback

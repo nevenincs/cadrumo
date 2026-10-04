@@ -48,6 +48,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-168` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md:10
 msgid "Scope"

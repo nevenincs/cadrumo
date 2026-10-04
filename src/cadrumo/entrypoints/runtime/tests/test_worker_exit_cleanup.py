@@ -299,6 +299,42 @@ class _ServeCustody(_Release):
         return ()
 
 
+def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
+    """A storage-bound custody check must permit concurrent IPC task progress."""
+
+    async def exercise() -> None:
+        loop = asyncio.get_running_loop()
+        stop, failed = asyncio.Event(), asyncio.Event()
+        heartbeat = threading.Event()
+
+        class Custody(_ServeCustody):
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                loop.call_soon_threadsafe(heartbeat.set)
+                assert heartbeat.wait(2), "custody validation blocked the worker loop"
+                loop.call_soon_threadsafe(stop.set)
+                return ()
+
+        class Uploads:
+            def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+                assert live_sessions == ()
+
+        class Human:
+            def expire(self) -> None:
+                pass
+
+        await worker_service._expire_custody(
+            stop,
+            failed,
+            cast(ProfileWorkerCustody, Custody()),
+            cast(worker_service.WorkerSubmissionStaging, Uploads()),
+            cast(ProfileWorkerHumanLogin, Human()),
+        )
+        assert not failed.is_set()
+
+    asyncio.run(exercise())
+
+
 @pytest.mark.parametrize("failures", [1, 2])
 @pytest.mark.parametrize("cancelled", [False, True])
 @pytest.mark.parametrize("frame_kind", ["malformed", "control-transfer"])

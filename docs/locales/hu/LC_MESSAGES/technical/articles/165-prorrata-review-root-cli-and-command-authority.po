@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:1
 msgid "Prorrata, review, root CLI and command authority"
-msgstr ""
+msgstr "Prorrata, felülvizsgálat, gyökér-CLI és parancsfelhatalmazás"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-165` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:10
 msgid "Scope"
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:14
 msgid "Registered work and review knowledge"
-msgstr ""
+msgstr "Regisztrált munka és felülvizsgálati ismeretek"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:16
 msgid ""
@@ -122,7 +125,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:22
 msgid "Root behavior and operator transport"
-msgstr ""
+msgstr "Gyökérszintű működés és operátori átvitel"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:24
 msgid ""
@@ -198,7 +201,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:32
 msgid "Runtime and command graph"
-msgstr ""
+msgstr "Futtatókörnyezet és parancsgráf"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:34
 msgid ""
@@ -267,7 +270,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:40
 msgid "Evidence and limits"
-msgstr ""
+msgstr "Bizonyítékok és korlátok"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:42
 msgid ""
@@ -290,7 +293,7 @@ msgstr "Lefedettségi függelék"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:46
 msgid "All 27 assigned files are linked below."
-msgstr ""
+msgstr "Mind a 27 kijelölt fájl hivatkozása alább található."
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:48
 msgid "`src/cadrumo/entrypoints/cli/_profile_session_gate.py`"

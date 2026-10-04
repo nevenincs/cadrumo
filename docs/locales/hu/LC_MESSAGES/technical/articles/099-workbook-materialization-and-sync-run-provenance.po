@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-099` · **Topic:** [Authentication and storage "
 "management](../topics/authentication-and-storage-management.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-099` · **Téma:** [Hitelesítés és "
+"tároláskezelés](../topics/authentication-and-storage-management.md)"
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:10
 msgid ""
@@ -126,7 +128,7 @@ msgstr ""
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:22
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:24
 msgid ""
@@ -204,27 +206,37 @@ msgid ""
 "All 4 assigned files were read fully across pages 1–2; no portions remain"
 " unread."
 msgstr ""
+"Mind a 4 kijelölt fájlt teljes egészében elolvastam az 1–2. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:38
 msgid ""
 "calc_sheets/workbook_export.py "
 "(`src/cadrumo/application/storage/calc_sheets/workbook_export.py`)"
 msgstr ""
+"calc_sheets/workbook_export.py "
+"(`src/cadrumo/application/storage/calc_sheets/workbook_export.py`)"
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:39
 msgid ""
 "sync_runs/__init__.py "
 "(`src/cadrumo/application/storage/sync_runs/__init__.py`)"
 msgstr ""
+"sync_runs/__init__.py "
+"(`src/cadrumo/application/storage/sync_runs/__init__.py`)"
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:40
 msgid ""
 "sync_runs/persist.py "
 "(`src/cadrumo/application/storage/sync_runs/persist.py`)"
 msgstr ""
+"sync_runs/persist.py "
+"(`src/cadrumo/application/storage/sync_runs/persist.py`)"
 
 #: ../../technical/articles/099-workbook-materialization-and-sync-run-provenance.md:41
 msgid ""
 "sync_runs/records.py "
 "(`src/cadrumo/application/storage/sync_runs/records.py`)"
 msgstr ""
+"sync_runs/records.py "
+"(`src/cadrumo/application/storage/sync_runs/records.py`)"

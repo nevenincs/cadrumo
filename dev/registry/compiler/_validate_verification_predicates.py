@@ -66,6 +66,7 @@ def _casilla_list_predicate_failures(
     *,
     operator_name: str,
     casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
     operator = VerificationPredicateOperator(operator_name)
     parsed = _parsed_expression(expression, operator)
@@ -95,6 +96,16 @@ def _casilla_list_predicate_failures(
     for casilla_id in ids:
         if casilla_id not in casillas:
             failures.append(f"{prefix}: {owner} {operator.value} references unknown casilla {casilla_id!r}")
+    if operator is VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK:
+        for role, casilla_id in zip(("application", "stock"), ids, strict=False):
+            if casilla_id not in casillas:
+                continue
+            casilla = casilla_by_id.get(casilla_id)
+            if casilla is not None and registry_scalar_value_type(casilla.data_type) != "decimal":
+                failures.append(
+                    f"{prefix}: {owner} {operator.value} {role} casilla {casilla_id!r} must be a Decimal "
+                    f"numeric casilla (scalar family 'decimal'), not data_type {casilla.data_type!r}",
+                )
     return failures
 
 

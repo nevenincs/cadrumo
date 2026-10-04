@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:1
 msgid "Withholding bindings, revision validation, and registry schema"
-msgstr ""
+msgstr "Vinculacions de retencions, validació de revisions i esquema del registre"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-134` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-134` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:12
 msgid ""
@@ -64,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:14
 msgid "Binding and revision capabilities"
-msgstr ""
+msgstr "Capacitats de vinculacions i revisions"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:16
 msgid ""
@@ -127,7 +129,7 @@ msgstr ""
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:22
 msgid "Runtime catalogues, dependency inspection, and schedules"
-msgstr ""
+msgstr "Catàlegs de l'entorn d'execució, inspecció de dependències i calendaris"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:24
 msgid ""
@@ -192,7 +194,7 @@ msgstr ""
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:30
 msgid "Central schema, governance, and validation"
-msgstr ""
+msgstr "Esquema central, governança i validació"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:32
 msgid ""
@@ -281,7 +283,7 @@ msgstr ""
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:40
 msgid "Quality, security, and limits"
-msgstr ""
+msgstr "Qualitat, seguretat i límits"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:42
 msgid ""
@@ -319,6 +321,8 @@ msgid ""
 "All 11 assigned files were read fully across the eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Es van llegir íntegrament els 11 fitxers assignats en vuit pàgines "
+"delimitades; no queda cap interval sense llegir."
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:50
 msgid ""
@@ -326,12 +330,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/retenciones_bindings.py`) — "
 "1–569"
 msgstr ""
+"registry/retenciones_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/retenciones_bindings.py`) — "
+"1–569"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:51
 msgid ""
 "registry/revision_context.py "
 "(`src/cadrumo/domain/calculations/registry/revision_context.py`) — 1–168"
 msgstr ""
+"registry/revision_context.py "
+"(`src/cadrumo/domain/calculations/registry/revision_context.py`) — 1–168"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:52
 msgid ""
@@ -339,12 +348,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/revision_contracts.py`) — "
 "1–399"
 msgstr ""
+"registry/revision_contracts.py "
+"(`src/cadrumo/domain/calculations/registry/revision_contracts.py`) — "
+"1–399"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:53
 msgid ""
 "registry/revision_order.py "
 "(`src/cadrumo/domain/calculations/registry/revision_order.py`) — 1–110"
 msgstr ""
+"registry/revision_order.py "
+"(`src/cadrumo/domain/calculations/registry/revision_order.py`) — 1–110"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:54
 msgid ""
@@ -352,6 +366,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/runtime_catalogue_validation.py`)"
 " — 1–97"
 msgstr ""
+"registry/runtime_catalogue_validation.py "
+"(`src/cadrumo/domain/calculations/registry/runtime_catalogue_validation.py`)"
+" — 1–97"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:55
 msgid ""
@@ -359,33 +376,46 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/runtime_catalogues.py`) — "
 "1–206"
 msgstr ""
+"registry/runtime_catalogues.py "
+"(`src/cadrumo/domain/calculations/registry/runtime_catalogues.py`) — "
+"1–206"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:56
 msgid ""
 "registry/runtime_graph.py "
 "(`src/cadrumo/domain/calculations/registry/runtime_graph.py`) — 1–232"
 msgstr ""
+"registry/runtime_graph.py "
+"(`src/cadrumo/domain/calculations/registry/runtime_graph.py`) — 1–232"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:57
 msgid ""
 "registry/schedules.py "
 "(`src/cadrumo/domain/calculations/registry/schedules.py`) — 1–185"
 msgstr ""
+"registry/schedules.py "
+"(`src/cadrumo/domain/calculations/registry/schedules.py`) — 1–185"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:58
 msgid ""
 "registry/schema.py (`src/cadrumo/domain/calculations/registry/schema.py`)"
 " — 1–1373"
 msgstr ""
+"registry/schema.py (`src/cadrumo/domain/calculations/registry/schema.py`)"
+" — 1–1373"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:59
 msgid ""
 "registry/schema_base.py "
 "(`src/cadrumo/domain/calculations/registry/schema_base.py`) — 1–900"
 msgstr ""
+"registry/schema_base.py "
+"(`src/cadrumo/domain/calculations/registry/schema_base.py`) — 1–900"
 
 #: ../../technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.md:60
 msgid ""
 "registry/schema_deadlines.py "
 "(`src/cadrumo/domain/calculations/registry/schema_deadlines.py`) — 1–191"
 msgstr ""
+"registry/schema_deadlines.py "
+"(`src/cadrumo/domain/calculations/registry/schema_deadlines.py`) — 1–191"

@@ -6,10 +6,11 @@ governs this surface is explicit: initial load is local-only, and reaching the
 AEAT is always an operator action with visible progress and result.
 
 The projection restores the profile, local filing records, stored census
-evidence and stored filed-declaration captures. The latter use the same
-evidence join as the overview calendar. Sources without a stored capture remain
-NEVER_CAPTURED; a local authority without a reader is UNAVAILABLE. Observed
-zero records stay distinguishable from both.
+evidence and stored filed-declaration captures, the latter through the same
+evidence join the overview calendar uses. Sources without a stored capture
+remain NEVER_CAPTURED; a local
+authority with no installed reader is UNAVAILABLE. A zero filing count is an
+observed zero and stays distinguishable from both.
 
 What the workspace does offer, even before a pull, are the pull actions
 themselves, joined to the operation contracts the session actually composed —
@@ -233,13 +234,6 @@ def _observation(
     census_observation: CensalObservation | None,
     filed_source: AeatSyncWorkspaceSourceObservationV1,
 ) -> AeatSyncWorkspaceSourceObservationV1:
-    if source is AeatSyncWorkspaceSource.AEAT_CENSUS and census_observation is not None:
-        return AeatSyncWorkspaceSourceObservationV1(
-            source=source,
-            availability=AeatSyncWorkspaceAvailability.AVAILABLE,
-            observed_at=census_observation.captured_at,
-            item_count=1,
-        )
     if source is AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS:
         if zone is AeatSyncWorkspaceZone.EVIDENCE_COMPARISON and filed_source.observed_at is not None:
             return AeatSyncWorkspaceSourceObservationV1(
@@ -248,6 +242,13 @@ def _observation(
                 refusal=_AEAT_FIGURES_NOT_READ,
             )
         return filed_source
+    if source is AeatSyncWorkspaceSource.AEAT_CENSUS and census_observation is not None:
+        return AeatSyncWorkspaceSourceObservationV1(
+            source=source,
+            availability=AeatSyncWorkspaceAvailability.AVAILABLE,
+            observed_at=census_observation.captured_at,
+            item_count=1,
+        )
     if source in _AEAT_SOURCES:
         return AeatSyncWorkspaceSourceObservationV1(
             source=source,
@@ -382,8 +383,8 @@ def _local_area_is_populated(
 def _aeat_side(
     area: AeatSyncOverviewArea,
     *,
-    filed_source: AeatSyncWorkspaceSourceObservationV1,
     census_observation: CensalObservation | None,
+    filed_source: AeatSyncWorkspaceSourceObservationV1,
 ) -> tuple[AeatSyncSourceState, UtcInstant | None]:
     """State what stored AEAT evidence establishes for one area, and when."""
     if area is AeatSyncOverviewArea.CENSUS and census_observation is not None:
@@ -414,14 +415,15 @@ def _overview_row(
     filing_count: int,
     custody_count: int | None,
     contracts: OperationPublicContractSetV1,
-    filed_source: AeatSyncWorkspaceSourceObservationV1,
     census_observation: CensalObservation | None = None,
+    filed_source: AeatSyncWorkspaceSourceObservationV1,
 ) -> AeatSyncWorkspaceOverviewRowV1:
     """State only what the local side genuinely observed for this area.
 
+    Stored census evidence establishes remote presence at its capture time.
+    The census detail rows separately compare individual profile fields.
     Stored filed-declaration captures establish the filed area's AEAT side;
     evidence comparison stays unobserved because captures hold no figures.
-    Stored census evidence independently establishes the census area's AEAT side.
 
     The local side is a THREE-way answer, not two. An area whose local source
     this session read reports PRESENT when it holds records and ABSENT when it
@@ -441,7 +443,7 @@ def _overview_row(
         )
         local_observed_at = observed_at
     actions, operations = _admitted_capabilities(area, contracts)
-    aeat_state, aeat_observed_at = _aeat_side(area, filed_source=filed_source, census_observation=census_observation)
+    aeat_state, aeat_observed_at = _aeat_side(area, census_observation=census_observation, filed_source=filed_source)
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
@@ -597,7 +599,7 @@ def read_local_aeat_sync_workspace_projection(
     census_observation: CensalObservation | None = None,
     filed_evidence: CalendarEvidenceProjection | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
-    """Project the local AEAT Sync workspace and its stored filing captures for one profile.
+    """Project local state and stored AEAT census and filing captures for one authenticated profile.
 
     `filed_evidence` is the calendar evidence join over this profile's stored
     filed-declaration captures, already scoped to `subject_key`. `None` means

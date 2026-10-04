@@ -46,10 +46,13 @@ msgid ""
 "**Report:** `STAGE-2-182` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-182` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:12
 msgid ""
@@ -63,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:14
 msgid "Operator capabilities"
-msgstr ""
+msgstr "Capacitats de l'operador"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:16
 msgid ""
@@ -140,7 +143,7 @@ msgstr ""
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:24
 msgid "Runtime and persistence boundaries"
-msgstr ""
+msgstr "Límits de l'entorn d'execució i la persistència"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:26
 msgid ""
@@ -250,30 +253,40 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:42
 msgid "All 22 manifest files and their complete declared line ranges were read."
 msgstr ""
+"Es van llegir els 22 fitxers del manifest i els seus intervals de línies "
+"declarats complets."
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:44
 msgid ""
 "operations/interactions.py "
 "(`src/cadrumo/entrypoints/tui/operations/interactions.py`) — 163 lines"
 msgstr ""
+"operations/interactions.py "
+"(`src/cadrumo/entrypoints/tui/operations/interactions.py`) — 163 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:45
 msgid ""
 "operations/logs.py (`src/cadrumo/entrypoints/tui/operations/logs.py`) — "
 "147 lines"
 msgstr ""
+"operations/logs.py (`src/cadrumo/entrypoints/tui/operations/logs.py`) — "
+"147 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:46
 msgid ""
 "operations/modal.py (`src/cadrumo/entrypoints/tui/operations/modal.py`) —"
 " 476 lines"
 msgstr ""
+"operations/modal.py (`src/cadrumo/entrypoints/tui/operations/modal.py`) —"
+" 476 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:47
 msgid ""
 "operations/projection.py "
 "(`src/cadrumo/entrypoints/tui/operations/projection.py`) — 235 lines"
 msgstr ""
+"operations/projection.py "
+"(`src/cadrumo/entrypoints/tui/operations/projection.py`) — 235 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:48
 msgid ""
@@ -281,6 +294,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/operations/refusal_explanation.py`) — 40 "
 "lines"
 msgstr ""
+"operations/refusal_explanation.py "
+"(`src/cadrumo/entrypoints/tui/operations/refusal_explanation.py`) — 40 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:49
 msgid ""
@@ -288,6 +304,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/operations/runtime_controller.py`) — 532 "
 "lines"
 msgstr ""
+"operations/runtime_controller.py "
+"(`src/cadrumo/entrypoints/tui/operations/runtime_controller.py`) — 532 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:50
 msgid ""
@@ -295,12 +314,17 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`) — "
 "184 lines"
 msgstr ""
+"operations/runtime_profile_session.py "
+"(`src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`) — "
+"184 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:51
 msgid ""
 "profile/__init__.py (`src/cadrumo/entrypoints/tui/profile/__init__.py`) —"
 " 5 lines"
 msgstr ""
+"profile/__init__.py (`src/cadrumo/entrypoints/tui/profile/__init__.py`) —"
+" 5 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:52
 msgid ""
@@ -308,6 +332,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/automation_inventory.py`) — 171 "
 "lines"
 msgstr ""
+"profile/automation_inventory.py "
+"(`src/cadrumo/entrypoints/tui/profile/automation_inventory.py`) — 171 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:53
 msgid ""
@@ -315,6 +342,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/automation_inventory_decisions.py`)"
 " — 93 lines"
 msgstr ""
+"profile/automation_inventory_decisions.py "
+"(`src/cadrumo/entrypoints/tui/profile/automation_inventory_decisions.py`)"
+" — 93 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:54
 msgid ""
@@ -322,6 +352,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/automation_inventory_details.py`) —"
 " 94 lines"
 msgstr ""
+"profile/automation_inventory_details.py "
+"(`src/cadrumo/entrypoints/tui/profile/automation_inventory_details.py`) —"
+" 94 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:55
 msgid ""
@@ -329,24 +362,34 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/automation_inventory_view.py`) — "
 "101 lines"
 msgstr ""
+"profile/automation_inventory_view.py "
+"(`src/cadrumo/entrypoints/tui/profile/automation_inventory_view.py`) — "
+"101 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:56
 msgid ""
 "profile/edit_screens.py "
 "(`src/cadrumo/entrypoints/tui/profile/edit_screens.py`) — 325 lines"
 msgstr ""
+"profile/edit_screens.py "
+"(`src/cadrumo/entrypoints/tui/profile/edit_screens.py`) — 325 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:57
 msgid ""
 "profile/overview.py (`src/cadrumo/entrypoints/tui/profile/overview.py`) —"
 " 437 lines"
 msgstr ""
+"profile/overview.py (`src/cadrumo/entrypoints/tui/profile/overview.py`) —"
+" 437 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:58
 msgid ""
 "profile/overview_contracts.py "
 "(`src/cadrumo/entrypoints/tui/profile/overview_contracts.py`) — 154 lines"
 msgstr ""
+"profile/overview_contracts.py "
+"(`src/cadrumo/entrypoints/tui/profile/overview_contracts.py`) — 154 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:59
 msgid ""
@@ -354,30 +397,42 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/overview_interactions.py`) — 398 "
 "lines"
 msgstr ""
+"profile/overview_interactions.py "
+"(`src/cadrumo/entrypoints/tui/profile/overview_interactions.py`) — 398 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:60
 msgid ""
 "profile/overview_rendering.py "
 "(`src/cadrumo/entrypoints/tui/profile/overview_rendering.py`) — 520 lines"
 msgstr ""
+"profile/overview_rendering.py "
+"(`src/cadrumo/entrypoints/tui/profile/overview_rendering.py`) — 520 "
+"línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:61
 msgid ""
 "profile/overview_setup.py "
 "(`src/cadrumo/entrypoints/tui/profile/overview_setup.py`) — 373 lines"
 msgstr ""
+"profile/overview_setup.py "
+"(`src/cadrumo/entrypoints/tui/profile/overview_setup.py`) — 373 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:62
 msgid ""
 "profile/overview_writes.py "
 "(`src/cadrumo/entrypoints/tui/profile/overview_writes.py`) — 301 lines"
 msgstr ""
+"profile/overview_writes.py "
+"(`src/cadrumo/entrypoints/tui/profile/overview_writes.py`) — 301 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:63
 msgid ""
 "profile/plantilla_media.py "
 "(`src/cadrumo/entrypoints/tui/profile/plantilla_media.py`) — 205 lines"
 msgstr ""
+"profile/plantilla_media.py "
+"(`src/cadrumo/entrypoints/tui/profile/plantilla_media.py`) — 205 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:64
 msgid ""
@@ -385,9 +440,14 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py`) — "
 "94 lines"
 msgstr ""
+"profile/runtime_auth_configuration.py "
+"(`src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py`) — "
+"94 línies"
 
 #: ../../technical/articles/182-supervised-operation-modal-and-profile-manager.md:65
 msgid ""
 "profile/runtime_errors.py "
 "(`src/cadrumo/entrypoints/tui/profile/runtime_errors.py`) — 20 lines"
 msgstr ""
+"profile/runtime_errors.py "
+"(`src/cadrumo/entrypoints/tui/profile/runtime_errors.py`) — 20 línies"

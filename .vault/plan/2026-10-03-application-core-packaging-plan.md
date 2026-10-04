@@ -13,7 +13,7 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:67f2909dba788ffa50311b1ed0c8a98659f66b62a14c1e40c95cb071f3ea1d7f'
+body_hash: 'sha256:c2cb48c6bb99c6c8f21baa382c8a5b99f7ee9c332b989c3345d07df1606d3bef'
 ---
 
 # `application-core-packaging` plan
@@ -125,6 +125,10 @@ The user explicitly redirected this session to Python package/layout/CMake integ
 ### S10 CMake checkpoint, 2026-10-03
 
 Both Rust crates now use one Cargo invocation projected by CMake and the Windows adapter. Default/bundle builds include the application crate; verify registers its Rust suite and package compatibility test. The latter receives the canonical manifest location, expected platform and ABI. An explicit absolute package-root override supports separately extracted acceptance inputs. The application rlib is not a Python extension or shipped runtime payload and stays outside the assembled file inventory. The fresh isolated Release bundle was attempted but the existing Python authority wheel hook rejected Modelo 232 revision 2016-2017 registry bindings; no guard was bypassed. Debug library tests and Release platform/application checks pass, including the separately extracted prior Release artifact. Fresh current-source bundle/ZIP acceptance remains blocked by that registry input; S10 capability generation and S11 all-target requirements remain open.
+
+### ZIP-bound Rust verification continuation, 2026-10-04
+
+The user requested implementation of the remaining package integration. The CMake verify-package command now passes generated profile-specific JSON argv for the Rust application compatibility probe to the existing artifact verifier. Both Python acceptance and Rust compatibility run against the same freshly extracted ZIP; staged-package overrides cannot redirect this gate. Probe failure prevents a passing result, and the report records extracted root and probe outcome alongside archive/manifest hashes. The verifier also rechecks the original manifest hash before writing acceptance. Focused real-subprocess regressions cover root override, failed probes and manifest mutation. A fresh bundle retry still failed the existing Modelo 232 revision 2016-2017 authority validation; independent pinned-archive verification remains distinct from current-source production acceptance.
 
 ## Steps
 

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:1
 msgid "Edit value contracts and Modelo export"
-msgstr ""
+msgstr "Szerkesztési értékszerződések és Modelo-export"
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-073` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:10
 msgid ""
@@ -199,7 +202,7 @@ msgstr ""
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:30
 msgid "Knowledge, security, and quality"
-msgstr ""
+msgstr "Tudás, biztonság és minőség"
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:32
 msgid ""
@@ -252,7 +255,7 @@ msgstr ""
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:40
 msgid "Full file coverage"
-msgstr ""
+msgstr "Teljes fájllefedettség"
 
 #: ../../technical/articles/073-edit-value-contracts-and-modelo-export.md:42
 msgid ""

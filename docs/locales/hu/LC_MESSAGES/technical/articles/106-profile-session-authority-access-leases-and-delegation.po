@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:1
 msgid "Profile session authority, access leases, and delegation"
-msgstr ""
+msgstr "Profilmunkamenet-felhatalmazás, hozzáférési bérletek és delegálás"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-106` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-106` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:12
 msgid ""
@@ -168,7 +170,7 @@ msgstr ""
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:24
 msgid "Profile data, validation, and views"
-msgstr ""
+msgstr "Profiladatok, validáció és nézetek"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:26
 msgid ""
@@ -292,53 +294,69 @@ msgid ""
 "session_authority_access.py "
 "(`src/cadrumo/application/user_profile/session_authority_access.py`)"
 msgstr ""
+"session_authority_access.py "
+"(`src/cadrumo/application/user_profile/session_authority_access.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:43
 msgid ""
 "session_authority_admission.py "
 "(`src/cadrumo/application/user_profile/session_authority_admission.py`)"
 msgstr ""
+"session_authority_admission.py "
+"(`src/cadrumo/application/user_profile/session_authority_admission.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:44
 msgid ""
 "session_authority_contracts.py "
 "(`src/cadrumo/application/user_profile/session_authority_contracts.py`)"
 msgstr ""
+"session_authority_contracts.py "
+"(`src/cadrumo/application/user_profile/session_authority_contracts.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:45
 msgid ""
 "session_authority_core.py "
 "(`src/cadrumo/application/user_profile/session_authority_core.py`)"
 msgstr ""
+"session_authority_core.py "
+"(`src/cadrumo/application/user_profile/session_authority_core.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:46
 msgid ""
 "session_authority_lifecycle.py "
 "(`src/cadrumo/application/user_profile/session_authority_lifecycle.py`)"
 msgstr ""
+"session_authority_lifecycle.py "
+"(`src/cadrumo/application/user_profile/session_authority_lifecycle.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:47
 msgid ""
 "session_authority_policy.py "
 "(`src/cadrumo/application/user_profile/session_authority_policy.py`)"
 msgstr ""
+"session_authority_policy.py "
+"(`src/cadrumo/application/user_profile/session_authority_policy.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:48
 msgid ""
 "usage_ratio_resolution.py "
 "(`src/cadrumo/application/user_profile/usage_ratio_resolution.py`)"
 msgstr ""
+"usage_ratio_resolution.py "
+"(`src/cadrumo/application/user_profile/usage_ratio_resolution.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:49
 msgid "validation.py (`src/cadrumo/application/user_profile/validation.py`)"
-msgstr ""
+msgstr "validation.py (`src/cadrumo/application/user_profile/validation.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:50
 msgid ""
 "view_operation.py "
 "(`src/cadrumo/application/user_profile/view_operation.py`)"
 msgstr ""
+"view_operation.py "
+"(`src/cadrumo/application/user_profile/view_operation.py`)"
 
 #: ../../technical/articles/106-profile-session-authority-access-leases-and-delegation.md:51
 msgid "view_reader.py (`src/cadrumo/application/user_profile/view_reader.py`)"
-msgstr ""
+msgstr "view_reader.py (`src/cadrumo/application/user_profile/view_reader.py`)"

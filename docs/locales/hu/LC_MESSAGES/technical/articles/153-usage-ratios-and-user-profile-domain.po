@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:1
 msgid "Usage ratios and user-profile domain"
-msgstr ""
+msgstr "Használati arányok és felhasználóiprofil-szakterület"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-153` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-153` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:16
 msgid ""
@@ -136,7 +138,7 @@ msgstr ""
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:24
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Biztonsági és minőségi értékelés"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:26
 msgid ""

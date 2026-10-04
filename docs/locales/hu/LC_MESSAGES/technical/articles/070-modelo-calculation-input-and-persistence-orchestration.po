@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:1
 msgid "Modelo calculation input and persistence orchestration"
-msgstr ""
+msgstr "Modelo-számítási bemenet és tárolásvezérlés"
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-070` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:10
 msgid "Scope"
@@ -67,7 +70,7 @@ msgstr ""
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:14
 msgid "Product capabilities and flow"
-msgstr ""
+msgstr "Termékképességek és folyamat"
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:16
 msgid ""
@@ -173,7 +176,7 @@ msgstr ""
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:26
 msgid "Knowledge, data, and trust boundaries"
-msgstr ""
+msgstr "Tudás-, adat- és bizalmi határok"
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:28
 msgid ""
@@ -227,7 +230,7 @@ msgstr ""
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:34
 msgid "Security, safety, and quality"
-msgstr ""
+msgstr "Biztonság, biztonságosság és minőség"
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:36
 msgid ""
@@ -308,12 +311,16 @@ msgid ""
 "calculate_input.py (`src/cadrumo/application/modelo/calculate_input.py`) "
 "— lines 1–1806, fully read."
 msgstr ""
+"calculate_input.py (`src/cadrumo/application/modelo/calculate_input.py`) "
+"— 1–1806,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:51
 msgid ""
 "calculation.py (`src/cadrumo/application/modelo/calculation.py`) — lines "
 "1–139, fully read."
 msgstr ""
+"calculation.py (`src/cadrumo/application/modelo/calculation.py`) — "
+"1–139,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:52
 msgid ""
@@ -321,6 +328,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_action_ports.py`) — lines "
 "1–126, fully read."
 msgstr ""
+"calculation_action_ports.py "
+"(`src/cadrumo/application/modelo/calculation_action_ports.py`) — 1–126,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:53
 msgid ""
@@ -328,6 +338,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_actions.py`) — lines 1–2225,"
 " fully read."
 msgstr ""
+"calculation_actions.py "
+"(`src/cadrumo/application/modelo/calculation_actions.py`) — 1–2225,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:54
 msgid ""
@@ -335,6 +348,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_advisory_projection.py`) — "
 "lines 1–296, fully read."
 msgstr ""
+"calculation_advisory_projection.py "
+"(`src/cadrumo/application/modelo/calculation_advisory_projection.py`) — "
+"1–296,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/070-modelo-calculation-input-and-persistence-orchestration.md:55
 msgid ""
@@ -342,3 +358,6 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_diagnostics.py`) — lines "
 "1–287, fully read."
 msgstr ""
+"calculation_diagnostics.py "
+"(`src/cadrumo/application/modelo/calculation_diagnostics.py`) — 1–287,. "
+"sor teljes egészében elolvasva."

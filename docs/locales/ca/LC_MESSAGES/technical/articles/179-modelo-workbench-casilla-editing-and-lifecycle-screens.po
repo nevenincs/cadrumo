@@ -48,10 +48,13 @@ msgid ""
 "**Report:** `STAGE-2-179` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-179` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:10
 msgid "Scope and limits"
-msgstr ""
+msgstr "Abast i límits"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:12
 msgid ""
@@ -64,7 +67,7 @@ msgstr ""
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:14
 msgid "Operator capabilities"
-msgstr ""
+msgstr "Capacitats de l'operador"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:16
 msgid ""
@@ -186,7 +189,7 @@ msgstr ""
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:32
 msgid "Security and safety assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i protecció"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:34
 msgid ""
@@ -236,12 +239,17 @@ msgstr "Cobertura completa dels fitxers assignats"
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:42
 msgid "All 12 manifest files and their full declared line ranges were read."
 msgstr ""
+"Es van llegir els 12 fitxers del manifest i els seus intervals de línies "
+"declarats complets."
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:44
 msgid ""
 "runtime_work_create.py "
 "(`src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py`) — 266 lines"
 msgstr ""
+"runtime_work_create.py "
+"(`src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py`) — 266 "
+"línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:45
 msgid ""
@@ -249,12 +257,17 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`) — 159 "
 "lines"
 msgstr ""
+"runtime_workbench_reads.py "
+"(`src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`) — 159 "
+"línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:46
 msgid ""
 "workbench/__init__.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/__init__.py`) — 5 lines"
 msgstr ""
+"workbench/__init__.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/__init__.py`) — 5 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:47
 msgid ""
@@ -262,6 +275,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py`) — 240 "
 "lines"
 msgstr ""
+"workbench/bulk_confirm.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py`) — 240 "
+"línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:48
 msgid ""
@@ -269,6 +285,9 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`) — 1,538 "
 "lines"
 msgstr ""
+"workbench/casilla_list.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`) — 1,538 "
+"línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:49
 msgid ""
@@ -276,12 +295,17 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/dialog_width.py`) — 39 "
 "lines"
 msgstr ""
+"workbench/dialog_width.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/dialog_width.py`) — 39 "
+"línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:50
 msgid ""
 "workbench/editor.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`) — 708 lines"
 msgstr ""
+"workbench/editor.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`) — 708 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:51
 msgid ""
@@ -289,27 +313,39 @@ msgid ""
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/editor_explanations.py`) —"
 " 215 lines"
 msgstr ""
+"workbench/editor_explanations.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/editor_explanations.py`) —"
+" 215 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:52
 msgid ""
 "workbench/export.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/export.py`) — 245 lines"
 msgstr ""
+"workbench/export.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/export.py`) — 245 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:53
 msgid ""
 "workbench/grid.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/grid.py`) — 287 lines"
 msgstr ""
+"workbench/grid.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/grid.py`) — 287 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:54
 msgid ""
 "workbench/header.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/header.py`) — 712 lines"
 msgstr ""
+"workbench/header.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/header.py`) — 712 línies"
 
 #: ../../technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md:55
 msgid ""
 "workbench/installed.py "
 "(`src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`) — 493 lines"
 msgstr ""
+"workbench/installed.py "
+"(`src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`) — 493 "
+"línies"

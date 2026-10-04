@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:1
 msgid "External-service constants, field provenance, and filing producers"
 msgstr ""
+"Constants de serveis externs, procedència de camps i productors de "
+"presentació"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:3
 msgid ""
@@ -46,10 +48,12 @@ msgid ""
 "**Report:** `STAGE-2-113` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-113` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:12
 msgid ""
@@ -64,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:14
 msgid "External constants and portal surfaces"
-msgstr ""
+msgstr "Constants externes i superfícies del portal"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:16
 msgid ""
@@ -109,7 +113,7 @@ msgstr ""
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:20
 msgid "Evidence provenance and history semantics"
-msgstr ""
+msgstr "Procedència d'evidències i semàntica d'historial"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:22
 msgid ""
@@ -143,7 +147,7 @@ msgstr ""
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:26
 msgid "Filesystem controls and producer-key inventory"
-msgstr ""
+msgstr "Controls del sistema de fitxers i inventari de claus de productors"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:28
 msgid ""
@@ -220,41 +224,51 @@ msgid ""
 "external_constants.py (`src/cadrumo/core/external_constants.py`) — lines "
 "1–547"
 msgstr ""
+"external_constants.py (`src/cadrumo/core/external_constants.py`) — línies"
+" 1–547"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:41
 msgid ""
 "external_constants.toml (`src/cadrumo/core/external_constants.toml`) — "
 "lines 1–305"
 msgstr ""
+"external_constants.toml (`src/cadrumo/core/external_constants.toml`) — "
+"línies 1–305"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:42
 msgid "field_grounding.py (`src/cadrumo/core/field_grounding.py`) — lines 1–77"
-msgstr ""
+msgstr "field_grounding.py (`src/cadrumo/core/field_grounding.py`) — línies 1–77"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:43
 msgid "field_origin.py (`src/cadrumo/core/field_origin.py`) — lines 1–81"
-msgstr ""
+msgstr "field_origin.py (`src/cadrumo/core/field_origin.py`) — línies 1–81"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:44
 msgid "field_role.py (`src/cadrumo/core/field_role.py`) — lines 1–142"
-msgstr ""
+msgstr "field_role.py (`src/cadrumo/core/field_role.py`) — línies 1–142"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:45
 msgid "file_change_time.py (`src/cadrumo/core/file_change_time.py`) — lines 1–91"
-msgstr ""
+msgstr "file_change_time.py (`src/cadrumo/core/file_change_time.py`) — línies 1–91"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:46
 msgid "file_permissions.py (`src/cadrumo/core/file_permissions.py`) — lines 1–225"
 msgstr ""
+"file_permissions.py (`src/cadrumo/core/file_permissions.py`) — línies "
+"1–225"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:47
 msgid ""
 "filed_history_discovery_signal.py "
 "(`src/cadrumo/core/filed_history_discovery_signal.py`) — lines 1–55"
 msgstr ""
+"filed_history_discovery_signal.py "
+"(`src/cadrumo/core/filed_history_discovery_signal.py`) — línies 1–55"
 
 #: ../../technical/articles/113-external-service-constants-field-provenance-and-filing-producers.md:48
 msgid ""
 "filing_producer_key.py (`src/cadrumo/core/filing_producer_key.py`) — "
 "lines 1–787"
 msgstr ""
+"filing_producer_key.py (`src/cadrumo/core/filing_producer_key.py`) — "
+"línies 1–787"

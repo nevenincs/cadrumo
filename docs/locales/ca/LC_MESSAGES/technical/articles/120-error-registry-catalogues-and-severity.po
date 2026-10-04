@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:1
 msgid "Error registry catalogues and severity"
-msgstr ""
+msgstr "Catàlegs del registre d’errors i severitat"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-120` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-120` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:12
 msgid ""
@@ -223,61 +225,81 @@ msgid ""
 "errors/registry/_core.py (`src/cadrumo/core/errors/registry/_core.py`) — "
 "lines 1–413"
 msgstr ""
+"errors/registry/_core.py (`src/cadrumo/core/errors/registry/_core.py`) — "
+"línies 1–413"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:43
 msgid ""
 "errors/registry/_core_part2.py "
 "(`src/cadrumo/core/errors/registry/_core_part2.py`) — lines 1–50"
 msgstr ""
+"errors/registry/_core_part2.py "
+"(`src/cadrumo/core/errors/registry/_core_part2.py`) — línies 1–50"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:44
 msgid ""
 "errors/registry/_domain.py "
 "(`src/cadrumo/core/errors/registry/_domain.py`) — lines 1–24"
 msgstr ""
+"errors/registry/_domain.py "
+"(`src/cadrumo/core/errors/registry/_domain.py`) — línies 1–24"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:45
 msgid ""
 "errors/registry/_domain_part1.py "
 "(`src/cadrumo/core/errors/registry/_domain_part1.py`) — lines 1–790"
 msgstr ""
+"errors/registry/_domain_part1.py "
+"(`src/cadrumo/core/errors/registry/_domain_part1.py`) — línies 1–790"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:46
 msgid ""
 "errors/registry/_domain_part2.py "
 "(`src/cadrumo/core/errors/registry/_domain_part2.py`) — lines 1–930"
 msgstr ""
+"errors/registry/_domain_part2.py "
+"(`src/cadrumo/core/errors/registry/_domain_part2.py`) — línies 1–930"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:47
 msgid ""
 "errors/registry/_domain_part3.py "
 "(`src/cadrumo/core/errors/registry/_domain_part3.py`) — lines 1–602"
 msgstr ""
+"errors/registry/_domain_part3.py "
+"(`src/cadrumo/core/errors/registry/_domain_part3.py`) — línies 1–602"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:48
 msgid ""
 "errors/registry/_domain_part4.py "
 "(`src/cadrumo/core/errors/registry/_domain_part4.py`) — lines 1–80"
 msgstr ""
+"errors/registry/_domain_part4.py "
+"(`src/cadrumo/core/errors/registry/_domain_part4.py`) — línies 1–80"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:49
 msgid ""
 "errors/registry/_entrypoints.py "
 "(`src/cadrumo/core/errors/registry/_entrypoints.py`) — lines 1–122"
 msgstr ""
+"errors/registry/_entrypoints.py "
+"(`src/cadrumo/core/errors/registry/_entrypoints.py`) — línies 1–122"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:50
 msgid ""
 "errors/registry/_entrypoints_part2.py "
 "(`src/cadrumo/core/errors/registry/_entrypoints_part2.py`) — lines 1–151"
 msgstr ""
+"errors/registry/_entrypoints_part2.py "
+"(`src/cadrumo/core/errors/registry/_entrypoints_part2.py`) — línies 1–151"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:51
 msgid ""
 "errors/registry/declared_codes.py "
 "(`src/cadrumo/core/errors/registry/declared_codes.py`) — lines 1–28"
 msgstr ""
+"errors/registry/declared_codes.py "
+"(`src/cadrumo/core/errors/registry/declared_codes.py`) — línies 1–28"
 
 #: ../../technical/articles/120-error-registry-catalogues-and-severity.md:52
 msgid "errors/severity.py (`src/cadrumo/core/errors/severity.py`) — lines 1–31"
-msgstr ""
+msgstr "errors/severity.py (`src/cadrumo/core/errors/severity.py`) — línies 1–31"

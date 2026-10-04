@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:1
 msgid "deadline, currency, and evidence-consent domain"
-msgstr ""
+msgstr "Határidő-, deviza- és bizonyítékhozzájárulási szakterület"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-141` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-141` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:10
 msgid "Scope"
@@ -63,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:16
 msgid ""
@@ -323,70 +325,76 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:58
 msgid "currency/__init__.py (`src/cadrumo/domain/currency/__init__.py`)"
-msgstr ""
+msgstr "currency/__init__.py (`src/cadrumo/domain/currency/__init__.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:59
 msgid "currency/errors.py (`src/cadrumo/domain/currency/errors.py`)"
-msgstr ""
+msgstr "currency/errors.py (`src/cadrumo/domain/currency/errors.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:60
 msgid "currency/models.py (`src/cadrumo/domain/currency/models.py`)"
-msgstr ""
+msgstr "currency/models.py (`src/cadrumo/domain/currency/models.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:61
 msgid "currency/service.py (`src/cadrumo/domain/currency/service.py`)"
-msgstr ""
+msgstr "currency/service.py (`src/cadrumo/domain/currency/service.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:62
 msgid "deadlines/__init__.py (`src/cadrumo/domain/deadlines/__init__.py`)"
-msgstr ""
+msgstr "deadlines/__init__.py (`src/cadrumo/domain/deadlines/__init__.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:63
 msgid "deadlines/engine.py (`src/cadrumo/domain/deadlines/engine.py`)"
-msgstr ""
+msgstr "deadlines/engine.py (`src/cadrumo/domain/deadlines/engine.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:64
 msgid "deadlines/errors.py (`src/cadrumo/domain/deadlines/errors.py`)"
-msgstr ""
+msgstr "deadlines/errors.py (`src/cadrumo/domain/deadlines/errors.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:65
 msgid "deadlines/fact_context.py (`src/cadrumo/domain/deadlines/fact_context.py`)"
-msgstr ""
+msgstr "deadlines/fact_context.py (`src/cadrumo/domain/deadlines/fact_context.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:66
 msgid "deadlines/festivos.py (`src/cadrumo/domain/deadlines/festivos.py`)"
-msgstr ""
+msgstr "deadlines/festivos.py (`src/cadrumo/domain/deadlines/festivos.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:67
 msgid "deadlines/models.py (`src/cadrumo/domain/deadlines/models.py`)"
-msgstr ""
+msgstr "deadlines/models.py (`src/cadrumo/domain/deadlines/models.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:68
 msgid "deadlines/plazo.py (`src/cadrumo/domain/deadlines/plazo.py`)"
-msgstr ""
+msgstr "deadlines/plazo.py (`src/cadrumo/domain/deadlines/plazo.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:69
 msgid "deadlines/profiles.py (`src/cadrumo/domain/deadlines/profiles.py`)"
-msgstr ""
+msgstr "deadlines/profiles.py (`src/cadrumo/domain/deadlines/profiles.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:70
 msgid "deadlines/recargo.py (`src/cadrumo/domain/deadlines/recargo.py`)"
-msgstr ""
+msgstr "deadlines/recargo.py (`src/cadrumo/domain/deadlines/recargo.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:71
 msgid ""
 "deadlines/setup_answer_projection.py "
 "(`src/cadrumo/domain/deadlines/setup_answer_projection.py`)"
 msgstr ""
+"deadlines/setup_answer_projection.py "
+"(`src/cadrumo/domain/deadlines/setup_answer_projection.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:72
 msgid ""
 "evidence_consent/__init__.py "
 "(`src/cadrumo/domain/evidence_consent/__init__.py`)"
 msgstr ""
+"evidence_consent/__init__.py "
+"(`src/cadrumo/domain/evidence_consent/__init__.py`)"
 
 #: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:73
 msgid ""
 "evidence_consent/record.py "
 "(`src/cadrumo/domain/evidence_consent/record.py`)"
 msgstr ""
+"evidence_consent/record.py "
+"(`src/cadrumo/domain/evidence_consent/record.py`)"

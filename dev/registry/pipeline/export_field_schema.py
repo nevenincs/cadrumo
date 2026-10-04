@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from typing import Final, Literal
 
@@ -175,3 +176,28 @@ def _is_required(validation: str | None) -> bool:
     return (
         validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() in _UNCONDITIONAL_REQUIREMENTS
     )
+
+
+#: A design ``Contenido`` cell naming blank as one of the position's admitted
+#: contents -- DR145's ``blanco o "C" (compl.)``, DR490's ``C o blanco``.
+_ADMITTED_BLANK: Final = re.compile(r"\bblancos?\b", re.IGNORECASE)
+
+
+def _is_required_casilla_text(validation: str | None, content: str | None) -> bool:
+    """Read whether an operator-entered text casilla has no blank representation.
+
+    A layout field's ``required`` is narrower than AEAT's ``obligatorio``: it
+    states that the field has NO blank representation, so the codec refuses an
+    absent value instead of writing the field's blank fill. A design can mark a
+    position obligatorio -- the record always carries it -- while its own
+    contenido admits blank as a value. DR145 row 2, ``Indicador de página
+    complementaria``, is ``obligatorio`` with contenido ``blanco o "C"
+    (compl.)``: the principal page's indicator IS blank. Reading the
+    obligatoriness alone left that page with no renderable value.
+
+    Only operator-entered casillas are read this way. Leaving such a casilla
+    empty selects the blank the design admits, and the casilla's own
+    declaration constrains every non-blank value. A producer-backed field still
+    states its value explicitly.
+    """
+    return _is_required(validation) and not (content is not None and _ADMITTED_BLANK.search(content))

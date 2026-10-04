@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:1
 msgid "Live access policy, corpus integrity, and decimal contracts"
-msgstr ""
+msgstr "Política d’accés en directe, integritat del corpus i contractes decimals"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-118` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-118` · **Tema:** [Autoritat central i controls "
+"compartits](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:12
 msgid ""
@@ -140,7 +142,7 @@ msgstr ""
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:26
 msgid "Decimal entry boundaries"
-msgstr ""
+msgstr "Límits d'entrada decimal"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:28
 msgid ""
@@ -216,85 +218,113 @@ msgid ""
 "access_gate/__init__.py (`src/cadrumo/core/access_gate/__init__.py`) — "
 "lines 1–32"
 msgstr ""
+"access_gate/__init__.py (`src/cadrumo/core/access_gate/__init__.py`) — "
+"línies 1–32"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:41
 msgid ""
 "access_gate/errors.py (`src/cadrumo/core/access_gate/errors.py`) — lines "
 "1–92"
 msgstr ""
+"access_gate/errors.py (`src/cadrumo/core/access_gate/errors.py`) — línies"
+" 1–92"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:42
 msgid "access_gate/gate.py (`src/cadrumo/core/access_gate/gate.py`) — lines 1–107"
 msgstr ""
+"access_gate/gate.py (`src/cadrumo/core/access_gate/gate.py`) — línies "
+"1–107"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:43
 msgid ""
 "classification/__init__.py "
 "(`src/cadrumo/core/classification/__init__.py`) — lines 1–20"
 msgstr ""
+"classification/__init__.py "
+"(`src/cadrumo/core/classification/__init__.py`) — línies 1–20"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:44
 msgid ""
 "classification/policies.py "
 "(`src/cadrumo/core/classification/policies.py`) — lines 1–336"
 msgstr ""
+"classification/policies.py "
+"(`src/cadrumo/core/classification/policies.py`) — línies 1–336"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:45
 msgid ""
 "corpus_manifest/__init__.py "
 "(`src/cadrumo/core/corpus_manifest/__init__.py`) — lines 1–28"
 msgstr ""
+"corpus_manifest/__init__.py "
+"(`src/cadrumo/core/corpus_manifest/__init__.py`) — línies 1–28"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:46
 msgid ""
 "corpus_manifest/errors.py (`src/cadrumo/core/corpus_manifest/errors.py`) "
 "— lines 1–46"
 msgstr ""
+"corpus_manifest/errors.py (`src/cadrumo/core/corpus_manifest/errors.py`) "
+"— línies 1–46"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:47
 msgid ""
 "corpus_manifest/manifest.py "
 "(`src/cadrumo/core/corpus_manifest/manifest.py`) — lines 1–513"
 msgstr ""
+"corpus_manifest/manifest.py "
+"(`src/cadrumo/core/corpus_manifest/manifest.py`) — línies 1–513"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:48
 msgid "decimal/__init__.py (`src/cadrumo/core/decimal/__init__.py`) — lines 1–55"
-msgstr ""
+msgstr "decimal/__init__.py (`src/cadrumo/core/decimal/__init__.py`) — línies 1–55"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:49
 msgid "decimal/coercion.py (`src/cadrumo/core/decimal/coercion.py`) — lines 1–214"
 msgstr ""
+"decimal/coercion.py (`src/cadrumo/core/decimal/coercion.py`) — línies "
+"1–214"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:50
 msgid ""
 "decimal/constants.py (`src/cadrumo/core/decimal/constants.py`) — lines "
 "1–48"
 msgstr ""
+"decimal/constants.py (`src/cadrumo/core/decimal/constants.py`) — línies "
+"1–48"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:51
 msgid ""
 "decimal/fixed_width.py (`src/cadrumo/core/decimal/fixed_width.py`) — "
 "lines 1–37"
 msgstr ""
+"decimal/fixed_width.py (`src/cadrumo/core/decimal/fixed_width.py`) — "
+"línies 1–37"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:52
 msgid ""
 "decimal/formatting.py (`src/cadrumo/core/decimal/formatting.py`) — lines "
 "1–57"
 msgstr ""
+"decimal/formatting.py (`src/cadrumo/core/decimal/formatting.py`) — línies"
+" 1–57"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:53
 msgid "decimal/grammar.py (`src/cadrumo/core/decimal/grammar.py`) — lines 1–230"
-msgstr ""
+msgstr "decimal/grammar.py (`src/cadrumo/core/decimal/grammar.py`) — línies 1–230"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:54
 msgid ""
 "decimal/printed_money.py (`src/cadrumo/core/decimal/printed_money.py`) — "
 "lines 1–126"
 msgstr ""
+"decimal/printed_money.py (`src/cadrumo/core/decimal/printed_money.py`) — "
+"línies 1–126"
 
 #: ../../technical/articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md:55
 msgid ""
 "decimal/printed_units.py (`src/cadrumo/core/decimal/printed_units.py`) — "
 "lines 1–62"
 msgstr ""
+"decimal/printed_units.py (`src/cadrumo/core/decimal/printed_units.py`) — "
+"línies 1–62"

@@ -47,6 +47,9 @@ msgid ""
 "**Report:** `STAGE-2-184` · **Topic:** [Installed runtime, terminal "
 "workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
 msgstr ""
+"**Informe:** `STAGE-2-184` · **Tema:** [Entorno de ejecución instalado, "
+"entorno de trabajo de terminal e infraestructura de agentes](../topics"
+"/runtime-tui-and-agent-harness.md)"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:10
 msgid "Scope"
@@ -65,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:14
 msgid "Product capabilities and flow"
-msgstr ""
+msgstr "Capacidades y flujo del producto"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:16
 msgid ""
@@ -177,7 +180,7 @@ msgstr ""
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Valoración de seguridad e implementación"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:34
 msgid ""
@@ -247,9 +250,13 @@ msgid ""
 "secret/registration.py "
 "(`src/cadrumo/entrypoints/tui/secret/registration.py`) — 935 lines"
 msgstr ""
+"secret/registration.py "
+"(`src/cadrumo/entrypoints/tui/secret/registration.py`) — 935 líneas"
 
 #: ../../technical/articles/184-profile-registration-recovery-and-runtime-login.md:47
 msgid ""
 "secret/runtime_login.py "
 "(`src/cadrumo/entrypoints/tui/secret/runtime_login.py`) — 714 lines"
 msgstr ""
+"secret/runtime_login.py "
+"(`src/cadrumo/entrypoints/tui/secret/runtime_login.py`) — 714 líneas"

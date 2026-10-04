@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-100` · **Topic:** [Authentication and storage "
 "management](../topics/authentication-and-storage-management.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-100` · **Téma:** [Hitelesítés és "
+"tároláskezelés](../topics/authentication-and-storage-management.md)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:10
 msgid ""
@@ -152,7 +154,7 @@ msgstr ""
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:24
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:26
 msgid ""
@@ -234,51 +236,69 @@ msgid ""
 "All 8 assigned files were read fully across pages 1–3; no portions remain"
 " unread."
 msgstr ""
+"Mind a 8 kijelölt fájlt teljes egészében elolvastam az 1–3. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:40
 msgid ""
 "storage_management/__init__.py "
 "(`src/cadrumo/application/storage_management/__init__.py`)"
 msgstr ""
+"storage_management/__init__.py "
+"(`src/cadrumo/application/storage_management/__init__.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:41
 msgid ""
 "storage_management/errors.py "
 "(`src/cadrumo/application/storage_management/errors.py`)"
 msgstr ""
+"storage_management/errors.py "
+"(`src/cadrumo/application/storage_management/errors.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:42
 msgid ""
 "storage_management/models.py "
 "(`src/cadrumo/application/storage_management/models.py`)"
 msgstr ""
+"storage_management/models.py "
+"(`src/cadrumo/application/storage_management/models.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:43
 msgid ""
 "storage_management/service.py "
 "(`src/cadrumo/application/storage_management/service.py`)"
 msgstr ""
+"storage_management/service.py "
+"(`src/cadrumo/application/storage_management/service.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:44
 msgid ""
 "transactions/__init__.py "
 "(`src/cadrumo/application/transactions/__init__.py`)"
 msgstr ""
+"transactions/__init__.py "
+"(`src/cadrumo/application/transactions/__init__.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:45
 msgid ""
 "transactions/diagnostics.py "
 "(`src/cadrumo/application/transactions/diagnostics.py`)"
 msgstr ""
+"transactions/diagnostics.py "
+"(`src/cadrumo/application/transactions/diagnostics.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:46
 msgid ""
 "transactions/import_classification.py "
 "(`src/cadrumo/application/transactions/import_classification.py`)"
 msgstr ""
+"transactions/import_classification.py "
+"(`src/cadrumo/application/transactions/import_classification.py`)"
 
 #: ../../technical/articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md:47
 msgid ""
 "transactions/import_diagnostics.py "
 "(`src/cadrumo/application/transactions/import_diagnostics.py`)"
 msgstr ""
+"transactions/import_diagnostics.py "
+"(`src/cadrumo/application/transactions/import_diagnostics.py`)"

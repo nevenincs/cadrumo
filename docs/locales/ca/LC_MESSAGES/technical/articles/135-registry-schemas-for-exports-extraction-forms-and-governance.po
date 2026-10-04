@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:1
 msgid "Registry schemas for exports, extraction, forms, and governance"
 msgstr ""
+"Esquemes del registre per a exportacions, extracció, formularis i "
+"governança"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:3
 msgid ""
@@ -46,10 +48,12 @@ msgid ""
 "**Report:** `STAGE-2-135` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-135` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:12
 msgid ""
@@ -64,7 +68,7 @@ msgstr ""
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:14
 msgid "Export, extraction, and form declarations"
-msgstr ""
+msgstr "Declaracions d'exportació, extracció i formularis"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:16
 msgid ""
@@ -143,7 +147,7 @@ msgstr ""
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:24
 msgid "Formula, authority, and revision contracts"
-msgstr ""
+msgstr "Contractes de fórmules, autoritat i revisions"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:26
 msgid ""
@@ -223,7 +227,7 @@ msgstr ""
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:34
 msgid "Security, quality, and limits"
-msgstr ""
+msgstr "Seguretat, qualitat i límits"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:36
 msgid ""
@@ -277,18 +281,24 @@ msgid ""
 "All 11 assigned files were read fully across eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Es van llegir íntegrament els 11 fitxers assignats en vuit pàgines "
+"delimitades; no queda cap interval sense llegir."
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:46
 msgid ""
 "registry/schema_exports.py "
 "(`src/cadrumo/domain/calculations/registry/schema_exports.py`) — 1–961"
 msgstr ""
+"registry/schema_exports.py "
+"(`src/cadrumo/domain/calculations/registry/schema_exports.py`) — 1–961"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:47
 msgid ""
 "registry/schema_extraction.py "
 "(`src/cadrumo/domain/calculations/registry/schema_extraction.py`) — 1–271"
 msgstr ""
+"registry/schema_extraction.py "
+"(`src/cadrumo/domain/calculations/registry/schema_extraction.py`) — 1–271"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:48
 msgid ""
@@ -296,36 +306,49 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/schema_form_layouts.py`) — "
 "1–527"
 msgstr ""
+"registry/schema_form_layouts.py "
+"(`src/cadrumo/domain/calculations/registry/schema_form_layouts.py`) — "
+"1–527"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:49
 msgid ""
 "registry/schema_formula.py "
 "(`src/cadrumo/domain/calculations/registry/schema_formula.py`) — 1–494"
 msgstr ""
+"registry/schema_formula.py "
+"(`src/cadrumo/domain/calculations/registry/schema_formula.py`) — 1–494"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:50
 msgid ""
 "registry/schema_governance.py "
 "(`src/cadrumo/domain/calculations/registry/schema_governance.py`) — 1–247"
 msgstr ""
+"registry/schema_governance.py "
+"(`src/cadrumo/domain/calculations/registry/schema_governance.py`) — 1–247"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:51
 msgid ""
 "registry/schema_input_kind.py "
 "(`src/cadrumo/domain/calculations/registry/schema_input_kind.py`) — 1–43"
 msgstr ""
+"registry/schema_input_kind.py "
+"(`src/cadrumo/domain/calculations/registry/schema_input_kind.py`) — 1–43"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:52
 msgid ""
 "registry/schema_overrides.py "
 "(`src/cadrumo/domain/calculations/registry/schema_overrides.py`) — 1–247"
 msgstr ""
+"registry/schema_overrides.py "
+"(`src/cadrumo/domain/calculations/registry/schema_overrides.py`) — 1–247"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:53
 msgid ""
 "registry/schema_references.py "
 "(`src/cadrumo/domain/calculations/registry/schema_references.py`) — 1–833"
 msgstr ""
+"registry/schema_references.py "
+"(`src/cadrumo/domain/calculations/registry/schema_references.py`) — 1–833"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:54
 msgid ""
@@ -333,15 +356,22 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/schema_revision_members.py`) —"
 " 1–230"
 msgstr ""
+"registry/schema_revision_members.py "
+"(`src/cadrumo/domain/calculations/registry/schema_revision_members.py`) —"
+" 1–230"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:55
 msgid ""
 "registry/schema_rounding.py "
 "(`src/cadrumo/domain/calculations/registry/schema_rounding.py`) — 1–47"
 msgstr ""
+"registry/schema_rounding.py "
+"(`src/cadrumo/domain/calculations/registry/schema_rounding.py`) — 1–47"
 
 #: ../../technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md:56
 msgid ""
 "registry/schema_scalars.py "
 "(`src/cadrumo/domain/calculations/registry/schema_scalars.py`) — 1–539"
 msgstr ""
+"registry/schema_scalars.py "
+"(`src/cadrumo/domain/calculations/registry/schema_scalars.py`) — 1–539"

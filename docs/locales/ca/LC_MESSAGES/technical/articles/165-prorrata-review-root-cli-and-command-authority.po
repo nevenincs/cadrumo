@@ -47,6 +47,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-165` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:10
 msgid "Scope"
@@ -66,7 +69,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:14
 msgid "Registered work and review knowledge"
-msgstr ""
+msgstr "Coneixement de treball registrat i revisió"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:16
 msgid ""
@@ -124,7 +127,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:22
 msgid "Root behavior and operator transport"
-msgstr ""
+msgstr "Comportament arrel i transport de l'operador"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:24
 msgid ""
@@ -200,7 +203,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:32
 msgid "Runtime and command graph"
-msgstr ""
+msgstr "Entorn d'execució i graf d'ordres"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:34
 msgid ""
@@ -269,7 +272,7 @@ msgstr ""
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:40
 msgid "Evidence and limits"
-msgstr ""
+msgstr "Evidències i límits"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:42
 msgid ""
@@ -292,7 +295,7 @@ msgstr "Apèndix de cobertura"
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:46
 msgid "All 27 assigned files are linked below."
-msgstr ""
+msgstr "Els 27 fitxers assignats es referencien a continuació."
 
 #: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:48
 msgid "`src/cadrumo/entrypoints/cli/_profile_session_gate.py`"

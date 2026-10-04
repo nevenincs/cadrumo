@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:1
 msgid "Profile-derived bindings and filing readiness"
-msgstr ""
+msgstr "Profilból származtatott kötések és bevallási készenlét"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-079` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:10
 msgid ""
@@ -204,7 +207,7 @@ msgstr ""
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:28
 msgid "Knowledge, safety, and limitations"
-msgstr ""
+msgstr "Tudás, biztonságosság és korlátok"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:30
 msgid ""
@@ -264,32 +267,40 @@ msgstr ""
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:40
 msgid "printed_boxes.py (`src/cadrumo/application/modelo/printed_boxes.py`)"
-msgstr ""
+msgstr "printed_boxes.py (`src/cadrumo/application/modelo/printed_boxes.py`)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:41
 msgid ""
 "prior_domiciliation.py "
 "(`src/cadrumo/application/modelo/prior_domiciliation.py`)"
 msgstr ""
+"prior_domiciliation.py "
+"(`src/cadrumo/application/modelo/prior_domiciliation.py`)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:42
 msgid ""
 "prior_payment_advisory.py "
 "(`src/cadrumo/application/modelo/prior_payment_advisory.py`)"
 msgstr ""
+"prior_payment_advisory.py "
+"(`src/cadrumo/application/modelo/prior_payment_advisory.py`)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:43
 msgid "profile_binding.py (`src/cadrumo/application/modelo/profile_binding.py`)"
-msgstr ""
+msgstr "profile_binding.py (`src/cadrumo/application/modelo/profile_binding.py`)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:44
 msgid ""
 "profile_export_binding.py "
 "(`src/cadrumo/application/modelo/profile_export_binding.py`)"
 msgstr ""
+"profile_export_binding.py "
+"(`src/cadrumo/application/modelo/profile_export_binding.py`)"
 
 #: ../../technical/articles/079-profile-derived-bindings-and-filing-readiness.md:45
 msgid ""
 "profile_readiness_gate.py "
 "(`src/cadrumo/application/modelo/profile_readiness_gate.py`)"
 msgstr ""
+"profile_readiness_gate.py "
+"(`src/cadrumo/application/modelo/profile_readiness_gate.py`)"

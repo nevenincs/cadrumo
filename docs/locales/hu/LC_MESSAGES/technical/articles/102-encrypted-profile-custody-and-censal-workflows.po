@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:1
 msgid "Encrypted profile custody and censal workflows"
-msgstr ""
+msgstr "Titkosított profilőrzés és adózóitörzs-munkafolyamatok"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-102` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-102` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:10
 msgid ""
@@ -177,7 +179,7 @@ msgstr ""
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:28
 msgid "Knowledge, security, and assessment"
-msgstr ""
+msgstr "Tudás, biztonság és értékelés"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:30
 msgid ""
@@ -286,89 +288,109 @@ msgid ""
 "All 17 assigned files were read fully across pages 1–9; no portions "
 "remain unread."
 msgstr ""
+"Mind a 17 kijelölt fájlt teljes egészében elolvastam az 1–9. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:46
 msgid ""
 "bundle_export_operation.py "
 "(`src/cadrumo/application/user_profile/bundle_export_operation.py`)"
 msgstr ""
+"bundle_export_operation.py "
+"(`src/cadrumo/application/user_profile/bundle_export_operation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:47
 msgid "capabilities.py (`src/cadrumo/application/user_profile/capabilities.py`)"
-msgstr ""
+msgstr "capabilities.py (`src/cadrumo/application/user_profile/capabilities.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:48
 msgid ""
 "capsule_archive.py "
 "(`src/cadrumo/application/user_profile/capsule_archive.py`)"
 msgstr ""
+"capsule_archive.py "
+"(`src/cadrumo/application/user_profile/capsule_archive.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:49
 msgid ""
 "capsule_record.py "
 "(`src/cadrumo/application/user_profile/capsule_record.py`)"
 msgstr ""
+"capsule_record.py "
+"(`src/cadrumo/application/user_profile/capsule_record.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:50
 msgid ""
 "capsule_restore.py "
 "(`src/cadrumo/application/user_profile/capsule_restore.py`)"
 msgstr ""
+"capsule_restore.py "
+"(`src/cadrumo/application/user_profile/capsule_restore.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:51
 msgid "censal_access.py (`src/cadrumo/application/user_profile/censal_access.py`)"
-msgstr ""
+msgstr "censal_access.py (`src/cadrumo/application/user_profile/censal_access.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:52
 msgid ""
 "censal_file_import_operation.py "
 "(`src/cadrumo/application/user_profile/censal_file_import_operation.py`)"
 msgstr ""
+"censal_file_import_operation.py "
+"(`src/cadrumo/application/user_profile/censal_file_import_operation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:53
 msgid ""
 "censal_observation.py "
 "(`src/cadrumo/application/user_profile/censal_observation.py`)"
 msgstr ""
+"censal_observation.py "
+"(`src/cadrumo/application/user_profile/censal_observation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:54
 msgid ""
 "censal_operation.py "
 "(`src/cadrumo/application/user_profile/censal_operation.py`)"
 msgstr ""
+"censal_operation.py "
+"(`src/cadrumo/application/user_profile/censal_operation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:55
 msgid ""
 "censal_prepare_operation.py "
 "(`src/cadrumo/application/user_profile/censal_prepare_operation.py`)"
 msgstr ""
+"censal_prepare_operation.py "
+"(`src/cadrumo/application/user_profile/censal_prepare_operation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:56
 msgid ""
 "censal_preview_operation.py "
 "(`src/cadrumo/application/user_profile/censal_preview_operation.py`)"
 msgstr ""
+"censal_preview_operation.py "
+"(`src/cadrumo/application/user_profile/censal_preview_operation.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:57
 msgid "censo_errors.py (`src/cadrumo/application/user_profile/censo_errors.py`)"
-msgstr ""
+msgstr "censo_errors.py (`src/cadrumo/application/user_profile/censo_errors.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:58
 msgid "censo_sync.py (`src/cadrumo/application/user_profile/censo_sync.py`)"
-msgstr ""
+msgstr "censo_sync.py (`src/cadrumo/application/user_profile/censo_sync.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:59
 msgid "commands.py (`src/cadrumo/application/user_profile/commands.py`)"
-msgstr ""
+msgstr "commands.py (`src/cadrumo/application/user_profile/commands.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:60
 msgid "completeness.py (`src/cadrumo/application/user_profile/completeness.py`)"
-msgstr ""
+msgstr "completeness.py (`src/cadrumo/application/user_profile/completeness.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:61
 msgid "cotejo_apply.py (`src/cadrumo/application/user_profile/cotejo_apply.py`)"
-msgstr ""
+msgstr "cotejo_apply.py (`src/cadrumo/application/user_profile/cotejo_apply.py`)"
 
 #: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:62
 msgid "custody_carry.py (`src/cadrumo/application/user_profile/custody_carry.py`)"
-msgstr ""
+msgstr "custody_carry.py (`src/cadrumo/application/user_profile/custody_carry.py`)"

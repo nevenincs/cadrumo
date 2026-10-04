@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:1
 msgid "Operation contracts, observation and transient operands"
-msgstr ""
+msgstr "Műveleti szerződések, megfigyelés és átmeneti operandusok"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-090` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-090` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:10
 msgid ""
@@ -147,7 +149,7 @@ msgstr ""
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:24
 msgid "Knowledge, security, and implementation assessment"
-msgstr ""
+msgstr "Tudás-, biztonsági és megvalósítási értékelés"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:26
 msgid ""
@@ -256,125 +258,153 @@ msgid ""
 "All 24 assigned files were read completely through pages 1–9; no portions"
 " were unread."
 msgstr ""
+"Mind a 24 kijelölt fájlt teljes egészében elolvastam az 1–9. oldalakon; "
+"nem maradt olvasatlan rész."
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:44
 msgid "capabilities.py (`src/cadrumo/application/operations/capabilities.py`)"
-msgstr ""
+msgstr "capabilities.py (`src/cadrumo/application/operations/capabilities.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:45
 msgid "composition.py (`src/cadrumo/application/operations/composition.py`)"
-msgstr ""
+msgstr "composition.py (`src/cadrumo/application/operations/composition.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:46
 msgid "drain.py (`src/cadrumo/application/operations/drain.py`)"
-msgstr ""
+msgstr "drain.py (`src/cadrumo/application/operations/drain.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:47
 msgid "error_detail.py (`src/cadrumo/application/operations/error_detail.py`)"
-msgstr ""
+msgstr "error_detail.py (`src/cadrumo/application/operations/error_detail.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:48
 msgid "errors.py (`src/cadrumo/application/operations/errors.py`)"
-msgstr ""
+msgstr "errors.py (`src/cadrumo/application/operations/errors.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:49
 msgid "event_replay.py (`src/cadrumo/application/operations/event_replay.py`)"
-msgstr ""
+msgstr "event_replay.py (`src/cadrumo/application/operations/event_replay.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:50
 msgid "events.py (`src/cadrumo/application/operations/events.py`)"
-msgstr ""
+msgstr "events.py (`src/cadrumo/application/operations/events.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:51
 msgid ""
 "financial_operand.py "
 "(`src/cadrumo/application/operations/financial_operand.py`)"
 msgstr ""
+"financial_operand.py "
+"(`src/cadrumo/application/operations/financial_operand.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:52
 msgid ""
 "financial_operand_custody.py "
 "(`src/cadrumo/application/operations/financial_operand_custody.py`)"
 msgstr ""
+"financial_operand_custody.py "
+"(`src/cadrumo/application/operations/financial_operand_custody.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:53
 msgid ""
 "financial_operand_submission.py "
 "(`src/cadrumo/application/operations/financial_operand_submission.py`)"
 msgstr ""
+"financial_operand_submission.py "
+"(`src/cadrumo/application/operations/financial_operand_submission.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:54
 msgid ""
 "frontend_contracts.py "
 "(`src/cadrumo/application/operations/frontend_contracts.py`)"
 msgstr ""
+"frontend_contracts.py "
+"(`src/cadrumo/application/operations/frontend_contracts.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:55
 msgid ""
 "frontend_projection.py "
 "(`src/cadrumo/application/operations/frontend_projection.py`)"
 msgstr ""
+"frontend_projection.py "
+"(`src/cadrumo/application/operations/frontend_projection.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:56
 msgid ""
 "frontend_requests.py "
 "(`src/cadrumo/application/operations/frontend_requests.py`)"
 msgstr ""
+"frontend_requests.py "
+"(`src/cadrumo/application/operations/frontend_requests.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:57
 msgid "interactions.py (`src/cadrumo/application/operations/interactions.py`)"
-msgstr ""
+msgstr "interactions.py (`src/cadrumo/application/operations/interactions.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:58
 msgid "models.py (`src/cadrumo/application/operations/models.py`)"
-msgstr ""
+msgstr "models.py (`src/cadrumo/application/operations/models.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:59
 msgid "observation.py (`src/cadrumo/application/operations/observation.py`)"
-msgstr ""
+msgstr "observation.py (`src/cadrumo/application/operations/observation.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:60
 msgid ""
 "operation_definition.py "
 "(`src/cadrumo/application/operations/operation_definition.py`)"
 msgstr ""
+"operation_definition.py "
+"(`src/cadrumo/application/operations/operation_definition.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:61
 msgid "owner.py (`src/cadrumo/application/operations/owner.py`)"
-msgstr ""
+msgstr "owner.py (`src/cadrumo/application/operations/owner.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:62
 msgid ""
 "persistence/__init__.py "
 "(`src/cadrumo/application/operations/persistence/__init__.py`)"
 msgstr ""
+"persistence/__init__.py "
+"(`src/cadrumo/application/operations/persistence/__init__.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:63
 msgid ""
 "persistence/_journal_snapshot_validation.py "
 "(`src/cadrumo/application/operations/persistence/_journal_snapshot_validation.py`)"
 msgstr ""
+"persistence/_journal_snapshot_validation.py "
+"(`src/cadrumo/application/operations/persistence/_journal_snapshot_validation.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:64
 msgid ""
 "persistence/events.py "
 "(`src/cadrumo/application/operations/persistence/events.py`)"
 msgstr ""
+"persistence/events.py "
+"(`src/cadrumo/application/operations/persistence/events.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:65
 msgid ""
 "persistence/financial_operand_custody.py "
 "(`src/cadrumo/application/operations/persistence/financial_operand_custody.py`)"
 msgstr ""
+"persistence/financial_operand_custody.py "
+"(`src/cadrumo/application/operations/persistence/financial_operand_custody.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:66
 msgid ""
 "persistence/idempotency.py "
 "(`src/cadrumo/application/operations/persistence/idempotency.py`)"
 msgstr ""
+"persistence/idempotency.py "
+"(`src/cadrumo/application/operations/persistence/idempotency.py`)"
 
 #: ../../technical/articles/090-operation-contracts-observation-and-transient-operands.md:67
 msgid ""
 "persistence/journal.py "
 "(`src/cadrumo/application/operations/persistence/journal.py`)"
 msgstr ""
+"persistence/journal.py "
+"(`src/cadrumo/application/operations/persistence/journal.py`)"

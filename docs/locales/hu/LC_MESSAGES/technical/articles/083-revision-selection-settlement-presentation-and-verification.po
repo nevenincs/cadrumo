@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:1
 msgid "Revision selection, settlement presentation, and verification"
-msgstr ""
+msgstr "Revízióválasztás, elszámolásmegjelenítés és ellenőrzés"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-083` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:10
 msgid ""
@@ -236,7 +239,7 @@ msgstr ""
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:34
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:36
 msgid ""
@@ -296,77 +299,101 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:46
 msgid "All 13 assigned source files were read completely through pages 1–8."
 msgstr ""
+"Mind a 13 kijelölt forrásfájlt teljes egészében elolvastam az 1–8. "
+"oldalakon."
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:48
 msgid ""
 "revision_selection_operation.py "
 "(`src/cadrumo/application/modelo/revision_selection_operation.py`)"
 msgstr ""
+"revision_selection_operation.py "
+"(`src/cadrumo/application/modelo/revision_selection_operation.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:49
 msgid ""
 "revision_snapshot_operation.py "
 "(`src/cadrumo/application/modelo/revision_snapshot_operation.py`)"
 msgstr ""
+"revision_snapshot_operation.py "
+"(`src/cadrumo/application/modelo/revision_snapshot_operation.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:50
 msgid ""
 "row_source_fingerprint.py "
 "(`src/cadrumo/application/modelo/row_source_fingerprint.py`)"
 msgstr ""
+"row_source_fingerprint.py "
+"(`src/cadrumo/application/modelo/row_source_fingerprint.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:51
 msgid "selectors.py (`src/cadrumo/application/modelo/selectors.py`)"
-msgstr ""
+msgstr "selectors.py (`src/cadrumo/application/modelo/selectors.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:52
 msgid ""
 "semantic_role_resolution.py "
 "(`src/cadrumo/application/modelo/semantic_role_resolution.py`)"
 msgstr ""
+"semantic_role_resolution.py "
+"(`src/cadrumo/application/modelo/semantic_role_resolution.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:53
 msgid ""
 "settlement_casilla.py "
 "(`src/cadrumo/application/modelo/settlement_casilla.py`)"
 msgstr ""
+"settlement_casilla.py "
+"(`src/cadrumo/application/modelo/settlement_casilla.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:54
 msgid "source_policy.py (`src/cadrumo/application/modelo/source_policy.py`)"
-msgstr ""
+msgstr "source_policy.py (`src/cadrumo/application/modelo/source_policy.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:55
 msgid ""
 "stored_row_field_input_gate.py "
 "(`src/cadrumo/application/modelo/stored_row_field_input_gate.py`)"
 msgstr ""
+"stored_row_field_input_gate.py "
+"(`src/cadrumo/application/modelo/stored_row_field_input_gate.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:56
 msgid ""
 "taxation_comparison.py "
 "(`src/cadrumo/application/modelo/taxation_comparison.py`)"
 msgstr ""
+"taxation_comparison.py "
+"(`src/cadrumo/application/modelo/taxation_comparison.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:57
 msgid ""
 "taxation_comparison_operation.py "
 "(`src/cadrumo/application/modelo/taxation_comparison_operation.py`)"
 msgstr ""
+"taxation_comparison_operation.py "
+"(`src/cadrumo/application/modelo/taxation_comparison_operation.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:58
 msgid ""
 "taxation_comparison_ports.py "
 "(`src/cadrumo/application/modelo/taxation_comparison_ports.py`)"
 msgstr ""
+"taxation_comparison_ports.py "
+"(`src/cadrumo/application/modelo/taxation_comparison_ports.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:59
 msgid ""
 "value_presentation.py "
 "(`src/cadrumo/application/modelo/value_presentation.py`)"
 msgstr ""
+"value_presentation.py "
+"(`src/cadrumo/application/modelo/value_presentation.py`)"
 
 #: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:60
 msgid ""
 "verification_actions.py "
 "(`src/cadrumo/application/modelo/verification_actions.py`)"
 msgstr ""
+"verification_actions.py "
+"(`src/cadrumo/application/modelo/verification_actions.py`)"

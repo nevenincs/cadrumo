@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:1
 msgid "Setup wizard, profile editing, and command construction"
-msgstr ""
+msgstr "Beállítási varázsló, profilszerkesztés és parancsépítés"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-107` · **Topic:** [Operations, profiles and "
 "workflows](../topics/operations-profiles-and-workflows.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-107` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:14
 msgid "Setup wizard and profile editing"
-msgstr ""
+msgstr "Beállítási varázsló és profilszerkesztés"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:16
 msgid ""
@@ -156,7 +158,7 @@ msgstr ""
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:26
 msgid "Descendant data entry"
-msgstr ""
+msgstr "Leszármazottak adatainak bevitele"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:28
 msgid ""
@@ -226,7 +228,7 @@ msgstr ""
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:34
 msgid "Knowledge, controls, and assessment"
-msgstr ""
+msgstr "Tudás, kontrollok és értékelés"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:36
 msgid ""
@@ -263,34 +265,36 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:42
 msgid "__init__.py (`src/cadrumo/application/wizard/__init__.py`)"
-msgstr ""
+msgstr "__init__.py (`src/cadrumo/application/wizard/__init__.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:43
 msgid ""
 "_checkpoint_store.py "
 "(`src/cadrumo/application/wizard/_checkpoint_store.py`)"
 msgstr ""
+"_checkpoint_store.py "
+"(`src/cadrumo/application/wizard/_checkpoint_store.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:44
 msgid "_format_hints.py (`src/cadrumo/application/wizard/_format_hints.py`)"
-msgstr ""
+msgstr "_format_hints.py (`src/cadrumo/application/wizard/_format_hints.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:45
 msgid "catalogue.py (`src/cadrumo/application/wizard/catalogue.py`)"
-msgstr ""
+msgstr "catalogue.py (`src/cadrumo/application/wizard/catalogue.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:46
 msgid "commands.py (`src/cadrumo/application/wizard/commands.py`)"
-msgstr ""
+msgstr "commands.py (`src/cadrumo/application/wizard/commands.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:47
 msgid "compiler.py (`src/cadrumo/application/wizard/compiler.py`)"
-msgstr ""
+msgstr "compiler.py (`src/cadrumo/application/wizard/compiler.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:48
 msgid "descendant_door.py (`src/cadrumo/application/wizard/descendant_door.py`)"
-msgstr ""
+msgstr "descendant_door.py (`src/cadrumo/application/wizard/descendant_door.py`)"
 
 #: ../../technical/articles/107-setup-wizard-profile-editing-and-command-construction.md:49
 msgid "descendant_group.py (`src/cadrumo/application/wizard/descendant_group.py`)"
-msgstr ""
+msgstr "descendant_group.py (`src/cadrumo/application/wizard/descendant_group.py`)"

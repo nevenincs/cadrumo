@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:1
 msgid "Supervised filing lifecycle and operation contracts"
-msgstr ""
+msgstr "Felügyelt bevallási életciklus és műveleti szerződések"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-078` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:10
 msgid ""
@@ -58,7 +61,7 @@ msgstr ""
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:12
 msgid "Product capabilities and execution"
-msgstr ""
+msgstr "Termékképességek és végrehajtás"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:14
 msgid ""
@@ -206,7 +209,7 @@ msgstr ""
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:28
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:30
 msgid ""
@@ -298,59 +301,77 @@ msgid ""
 "modelo_spreadsheet_observations.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_observations.py`)"
 msgstr ""
+"modelo_spreadsheet_observations.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_observations.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:45
 msgid ""
 "modelo_spreadsheet_operation.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`)"
 msgstr ""
+"modelo_spreadsheet_operation.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:46
 msgid ""
 "modelo_spreadsheet_operation_contracts.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_contracts.py`)"
 msgstr ""
+"modelo_spreadsheet_operation_contracts.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_contracts.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:47
 msgid ""
 "modelo_spreadsheet_operation_projections.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_projections.py`)"
 msgstr ""
+"modelo_spreadsheet_operation_projections.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_projections.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:48
 msgid ""
 "modelo_spreadsheet_operation_scenario.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_scenario.py`)"
 msgstr ""
+"modelo_spreadsheet_operation_scenario.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_operation_scenario.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:49
 msgid ""
 "modelo_spreadsheet_registration.py "
 "(`src/cadrumo/application/modelo/modelo_spreadsheet_registration.py`)"
 msgstr ""
+"modelo_spreadsheet_registration.py "
+"(`src/cadrumo/application/modelo/modelo_spreadsheet_registration.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:50
 msgid ""
 "operation_definitions.py "
 "(`src/cadrumo/application/modelo/operation_definitions.py`)"
 msgstr ""
+"operation_definitions.py "
+"(`src/cadrumo/application/modelo/operation_definitions.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:51
 msgid "operator_inputs.py (`src/cadrumo/application/modelo/operator_inputs.py`)"
-msgstr ""
+msgstr "operator_inputs.py (`src/cadrumo/application/modelo/operator_inputs.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:52
 msgid ""
 "participation_index_rebuild.py "
 "(`src/cadrumo/application/modelo/participation_index_rebuild.py`)"
 msgstr ""
+"participation_index_rebuild.py "
+"(`src/cadrumo/application/modelo/participation_index_rebuild.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:53
 msgid ""
 "participation_index_rebuild_ports.py "
 "(`src/cadrumo/application/modelo/participation_index_rebuild_ports.py`)"
 msgstr ""
+"participation_index_rebuild_ports.py "
+"(`src/cadrumo/application/modelo/participation_index_rebuild_ports.py`)"
 
 #: ../../technical/articles/078-supervised-filing-lifecycle-and-operation-contracts.md:54
 msgid "preconditions.py (`src/cadrumo/application/modelo/preconditions.py`)"
-msgstr ""
+msgstr "preconditions.py (`src/cadrumo/application/modelo/preconditions.py`)"

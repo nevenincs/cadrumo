@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:1
 msgid "Taxpayer applicability and indexed registry authority"
-msgstr ""
+msgstr "Adózói alkalmazhatóság és indexelt regiszterszabályforrás"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-125` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-125` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:12
 msgid ""
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:14
 msgid "Taxpayer applicability and 202 modality"
-msgstr ""
+msgstr "Adózói alkalmazhatóság és 202-es módozat"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:16
 msgid ""
@@ -124,7 +126,7 @@ msgstr ""
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:22
 msgid "Generation-pinned registry authority"
-msgstr ""
+msgstr "Generációhoz rögzített mérvadó regiszter"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:24
 msgid ""
@@ -214,7 +216,7 @@ msgstr ""
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:32
 msgid "Binding/catalogue contracts and assessment"
-msgstr ""
+msgstr "Kötési/katalógusszerződések és értékelés"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:34
 msgid ""
@@ -264,6 +266,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/applicability.py`) — lines "
 "1–1,164"
 msgstr ""
+"registry/applicability.py "
+"(`src/cadrumo/domain/calculations/registry/applicability.py`) — 1–1,164. "
+"sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:41
 msgid ""
@@ -271,6 +276,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/applicability_modelo202.py`) —"
 " lines 1–235"
 msgstr ""
+"registry/applicability_modelo202.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_modelo202.py`) —"
+" 1–235. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:42
 msgid ""
@@ -278,6 +286,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`)"
 " — lines 1–297"
 msgstr ""
+"registry/applicability_payer_facts.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`)"
+" — 1–297. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:43
 msgid ""
@@ -285,12 +296,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/applicability_routes.py`) — "
 "lines 1–34"
 msgstr ""
+"registry/applicability_routes.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_routes.py`) — "
+"1–34. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:44
 msgid ""
 "registry/authority.py "
 "(`src/cadrumo/domain/calculations/registry/authority.py`) — lines 1–1,039"
 msgstr ""
+"registry/authority.py "
+"(`src/cadrumo/domain/calculations/registry/authority.py`) — 1–1,039. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:45
 msgid ""
@@ -298,6 +314,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/authority_artifact.py`) — "
 "lines 1–488"
 msgstr ""
+"registry/authority_artifact.py "
+"(`src/cadrumo/domain/calculations/registry/authority_artifact.py`) — "
+"1–488. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:46
 msgid ""
@@ -305,6 +324,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/authority_cache.py`) — lines "
 "1–257"
 msgstr ""
+"registry/authority_cache.py "
+"(`src/cadrumo/domain/calculations/registry/authority_cache.py`) — 1–257. "
+"sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:47
 msgid ""
@@ -312,6 +334,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/authority_component_codec.py`)"
 " — lines 1–428"
 msgstr ""
+"registry/authority_component_codec.py "
+"(`src/cadrumo/domain/calculations/registry/authority_component_codec.py`)"
+" — 1–428. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:48
 msgid ""
@@ -319,6 +344,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/authority_store.py`) — lines "
 "1–430"
 msgstr ""
+"registry/authority_store.py "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) — 1–430. "
+"sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:49
 msgid ""
@@ -326,6 +354,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/bienes_inversion_catalogue.py`)"
 " — lines 1–399"
 msgstr ""
+"registry/bienes_inversion_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_catalogue.py`)"
+" — 1–399. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:50
 msgid ""
@@ -333,6 +364,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/bienes_inversion_regularizacion_bindings.py`)"
 " — lines 1–52"
 msgstr ""
+"registry/bienes_inversion_regularizacion_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_regularizacion_bindings.py`)"
+" — 1–52. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:51
 msgid ""
@@ -340,6 +374,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_aggregation.py`) — "
 "lines 1–68"
 msgstr ""
+"registry/binding_aggregation.py "
+"(`src/cadrumo/domain/calculations/registry/binding_aggregation.py`) — "
+"1–68. sor"
 
 #: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:52
 msgid ""
@@ -347,3 +384,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_provider.py`) — lines "
 "1–103"
 msgstr ""
+"registry/binding_provider.py "
+"(`src/cadrumo/domain/calculations/registry/binding_provider.py`) — 1–103."
+" sor"

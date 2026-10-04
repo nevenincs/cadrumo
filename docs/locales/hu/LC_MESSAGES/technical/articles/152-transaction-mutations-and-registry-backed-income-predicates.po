@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:1
 msgid "Transaction mutations and registry-backed income predicates"
-msgstr ""
+msgstr "Tranzakciómódosítások és regiszterre épülő jövedelempredikátumok"
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:3
 msgid ""
@@ -44,6 +44,8 @@ msgid ""
 "**Report:** `STAGE-2-152` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-152` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:10
 msgid "Scope"
@@ -60,7 +62,7 @@ msgstr ""
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:16
 msgid ""
@@ -112,7 +114,7 @@ msgstr ""
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:22
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Biztonsági és minőségi értékelés"
 
 #: ../../technical/articles/152-transaction-mutations-and-registry-backed-income-predicates.md:24
 msgid ""

@@ -45,6 +45,8 @@ msgid ""
 "**Report:** `STAGE-2-200` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-200` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/200-eu-vat-reference-text.md:10
 msgid "Scope"
@@ -167,9 +169,13 @@ msgid ""
 "`src/cadrumo/_data/manual_corpus_text/eu_official/iva/eprs-iva-rates-"
 "eu-2025-07-01.pdf.corpus_text.json` — 44,016 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/eu_official/iva/eprs-iva-rates-"
+"eu-2025-07-01.pdf.corpus_text.json` — 44,016 bytes"
 
 #: ../../technical/articles/200-eu-vat-reference-text.md:35
 msgid ""
 "`src/cadrumo/_data/manual_corpus_text/eu_official/iva/romania-iva-rate-"
 "change-2025.pdf.corpus_text.json` — 20,759 bytes"
 msgstr ""
+"`src/cadrumo/_data/manual_corpus_text/eu_official/iva/romania-iva-rate-"
+"change-2025.pdf.corpus_text.json` — 20,759 bytes"

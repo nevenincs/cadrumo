@@ -45,10 +45,12 @@ msgid ""
 "**Report:** `STAGE-2-204` · **Topic:** [Bundled knowledge and "
 "localization](../topics/bundled-knowledge-and-localization.md)"
 msgstr ""
+"**Informe:** `STAGE-2-204` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
 
 #: ../../technical/articles/204-cadrumo-user-profile-schema.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Ámbito y método"
 
 #: ../../technical/articles/204-cadrumo-user-profile-schema.md:12
 msgid ""
@@ -173,7 +175,7 @@ msgstr ""
 
 #: ../../technical/articles/204-cadrumo-user-profile-schema.md:30
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Valoración de seguridad e implementación"
 
 #: ../../technical/articles/204-cadrumo-user-profile-schema.md:32
 msgid ""
@@ -252,3 +254,5 @@ msgid ""
 "`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` — 92,246 "
 "bytes"
 msgstr ""
+"`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` — 92,246 "
+"bytes"

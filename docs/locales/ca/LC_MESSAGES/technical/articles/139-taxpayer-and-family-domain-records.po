@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:1
 msgid "taxpayer and family domain records"
-msgstr ""
+msgstr "registres del domini del contribuent i la família"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-139` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-139` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:10
 msgid "Scope"
@@ -69,7 +71,7 @@ msgstr ""
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:16
 msgid ""
@@ -339,86 +341,104 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:58
 msgid "contribuyente/__init__.py (`src/cadrumo/domain/contribuyente/__init__.py`)"
-msgstr ""
+msgstr "contribuyente/__init__.py (`src/cadrumo/domain/contribuyente/__init__.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:59
 msgid "ccaa.py (`src/cadrumo/domain/contribuyente/ccaa.py`)"
-msgstr ""
+msgstr "ccaa.py (`src/cadrumo/domain/contribuyente/ccaa.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:60
 msgid "constants.py (`src/cadrumo/domain/contribuyente/constants.py`)"
-msgstr ""
+msgstr "constants.py (`src/cadrumo/domain/contribuyente/constants.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:61
 msgid ""
 "deduccion_maternidad.py "
 "(`src/cadrumo/domain/contribuyente/deduccion_maternidad.py`)"
 msgstr ""
+"deduccion_maternidad.py "
+"(`src/cadrumo/domain/contribuyente/deduccion_maternidad.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:62
 msgid "descendant.py (`src/cadrumo/domain/contribuyente/descendant.py`)"
-msgstr ""
+msgstr "descendant.py (`src/cadrumo/domain/contribuyente/descendant.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:63
 msgid ""
 "descendant_facts.py "
 "(`src/cadrumo/domain/contribuyente/descendant_facts.py`)"
 msgstr ""
+"descendant_facts.py "
+"(`src/cadrumo/domain/contribuyente/descendant_facts.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:64
 msgid ""
 "descendant_guarderia.py "
 "(`src/cadrumo/domain/contribuyente/descendant_guarderia.py`)"
 msgstr ""
+"descendant_guarderia.py "
+"(`src/cadrumo/domain/contribuyente/descendant_guarderia.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:65
 msgid ""
 "descendant_madrid.py "
 "(`src/cadrumo/domain/contribuyente/descendant_madrid.py`)"
 msgstr ""
+"descendant_madrid.py "
+"(`src/cadrumo/domain/contribuyente/descendant_madrid.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:66
 msgid ""
 "descendant_maternity.py "
 "(`src/cadrumo/domain/contribuyente/descendant_maternity.py`)"
 msgstr ""
+"descendant_maternity.py "
+"(`src/cadrumo/domain/contribuyente/descendant_maternity.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:67
 msgid ""
 "descendant_record.py "
 "(`src/cadrumo/domain/contribuyente/descendant_record.py`)"
 msgstr ""
+"descendant_record.py "
+"(`src/cadrumo/domain/contribuyente/descendant_record.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:68
 msgid "entity_type.py (`src/cadrumo/domain/contribuyente/entity_type.py`)"
-msgstr ""
+msgstr "entity_type.py (`src/cadrumo/domain/contribuyente/entity_type.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:69
 msgid "errors.py (`src/cadrumo/domain/contribuyente/errors.py`)"
-msgstr ""
+msgstr "errors.py (`src/cadrumo/domain/contribuyente/errors.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:70
 msgid ""
 "family_fact_context.py "
 "(`src/cadrumo/domain/contribuyente/family_fact_context.py`)"
 msgstr ""
+"family_fact_context.py "
+"(`src/cadrumo/domain/contribuyente/family_fact_context.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:71
 msgid "family_profile.py (`src/cadrumo/domain/contribuyente/family_profile.py`)"
-msgstr ""
+msgstr "family_profile.py (`src/cadrumo/domain/contribuyente/family_profile.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:72
 msgid "family_types.py (`src/cadrumo/domain/contribuyente/family_types.py`)"
-msgstr ""
+msgstr "family_types.py (`src/cadrumo/domain/contribuyente/family_types.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:73
 msgid ""
 "guarderia_mensual.py "
 "(`src/cadrumo/domain/contribuyente/guarderia_mensual.py`)"
 msgstr ""
+"guarderia_mensual.py "
+"(`src/cadrumo/domain/contribuyente/guarderia_mensual.py`)"
 
 #: ../../technical/articles/139-taxpayer-and-family-domain-records.md:74
 msgid ""
 "inventory/__init__.py "
 "(`src/cadrumo/domain/contribuyente/inventory/__init__.py`)"
 msgstr ""
+"inventory/__init__.py "
+"(`src/cadrumo/domain/contribuyente/inventory/__init__.py`)"

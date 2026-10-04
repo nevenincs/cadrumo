@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:1
 msgid "CLI contracts, execution projection, diagnostics and evidence notices"
-msgstr ""
+msgstr "CLI-szerződések, végrehajtási vetület, diagnosztika és bizonyítékjelzések"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-158` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:10
 msgid "Scope and capability"
@@ -135,7 +138,7 @@ msgstr ""
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:22
 msgid "How the command boundary works"
-msgstr ""
+msgstr "A parancshatár működése"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:24
 msgid ""
@@ -200,7 +203,7 @@ msgstr ""
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:30
 msgid "Knowledge, trust and safety"
-msgstr ""
+msgstr "Tudás, bizalom és biztonságosság"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:32
 msgid ""
@@ -295,167 +298,213 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:46
 msgid "All 30 manifest files are linked below; every assigned line was read."
 msgstr ""
+"A jegyzék mind a 30 fájljára alább található hivatkozás; minden kijelölt "
+"sort elolvastam."
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:48
 msgid ""
 "_app_live_rendering.py "
 "(`src/cadrumo/entrypoints/cli/_app_live_rendering.py`)"
 msgstr ""
+"_app_live_rendering.py "
+"(`src/cadrumo/entrypoints/cli/_app_live_rendering.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:49
 msgid ""
 "_app_live_verify_cli.py "
 "(`src/cadrumo/entrypoints/cli/_app_live_verify_cli.py`)"
 msgstr ""
+"_app_live_verify_cli.py "
+"(`src/cadrumo/entrypoints/cli/_app_live_verify_cli.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:50
 msgid ""
 "_app_live_verify_command_specs.py "
 "(`src/cadrumo/entrypoints/cli/_app_live_verify_command_specs.py`)"
 msgstr ""
+"_app_live_verify_command_specs.py "
+"(`src/cadrumo/entrypoints/cli/_app_live_verify_command_specs.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:51
 msgid ""
 "_app_live_verify_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_app_live_verify_payloads.py`)"
 msgstr ""
+"_app_live_verify_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_app_live_verify_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:52
 msgid "_app_quickfile.py (`src/cadrumo/entrypoints/cli/_app_quickfile.py`)"
-msgstr ""
+msgstr "_app_quickfile.py (`src/cadrumo/entrypoints/cli/_app_quickfile.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:53
 msgid ""
 "_app_quickfile_command_specs.py "
 "(`src/cadrumo/entrypoints/cli/_app_quickfile_command_specs.py`)"
 msgstr ""
+"_app_quickfile_command_specs.py "
+"(`src/cadrumo/entrypoints/cli/_app_quickfile_command_specs.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:54
 msgid ""
 "_app_quickfile_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py`)"
 msgstr ""
+"_app_quickfile_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:55
 msgid ""
 "_argument_only_refusals.py "
 "(`src/cadrumo/entrypoints/cli/_argument_only_refusals.py`)"
 msgstr ""
+"_argument_only_refusals.py "
+"(`src/cadrumo/entrypoints/cli/_argument_only_refusals.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:56
 msgid ""
 "_bienes_inversion_cli.py "
 "(`src/cadrumo/entrypoints/cli/_bienes_inversion_cli.py`)"
 msgstr ""
+"_bienes_inversion_cli.py "
+"(`src/cadrumo/entrypoints/cli/_bienes_inversion_cli.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:57
 msgid ""
 "_bienes_inversion_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py`)"
 msgstr ""
+"_bienes_inversion_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:58
 msgid "_bootstrap_exempt.py (`src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`)"
-msgstr ""
+msgstr "_bootstrap_exempt.py (`src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:59
 msgid ""
 "_command_parameter_contracts.py "
 "(`src/cadrumo/entrypoints/cli/_command_parameter_contracts.py`)"
 msgstr ""
+"_command_parameter_contracts.py "
+"(`src/cadrumo/entrypoints/cli/_command_parameter_contracts.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:60
 msgid ""
 "_command_parameter_validation.py "
 "(`src/cadrumo/entrypoints/cli/_command_parameter_validation.py`)"
 msgstr ""
+"_command_parameter_validation.py "
+"(`src/cadrumo/entrypoints/cli/_command_parameter_validation.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:61
 msgid "_command_policy.py (`src/cadrumo/entrypoints/cli/_command_policy.py`)"
-msgstr ""
+msgstr "_command_policy.py (`src/cadrumo/entrypoints/cli/_command_policy.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:62
 msgid ""
 "_command_policy_validation.py "
 "(`src/cadrumo/entrypoints/cli/_command_policy_validation.py`)"
 msgstr ""
+"_command_policy_validation.py "
+"(`src/cadrumo/entrypoints/cli/_command_policy_validation.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:63
 msgid "_command_runtime.py (`src/cadrumo/entrypoints/cli/_command_runtime.py`)"
-msgstr ""
+msgstr "_command_runtime.py (`src/cadrumo/entrypoints/cli/_command_runtime.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:64
 msgid ""
 "_command_secret_contracts.py "
 "(`src/cadrumo/entrypoints/cli/_command_secret_contracts.py`)"
 msgstr ""
+"_command_secret_contracts.py "
+"(`src/cadrumo/entrypoints/cli/_command_secret_contracts.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:65
 msgid ""
 "_command_shared_contracts.py "
 "(`src/cadrumo/entrypoints/cli/_command_shared_contracts.py`)"
 msgstr ""
+"_command_shared_contracts.py "
+"(`src/cadrumo/entrypoints/cli/_command_shared_contracts.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:66
 msgid ""
 "_command_structure_validation.py "
 "(`src/cadrumo/entrypoints/cli/_command_structure_validation.py`)"
 msgstr ""
+"_command_structure_validation.py "
+"(`src/cadrumo/entrypoints/cli/_command_structure_validation.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:67
 msgid "_command_target.py (`src/cadrumo/entrypoints/cli/_command_target.py`)"
-msgstr ""
+msgstr "_command_target.py (`src/cadrumo/entrypoints/cli/_command_target.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:68
 msgid ""
 "_config_bucket_history_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_config_bucket_history_payloads.py`)"
 msgstr ""
+"_config_bucket_history_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_config_bucket_history_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:69
 msgid ""
 "_config_descendiente_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_config_descendiente_payloads.py`)"
 msgstr ""
+"_config_descendiente_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_config_descendiente_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:70
 msgid ""
 "_config_help_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_config_help_payloads.py`)"
 msgstr ""
+"_config_help_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_config_help_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:71
 msgid ""
 "_config_plantilla_media_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_config_plantilla_media_payloads.py`)"
 msgstr ""
+"_config_plantilla_media_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_config_plantilla_media_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:72
 msgid ""
 "_config_quarantine_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_config_quarantine_payloads.py`)"
 msgstr ""
+"_config_quarantine_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_config_quarantine_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:73
 msgid "_date_parsing.py (`src/cadrumo/entrypoints/cli/_date_parsing.py`)"
-msgstr ""
+msgstr "_date_parsing.py (`src/cadrumo/entrypoints/cli/_date_parsing.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:74
 msgid "_decimal_parsing.py (`src/cadrumo/entrypoints/cli/_decimal_parsing.py`)"
-msgstr ""
+msgstr "_decimal_parsing.py (`src/cadrumo/entrypoints/cli/_decimal_parsing.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:75
 msgid "_decimal_wire.py (`src/cadrumo/entrypoints/cli/_decimal_wire.py`)"
-msgstr ""
+msgstr "_decimal_wire.py (`src/cadrumo/entrypoints/cli/_decimal_wire.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:76
 msgid ""
 "_diagnostics_payloads.py "
 "(`src/cadrumo/entrypoints/cli/_diagnostics_payloads.py`)"
 msgstr ""
+"_diagnostics_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_diagnostics_payloads.py`)"
 
 #: ../../technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md:77
 msgid ""
 "_evidence_field_notices.py "
 "(`src/cadrumo/entrypoints/cli/_evidence_field_notices.py`)"
 msgstr ""
+"_evidence_field_notices.py "
+"(`src/cadrumo/entrypoints/cli/_evidence_field_notices.py`)"

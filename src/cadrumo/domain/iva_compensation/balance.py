@@ -98,8 +98,8 @@ def _partition_balance_lots(
         if lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
     ]
     # Include ACTIVE and EXPIRY_REVIEW_DUE lots. EXPIRED_REVIEW_REQUIRED lots
-    # have passed the statutory boundary and are not usable without a separate
-    # policy review.
+    # are beyond the coarse year-level review window and require a separate
+    # review before inclusion in the active balance.
     active_lots = [
         lot
         for lot in lots_with_balance

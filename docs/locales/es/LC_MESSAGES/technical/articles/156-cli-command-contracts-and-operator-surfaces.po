@@ -46,6 +46,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-156` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:10
 msgid "Scope"
@@ -66,7 +69,7 @@ msgstr ""
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacidades del producto"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:16
 msgid ""

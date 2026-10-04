@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:1
 msgid "Modelo command support, discovery, amendment and export surfaces"
-msgstr ""
+msgstr "Modelo-parancstámogatás, felderítés, módosítás és exportfelületek"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-161` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:10
 msgid "Scope and capability"
@@ -142,7 +145,7 @@ msgstr ""
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:22
 msgid "Discovery and knowledge presented to operators"
-msgstr ""
+msgstr "Az operátoroknak bemutatott felderítés és tudás"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:24
 msgid ""
@@ -191,7 +194,7 @@ msgstr ""
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:28
 msgid "Input boundaries, effects, and quality"
-msgstr ""
+msgstr "Bemeneti határok, hatások és minőség"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:30
 msgid ""

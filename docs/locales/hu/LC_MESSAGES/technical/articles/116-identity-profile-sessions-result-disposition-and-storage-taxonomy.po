@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:1
 msgid "Identity, profile sessions, result disposition, and storage taxonomy"
-msgstr ""
+msgstr "Azonosság, profilmunkamenetek, eredményrendelkezés és tárolási taxonómia"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-116` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-116` · **Téma:** [Alapvető felhatalmazás és közös "
+"ellenőrzések](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:12
 msgid ""
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:14
 msgid "Identity, profile-session, and value boundaries"
-msgstr ""
+msgstr "Személyazonossági, profilmunkamenet- és értékhatárok"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:16
 msgid ""
@@ -130,7 +132,7 @@ msgstr ""
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:24
 msgid "Remote authority, lifecycle evidence, and storage"
-msgstr ""
+msgstr "Távoli mérvadó állapot, életciklus-bizonyítékok és tárolás"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:26
 msgid ""
@@ -214,7 +216,7 @@ msgstr ""
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:36
 msgid "Tabular ingestion, provenance, and local utilities"
-msgstr ""
+msgstr "Táblázatos befogadás, eredet és helyi segédeszközök"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:38
 msgid ""
@@ -295,162 +297,184 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:50
 msgid "presentation.py (`src/cadrumo/core/presentation.py`) — lines 1–19"
-msgstr ""
+msgstr "presentation.py (`src/cadrumo/core/presentation.py`) — 1–19. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:51
 msgid ""
 "prior_domiciliation_election.py "
 "(`src/cadrumo/core/prior_domiciliation_election.py`) — lines 1–21"
 msgstr ""
+"prior_domiciliation_election.py "
+"(`src/cadrumo/core/prior_domiciliation_election.py`) — 1–21. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:52
 msgid "process_binding.py (`src/cadrumo/core/process_binding.py`) — lines 1–116"
-msgstr ""
+msgstr "process_binding.py (`src/cadrumo/core/process_binding.py`) — 1–116. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:53
 msgid "product_identity.py (`src/cadrumo/core/product_identity.py`) — lines 1–72"
-msgstr ""
+msgstr "product_identity.py (`src/cadrumo/core/product_identity.py`) — 1–72. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:54
 msgid ""
 "profile_discovery.py (`src/cadrumo/core/profile_discovery.py`) — lines "
 "1–28"
-msgstr ""
+msgstr "profile_discovery.py (`src/cadrumo/core/profile_discovery.py`) — 1–28. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:55
 msgid ""
 "profile_publication.py (`src/cadrumo/core/profile_publication.py`) — "
 "lines 1–43"
 msgstr ""
+"profile_publication.py (`src/cadrumo/core/profile_publication.py`) — "
+"1–43. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:56
 msgid "profile_session.py (`src/cadrumo/core/profile_session.py`) — lines 1–79"
-msgstr ""
+msgstr "profile_session.py (`src/cadrumo/core/profile_session.py`) — 1–79. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:57
 msgid ""
 "prorrata_exclusions.py (`src/cadrumo/core/prorrata_exclusions.py`) — "
 "lines 1–38"
 msgstr ""
+"prorrata_exclusions.py (`src/cadrumo/core/prorrata_exclusions.py`) — "
+"1–38. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:58
 msgid ""
 "prorrata_register.py (`src/cadrumo/core/prorrata_register.py`) — lines "
 "1–66"
-msgstr ""
+msgstr "prorrata_register.py (`src/cadrumo/core/prorrata_register.py`) — 1–66. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:59
 msgid "prose_elision.py (`src/cadrumo/core/prose_elision.py`) — lines 1–192"
-msgstr ""
+msgstr "prose_elision.py (`src/cadrumo/core/prose_elision.py`) — 1–192. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:60
 msgid "provenance_stamp.py (`src/cadrumo/core/provenance_stamp.py`) — lines 1–126"
-msgstr ""
+msgstr "provenance_stamp.py (`src/cadrumo/core/provenance_stamp.py`) — 1–126. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:61
 msgid ""
 "record_design_epoch.py (`src/cadrumo/core/record_design_epoch.py`) — "
 "lines 1–51"
 msgstr ""
+"record_design_epoch.py (`src/cadrumo/core/record_design_epoch.py`) — "
+"1–51. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:62
 msgid "refund_election.py (`src/cadrumo/core/refund_election.py`) — lines 1–63"
-msgstr ""
+msgstr "refund_election.py (`src/cadrumo/core/refund_election.py`) — 1–63. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:63
 msgid ""
 "register_scoping_signal.py "
 "(`src/cadrumo/core/register_scoping_signal.py`) — lines 1–56"
 msgstr ""
+"register_scoping_signal.py "
+"(`src/cadrumo/core/register_scoping_signal.py`) — 1–56. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:64
 msgid "registry_token.py (`src/cadrumo/core/registry_token.py`) — lines 1–137"
-msgstr ""
+msgstr "registry_token.py (`src/cadrumo/core/registry_token.py`) — 1–137. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:65
 msgid "remote_authority.py (`src/cadrumo/core/remote_authority.py`) — lines 1–132"
-msgstr ""
+msgstr "remote_authority.py (`src/cadrumo/core/remote_authority.py`) — 1–132. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:66
 msgid ""
 "renta_declaracion_type.py (`src/cadrumo/core/renta_declaracion_type.py`) "
 "— lines 1–13"
 msgstr ""
+"renta_declaracion_type.py (`src/cadrumo/core/renta_declaracion_type.py`) "
+"— 1–13. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:67
 msgid "repository_id.py (`src/cadrumo/core/repository_id.py`) — lines 1–49"
-msgstr ""
+msgstr "repository_id.py (`src/cadrumo/core/repository_id.py`) — 1–49. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:68
 msgid "requirement.py (`src/cadrumo/core/requirement.py`) — lines 1–39"
-msgstr ""
+msgstr "requirement.py (`src/cadrumo/core/requirement.py`) — 1–39. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:69
 msgid "rescate_type.py (`src/cadrumo/core/rescate_type.py`) — lines 1–43"
-msgstr ""
+msgstr "rescate_type.py (`src/cadrumo/core/rescate_type.py`) — 1–43. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:70
 msgid ""
 "result_disposition.py (`src/cadrumo/core/result_disposition.py`) — lines "
 "1–388"
 msgstr ""
+"result_disposition.py (`src/cadrumo/core/result_disposition.py`) — 1–388."
+" sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:71
 msgid "revision_review.py (`src/cadrumo/core/revision_review.py`) — lines 1–75"
-msgstr ""
+msgstr "revision_review.py (`src/cadrumo/core/revision_review.py`) — 1–75. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:72
 msgid ""
 "schema_family_disposition.py "
 "(`src/cadrumo/core/schema_family_disposition.py`) — lines 1–73"
 msgstr ""
+"schema_family_disposition.py "
+"(`src/cadrumo/core/schema_family_disposition.py`) — 1–73. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:73
 msgid ""
 "secure_object_write.py (`src/cadrumo/core/secure_object_write.py`) — "
 "lines 1–81"
 msgstr ""
+"secure_object_write.py (`src/cadrumo/core/secure_object_write.py`) — "
+"1–81. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:74
 msgid "source_locator.py (`src/cadrumo/core/source_locator.py`) — lines 1–46"
-msgstr ""
+msgstr "source_locator.py (`src/cadrumo/core/source_locator.py`) — 1–46. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:75
 msgid "spanish_postcode.py (`src/cadrumo/core/spanish_postcode.py`) — lines 1–74"
-msgstr ""
+msgstr "spanish_postcode.py (`src/cadrumo/core/spanish_postcode.py`) — 1–74. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:76
 msgid "spanish_stemming.py (`src/cadrumo/core/spanish_stemming.py`) — lines 1–82"
-msgstr ""
+msgstr "spanish_stemming.py (`src/cadrumo/core/spanish_stemming.py`) — 1–82. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:77
 msgid ""
 "storage_materialization.py "
 "(`src/cadrumo/core/storage_materialization.py`) — lines 1–110"
 msgstr ""
+"storage_materialization.py "
+"(`src/cadrumo/core/storage_materialization.py`) — 1–110. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:78
 msgid "storage_taxonomy.py (`src/cadrumo/core/storage_taxonomy.py`) — lines 1–415"
-msgstr ""
+msgstr "storage_taxonomy.py (`src/cadrumo/core/storage_taxonomy.py`) — 1–415. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:79
 msgid ""
 "storage_taxonomy_locations.py "
 "(`src/cadrumo/core/storage_taxonomy_locations.py`) — lines 1–972"
 msgstr ""
+"storage_taxonomy_locations.py "
+"(`src/cadrumo/core/storage_taxonomy_locations.py`) — 1–972. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:80
 msgid "sync_surface.py (`src/cadrumo/core/sync_surface.py`) — lines 1–44"
-msgstr ""
+msgstr "sync_surface.py (`src/cadrumo/core/sync_surface.py`) — 1–44. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:81
 msgid "tabular.py (`src/cadrumo/core/tabular.py`) — lines 1–703"
-msgstr ""
+msgstr "tabular.py (`src/cadrumo/core/tabular.py`) — 1–703. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:82
 msgid "tax_domain.py (`src/cadrumo/core/tax_domain.py`) — lines 1–50"
-msgstr ""
+msgstr "tax_domain.py (`src/cadrumo/core/tax_domain.py`) — 1–50. sor"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:83
 msgid "text_bounds.py (`src/cadrumo/core/text_bounds.py`) — lines 1–121"
-msgstr ""
+msgstr "text_bounds.py (`src/cadrumo/core/text_bounds.py`) — 1–121. sor"

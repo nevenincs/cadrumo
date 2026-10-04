@@ -59,7 +59,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
@@ -538,7 +538,7 @@ def revision_render_inputs(
     filing_year: int | None = None,
     period: str | None = None,
 ) -> RevisionRenderInputs:
-    """Derive one revision's render inputs from the validated authority.
+    """Derive one revision's render inputs from validated authority.
 
     Raises:
         ValueError: If the source selector is undeclared, a layout is absent
@@ -546,11 +546,34 @@ def revision_render_inputs(
             absent. Each is reported by name rather than substituted, because a
             silent fallback would derive the wrong thing and look like success.
     """
-    definition = authority.modelo(modelo)
+    return _revision_render_inputs(
+        authority.modelo(modelo),
+        authority.catalogues,
+        modelo=modelo,
+        revision=revision,
+        source_ref=source_ref,
+        bootstrap_transport=bootstrap_transport,
+        filing_year=filing_year,
+        period=period,
+    )
+
+
+def _revision_render_inputs(
+    definition: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None,
+    bootstrap_transport: GeneratedExportBootstrapTransport | None,
+    filing_year: int | None,
+    period: str | None,
+) -> RevisionRenderInputs:
+    """Assemble canonical source facts; the caller owns authority admission."""
     if revision not in definition.revisions:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     selected = definition.revisions[revision]
-    sources = authority.catalogues.sources
+    sources = catalogues.sources
     effective_year = selected.valid_from.year if filing_year is None else filing_year
     selected_source_ref, epoch = _select_record_design_source(
         selected,
@@ -596,7 +619,7 @@ def revision_render_inputs(
         revision=selected,
         source_root=bundled_path(),
         sources=sources,
-        legal_ref_ids=frozenset(authority.catalogues.legal),
+        legal_ref_ids=frozenset(catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     evidence = load_render_profile_source_evidence(

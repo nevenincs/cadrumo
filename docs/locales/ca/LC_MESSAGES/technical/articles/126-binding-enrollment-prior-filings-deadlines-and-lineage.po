@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:1
 msgid "Binding enrollment, prior filings, deadlines, and lineage"
-msgstr ""
+msgstr "Inscripció de vinculacions, presentacions anteriors, terminis i llinatge"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:3
 msgid ""
@@ -46,10 +46,12 @@ msgid ""
 "**Report:** `STAGE-2-126` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-126` · **Tema:** [Domini del càlcul "
+"tributari](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:12
 msgid ""
@@ -63,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:14
 msgid "Binding enrollment and authored contracts"
-msgstr ""
+msgstr "Inscripció de vinculacions i contractes definits"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:16
 msgid ""
@@ -152,7 +154,7 @@ msgstr ""
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:24
 msgid "Source resolution, provenance, and temporal folds"
-msgstr ""
+msgstr "Resolució de fonts, procedència i agregacions temporals"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:26
 msgid ""
@@ -267,6 +269,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_provider_registration.py`)"
 " — lines 1–1,038"
 msgstr ""
+"registry/binding_provider_registration.py "
+"(`src/cadrumo/domain/calculations/registry/binding_provider_registration.py`)"
+" — línies 1–1,038"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:41
 msgid ""
@@ -274,6 +279,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_selector_utils.py`) — "
 "lines 1–842"
 msgstr ""
+"registry/binding_selector_utils.py "
+"(`src/cadrumo/domain/calculations/registry/binding_selector_utils.py`) — "
+"línies 1–842"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:42
 msgid ""
@@ -281,6 +289,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_targets.py`) — lines "
 "1–213"
 msgstr ""
+"registry/binding_targets.py "
+"(`src/cadrumo/domain/calculations/registry/binding_targets.py`) — línies "
+"1–213"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:43
 msgid ""
@@ -288,6 +299,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_temporal.py`) — lines "
 "1–530"
 msgstr ""
+"registry/binding_temporal.py "
+"(`src/cadrumo/domain/calculations/registry/binding_temporal.py`) — línies"
+" 1–530"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:44
 msgid ""
@@ -295,6 +309,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_terminal_audit.py`) — "
 "lines 1–114"
 msgstr ""
+"registry/binding_terminal_audit.py "
+"(`src/cadrumo/domain/calculations/registry/binding_terminal_audit.py`) — "
+"línies 1–114"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:45
 msgid ""
@@ -302,6 +319,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`) —"
 " lines 1–88"
 msgstr ""
+"registry/binding_terminal_origin.py "
+"(`src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`) —"
+" línies 1–88"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:46
 msgid ""
@@ -309,12 +329,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/binding_value_contract.py`) — "
 "lines 1–157"
 msgstr ""
+"registry/binding_value_contract.py "
+"(`src/cadrumo/domain/calculations/registry/binding_value_contract.py`) — "
+"línies 1–157"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:47
 msgid ""
 "registry/bindings.py "
 "(`src/cadrumo/domain/calculations/registry/bindings.py`) — lines 1–618"
 msgstr ""
+"registry/bindings.py "
+"(`src/cadrumo/domain/calculations/registry/bindings.py`) — línies 1–618"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:48
 msgid ""
@@ -322,6 +347,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`) "
 "— lines 1–834"
 msgstr ""
+"registry/bindings_previous_filing.py "
+"(`src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`) "
+"— línies 1–834"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:49
 msgid ""
@@ -329,6 +357,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/calendar_ccaa_catalogue.py`) —"
 " lines 1–255"
 msgstr ""
+"registry/calendar_ccaa_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/calendar_ccaa_catalogue.py`) —"
+" línies 1–255"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:50
 msgid ""
@@ -336,6 +367,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/casilla_lineage.py`) — lines "
 "1–90"
 msgstr ""
+"registry/casilla_lineage.py "
+"(`src/cadrumo/domain/calculations/registry/casilla_lineage.py`) — línies "
+"1–90"
 
 #: ../../technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md:51
 msgid ""
@@ -343,3 +377,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/casilla_lineage_totality.py`) "
 "— lines 1–213"
 msgstr ""
+"registry/casilla_lineage_totality.py "
+"(`src/cadrumo/domain/calculations/registry/casilla_lineage_totality.py`) "
+"— línies 1–213"

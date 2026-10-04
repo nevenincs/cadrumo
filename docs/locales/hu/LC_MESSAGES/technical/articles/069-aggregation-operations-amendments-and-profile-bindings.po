@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:1
 msgid "Aggregation operations, amendments, and profile bindings"
-msgstr ""
+msgstr "Összesítési műveletek, módosítások és profilkötések"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:3
 msgid ""
@@ -45,10 +45,13 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-069` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:12
 msgid ""
@@ -63,7 +66,7 @@ msgstr ""
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Termékképességek"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:16
 msgid ""
@@ -198,7 +201,7 @@ msgstr ""
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:32
 msgid "Security, quality, and limits"
-msgstr ""
+msgstr "Biztonság, minőség és korlátok"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:34
 msgid ""
@@ -264,87 +267,117 @@ msgid ""
 "All 14 assigned files were read fully across eight bounded pages; no "
 "unread ranges remain."
 msgstr ""
+"Mind a 14 kijelölt fájlt teljes egészében elolvastam nyolc körülhatárolt "
+"oldalon; nem maradt olvasatlan tartomány."
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:46
 msgid ""
 "modelo/action_errors.py "
 "(`src/cadrumo/application/modelo/action_errors.py`) — 1–573"
 msgstr ""
+"modelo/action_errors.py "
+"(`src/cadrumo/application/modelo/action_errors.py`) — 1–573"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:47
 msgid ""
 "modelo/aggregate_operation.py "
 "(`src/cadrumo/application/modelo/aggregate_operation.py`) — 1–881"
 msgstr ""
+"modelo/aggregate_operation.py "
+"(`src/cadrumo/application/modelo/aggregate_operation.py`) — 1–881"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:48
 msgid ""
 "modelo/aggregate_public.py "
 "(`src/cadrumo/application/modelo/aggregate_public.py`) — 1–215"
 msgstr ""
+"modelo/aggregate_public.py "
+"(`src/cadrumo/application/modelo/aggregate_public.py`) — 1–215"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:49
 msgid ""
 "modelo/amendment_action_ports.py "
 "(`src/cadrumo/application/modelo/amendment_action_ports.py`) — 1–50"
 msgstr ""
+"modelo/amendment_action_ports.py "
+"(`src/cadrumo/application/modelo/amendment_action_ports.py`) — 1–50"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:50
 msgid ""
 "modelo/amendment_actions.py "
 "(`src/cadrumo/application/modelo/amendment_actions.py`) — 1–999"
 msgstr ""
+"modelo/amendment_actions.py "
+"(`src/cadrumo/application/modelo/amendment_actions.py`) — 1–999"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:51
 msgid ""
 "modelo/amendment_context_operation.py "
 "(`src/cadrumo/application/modelo/amendment_context_operation.py`) — 1–256"
 msgstr ""
+"modelo/amendment_context_operation.py "
+"(`src/cadrumo/application/modelo/amendment_context_operation.py`) — 1–256"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:52
 msgid ""
 "modelo/amendment_projection.py "
 "(`src/cadrumo/application/modelo/amendment_projection.py`) — 1–50"
 msgstr ""
+"modelo/amendment_projection.py "
+"(`src/cadrumo/application/modelo/amendment_projection.py`) — 1–50"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:53
 msgid ""
 "modelo/art20_advisory.py "
 "(`src/cadrumo/application/modelo/art20_advisory.py`) — 1–89"
 msgstr ""
+"modelo/art20_advisory.py "
+"(`src/cadrumo/application/modelo/art20_advisory.py`) — 1–89"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:54
 msgid ""
 "modelo/art52_advisory.py "
 "(`src/cadrumo/application/modelo/art52_advisory.py`) — 1–145"
 msgstr ""
+"modelo/art52_advisory.py "
+"(`src/cadrumo/application/modelo/art52_advisory.py`) — 1–145"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:55
 msgid ""
 "modelo/audit_operation.py "
 "(`src/cadrumo/application/modelo/audit_operation.py`) — 1–585"
 msgstr ""
+"modelo/audit_operation.py "
+"(`src/cadrumo/application/modelo/audit_operation.py`) — 1–585"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:56
 msgid ""
 "modelo/audit_operation_ports.py "
 "(`src/cadrumo/application/modelo/audit_operation_ports.py`) — 1–27"
 msgstr ""
+"modelo/audit_operation_ports.py "
+"(`src/cadrumo/application/modelo/audit_operation_ports.py`) — 1–27"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:57
 msgid ""
 "modelo/binding_readiness.py "
 "(`src/cadrumo/application/modelo/binding_readiness.py`) — 1–246"
 msgstr ""
+"modelo/binding_readiness.py "
+"(`src/cadrumo/application/modelo/binding_readiness.py`) — 1–246"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:58
 msgid ""
 "modelo/binding_resolution.py "
 "(`src/cadrumo/application/modelo/binding_resolution.py`) — 1–460"
 msgstr ""
+"modelo/binding_resolution.py "
+"(`src/cadrumo/application/modelo/binding_resolution.py`) — 1–460"
 
 #: ../../technical/articles/069-aggregation-operations-amendments-and-profile-bindings.md:59
 msgid ""
 "modelo/borrador_binding.py "
 "(`src/cadrumo/application/modelo/borrador_binding.py`) — 1–461"
 msgstr ""
+"modelo/borrador_binding.py "
+"(`src/cadrumo/application/modelo/borrador_binding.py`) — 1–461"

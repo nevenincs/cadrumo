@@ -47,6 +47,9 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-170` · **Tema:** [Interfícies de l’operador, part "
+"2: transport segur i ponts d’operacions](../topics/operator-interfaces-"
+"part-2.md)"
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:10
 msgid "Scope"
@@ -66,7 +69,7 @@ msgstr ""
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:14
 msgid "CLI execution and failure behavior"
-msgstr ""
+msgstr "Execució de la CLI i comportament davant d'errors"
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:16
 msgid ""
@@ -133,7 +136,7 @@ msgstr ""
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:22
 msgid "Ledger and evidence operations"
-msgstr ""
+msgstr "Operacions del llibre major i evidències"
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:24
 msgid ""
@@ -195,7 +198,7 @@ msgstr ""
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:30
 msgid "Modelo work and workbook workflows"
-msgstr ""
+msgstr "Treball de Modelo i fluxos de llibres"
 
 #: ../../technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.md:32
 msgid ""

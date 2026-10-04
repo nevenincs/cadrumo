@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:1
 msgid "IVA classification and evidence substrate"
-msgstr ""
+msgstr "Classificació d’IVA i base d’evidències"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-143` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-143` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:10
 msgid "Scope"
@@ -63,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:16
 msgid ""
@@ -329,76 +331,88 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:58
 msgid "iva/__init__.py (`src/cadrumo/domain/iva/__init__.py`)"
-msgstr ""
+msgstr "iva/__init__.py (`src/cadrumo/domain/iva/__init__.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:59
 msgid ""
 "iva/_classification_engine.py "
 "(`src/cadrumo/domain/iva/_classification_engine.py`)"
 msgstr ""
+"iva/_classification_engine.py "
+"(`src/cadrumo/domain/iva/_classification_engine.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:60
 msgid ""
 "iva/_classification_predicates.py "
 "(`src/cadrumo/domain/iva/_classification_predicates.py`)"
 msgstr ""
+"iva/_classification_predicates.py "
+"(`src/cadrumo/domain/iva/_classification_predicates.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:61
 msgid ""
 "iva/_component_fact_projection.py "
 "(`src/cadrumo/domain/iva/_component_fact_projection.py`)"
 msgstr ""
+"iva/_component_fact_projection.py "
+"(`src/cadrumo/domain/iva/_component_fact_projection.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:62
 msgid ""
 "iva/_component_row_projection.py "
 "(`src/cadrumo/domain/iva/_component_row_projection.py`)"
 msgstr ""
+"iva/_component_row_projection.py "
+"(`src/cadrumo/domain/iva/_component_row_projection.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:63
 msgid "iva/_component_rows.py (`src/cadrumo/domain/iva/_component_rows.py`)"
-msgstr ""
+msgstr "iva/_component_rows.py (`src/cadrumo/domain/iva/_component_rows.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:64
 msgid ""
 "iva/_fact_mapping_entries.py "
 "(`src/cadrumo/domain/iva/_fact_mapping_entries.py`)"
 msgstr ""
+"iva/_fact_mapping_entries.py "
+"(`src/cadrumo/domain/iva/_fact_mapping_entries.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:65
 msgid "iva/classification.py (`src/cadrumo/domain/iva/classification.py`)"
-msgstr ""
+msgstr "iva/classification.py (`src/cadrumo/domain/iva/classification.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:66
 msgid "iva/components.py (`src/cadrumo/domain/iva/components.py`)"
-msgstr ""
+msgstr "iva/components.py (`src/cadrumo/domain/iva/components.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:67
 msgid "iva/country_vocabulary.py (`src/cadrumo/domain/iva/country_vocabulary.py`)"
-msgstr ""
+msgstr "iva/country_vocabulary.py (`src/cadrumo/domain/iva/country_vocabulary.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:68
 msgid "iva/deduction_facts.py (`src/cadrumo/domain/iva/deduction_facts.py`)"
-msgstr ""
+msgstr "iva/deduction_facts.py (`src/cadrumo/domain/iva/deduction_facts.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:69
 msgid "iva/errors.py (`src/cadrumo/domain/iva/errors.py`)"
-msgstr ""
+msgstr "iva/errors.py (`src/cadrumo/domain/iva/errors.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:70
 msgid "iva/establishment.py (`src/cadrumo/domain/iva/establishment.py`)"
-msgstr ""
+msgstr "iva/establishment.py (`src/cadrumo/domain/iva/establishment.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:71
 msgid "iva/flow.py (`src/cadrumo/domain/iva/flow.py`)"
-msgstr ""
+msgstr "iva/flow.py (`src/cadrumo/domain/iva/flow.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:72
 msgid "iva/identification.py (`src/cadrumo/domain/iva/identification.py`)"
-msgstr ""
+msgstr "iva/identification.py (`src/cadrumo/domain/iva/identification.py`)"
 
 #: ../../technical/articles/143-iva-classification-and-evidence-substrate.md:73
 msgid ""
 "iva/invoice_classification.py "
 "(`src/cadrumo/domain/iva/invoice_classification.py`)"
 msgstr ""
+"iva/invoice_classification.py "
+"(`src/cadrumo/domain/iva/invoice_classification.py`)"

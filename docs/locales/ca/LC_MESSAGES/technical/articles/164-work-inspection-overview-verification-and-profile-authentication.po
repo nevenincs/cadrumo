@@ -47,6 +47,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-164` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:10
 msgid "Scope"
@@ -66,7 +69,7 @@ msgstr ""
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:14
 msgid "Work revisions, reports, and filing transitions"
-msgstr ""
+msgstr "Revisions de treball, informes i transicions de presentació"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:16
 msgid ""
@@ -130,7 +133,7 @@ msgstr ""
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:22
 msgid "Overview and related operator surfaces"
-msgstr ""
+msgstr "Visió general i superfícies relacionades de l'operador"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:24
 msgid ""
@@ -243,7 +246,7 @@ msgstr "Apèndix de cobertura"
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:40
 msgid "All 18 assigned files are linked below."
-msgstr ""
+msgstr "Els 18 fitxers assignats es referencien a continuació."
 
 #: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:42
 msgid "`src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`"

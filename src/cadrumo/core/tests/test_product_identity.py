@@ -30,6 +30,7 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         environment_prefix="CADRUMO_",
         companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
         companion_namespace="cadrumo_data",
+        application_id="md.neve.cadrumo",
     )
 
     assert expected == PRODUCT_IDENTITY

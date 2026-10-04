@@ -22,6 +22,8 @@ msgstr ""
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:1
 msgid "Identity, profile sessions, result disposition, and storage taxonomy"
 msgstr ""
+"Identidad, sesiones de perfiles, disposición del resultado y taxonomía de"
+" almacenamiento"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:3
 msgid ""
@@ -45,10 +47,12 @@ msgid ""
 "**Report:** `STAGE-2-116` · **Topic:** [Core authority and shared "
 "controls](../topics/core-authority-and-shared-controls.md)"
 msgstr ""
+"**Informe:** `STAGE-2-116` · **Tema:** [Autoridad central y controles "
+"compartidos](../topics/core-authority-and-shared-controls.md)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Ámbito y método"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:12
 msgid ""
@@ -59,10 +63,17 @@ msgid ""
 "tests, file writes, AEAT/Cl@ve requests, or external legal checks were "
 "performed."
 msgstr ""
+"Este bloque contiene 34 módulos del núcleo con un total de 4,617 líneas, "
+"194,620 bytes y 43,310 tokens de aproximación medidos. Leí las nueve "
+"páginas acotadas, incluidos los módulos completos de disposición de "
+"resultados, taxonomía de almacenamiento y normalización tabular. Solo "
+"inspección estática: no se realizaron importaciones de aplicación, "
+"pruebas, escrituras de archivos, solicitudes AEAT/Cl@ve ni comprobaciones"
+" legales externas."
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:14
 msgid "Identity, profile-session, and value boundaries"
-msgstr ""
+msgstr "Identidad, sesiones de perfiles y límites de valores"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:16
 msgid ""
@@ -77,6 +88,18 @@ msgid ""
 "Process-scoped and contextual binding "
 "(`src/cadrumo/core/process_binding.py`)"
 msgstr ""
+"`ProcessScopedBinding` combina un valor de ámbito de proceso protegido "
+"por bloqueo con una sustitución local al contexto. Admite una sesión "
+"autenticada de perfil compartida entre puntos de entrada CLI, asíncronos "
+"y de hilos de trabajo y conserva sustituciones delimitadas para un "
+"bloque. `None` sigue siendo una sustitución significativa, las "
+"sustituciones anidadas se deshacen mediante tokens de contexto y las "
+"rutas de cierre solo pueden limpiar el objeto exacto observado para no "
+"borrar accidentalmente una sustitución reentrante. La vinculación "
+"conserva referencias en lugar de copiar o sobrescribir secretos con "
+"ceros; la custodia del ciclo de vida permanece en el responsable. "
+"Vinculación de ámbito de proceso y contextual "
+"(`src/cadrumo/core/process_binding.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:18
 msgid ""
@@ -93,6 +116,19 @@ msgid ""
 "(`src/cadrumo/core/profile_publication.py`) Session and record refusal "
 "states (`src/cadrumo/core/profile_session.py`)"
 msgstr ""
+"Los vocabularios de perfiles distinguen resultados puros de "
+"descubrimiento (reconocido, cambio concurrente, degradado), motivos de "
+"publicación (inscripción o restauración), causas de rechazo de sesiones "
+"persistidas (incluidas caducidad, custodia cambiada, manipulación, datos "
+"ausentes del llavero y llavero no disponible) y registro de perfil no "
+"disponible frente al ordinario «se requiere sesión». Estas distinciones "
+"permiten informar de reintento, reparación, sesión cerrada y no "
+"disponibilidad sin convertirlos en una lista vacía de perfiles. Son "
+"contratos, no la implementación de persistencia de sesiones ni "
+"criptografía. Resultados de descubrimiento "
+"(`src/cadrumo/core/profile_discovery.py`) Tipos de publicación "
+"(`src/cadrumo/core/profile_publication.py`) Estados de rechazo de "
+"sesiones y registros (`src/cadrumo/core/profile_session.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:20
 msgid ""
@@ -110,6 +146,21 @@ msgid ""
 "(`src/cadrumo/core/registry_token.py`) Postcode shape "
 "(`src/cadrumo/core/spanish_postcode.py`)"
 msgstr ""
+"Otros contratos comunes de valores separan ejes semánticos: elección "
+"actual de pago de resultado positivo frente a conservación de "
+"domiciliación anterior y elección de devolución de resultado negativo; "
+"disposición del resultado por modelo; datos de avisos de presentación; "
+"progreso de operaciones; y evidencia, origen y condicionalidad de "
+"acciones del operador. Los identificadores solo sintácticos `Modelo` y "
+"`TaxDomain` deliberadamente no afirman pertenencia a un catálogo, "
+"mientras que los tipos `RegistryToken` exigen proyección del registro o "
+"distinguen texto proyectado de tokens ya validados. Los códigos postales "
+"españoles conservan ceros iniciales y restringen prefijos de provincia a "
+"01–52. Esta división evita confundir sintaxis de transporte con autoridad"
+" del dominio. Elección de devolución "
+"(`src/cadrumo/core/refund_election.py`) Tokens opacos del registro "
+"(`src/cadrumo/core/registry_token.py`) Estructura de códigos postales "
+"(`src/cadrumo/core/spanish_postcode.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:22
 msgid ""
@@ -128,10 +179,26 @@ msgid ""
 "account axes (`src/cadrumo/core/result_disposition.py`) Sign derivation "
 "and input filtering (`src/cadrumo/core/result_disposition.py`)"
 msgstr ""
+"El contrato mayor de disposición de resultados convierte casillas de "
+"resultado y signos por modelo en códigos de presentación. Distingue "
+"estado de devolución (controla arrastre) de si debe incluirse una cuenta "
+"en el archivo (también incluye domiciliación), rechaza identificadores de"
+" casillas ajenas y produce `None` para un modelo no catalogado para que "
+"los consumidores apliquen una alternativa explícita en lugar de inventar "
+"un código. Los ejemplos declarados aquí incluyen crédito negativo de M303"
+" como `C`, resultados negativos de trimestres intermedios de M130/M131 "
+"como `B`, pero Q4 como `N`, negativo de M200 como devolución `D` y "
+"códigos de canales de pago y devolución separados de la derivación "
+"directa del signo. Estas reglas están ancladas a diseños de registros e "
+"instrucciones incluidos en los comentarios del código, pero no se "
+"contrastaron independientemente con la AEAT. Especificación de "
+"disposición (`src/cadrumo/core/result_disposition.py`) Ejes de devolución"
+" y cuenta (`src/cadrumo/core/result_disposition.py`) Derivación del signo"
+" y filtrado de entradas (`src/cadrumo/core/result_disposition.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:24
 msgid "Remote authority, lifecycle evidence, and storage"
-msgstr ""
+msgstr "Autoridad remota, evidencia del ciclo de vida y almacenamiento"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:26
 msgid ""
@@ -147,6 +214,19 @@ msgid ""
 "(`src/cadrumo/core/remote_authority.py`) Separate Cl@ve allowance "
 "(`src/cadrumo/core/remote_authority.py`)"
 msgstr ""
+"`remote_authority.py` es una función auxiliar limitada de protección: "
+"solo acepta URL HTTPS con nombre de anfitrión sin adornos, rechaza "
+"información de usuario y puertos explícitos en lugar de eliminarlos y "
+"compara nombres de anfitrión en límites de etiquetas para que "
+"`evilagenciatributaria...` no se admita como subdominio. Obtiene sufijos "
+"actuales y antiguos de la AEAT de constantes centralizadas y trata Cl@ve "
+"como permiso distinto de proveedor nacional de identidad cuyo uso se "
+"controla por separado. Estos predicados no definen por sí mismos una "
+"política completa de solicitudes ni autorizan un anfitrión para datos "
+"arbitrarios. Análisis canónico de nombres de anfitrión "
+"(`src/cadrumo/core/remote_authority.py`) Prueba de límites de sufijos "
+"(`src/cadrumo/core/remote_authority.py`) Permiso separado de Cl@ve "
+"(`src/cadrumo/core/remote_authority.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:28
 msgid ""
@@ -163,6 +243,20 @@ msgid ""
 "(`src/cadrumo/core/storage_taxonomy.py`) Central location data "
 "(`src/cadrumo/core/storage_taxonomy_locations.py`)"
 msgstr ""
+"La taxonomía de almacenamiento es un inventario tipado de rutas elegidas "
+"por la aplicación. Cada `StorageLocation` incluye subruta, tipo archivo o"
+" directorio, ámbito de raíz, depósito o almacén de claves, política de "
+"sustitución, ciclo de vida, agrupación del operador y participación en "
+"huellas, además de un módulo consumidor o un motivo documentado de "
+"inactividad. La tabla de ubicaciones incluye archivos de custodia de "
+"cápsulas de perfiles y almacenes de claves, evidencia de estado activo, "
+"registros, cachés, salidas generadas, rutas de depósitos y varias rutas "
+"retiradas o inactivas conservadas para reconocimiento o contabilización "
+"explícita. Los campos de configuración de raíz se indexan inversamente "
+"desde la misma declaración. Ejes y ubicaciones de la taxonomía "
+"(`src/cadrumo/core/storage_taxonomy.py`) Registro estricto de ubicaciones"
+" (`src/cadrumo/core/storage_taxonomy.py`) Datos centrales de ubicaciones "
+"(`src/cadrumo/core/storage_taxonomy_locations.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:30
 msgid ""
@@ -182,6 +276,24 @@ msgid ""
 "composition (`src/cadrumo/core/storage_taxonomy_locations.py`) Explicit "
 "materialization (`src/cadrumo/core/storage_materialization.py`)"
 msgstr ""
+"Los resolvedores de rutas distinguen entradas de ámbito raíz de las de "
+"depósito o almacén de claves, mantienen los almacenes de claves como "
+"hermanos de los datos de depósitos y obtienen directorios del árbol de "
+"almacenamiento de campos declarados, no de una segunda lista. La "
+"materialización es explícita: las sustituciones elegidas por el operador "
+"ya deben ser directorios, mientras que pueden crearse destinos "
+"predeterminados o de raíz responsabilidad de la aplicación; en esta "
+"función auxiliar solo la raíz recibe la llamada de restricción de "
+"permisos. Un límite de seguridad que verificar en consumidores es la "
+"validación de identificadores de depósitos: `bucket_scoped_storage_path` "
+"rechaza un identificador vacío, pero no impone por sí mismo una gramática"
+" segura para rutas antes de unirlo a la ruta. Por tanto, su seguridad "
+"depende de que todos los invocadores proporcionen un identificador "
+"validado. Estas funciones tampoco proporcionan una garantía general de "
+"contención para rutas arbitrarias. Resolvedores delimitados "
+"(`src/cadrumo/core/storage_taxonomy_locations.py`) Composición de rutas "
+"de depósitos (`src/cadrumo/core/storage_taxonomy_locations.py`) "
+"Materialización explícita (`src/cadrumo/core/storage_materialization.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:32
 msgid ""
@@ -201,6 +313,25 @@ msgid ""
 "review status (`src/cadrumo/core/revision_review.py`) Schema-family "
 "disposition (`src/cadrumo/core/schema_family_disposition.py`)"
 msgstr ""
+"`SecureObjectWrite` es un DTO estricto y congelado entre puertos de "
+"repositorios del dominio y persistencia. Incluye clasificación, versión "
+"de esquema, carga, procedencia, evento de origen y revisión esperada o "
+"valor de comparación e intercambio opcionales. El módulo deja "
+"explícitamente la imposición de marcas de tiempo conscientes de UTC al "
+"conducto central de almacenamiento; un invocador que lo eludiera también "
+"eludiría esa parte del contrato de escritura, por lo que debe seguirse la"
+" integración. Los hechos de custodia de perfiles representan por separado"
+" inscripción o restauración, rechazo de sesiones en caché y "
+"disponibilidad del registro. `RevisionReviewStatus` asigna revisión "
+"pendiente a metadatos de gobernanza ausentes, y la disposición de "
+"familias de esquemas trata familias vacías no declaradas como bloqueadas "
+"hasta poblarlas o justificar explícitamente que no aplican. Son "
+"declaraciones útiles restrictivas ante fallos, pero la imposición real "
+"reside en cargadores del registro y controles de construcción. DTO de "
+"escritura de objetos seguros (`src/cadrumo/core/secure_object_write.py`) "
+"Estado de revisión de versiones (`src/cadrumo/core/revision_review.py`) "
+"Disposición de familias de esquemas "
+"(`src/cadrumo/core/schema_family_disposition.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:34
 msgid ""
@@ -212,10 +343,17 @@ msgid ""
 "not execute cleanup or demonstrate that every destructive consumer honors"
 " the lifecycle tags."
 msgstr ""
+"`storage_taxonomy.py` distingue retención, rotación y TTL de evidencia "
+"sin límites y declara de forma independiente qué entra en la huella de la"
+" raíz de datos. `storage_materialization.py` separa lecturas de "
+"configuración de creación en el sistema de archivos. Esto permite razonar"
+" sobre dónde pertenecen los datos de aplicación y qué espacio puede "
+"recuperarse, pero este bloque no ejecuta limpieza ni demuestra que todos "
+"los consumidores destructivos respeten las etiquetas del ciclo de vida."
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:36
 msgid "Tabular ingestion, provenance, and local utilities"
-msgstr ""
+msgstr "Ingesta tabular, procedencia y utilidades locales"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:38
 msgid ""
@@ -236,6 +374,24 @@ msgid ""
 "(`src/cadrumo/core/tabular.py`) Normalization flow "
 "(`src/cadrumo/core/tabular.py`)"
 msgstr ""
+"`tabular.py` normaliza texto delimitado sin interpretar el significado de"
+" columnas. Elige entre punto y coma, coma, tabulación y barra vertical "
+"mediante puntuaciones de rectangularidad de todo el archivo, admite "
+"saltos de línea entrecomillados y decodifica bytes con codificaciones "
+"preferidas y alternativas configuradas, dando prioridad decisiva al BOM "
+"UTF-8. Solo busca encabezado en las primeras 20 filas analizadas, "
+"conserva literalmente las celdas con números físicos de línea inicial, "
+"mantiene por separado preámbulo y filas reconocidas de resumen y emite "
+"avisos de codificación alternativa, filas irregulares o vacías y "
+"ambigüedad decimal. La convención decimal se infiere de celdas con "
+"aspecto numérico, pero no se aplica a los valores almacenados; asignación"
+" de roles y conversión de tipos corresponden a etapas posteriores. Los "
+"principales rechazos de todo el origen son decodificación incorrecta, "
+"ausencia de un rectángulo utilizable y falta de encabezados. Contrato de "
+"datos tabulares (`src/cadrumo/core/tabular.py`) Decodificación y "
+"puntuación de delimitadores (`src/cadrumo/core/tabular.py`) Evidencia "
+"decimal (`src/cadrumo/core/tabular.py`) Flujo de normalización "
+"(`src/cadrumo/core/tabular.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:40
 msgid ""
@@ -253,6 +409,22 @@ msgid ""
 "(`src/cadrumo/core/record_design_epoch.py`) Hedged scoping signals "
 "(`src/cadrumo/core/register_scoping_signal.py`)"
 msgstr ""
+"Las marcas de procedencia codifican transporte del proveedor, lector, "
+"modelo y cualificador opcional en una gramática canónica. El analizador "
+"devuelve desconocido para marcas mal formadas o ajenas a LLM en lugar de "
+"un `local` optimista, importante para las revisiones de retirada de datos"
+" de la nube. El propio módulo dice que los productores necesitan un "
+"control en la batería de pruebas para impedir que marcas formateadas "
+"manualmente eludan el constructor. Las épocas de diseños de registros "
+"describen el año de presentación y familia de diseño, no una revisión "
+"PDF. Las señales de ámbito de registros son deliberadamente cautelosas: "
+"las comparaciones sin conexión de listas de opciones pueden indicar "
+"comportamiento probablemente universal o probablemente delimitado por "
+"NIF, pero no pueden afirmar ninguno como hecho sin un sondeo en vivo "
+"autorizado. Constructor y analizador de marcas "
+"(`src/cadrumo/core/provenance_stamp.py`) Gramática de épocas "
+"(`src/cadrumo/core/record_design_epoch.py`) Señales cautelosas de ámbito "
+"(`src/cadrumo/core/register_scoping_signal.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:42
 msgid ""
@@ -271,6 +443,23 @@ msgid ""
 "(`src/cadrumo/core/text_bounds.py`) Sync direction "
 "(`src/cadrumo/core/sync_surface.py`)"
 msgstr ""
+"`elided_prose` proporciona truncamiento total y visible para texto "
+"orientativo ensamblado por el sistema, mientras que el texto introducido "
+"por el operador conserva un límite que genera error. Esto impide que un "
+"aviso largo derivado del contribuyente convierta una advertencia no "
+"bloqueante en un flujo fallido, aunque un mensaje cortado todavía "
+"necesita suficiente margen para conservar su remedio útil. La reducción a"
+" raíces del español comparte tokenización y caché acotada de raíces. "
+"`TextBounds` centraliza restricciones de estructura para recuentos "
+"positivos, meses y conjuntos canónicos ordenados de meses; `SyncSurface` "
+"distingue sincronización de declaraciones de AEAT a local de la réplica "
+"unidireccional de hojas de cálculo. Los tokens opcionales de prorrata "
+"incluyen estructura, mientras que el registro fechado de hechos es "
+"responsable de pertenencia y significado legal. Truncamiento visible "
+"(`src/cadrumo/core/prose_elision.py`) Reducción compartida a raíces "
+"(`src/cadrumo/core/spanish_stemming.py`) Límites escalares "
+"(`src/cadrumo/core/text_bounds.py`) Dirección de sincronización "
+"(`src/cadrumo/core/sync_surface.py`)"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:44
 msgid "Assessment and follow-up"
@@ -289,6 +478,20 @@ msgid ""
 "against bundled authority, not independently validated law. Test and "
 "production reachability were not assessed in this static chunk."
 msgstr ""
+"Las características locales de diseño más sólidas son la autoridad tipada"
+" única de ubicaciones de almacenamiento, separación entre cargas "
+"factuales y de presentación o acciones, comprobaciones de anfitriones "
+"remotos conscientes del ámbito, declaraciones de modelos, entornos y "
+"licencias y conservación estructural en importaciones tabulares. El "
+"seguimiento debe rastrear la validación segura de identificadores de "
+"depósitos hasta cada resolvedor de almacenamiento, verificar en sus "
+"consumidores las suposiciones sobre destinos de terceros y el conducto "
+"central de escritura segura y ejercitar casos límite de dialectos CSV, "
+"encabezados y decimales con exportaciones representativas. Las "
+"disposiciones de exportación y anotaciones de notificaciones y pensiones "
+"se declaran frente a autoridad incluida, no a legislación validada "
+"independientemente. En este bloque estático no se evaluó la accesibilidad"
+" desde pruebas ni producción."
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:48
 msgid "Complete assigned-file coverage"
@@ -296,162 +499,194 @@ msgstr "Cobertura completa de los archivos asignados"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:50
 msgid "presentation.py (`src/cadrumo/core/presentation.py`) — lines 1–19"
-msgstr ""
+msgstr "presentation.py (`src/cadrumo/core/presentation.py`) — líneas 1–19"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:51
 msgid ""
 "prior_domiciliation_election.py "
 "(`src/cadrumo/core/prior_domiciliation_election.py`) — lines 1–21"
 msgstr ""
+"prior_domiciliation_election.py "
+"(`src/cadrumo/core/prior_domiciliation_election.py`) — líneas 1–21"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:52
 msgid "process_binding.py (`src/cadrumo/core/process_binding.py`) — lines 1–116"
-msgstr ""
+msgstr "process_binding.py (`src/cadrumo/core/process_binding.py`) — líneas 1–116"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:53
 msgid "product_identity.py (`src/cadrumo/core/product_identity.py`) — lines 1–72"
-msgstr ""
+msgstr "product_identity.py (`src/cadrumo/core/product_identity.py`) — líneas 1–72"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:54
 msgid ""
 "profile_discovery.py (`src/cadrumo/core/profile_discovery.py`) — lines "
 "1–28"
 msgstr ""
+"profile_discovery.py (`src/cadrumo/core/profile_discovery.py`) — líneas "
+"1–28"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:55
 msgid ""
 "profile_publication.py (`src/cadrumo/core/profile_publication.py`) — "
 "lines 1–43"
 msgstr ""
+"profile_publication.py (`src/cadrumo/core/profile_publication.py`) — "
+"líneas 1–43"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:56
 msgid "profile_session.py (`src/cadrumo/core/profile_session.py`) — lines 1–79"
-msgstr ""
+msgstr "profile_session.py (`src/cadrumo/core/profile_session.py`) — líneas 1–79"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:57
 msgid ""
 "prorrata_exclusions.py (`src/cadrumo/core/prorrata_exclusions.py`) — "
 "lines 1–38"
 msgstr ""
+"prorrata_exclusions.py (`src/cadrumo/core/prorrata_exclusions.py`) — "
+"líneas 1–38"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:58
 msgid ""
 "prorrata_register.py (`src/cadrumo/core/prorrata_register.py`) — lines "
 "1–66"
 msgstr ""
+"prorrata_register.py (`src/cadrumo/core/prorrata_register.py`) — líneas "
+"1–66"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:59
 msgid "prose_elision.py (`src/cadrumo/core/prose_elision.py`) — lines 1–192"
-msgstr ""
+msgstr "prose_elision.py (`src/cadrumo/core/prose_elision.py`) — líneas 1–192"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:60
 msgid "provenance_stamp.py (`src/cadrumo/core/provenance_stamp.py`) — lines 1–126"
 msgstr ""
+"provenance_stamp.py (`src/cadrumo/core/provenance_stamp.py`) — líneas "
+"1–126"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:61
 msgid ""
 "record_design_epoch.py (`src/cadrumo/core/record_design_epoch.py`) — "
 "lines 1–51"
 msgstr ""
+"record_design_epoch.py (`src/cadrumo/core/record_design_epoch.py`) — "
+"líneas 1–51"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:62
 msgid "refund_election.py (`src/cadrumo/core/refund_election.py`) — lines 1–63"
-msgstr ""
+msgstr "refund_election.py (`src/cadrumo/core/refund_election.py`) — líneas 1–63"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:63
 msgid ""
 "register_scoping_signal.py "
 "(`src/cadrumo/core/register_scoping_signal.py`) — lines 1–56"
 msgstr ""
+"register_scoping_signal.py "
+"(`src/cadrumo/core/register_scoping_signal.py`) — líneas 1–56"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:64
 msgid "registry_token.py (`src/cadrumo/core/registry_token.py`) — lines 1–137"
-msgstr ""
+msgstr "registry_token.py (`src/cadrumo/core/registry_token.py`) — líneas 1–137"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:65
 msgid "remote_authority.py (`src/cadrumo/core/remote_authority.py`) — lines 1–132"
 msgstr ""
+"remote_authority.py (`src/cadrumo/core/remote_authority.py`) — líneas "
+"1–132"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:66
 msgid ""
 "renta_declaracion_type.py (`src/cadrumo/core/renta_declaracion_type.py`) "
 "— lines 1–13"
 msgstr ""
+"renta_declaracion_type.py (`src/cadrumo/core/renta_declaracion_type.py`) "
+"— líneas 1–13"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:67
 msgid "repository_id.py (`src/cadrumo/core/repository_id.py`) — lines 1–49"
-msgstr ""
+msgstr "repository_id.py (`src/cadrumo/core/repository_id.py`) — líneas 1–49"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:68
 msgid "requirement.py (`src/cadrumo/core/requirement.py`) — lines 1–39"
-msgstr ""
+msgstr "requirement.py (`src/cadrumo/core/requirement.py`) — líneas 1–39"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:69
 msgid "rescate_type.py (`src/cadrumo/core/rescate_type.py`) — lines 1–43"
-msgstr ""
+msgstr "rescate_type.py (`src/cadrumo/core/rescate_type.py`) — líneas 1–43"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:70
 msgid ""
 "result_disposition.py (`src/cadrumo/core/result_disposition.py`) — lines "
 "1–388"
 msgstr ""
+"result_disposition.py (`src/cadrumo/core/result_disposition.py`) — líneas"
+" 1–388"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:71
 msgid "revision_review.py (`src/cadrumo/core/revision_review.py`) — lines 1–75"
-msgstr ""
+msgstr "revision_review.py (`src/cadrumo/core/revision_review.py`) — líneas 1–75"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:72
 msgid ""
 "schema_family_disposition.py "
 "(`src/cadrumo/core/schema_family_disposition.py`) — lines 1–73"
 msgstr ""
+"schema_family_disposition.py "
+"(`src/cadrumo/core/schema_family_disposition.py`) — líneas 1–73"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:73
 msgid ""
 "secure_object_write.py (`src/cadrumo/core/secure_object_write.py`) — "
 "lines 1–81"
 msgstr ""
+"secure_object_write.py (`src/cadrumo/core/secure_object_write.py`) — "
+"líneas 1–81"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:74
 msgid "source_locator.py (`src/cadrumo/core/source_locator.py`) — lines 1–46"
-msgstr ""
+msgstr "source_locator.py (`src/cadrumo/core/source_locator.py`) — líneas 1–46"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:75
 msgid "spanish_postcode.py (`src/cadrumo/core/spanish_postcode.py`) — lines 1–74"
-msgstr ""
+msgstr "spanish_postcode.py (`src/cadrumo/core/spanish_postcode.py`) — líneas 1–74"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:76
 msgid "spanish_stemming.py (`src/cadrumo/core/spanish_stemming.py`) — lines 1–82"
-msgstr ""
+msgstr "spanish_stemming.py (`src/cadrumo/core/spanish_stemming.py`) — líneas 1–82"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:77
 msgid ""
 "storage_materialization.py "
 "(`src/cadrumo/core/storage_materialization.py`) — lines 1–110"
 msgstr ""
+"storage_materialization.py "
+"(`src/cadrumo/core/storage_materialization.py`) — líneas 1–110"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:78
 msgid "storage_taxonomy.py (`src/cadrumo/core/storage_taxonomy.py`) — lines 1–415"
 msgstr ""
+"storage_taxonomy.py (`src/cadrumo/core/storage_taxonomy.py`) — líneas "
+"1–415"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:79
 msgid ""
 "storage_taxonomy_locations.py "
 "(`src/cadrumo/core/storage_taxonomy_locations.py`) — lines 1–972"
 msgstr ""
+"storage_taxonomy_locations.py "
+"(`src/cadrumo/core/storage_taxonomy_locations.py`) — líneas 1–972"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:80
 msgid "sync_surface.py (`src/cadrumo/core/sync_surface.py`) — lines 1–44"
-msgstr ""
+msgstr "sync_surface.py (`src/cadrumo/core/sync_surface.py`) — líneas 1–44"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:81
 msgid "tabular.py (`src/cadrumo/core/tabular.py`) — lines 1–703"
-msgstr ""
+msgstr "tabular.py (`src/cadrumo/core/tabular.py`) — líneas 1–703"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:82
 msgid "tax_domain.py (`src/cadrumo/core/tax_domain.py`) — lines 1–50"
-msgstr ""
+msgstr "tax_domain.py (`src/cadrumo/core/tax_domain.py`) — líneas 1–50"
 
 #: ../../technical/articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md:83
 msgid "text_bounds.py (`src/cadrumo/core/text_bounds.py`) — lines 1–121"
-msgstr ""
+msgstr "text_bounds.py (`src/cadrumo/core/text_bounds.py`) — líneas 1–121"

@@ -47,10 +47,13 @@ msgid ""
 "secure transport and operation bridges](../topics/operator-interfaces-"
 "part-2.md)"
 msgstr ""
+"**Informe:** `STAGE-2-171` · **Tema:** [Interfícies de l’operador, part "
+"2: transport segur i ponts d’operacions](../topics/operator-interfaces-"
+"part-2.md)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Abast i mètode"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:12
 msgid ""
@@ -312,244 +315,324 @@ msgstr ""
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:46
 msgid "`period_parsing.py` (`src/cadrumo/entrypoints/cli/period_parsing.py`)"
-msgstr ""
+msgstr "`period_parsing.py` (`src/cadrumo/entrypoints/cli/period_parsing.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:47
 msgid ""
 "`registered_operation_admission.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_admission.py`)"
 msgstr ""
+"`registered_operation_admission.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_admission.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:48
 msgid ""
 "`registered_operation_completion.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_completion.py`)"
 msgstr ""
+"`registered_operation_completion.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_completion.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:49
 msgid ""
 "`registered_operation_contracts.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_contracts.py`)"
 msgstr ""
+"`registered_operation_contracts.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_contracts.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:50
 msgid ""
 "`registered_operation_deadlines.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_deadlines.py`)"
 msgstr ""
+"`registered_operation_deadlines.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_deadlines.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:51
 msgid ""
 "`registered_operation_errors.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_errors.py`)"
 msgstr ""
+"`registered_operation_errors.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_errors.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:52
 msgid ""
 "`registered_operation_exchange.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_exchange.py`)"
 msgstr ""
+"`registered_operation_exchange.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_exchange.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:53
 msgid ""
 "`registered_operation_observations.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_observations.py`)"
 msgstr ""
+"`registered_operation_observations.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_observations.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:54
 msgid ""
 "`registered_operation_projections.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_projections.py`)"
 msgstr ""
+"`registered_operation_projections.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_projections.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:55
 msgid ""
 "`registered_operation_responses.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_responses.py`)"
 msgstr ""
+"`registered_operation_responses.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_responses.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:56
 msgid ""
 "`registered_operation_reviews.py` "
 "(`src/cadrumo/entrypoints/cli/registered_operation_reviews.py`)"
 msgstr ""
+"`registered_operation_reviews.py` "
+"(`src/cadrumo/entrypoints/cli/registered_operation_reviews.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:57
 msgid ""
 "`runtime_collab_recipient.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_collab_recipient.py`)"
 msgstr ""
+"`runtime_collab_recipient.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_collab_recipient.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:58
 msgid ""
 "`runtime_counterparty.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_counterparty.py`)"
 msgstr ""
+"`runtime_counterparty.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_counterparty.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:59
 msgid ""
 "`runtime_diagnostics.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_diagnostics.py`)"
 msgstr ""
+"`runtime_diagnostics.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_diagnostics.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:60
 msgid ""
 "`runtime_expedientes_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_expedientes_capture.py`)"
 msgstr ""
+"`runtime_expedientes_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_expedientes_capture.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:61
 msgid ""
 "`runtime_expedientes_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_expedientes_read.py`)"
 msgstr ""
+"`runtime_expedientes_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_expedientes_read.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:62
 msgid ""
 "`runtime_filed_bulk.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_bulk.py`)"
 msgstr ""
+"`runtime_filed_bulk.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_bulk.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:63
 msgid ""
 "`runtime_filed_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_history.py`)"
 msgstr ""
+"`runtime_filed_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_history.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:64
 msgid ""
 "`runtime_filed_projection.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_projection.py`)"
 msgstr ""
+"`runtime_filed_projection.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_projection.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:65
 msgid ""
 "`runtime_filed_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_read.py`)"
 msgstr ""
+"`runtime_filed_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_read.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:66
 msgid ""
 "`runtime_filed_single.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_single.py`)"
 msgstr ""
+"`runtime_filed_single.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_single.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:67
 msgid ""
 "`runtime_filed_source.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_filed_source.py`)"
 msgstr ""
+"`runtime_filed_source.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_filed_source.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:68
 msgid ""
 "`runtime_invoice_catalogue.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_invoice_catalogue.py`)"
 msgstr ""
+"`runtime_invoice_catalogue.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_invoice_catalogue.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:69
 msgid ""
 "`runtime_invoice_intake.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_invoice_intake.py`)"
 msgstr ""
+"`runtime_invoice_intake.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_invoice_intake.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:70
 msgid ""
 "`runtime_iva_history_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_iva_history_capture.py`)"
 msgstr ""
+"`runtime_iva_history_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_iva_history_capture.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:71
 msgid ""
 "`runtime_iva_remote_state_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_iva_remote_state_capture.py`)"
 msgstr ""
+"`runtime_iva_remote_state_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_iva_remote_state_capture.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:72
 msgid ""
 "`runtime_iva_wallet_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_iva_wallet_capture.py`)"
 msgstr ""
+"`runtime_iva_wallet_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_iva_wallet_capture.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:73
 msgid ""
 "`runtime_iva_wallet_history.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_iva_wallet_history.py`)"
 msgstr ""
+"`runtime_iva_wallet_history.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_iva_wallet_history.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:74
 msgid ""
 "`runtime_justificante_capture.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_justificante_capture.py`)"
 msgstr ""
+"`runtime_justificante_capture.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_justificante_capture.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:75
 msgid ""
 "`runtime_justificante_read.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_justificante_read.py`)"
 msgstr ""
+"`runtime_justificante_read.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_justificante_read.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:76
 msgid ""
 "`runtime_ledger_actividad_asset.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_actividad_asset.py`)"
 msgstr ""
+"`runtime_ledger_actividad_asset.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_actividad_asset.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:77
 msgid ""
 "`runtime_ledger_add.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_add.py`)"
 msgstr ""
+"`runtime_ledger_add.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_add.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:78
 msgid ""
 "`runtime_ledger_allocate.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_allocate.py`)"
 msgstr ""
+"`runtime_ledger_allocate.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_allocate.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:79
 msgid ""
 "`runtime_ledger_attachment.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_attachment.py`)"
 msgstr ""
+"`runtime_ledger_attachment.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_attachment.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:80
 msgid ""
 "`runtime_ledger_bienes_inversion.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_bienes_inversion.py`)"
 msgstr ""
+"`runtime_ledger_bienes_inversion.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_bienes_inversion.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:81
 msgid ""
 "`runtime_ledger_bulk_classify.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_bulk_classify.py`)"
 msgstr ""
+"`runtime_ledger_bulk_classify.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_bulk_classify.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:82
 msgid ""
 "`runtime_ledger_check.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_check.py`)"
 msgstr ""
+"`runtime_ledger_check.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_check.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:83
 msgid ""
 "`runtime_ledger_classify.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_classify.py`)"
 msgstr ""
+"`runtime_ledger_classify.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_classify.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:84
 msgid ""
 "`runtime_ledger_evidence_add.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_add.py`)"
 msgstr ""
+"`runtime_ledger_evidence_add.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_add.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:85
 msgid ""
 "`runtime_ledger_evidence_followup.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_followup.py`)"
 msgstr ""
+"`runtime_ledger_evidence_followup.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_followup.py`)"
 
 #: ../../technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md:86
 msgid ""
 "`runtime_ledger_evidence_ingestion.py` "
 "(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_ingestion.py`)"
 msgstr ""
+"`runtime_ledger_evidence_ingestion.py` "
+"(`src/cadrumo/entrypoints/cli/runtime_ledger_evidence_ingestion.py`)"

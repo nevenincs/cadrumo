@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:1
 msgid "Modelo history, invoice withholding capture, and IVA wallet"
-msgstr ""
+msgstr "Modelo-előzmények, számlaforrásadó-rögzítés és IVA-pénztárca"
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-075` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:10
 msgid ""
@@ -165,7 +168,7 @@ msgstr ""
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:24
 msgid "Knowledge, security, and quality"
-msgstr ""
+msgstr "Tudás, biztonság és minőség"
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:26
 msgid ""
@@ -208,7 +211,7 @@ msgstr ""
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:32
 msgid "Full file coverage"
-msgstr ""
+msgstr "Teljes fájllefedettség"
 
 #: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:34
 msgid ""

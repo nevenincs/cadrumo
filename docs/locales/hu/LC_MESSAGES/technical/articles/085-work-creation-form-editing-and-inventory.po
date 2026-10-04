@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 2: verification, workbench and workspace](../topics"
 "/modelo-work-and-revision-lifecycle-part-2.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-085` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 2. rész: ellenőrzés, munkafelület és munkatér](../topics"
+"/modelo-work-and-revision-lifecycle-part-2.md)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:10
 msgid ""
@@ -210,7 +213,7 @@ msgstr ""
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:32
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:34
 msgid ""
@@ -264,101 +267,125 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:44
 msgid "All 19 assigned source files were read completely through pages 1–8."
 msgstr ""
+"Mind a 19 kijelölt forrásfájlt teljes egészében elolvastam az 1–8. "
+"oldalakon."
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:46
 msgid ""
 "work_create_operation.py "
 "(`src/cadrumo/application/modelo/work_create_operation.py`)"
 msgstr ""
+"work_create_operation.py "
+"(`src/cadrumo/application/modelo/work_create_operation.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:47
 msgid ""
 "work_create_policy.py "
 "(`src/cadrumo/application/modelo/work_create_policy.py`)"
 msgstr ""
+"work_create_policy.py "
+"(`src/cadrumo/application/modelo/work_create_policy.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:48
 msgid "work_form.py (`src/cadrumo/application/modelo/work_form.py`)"
-msgstr ""
+msgstr "work_form.py (`src/cadrumo/application/modelo/work_form.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:49
 msgid ""
 "work_form_context.py "
 "(`src/cadrumo/application/modelo/work_form_context.py`)"
 msgstr ""
+"work_form_context.py "
+"(`src/cadrumo/application/modelo/work_form_context.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:50
 msgid "work_form_counts.py (`src/cadrumo/application/modelo/work_form_counts.py`)"
-msgstr ""
+msgstr "work_form_counts.py (`src/cadrumo/application/modelo/work_form_counts.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:51
 msgid "work_form_errors.py (`src/cadrumo/application/modelo/work_form_errors.py`)"
-msgstr ""
+msgstr "work_form_errors.py (`src/cadrumo/application/modelo/work_form_errors.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:52
 msgid ""
 "work_form_field_projection.py "
 "(`src/cadrumo/application/modelo/work_form_field_projection.py`)"
 msgstr ""
+"work_form_field_projection.py "
+"(`src/cadrumo/application/modelo/work_form_field_projection.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:53
 msgid ""
 "work_form_field_state.py "
 "(`src/cadrumo/application/modelo/work_form_field_state.py`)"
 msgstr ""
+"work_form_field_state.py "
+"(`src/cadrumo/application/modelo/work_form_field_state.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:54
 msgid ""
 "work_form_inspection.py "
 "(`src/cadrumo/application/modelo/work_form_inspection.py`)"
 msgstr ""
+"work_form_inspection.py "
+"(`src/cadrumo/application/modelo/work_form_inspection.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:55
 msgid "work_form_layout.py (`src/cadrumo/application/modelo/work_form_layout.py`)"
-msgstr ""
+msgstr "work_form_layout.py (`src/cadrumo/application/modelo/work_form_layout.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:56
 msgid ""
 "work_form_localization.py "
 "(`src/cadrumo/application/modelo/work_form_localization.py`)"
 msgstr ""
+"work_form_localization.py "
+"(`src/cadrumo/application/modelo/work_form_localization.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:57
 msgid "work_form_models.py (`src/cadrumo/application/modelo/work_form_models.py`)"
-msgstr ""
+msgstr "work_form_models.py (`src/cadrumo/application/modelo/work_form_models.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:58
 msgid "work_form_notes.py (`src/cadrumo/application/modelo/work_form_notes.py`)"
-msgstr ""
+msgstr "work_form_notes.py (`src/cadrumo/application/modelo/work_form_notes.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:59
 msgid "work_form_rates.py (`src/cadrumo/application/modelo/work_form_rates.py`)"
-msgstr ""
+msgstr "work_form_rates.py (`src/cadrumo/application/modelo/work_form_rates.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:60
 msgid ""
 "work_form_records.py "
 "(`src/cadrumo/application/modelo/work_form_records.py`)"
 msgstr ""
+"work_form_records.py "
+"(`src/cadrumo/application/modelo/work_form_records.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:61
 msgid "work_form_result.py (`src/cadrumo/application/modelo/work_form_result.py`)"
-msgstr ""
+msgstr "work_form_result.py (`src/cadrumo/application/modelo/work_form_result.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:62
 msgid ""
 "work_form_service.py "
 "(`src/cadrumo/application/modelo/work_form_service.py`)"
 msgstr ""
+"work_form_service.py "
+"(`src/cadrumo/application/modelo/work_form_service.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:63
 msgid ""
 "work_form_sources.py "
 "(`src/cadrumo/application/modelo/work_form_sources.py`)"
 msgstr ""
+"work_form_sources.py "
+"(`src/cadrumo/application/modelo/work_form_sources.py`)"
 
 #: ../../technical/articles/085-work-creation-form-editing-and-inventory.md:64
 msgid ""
 "work_inventory_operation.py "
 "(`src/cadrumo/application/modelo/work_inventory_operation.py`)"
 msgstr ""
+"work_inventory_operation.py "
+"(`src/cadrumo/application/modelo/work_inventory_operation.py`)"

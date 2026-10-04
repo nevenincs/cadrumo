@@ -45,6 +45,8 @@ msgid ""
 "**Report:** `STAGE-2-153` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-153` · **Tema:** [Dominio empresarial y del "
+"contribuyente](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:10
 msgid "Scope"
@@ -63,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacidades del producto"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:16
 msgid ""
@@ -137,7 +139,7 @@ msgstr ""
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:24
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Evaluación de seguridad y calidad"
 
 #: ../../technical/articles/153-usage-ratios-and-user-profile-domain.md:26
 msgid ""

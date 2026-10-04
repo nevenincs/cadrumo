@@ -49,6 +49,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-161` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:10
 msgid "Scope and capability"
@@ -146,7 +149,7 @@ msgstr ""
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:22
 msgid "Discovery and knowledge presented to operators"
-msgstr ""
+msgstr "Descobriment i coneixement presentat als operadors"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:24
 msgid ""
@@ -195,7 +198,7 @@ msgstr ""
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:28
 msgid "Input boundaries, effects, and quality"
-msgstr ""
+msgstr "Límits d'entrada, efectes i qualitat"
 
 #: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:30
 msgid ""

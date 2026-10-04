@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:1
 msgid "Dated tax vocabularies, inheritance, and IVA carries"
-msgstr ""
+msgstr "Dátumozott adószókészletek, öröklés és IVA-továbbvitelek"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:3
 msgid ""
@@ -44,10 +44,12 @@ msgid ""
 "**Report:** `STAGE-2-130` · **Topic:** [Tax calculation domain](../topics"
 "/tax-calculation-domain.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-130` · **Téma:** [Az adószámítás "
+"szakterülete](../topics/tax-calculation-domain.md)"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:10
 msgid "Scope and method"
-msgstr ""
+msgstr "Hatókör és módszer"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:12
 msgid ""
@@ -61,7 +63,7 @@ msgstr ""
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:14
 msgid "Dated tax vocabularies"
-msgstr ""
+msgstr "Dátumhoz kötött adószókincsek"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:16
 msgid ""
@@ -146,7 +148,7 @@ msgstr ""
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:24
 msgid "IVA carry and family semantics"
-msgstr ""
+msgstr "IVA-átvitel és családi szemantika"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:26
 msgid ""
@@ -183,7 +185,7 @@ msgstr ""
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:30
 msgid "Ledger selector boundaries"
-msgstr ""
+msgstr "Főkönyvi szelektorhatárok"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:32
 msgid ""
@@ -210,7 +212,7 @@ msgstr ""
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:34
 msgid "Security, quality and limits"
-msgstr ""
+msgstr "Biztonság, minőség és korlátok"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:36
 msgid ""
@@ -241,6 +243,8 @@ msgid ""
 "registry/irnr_tipo_renta.py "
 "(`src/cadrumo/domain/calculations/registry/irnr_tipo_renta.py`) — 1–351"
 msgstr ""
+"registry/irnr_tipo_renta.py "
+"(`src/cadrumo/domain/calculations/registry/irnr_tipo_renta.py`) — 1–351"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:43
 msgid ""
@@ -248,12 +252,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/irpf_income_categories.py`) — "
 "1–195"
 msgstr ""
+"registry/irpf_income_categories.py "
+"(`src/cadrumo/domain/calculations/registry/irpf_income_categories.py`) — "
+"1–195"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:44
 msgid ""
 "registry/irpf_regimes.py "
 "(`src/cadrumo/domain/calculations/registry/irpf_regimes.py`) — 1–350"
 msgstr ""
+"registry/irpf_regimes.py "
+"(`src/cadrumo/domain/calculations/registry/irpf_regimes.py`) — 1–350"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:45
 msgid ""
@@ -261,6 +270,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_cash_accounting_vocabulary.py`)"
 " — 1–171"
 msgstr ""
+"registry/iva_cash_accounting_vocabulary.py "
+"(`src/cadrumo/domain/calculations/registry/iva_cash_accounting_vocabulary.py`)"
+" — 1–171"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:46
 msgid ""
@@ -268,6 +280,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`) — "
 "1–283"
 msgstr ""
+"registry/iva_category_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`) — "
+"1–283"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:47
 msgid ""
@@ -275,6 +290,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_compensation_annual_partition_bindings.py`)"
 " — 1–138"
 msgstr ""
+"registry/iva_compensation_annual_partition_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/iva_compensation_annual_partition_bindings.py`)"
+" — 1–138"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:48
 msgid ""
@@ -282,6 +300,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_deduction_catalogue.py`) —"
 " 1–218"
 msgstr ""
+"registry/iva_deduction_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/iva_deduction_catalogue.py`) —"
+" 1–218"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:49
 msgid ""
@@ -289,6 +310,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_flow_catalogue.py`) — "
 "1–366"
 msgstr ""
+"registry/iva_flow_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/iva_flow_catalogue.py`) — "
+"1–366"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:50
 msgid ""
@@ -296,6 +320,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_legal_vocabulary.py`) — "
 "1–160"
 msgstr ""
+"registry/iva_legal_vocabulary.py "
+"(`src/cadrumo/domain/calculations/registry/iva_legal_vocabulary.py`) — "
+"1–160"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:51
 msgid ""
@@ -303,6 +330,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_rate_kind_catalogue.py`) —"
 " 1–183"
 msgstr ""
+"registry/iva_rate_kind_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/iva_rate_kind_catalogue.py`) —"
+" 1–183"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:52
 msgid ""
@@ -310,6 +340,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_rate_role_catalogue.py`) —"
 " 1–156"
 msgstr ""
+"registry/iva_rate_role_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/iva_rate_role_catalogue.py`) —"
+" 1–156"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:53
 msgid ""
@@ -317,6 +350,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_regime_vocabulary.py`) — "
 "1–258"
 msgstr ""
+"registry/iva_regime_vocabulary.py "
+"(`src/cadrumo/domain/calculations/registry/iva_regime_vocabulary.py`) — "
+"1–258"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:54
 msgid ""
@@ -324,6 +360,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_source.py`)"
 " — 1–152"
 msgstr ""
+"registry/iva_schema_vocabulary_source.py "
+"(`src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_source.py`)"
+" — 1–152"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:55
 msgid ""
@@ -331,6 +370,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py`)"
 " — 1–43"
 msgstr ""
+"registry/iva_schema_vocabulary_tokens.py "
+"(`src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py`)"
+" — 1–43"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:56
 msgid ""
@@ -338,12 +380,17 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/iva_wallet_carry_targets.py`) "
 "— 1–76"
 msgstr ""
+"registry/iva_wallet_carry_targets.py "
+"(`src/cadrumo/domain/calculations/registry/iva_wallet_carry_targets.py`) "
+"— 1–76"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:57
 msgid ""
 "registry/keyed_families.py "
 "(`src/cadrumo/domain/calculations/registry/keyed_families.py`) — 1–403"
 msgstr ""
+"registry/keyed_families.py "
+"(`src/cadrumo/domain/calculations/registry/keyed_families.py`) — 1–403"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:58
 msgid ""
@@ -351,6 +398,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_binding_selector_support.py`)"
 " — 1–96"
 msgstr ""
+"registry/ledger_binding_selector_support.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_binding_selector_support.py`)"
+" — 1–96"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:59
 msgid ""
@@ -358,6 +408,9 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_binding_validation.py`)"
 " — 1–106"
 msgstr ""
+"registry/ledger_binding_validation.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_binding_validation.py`)"
+" — 1–106"
 
 #: ../../technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md:60
 msgid ""
@@ -365,3 +418,6 @@ msgid ""
 "(`src/cadrumo/domain/calculations/registry/ledger_impatriado_bindings.py`)"
 " — 1–315"
 msgstr ""
+"registry/ledger_impatriado_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_impatriado_bindings.py`)"
+" — 1–315"

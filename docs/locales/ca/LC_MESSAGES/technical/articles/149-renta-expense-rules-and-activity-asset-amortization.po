@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:1
 msgid "Renta expense rules and activity-asset amortization"
-msgstr ""
+msgstr "Regles de despeses de renda i amortització d’actius d’activitat"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-149` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-149` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:16
 msgid ""
@@ -136,7 +138,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:24
 msgid "How it works and knowledge"
-msgstr ""
+msgstr "Funcionament i coneixement"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:26
 msgid ""
@@ -185,7 +187,7 @@ msgstr ""
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:32
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/149-renta-expense-rules-and-activity-asset-amortization.md:34
 msgid ""

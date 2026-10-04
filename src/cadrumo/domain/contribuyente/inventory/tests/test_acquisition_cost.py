@@ -9,8 +9,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+from cadrumo.domain.iva.schema import IvaRateKind
 
+from ....calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....filing_evidence import FilingEvidenceReference
 from ....iva.lookup import lookup_rate
 from ..records import (

@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 2: verification, workbench and workspace](../topics"
 "/modelo-work-and-revision-lifecycle-part-2.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-084` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 2. rész: ellenőrzés, munkafelület és munkatér](../topics"
+"/modelo-work-and-revision-lifecycle-part-2.md)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:10
 msgid ""
@@ -235,7 +238,7 @@ msgstr ""
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:32
 msgid "Knowledge, safety, and implementation assessment"
-msgstr ""
+msgstr "Tudás, biztonságosság és megvalósítási értékelés"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:34
 msgid ""
@@ -290,65 +293,85 @@ msgstr "Az összes kijelölt fájl teljes lefedettsége"
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:44
 msgid "All 11 assigned source files were read completely through pages 1–9."
 msgstr ""
+"Mind a 11 kijelölt forrásfájlt teljes egészében elolvastam az 1–9. "
+"oldalakon."
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:46
 msgid ""
 "verification_cross_period.py "
 "(`src/cadrumo/application/modelo/verification_cross_period.py`)"
 msgstr ""
+"verification_cross_period.py "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:47
 msgid ""
 "verification_preconditions.py "
 "(`src/cadrumo/application/modelo/verification_preconditions.py`)"
 msgstr ""
+"verification_preconditions.py "
+"(`src/cadrumo/application/modelo/verification_preconditions.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:48
 msgid ""
 "verification_predicates.py "
 "(`src/cadrumo/application/modelo/verification_predicates.py`)"
 msgstr ""
+"verification_predicates.py "
+"(`src/cadrumo/application/modelo/verification_predicates.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:49
 msgid ""
 "verification_projection.py "
 "(`src/cadrumo/application/modelo/verification_projection.py`)"
 msgstr ""
+"verification_projection.py "
+"(`src/cadrumo/application/modelo/verification_projection.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:50
 msgid ""
 "verification_report_read_operation.py "
 "(`src/cadrumo/application/modelo/verification_report_read_operation.py`)"
 msgstr ""
+"verification_report_read_operation.py "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:51
 msgid ""
 "verification_repository_ports.py "
 "(`src/cadrumo/application/modelo/verification_repository_ports.py`)"
 msgstr ""
+"verification_repository_ports.py "
+"(`src/cadrumo/application/modelo/verification_repository_ports.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:52
 msgid "verify_selector.py (`src/cadrumo/application/modelo/verify_selector.py`)"
-msgstr ""
+msgstr "verify_selector.py (`src/cadrumo/application/modelo/verify_selector.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:53
 msgid ""
 "withholding_detail_gate.py "
 "(`src/cadrumo/application/modelo/withholding_detail_gate.py`)"
 msgstr ""
+"withholding_detail_gate.py "
+"(`src/cadrumo/application/modelo/withholding_detail_gate.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:54
 msgid ""
 "wizard_attempt_operation.py "
 "(`src/cadrumo/application/modelo/wizard_attempt_operation.py`)"
 msgstr ""
+"wizard_attempt_operation.py "
+"(`src/cadrumo/application/modelo/wizard_attempt_operation.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:55
 msgid ""
 "wizard_context_operation.py "
 "(`src/cadrumo/application/modelo/wizard_context_operation.py`)"
 msgstr ""
+"wizard_context_operation.py "
+"(`src/cadrumo/application/modelo/wizard_context_operation.py`)"
 
 #: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:56
 msgid "work_addressing.py (`src/cadrumo/application/modelo/work_addressing.py`)"
-msgstr ""
+msgstr "work_addressing.py (`src/cadrumo/application/modelo/work_addressing.py`)"

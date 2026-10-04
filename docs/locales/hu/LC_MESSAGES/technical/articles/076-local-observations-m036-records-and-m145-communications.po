@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:1
 msgid "Local observations, M036 records, and M145 communications"
-msgstr ""
+msgstr "Helyi megfigyelések, M036-rekordok és M145-közlések"
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-076` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:10
 msgid ""
@@ -188,7 +191,7 @@ msgstr ""
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:30
 msgid "Knowledge, security, and quality"
-msgstr ""
+msgstr "Tudás, biztonság és minőség"
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:32
 msgid ""
@@ -228,7 +231,7 @@ msgstr ""
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:38
 msgid "Full file coverage"
-msgstr ""
+msgstr "Teljes fájllefedettség"
 
 #: ../../technical/articles/076-local-observations-m036-records-and-m145-communications.md:40
 msgid ""

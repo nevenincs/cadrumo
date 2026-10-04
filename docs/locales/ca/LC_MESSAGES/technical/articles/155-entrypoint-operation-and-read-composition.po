@@ -47,6 +47,9 @@ msgid ""
 "command graph and principal workflows](../topics/operator-interfaces-"
 "part-1.md)"
 msgstr ""
+"**Informe:** `STAGE-2-155` · **Tema:** [Interfícies de l’operador, part "
+"1: graf d’ordres i fluxos principals de treball](../topics/operator-"
+"interfaces-part-1.md)"
 
 #: ../../technical/articles/155-entrypoint-operation-and-read-composition.md:10
 msgid "Scope"
@@ -67,7 +70,7 @@ msgstr ""
 
 #: ../../technical/articles/155-entrypoint-operation-and-read-composition.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/155-entrypoint-operation-and-read-composition.md:16
 msgid ""
@@ -211,7 +214,7 @@ msgstr ""
 
 #: ../../technical/articles/155-entrypoint-operation-and-read-composition.md:32
 msgid "Security and safety assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i protecció"
 
 #: ../../technical/articles/155-entrypoint-operation-and-read-composition.md:34
 msgid ""

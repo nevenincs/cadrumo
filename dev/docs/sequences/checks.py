@@ -22,7 +22,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.golden_comparison import canonicalise
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
 

@@ -2,7 +2,9 @@ add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/bu
     "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico"
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${PROJECT_BINARY_DIR}/_deps/build-tools"
+    --channel "${CADRUMO_CHANNEL}"
   DEPENDS ${native_helper_inputs} ${contract_inputs}
+    "${CONTRACT_DIR}/identity.json"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${PROJECT_BINARY_DIR}/_deps/build-tools/ready"
     "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
@@ -66,7 +68,9 @@ target_link_libraries(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/libs/python
 add_dependencies(cadrumo_python_bridge python_dependencies)
 add_executable(platform_static_consumer platform/tests/consumer.c)
 add_executable(platform_dll_consumer platform/tests/consumer.c)
+include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
 foreach(target cadrumo_python cadrumo_python_d cadrumo_python_bridge platform_static_consumer platform_dll_consumer)
+  cadrumo_compile_policy(${target})
   target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
   add_dependencies(${target} native_contract)
 endforeach()

@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:1
 msgid "modelo calculation, evidence and filing lifecycle"
-msgstr ""
+msgstr "càlcul de modelo, evidències i cicle de vida de presentació"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:3
 msgid ""
@@ -46,6 +46,8 @@ msgid ""
 "**Report:** `STAGE-2-146` · **Topic:** [Business and taxpayer "
 "domain](../topics/business-and-taxpayer-domain.md)"
 msgstr ""
+"**Informe:** `STAGE-2-146` · **Tema:** [Domini empresarial i del "
+"contribuent](../topics/business-and-taxpayer-domain.md)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:10
 msgid "Scope"
@@ -62,7 +64,7 @@ msgstr ""
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:14
 msgid "Product capabilities"
-msgstr ""
+msgstr "Capacitats del producte"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:16
 msgid ""
@@ -154,7 +156,7 @@ msgstr ""
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:26
 msgid "How it works and knowledge"
-msgstr ""
+msgstr "Funcionament i coneixement"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:28
 msgid ""
@@ -209,7 +211,7 @@ msgstr ""
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:34
 msgid "Security and implementation assessment"
-msgstr ""
+msgstr "Avaluació de seguretat i implementació"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:36
 msgid ""
@@ -288,78 +290,96 @@ msgstr "Cobertura completa dels fitxers assignats"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:50
 msgid "modelos/__init__.py (`src/cadrumo/domain/modelos/__init__.py`)"
-msgstr ""
+msgstr "modelos/__init__.py (`src/cadrumo/domain/modelos/__init__.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:51
 msgid ""
 "modelos/calculation_repository.py "
 "(`src/cadrumo/domain/modelos/calculation_repository.py`)"
 msgstr ""
+"modelos/calculation_repository.py "
+"(`src/cadrumo/domain/modelos/calculation_repository.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:52
 msgid ""
 "modelos/calculation_revision.py "
 "(`src/cadrumo/domain/modelos/calculation_revision.py`)"
 msgstr ""
+"modelos/calculation_revision.py "
+"(`src/cadrumo/domain/modelos/calculation_revision.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:53
 msgid ""
 "modelos/calculation_revision_aggregate.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_aggregate.py`)"
 msgstr ""
+"modelos/calculation_revision_aggregate.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_aggregate.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:54
 msgid ""
 "modelos/calculation_revision_amendment.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_amendment.py`)"
 msgstr ""
+"modelos/calculation_revision_amendment.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_amendment.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:55
 msgid ""
 "modelos/calculation_revision_identity.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_identity.py`)"
 msgstr ""
+"modelos/calculation_revision_identity.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_identity.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:56
 msgid ""
 "modelos/calculation_revision_m303_evidence.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_m303_evidence.py`)"
 msgstr ""
+"modelos/calculation_revision_m303_evidence.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_m303_evidence.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:57
 msgid ""
 "modelos/calculation_revision_m303_handoff.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`)"
 msgstr ""
+"modelos/calculation_revision_m303_handoff.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:58
 msgid ""
 "modelos/calculation_revision_operator_layer.py "
 "(`src/cadrumo/domain/modelos/calculation_revision_operator_layer.py`)"
 msgstr ""
+"modelos/calculation_revision_operator_layer.py "
+"(`src/cadrumo/domain/modelos/calculation_revision_operator_layer.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:59
 msgid "modelos/codes.py (`src/cadrumo/domain/modelos/codes.py`)"
-msgstr ""
+msgstr "modelos/codes.py (`src/cadrumo/domain/modelos/codes.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:60
 msgid "modelos/dt12_reduccion.py (`src/cadrumo/domain/modelos/dt12_reduccion.py`)"
-msgstr ""
+msgstr "modelos/dt12_reduccion.py (`src/cadrumo/domain/modelos/dt12_reduccion.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:61
 msgid "modelos/errors.py (`src/cadrumo/domain/modelos/errors.py`)"
-msgstr ""
+msgstr "modelos/errors.py (`src/cadrumo/domain/modelos/errors.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:62
 msgid "modelos/filing_record.py (`src/cadrumo/domain/modelos/filing_record.py`)"
-msgstr ""
+msgstr "modelos/filing_record.py (`src/cadrumo/domain/modelos/filing_record.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:63
 msgid ""
 "modelos/filing_repository.py "
 "(`src/cadrumo/domain/modelos/filing_repository.py`)"
 msgstr ""
+"modelos/filing_repository.py "
+"(`src/cadrumo/domain/modelos/filing_repository.py`)"
 
 #: ../../technical/articles/146-modelo-calculation-evidence-and-filing-lifecycle.md:64
 msgid "modelos/filing_text.py (`src/cadrumo/domain/modelos/filing_text.py`)"
-msgstr ""
+msgstr "modelos/filing_text.py (`src/cadrumo/domain/modelos/filing_text.py`)"

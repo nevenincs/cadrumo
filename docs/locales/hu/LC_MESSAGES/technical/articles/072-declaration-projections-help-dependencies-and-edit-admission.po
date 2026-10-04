@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:1
 msgid "Declaration projections, help, dependencies, and edit admission"
-msgstr ""
+msgstr "Bevallásvetületek, súgó, függőségek és szerkesztési befogadás"
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:3
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
 "part-1.md)"
 msgstr ""
+"**Jelentés:** `STAGE-2-072` · **Téma:** [Modelo-munka és revíziós "
+"életciklus, 1. rész](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:10
 msgid "Scope"
@@ -62,7 +65,7 @@ msgstr ""
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:14
 msgid "Product capabilities and data flow"
-msgstr ""
+msgstr "Termékképességek és adatáramlás"
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:16
 msgid ""
@@ -201,7 +204,7 @@ msgstr ""
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:30
 msgid "Security and quality assessment"
-msgstr ""
+msgstr "Biztonsági és minőségi értékelés"
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:32
 msgid ""
@@ -271,18 +274,25 @@ msgid ""
 "(`src/cadrumo/application/modelo/calculation_summary_presentation.py`) — "
 "lines 1–418, fully read."
 msgstr ""
+"calculation_summary_presentation.py "
+"(`src/cadrumo/application/modelo/calculation_summary_presentation.py`) — "
+"1–418,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:45
 msgid ""
 "caller_context.py (`src/cadrumo/application/modelo/caller_context.py`) — "
 "lines 1–164, fully read."
 msgstr ""
+"caller_context.py (`src/cadrumo/application/modelo/caller_context.py`) — "
+"1–164,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:46
 msgid ""
 "casilla_help.py (`src/cadrumo/application/modelo/casilla_help.py`) — "
 "lines 1–299, fully read."
 msgstr ""
+"casilla_help.py (`src/cadrumo/application/modelo/casilla_help.py`) — "
+"1–299,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:47
 msgid ""
@@ -290,6 +300,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/casilla_help_formula.py`) — lines 1–490,"
 " fully read."
 msgstr ""
+"casilla_help_formula.py "
+"(`src/cadrumo/application/modelo/casilla_help_formula.py`) — 1–490,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:48
 msgid ""
@@ -297,12 +310,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/casilla_help_reach.py`) — lines 1–162, "
 "fully read."
 msgstr ""
+"casilla_help_reach.py "
+"(`src/cadrumo/application/modelo/casilla_help_reach.py`) — 1–162,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:49
 msgid ""
 "data_inventory.py (`src/cadrumo/application/modelo/data_inventory.py`) — "
 "lines 1–368, fully read."
 msgstr ""
+"data_inventory.py (`src/cadrumo/application/modelo/data_inventory.py`) — "
+"1–368,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:50
 msgid ""
@@ -310,6 +328,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declaration_summary.py`) — lines 1–138, "
 "fully read."
 msgstr ""
+"declaration_summary.py "
+"(`src/cadrumo/application/modelo/declaration_summary.py`) — 1–138,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:51
 msgid ""
@@ -317,6 +338,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declaration_targets.py`) — lines 1–46, "
 "fully read."
 msgstr ""
+"declaration_targets.py "
+"(`src/cadrumo/application/modelo/declaration_targets.py`) — 1–46,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:52
 msgid ""
@@ -324,6 +348,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declarations_calendar.py`) — lines "
 "1–553, fully read."
 msgstr ""
+"declarations_calendar.py "
+"(`src/cadrumo/application/modelo/declarations_calendar.py`) — 1–553,. sor"
+" teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:53
 msgid ""
@@ -331,6 +358,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declarations_list.py`) — lines 1–144, "
 "fully read."
 msgstr ""
+"declarations_list.py "
+"(`src/cadrumo/application/modelo/declarations_list.py`) — 1–144,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:54
 msgid ""
@@ -338,6 +368,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declarations_portfolio.py`) — lines "
 "1–151, fully read."
 msgstr ""
+"declarations_portfolio.py "
+"(`src/cadrumo/application/modelo/declarations_portfolio.py`) — 1–151,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:55
 msgid ""
@@ -345,6 +378,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/declarations_workspace.py`) — lines "
 "1–864, fully read."
 msgstr ""
+"declarations_workspace.py "
+"(`src/cadrumo/application/modelo/declarations_workspace.py`) — 1–864,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:56
 msgid ""
@@ -352,6 +388,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/dependency_operation.py`) — lines 1–286,"
 " fully read."
 msgstr ""
+"dependency_operation.py "
+"(`src/cadrumo/application/modelo/dependency_operation.py`) — 1–286,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:57
 msgid ""
@@ -359,6 +398,9 @@ msgid ""
 "(`src/cadrumo/application/modelo/dependency_projection.py`) — lines "
 "1–216, fully read."
 msgstr ""
+"dependency_projection.py "
+"(`src/cadrumo/application/modelo/dependency_projection.py`) — 1–216,. sor"
+" teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:58
 msgid ""
@@ -366,12 +408,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/dependency_read_ports.py`) — lines 1–47,"
 " fully read."
 msgstr ""
+"dependency_read_ports.py "
+"(`src/cadrumo/application/modelo/dependency_read_ports.py`) — 1–47,. sor "
+"teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:59
 msgid ""
 "dt12_advisory.py (`src/cadrumo/application/modelo/dt12_advisory.py`) — "
 "lines 1–100, fully read."
 msgstr ""
+"dt12_advisory.py (`src/cadrumo/application/modelo/dt12_advisory.py`) — "
+"1–100,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:60
 msgid ""
@@ -379,12 +426,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/dt12_antiquity_advisory.py`) — lines "
 "1–98, fully read."
 msgstr ""
+"dt12_antiquity_advisory.py "
+"(`src/cadrumo/application/modelo/dt12_antiquity_advisory.py`) — 1–98,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:61
 msgid ""
 "edit_admission.py (`src/cadrumo/application/modelo/edit_admission.py`) — "
 "lines 1–455, fully read."
 msgstr ""
+"edit_admission.py (`src/cadrumo/application/modelo/edit_admission.py`) — "
+"1–455,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:62
 msgid ""
@@ -392,12 +444,17 @@ msgid ""
 "(`src/cadrumo/application/modelo/edit_baseline_projection.py`) — lines "
 "1–96, fully read."
 msgstr ""
+"edit_baseline_projection.py "
+"(`src/cadrumo/application/modelo/edit_baseline_projection.py`) — 1–96,. "
+"sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:63
 msgid ""
 "edit_contract.py (`src/cadrumo/application/modelo/edit_contract.py`) — "
 "lines 1–136, fully read."
 msgstr ""
+"edit_contract.py (`src/cadrumo/application/modelo/edit_contract.py`) — "
+"1–136,. sor teljes egészében elolvasva."
 
 #: ../../technical/articles/072-declaration-projections-help-dependencies-and-edit-admission.md:64
 msgid ""
@@ -405,3 +462,6 @@ msgid ""
 "(`src/cadrumo/application/modelo/edit_locale_input.py`) — lines 1–38, "
 "fully read."
 msgstr ""
+"edit_locale_input.py "
+"(`src/cadrumo/application/modelo/edit_locale_input.py`) — 1–38,. sor "
+"teljes egészében elolvasva."

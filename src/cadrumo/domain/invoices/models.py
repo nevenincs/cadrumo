@@ -35,6 +35,7 @@ from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -44,7 +45,7 @@ from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_member_state, spanish_eu_member_state
+from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
