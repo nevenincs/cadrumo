@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:283d2f9d52577bad9834f54b07805d28ed2619caaac2c046ca47919fddb49f51'
+body_hash: 'sha256:57a5d96e23155dee9183e3286267992c23baf0a23fcf72415b8e876059c7fb92'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -89,7 +89,7 @@ Puts own-account setup, import binding and per-filing account election in the Te
 
 Bring every CLI command, option, help text, JSON envelope, refusal rendering and generated reference that consumes the changed backend into agreement with it: own-account operations, transaction account binding, import options, per-filing account overrides, disposition and cutoff refusals, and the 360 DEVOLUCION route. Runs after the backend Steps it conforms to are closed.
 
-- [ ] `P06a.S23` - audit and align every CLI family touched by P01 to P05 (ledger account, import, add, list, modelo calculate, verify and export, wizard, 360 solicitud) against the changed backend contracts: options, positional subjects, help text, JSON output schemas and refusal rendering, removing options whose backend was deleted; `src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
+- [ ] `P06a.S23` - audit and align every CLI family touched by P01 to P05 (ledger account, import, add, list, view, review, modelo calculate, verify and export, wizard, 360 solicitud) against the changed backend contracts: options, positional subjects, help text, JSON output schemas and refusal rendering, removing options whose backend was deleted; show the masked own account in ledger list and view output and refresh the affected docs goldens through their owner; fix the empty-list hint that names the program aeat instead of cadrumo; `src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
 - [ ] `P06a.S24` - point operator remedies and the error catalogue for missing charge or refund accounts, non-ES charge accounts, past-cutoff domiciliacion and 360 account refusals at the live ledger account and 360 commands, and pass the operator-surface reconciliation; `src/cadrumo/application/operator_surface/, src/cadrumo/core/errors/registry/, src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`.
 - [ ] `P06a.S25` - prove live CLI registration, refusal, output shape and promised idempotency for every conformed command, assert no IBAN appears in argv, text or JSON output, and regenerate the CLI reference from its owner; `src/cadrumo/entrypoints/cli/tests/, docs/`.
 
