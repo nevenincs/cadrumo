@@ -312,3 +312,22 @@ test("the palette lists actions and runs the chosen one", async ({
   await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
 });
+
+test("a forced appearance reaches the documentation through the bridge", async ({
+  page: target,
+}) => {
+  await openWithDocs(target);
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await target
+    .getByRole("radiogroup", { name: label("desktop.settings.appearance") })
+    .getByRole("radio", { name: label("desktop.settings.dark") })
+    .click();
+  await expect
+    .poll(() =>
+      docsFrame(target).evaluate(() => document.body.dataset.theme ?? ""),
+    )
+    .toBe("dark");
+  await expect(target.locator("html")).toHaveAttribute("data-scheme", "dark");
+});

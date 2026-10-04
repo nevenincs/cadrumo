@@ -710,6 +710,13 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+.palette-crumb {
+  color: var(--faint);
+  font-size: var(--font-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .palette-excerpt {
   color: var(--muted);
   font-size: var(--font-sm);

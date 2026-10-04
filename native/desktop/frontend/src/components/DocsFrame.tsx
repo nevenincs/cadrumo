@@ -20,6 +20,9 @@ const SEARCH_TIMEOUT_MS = 4000;
 const EXTERNAL_BURST = 3;
 const EXTERNAL_WINDOW_MS = 10000;
 const MAX_SELECTION = 65536;
+// The page's own bounds; a request beyond them is refused without an answer.
+const MAX_QUERY = 256;
+const MAX_URL = 4096;
 const LINK_SCHEMES = new Set(["http:", "https:", "mailto:"]);
 
 function hasLinkScheme(href: string): boolean {
@@ -110,6 +113,7 @@ function readResults(
       url: url.href,
       excerpt: r.excerpt,
       ranges,
+      ...(typeof r.crumb === "string" && r.crumb ? { crumb: r.crumb } : {}),
     });
   }
   return out;
@@ -289,7 +293,16 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         },
         navigate: (url: string) => {
           if (!features.current.includes("navigate")) return false;
-          post("command", { name: "navigate", url });
+          // The page refuses anything else without answering, so check here.
+          let target: URL;
+          try {
+            target = new URL(url);
+          } catch {
+            return false;
+          }
+          if (target.origin !== origin || target.href.length > MAX_URL)
+            return false;
+          post("command", { name: "navigate", url: target.href });
           return true;
         },
         openSearch: () => {
@@ -313,10 +326,14 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
               if (results) resolve(results);
               else reject(new Error("docs-search-malformed"));
             });
-            post("search", { id, query, limit: SEARCH_LIMIT });
+            post("search", {
+              id,
+              query: query.slice(0, MAX_QUERY),
+              limit: SEARCH_LIMIT,
+            });
           }),
       }),
-      [post],
+      [post, origin],
     );
 
     return (

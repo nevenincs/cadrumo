@@ -173,6 +173,9 @@ export function CommandPalette({
             <span className="palette-kind">{kindLabel(row.result.kind)}</span>
           )}
         </span>
+        {row.type === "doc" && row.result.crumb && (
+          <span className="palette-crumb">{row.result.crumb}</span>
+        )}
         {row.type === "doc" && row.result.excerpt && (
           <span className="palette-excerpt">
             <Highlighted text={row.result.excerpt} ranges={row.result.ranges} />
