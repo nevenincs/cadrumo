@@ -313,7 +313,7 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
         await pilot.pause(0.05)
         assert not client.closed
         enrollment.release.set()
-    outcome = screen.safe_outcome
+    outcome = screen._outcome
     assert outcome is not None
     assert outcome.stage is EnrollmentStage.DECLINED
     assert not outcome.uncertain
@@ -402,7 +402,7 @@ async def test_pending_delivery_allows_human_review_and_cancel_preserves_request
             review_screen.action_close()
             await pilot.pause()
             assert app.screen is screen
-            assert screen._busy and screen.safe_outcome is None
+            assert screen._busy and screen._outcome is None
             assert enrollment.submits == 1
             assert not screen.query_one("#automation-request-review", Button).disabled
         finally:
@@ -411,7 +411,7 @@ async def test_pending_delivery_allows_human_review_and_cancel_preserves_request
             while screen._busy:
                 await pilot.pause(0.02)
         assert not screen.query_one("#automation-request-close", Button).disabled
-        assert screen.safe_outcome is not None and screen.safe_outcome.stage is EnrollmentStage.DECLINED
+        assert screen._outcome is not None and screen._outcome.stage is EnrollmentStage.DECLINED
         app.exit()
     assert requester.closed and not reviewer.closed
 
@@ -521,7 +521,7 @@ async def test_failed_fresh_admission_keeps_request_uncertain_and_cleanup_retrya
                 await screen._execute(draft)
         else:
             await screen._execute(draft)
-        outcome = screen.safe_outcome
+        outcome = screen._outcome
         assert outcome is not None and outcome.uncertain
         assert outcome.request_id == enrollment.prepared.enrollment_request_id
         assert outcome.review_digest == "a" * 64
@@ -581,7 +581,7 @@ async def test_prepare_failure_cleanup_and_originating_owned_client_both_close_o
             datetime.now(UTC) + timedelta(days=15)
         ).isoformat()
         await screen._execute(screen._draft())
-        outcome = screen.safe_outcome
+        outcome = screen._outcome
         assert outcome is not None and not outcome.uncertain
         assert outcome.request_id is None
         assert client.enrollment.submits == 0
@@ -661,7 +661,7 @@ async def test_returned_fresh_client_refusal_keeps_primary_and_retries_failed_cl
         screen.query_one("#automation-request-grant", Input).value = str(uuid4())
         screen.query_one("#automation-request-reference", Input).value = str(reference)
         await screen._execute(screen._draft())
-        outcome = screen.safe_outcome
+        outcome = screen._outcome
         assert outcome is not None and outcome.uncertain
         assert outcome.reason == "unavailable"
         assert outcome.request_id == enrollment.prepared.enrollment_request_id
@@ -725,7 +725,7 @@ async def test_unmount_caller_cancellation_drains_native_request_and_releases_ow
                 with pytest.raises(asyncio.CancelledError):
                     await closing
                 assert client.closed and client.close_calls == 1
-                outcome = screen.safe_outcome
+                outcome = screen._outcome
                 assert outcome is not None and outcome.stage is EnrollmentStage.DECLINED
                 assert not outcome.uncertain
                 assert outcome.request_id == enrollment.prepared.enrollment_request_id

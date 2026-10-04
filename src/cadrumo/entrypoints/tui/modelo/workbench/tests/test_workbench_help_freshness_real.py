@@ -65,7 +65,7 @@ async def _set_retention(work: SeededOperatorWork, value: str) -> None:
 
 
 async def _explanation(app: ScreenHostApp[None], pilot: Pilot[None]) -> str:
-    screen = app.hosted_screen
+    screen = app._hosted_screen
     assert isinstance(screen, ModeloWorkbenchScreen)
     for _ in range(100):
         await pilot.pause()

@@ -90,11 +90,6 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
         """Report loss without transferring the borrowed client."""
         return self._access_lost
 
-    @property
-    def settled_outcome(self) -> AutomationDecisionUiOutcome | None:
-        """Retain canonical operation facts after a cancelled presentation worker."""
-        return self._outcome
-
     @override
     def compose(self) -> ComposeResult:
         yield from decision_widgets(self._decision, self._consent_text)

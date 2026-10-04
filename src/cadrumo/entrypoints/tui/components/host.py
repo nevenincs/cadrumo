@@ -31,11 +31,6 @@ class ScreenHostApp[ResultT](App[ResultT | None]):
         super().__init__()
         self._hosted_screen = screen
 
-    @property
-    def hosted_screen(self) -> Screen[ResultT | None]:
-        """The screen under this host, for a caller that addresses it directly."""
-        return self._hosted_screen
-
     async def on_mount(self) -> None:
         """Mount the screen and exit when it dismisses.
 

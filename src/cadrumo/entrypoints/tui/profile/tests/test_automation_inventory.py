@@ -520,11 +520,11 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
             release.set()
         await asyncio.wait_for(closing, 5)
         assert finished.is_set()
-        assert modal.settled_outcome is not None
-        assert modal.settled_outcome.operation_id == "e" * 64
-        assert modal.settled_outcome.effect is OperationEffect.UPDATED
-        assert modal.settled_outcome.completed is not failed
-        assert modal.settled_outcome.terminal_condition is (
+        assert modal._outcome is not None
+        assert modal._outcome.operation_id == "e" * 64
+        assert modal._outcome.effect is OperationEffect.UPDATED
+        assert modal._outcome.completed is not failed
+        assert modal._outcome.terminal_condition is (
             OperationTerminalCondition.FAILED if failed else OperationTerminalCondition.SUCCEEDED
         )
         assert modal._review is None and modal._consent_text == ""

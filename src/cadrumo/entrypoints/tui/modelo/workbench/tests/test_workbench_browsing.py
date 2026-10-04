@@ -244,14 +244,14 @@ async def test_sorting_lays_the_whole_declaration_out_by_box_by_amount_and_by_at
             for _ in range(3):
                 await pilot.press("o")
                 await _settle(pilot)
-                orders[screen.box_order] = _boxes(screen)
-                titles[screen.box_order] = str(screen.query_one("#wb-page", Static).render())
+                orders[screen._sort] = _boxes(screen)
+                titles[screen._sort] = str(screen.query_one("#wb-page", Static).render())
             labelled = next(
                 item for item in screen.query_one(CasillaList).items if isinstance(item, CasillaListEntry)
             ).label
             await pilot.press("o")
             await _settle(pilot)
-            back = (screen.box_order, _boxes(screen))
+            back = (screen._sort, _boxes(screen))
             app.exit(None)
 
     assert orders[SortOrder.BOX] == ["01", "02", "03", "06", "07", "09", "19", "99"]
@@ -317,7 +317,7 @@ async def test_a_sorted_jump_names_the_targets_page_without_changing_the_remembe
             await _settle(pilot)
             crumb = str(screen.query_one("#wb-crumb", Static).render())
             assert _cursor(screen) == "07"
-            assert screen.box_order is SortOrder.BOX and screen._page_index == remembered
+            assert screen._sort is SortOrder.BOX and screen._page_index == remembered
             assert "page 1 of 3" in crumb and "Liquidación" in crumb
             assert "sorted by box number" in crumb
             app.exit(None)

@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:cc3ce5c56447383577e202841e28b8fdf7a5ebf9781f189c4b89c60237b12129'
+body_hash: 'sha256:5875ddd6fbbe21d4ae81e3dd84bc2ab10cace86a9e762bc1b87a41099aba45bb'
 ---
 
 # `reachability-burndown` plan
@@ -38,7 +38,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S09` - Resolve newly exact unused functions and test-only catalogue projections, wire the canonical JSON envelope emitter, repair private locale-key visibility and remove obsolete translations; `Core JSON contracts, operator and aggregation helpers, registry fixture owners, locale discovery and catalogues, conformance isolation and owning tests`.
 - [x] `S11` - Retire unsupported LLM summary and cache display doors and the legacy corpus-reference lookup; `LLM persistence and owning tests, citation lookup and owning tests`.
 - [x] `S12` - Resolve explicit type-alias schema visibility and remove uncalled domain and filing convenience doors; `dev/audit schema consumer analysis, domain record predicates, filing runtime and owning tests`.
-- [ ] `S13` - Retire TUI properties used only for test introspection while preserving real presentation and retained cancellation facts; `TUI app, screen hosts, workbench and automation screens with owning and development tests`.
+- [x] `S13` - Retire TUI properties used only for test introspection while preserving real presentation and retained cancellation facts; `TUI app, screen hosts, workbench and automation screens with owning and development tests`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

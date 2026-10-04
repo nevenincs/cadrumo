@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:30f7b2389f04a0571c2c3384fd1ed1a1c9ed241e70f0d6d725decde0cee0de42'
+body_hash: 'sha256:c502154cc6557a8c21298d308670cb82d9cc85ba39e7297d38f9614389b43e15'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -400,6 +400,26 @@ related:
 - `S12` `verify:` `Profile and localization delta (20 passed; stale wizard enrollment then repaired)` -> `pass`
 - `S12` `verify:` `Current profile writer contracts (4 passed)` -> `pass`
 - `S12` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S13` `M` `dev/agent_eval/tests/test_installed_mcp_tui_grant_parity.py`
+- `S13` `M` `dev/agent_eval/tests/test_runtime_automation_grant_lock_parity.py`
+- `S13` `M` `dev/agent_eval/tests/test_runtime_automation_management_parity.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/components/host.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/home.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_browsing.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_filters.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_freshness_real.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/secret/automation_decision.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_accessibility.py`
+- `S13` `verify:` `Owned TUI unit corpus (81 passed)` -> `pass`
+- `S13` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -412,3 +432,4 @@ related:
 - `S09` Canonical fixture owners replace unused product projections; real JSON producer uses SchemaEnvelope. Private qualified locale constants are visible and 16 obsolete keys were removed through LocaleManager in all four catalogues. Actual authored conformance authority replaces ambient candidate borrowing; M303 fixture now carries replayable wallet evidence. Remaining M180 parser expectations and independent inventory import cycle remain under S07; 84 live heuristic candidates remain under S10. Concurrent filing clock, new wallet tests and locale additions are excluded from the checkpoint.
 - `S11` Removed unsupported summary APIs and their models; retained independent persistence field, filtering and failure assertions. Unsafe model tests drive actual encrypted cache reads and writes; tagged and vendor-qualified names round-trip unchanged. Retired the unused cache display grammar and legacy corpus-reference lookup; exact pinned citation resolution remains active. Shared external edits are outside this checkpoint.
 - `S12` Explicit discriminated and nested type aliases now retain real schema fields, with import-only and recursive negative controls. Removed unused filing single-source wrapper, perceptor-scope and activity-staleness convenience methods, unsupported payment-state enum and uncalled profile/localization enum members. Real foreign-asset year-end disagreement now calls `ceased_in` after `held_in` establishes the year cohort. Retired obsolete wizard-door enrollment; broader legal-excerpt expectations remain visibly open under S07.
+- `S13` Removed six test-only TUI getters. Tests inspect the actual retained presentation facts at their owner; production mounting, sort state, refusal codes and cancellation outcomes are unchanged. Native endpoint-dependent automation integration remains S07.

@@ -107,11 +107,6 @@ class RuntimeAutomationRequesterScreen(
         self._submitted: AutomationReceiptProjection | None = None
         self._cleanup_owners: dict[int, _requester_cleanup.RequesterCleanup] = {}
 
-    @property
-    def safe_outcome(self) -> _requester_contracts.AutomationRequestOutcome | None:
-        """Retain the request ID even if this presentation is dismissed."""
-        return self._outcome
-
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="automation-request-body"):

@@ -313,12 +313,12 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        assert app.home_refresh_refusal_code is None
+        assert app._home_refresh_refusal_code is None
 
         app._show_home(None)
         await pilot.pause()
 
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app.return_value is None
         assert app.is_running
         app.exit(None)
@@ -343,7 +343,7 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
         await pilot.pause()
 
         assert app.return_value is None
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is not None
         app.exit(None)
 

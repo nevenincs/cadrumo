@@ -663,9 +663,9 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     proof.value = PROFILE_INPUT
                     progress("approve_enter")
                     decision.query_one("#automation-decision-confirm", Button).press()
-                    await _until(pilot, lambda: decision.settled_outcome is not None and not decision._busy)
+                    await _until(pilot, lambda: decision._outcome is not None and not decision._busy)
                     progress("approve_exit")
-                    outcome = decision.settled_outcome
+                    outcome = decision._outcome
                     assert outcome is not None and outcome.completed and not outcome.access_lost, safe_trace()
                     assert outcome.terminal_condition is OperationTerminalCondition.SUCCEEDED
                     assert outcome.effect is OperationEffect.UPDATED and outcome.operation_id is not None

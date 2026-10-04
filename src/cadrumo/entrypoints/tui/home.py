@@ -253,11 +253,6 @@ class HomeScreen(AccountChromeScreen):
         self.back_requested = False
 
     @property
-    def home_targets(self) -> tuple[HomeTarget, ...]:
-        """The domain identities this rendering offered, in mounted order."""
-        return tuple(self._targets.values())
-
-    @property
     def projection(self) -> HomeProjectionV1:
         """Return the unchanged injected application projection."""
         return self._projection

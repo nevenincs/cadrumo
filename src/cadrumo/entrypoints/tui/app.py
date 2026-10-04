@@ -214,11 +214,6 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         return self._workbench_search_service
 
     @property
-    def home_refresh_refusal_code(self) -> str | None:
-        """Expose only a sanitized refusal code for host presentation."""
-        return self._home_refresh_refusal_code
-
-    @property
     def workbench_search_refusal_code(self) -> str | None:
         """Expose only a sanitized availability code for host presentation."""
         return self._workbench_search_refusal_code

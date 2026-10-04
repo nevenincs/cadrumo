@@ -178,7 +178,7 @@ async def test_root_read_failure_is_a_safe_refusal_without_rendering_exception(
     async with app.run_test() as pilot:
         await app.workers.wait_for_complete()
         await pilot.pause()
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is None
     captured = capsys.readouterr()
     assert private_value not in captured.out + captured.err

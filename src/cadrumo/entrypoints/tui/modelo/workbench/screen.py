@@ -505,11 +505,6 @@ class ModeloWorkbenchScreen(
         return self._pages
 
     @property
-    def box_order(self) -> SortOrder:
-        """How the boxes are ordered now."""
-        return self._sort
-
-    @property
     def box_marks(self) -> tuple[WorkbenchMark, ...]:
         """The states of the boxes the list shows, once per box: its origin and any attention mark."""
         marks: list[WorkbenchMark] = []

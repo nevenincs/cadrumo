@@ -490,18 +490,18 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
                             owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=45)
+                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
                             if approval.done():
                                 approval.result()
-                            if request.safe_outcome is None:
-                                await _until(pilot, lambda: request.safe_outcome is not None, timeout=45)
+                            if request._outcome is None:
+                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
                             approval_error = await await_cancellation_complete(
                                 asyncio.to_thread(approval.exception, timeout=45),
                                 task_name="grant-result-approval-settlement",
                             )
                             if approval_error is not None:
                                 raise approval_error
-                            outcome = request.safe_outcome
+                            outcome = request._outcome
                             assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                             assert not outcome.uncertain and outcome.request_id == submitted.request_id
                             assert PROFILE_INPUT not in str(

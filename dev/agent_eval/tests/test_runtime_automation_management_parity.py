@@ -206,7 +206,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                         "#automation-request-key-expiry", Input
                     ).value = subject.proposal.key_expires_at.isoformat()
                     request.query_one("#automation-request-submit", Button).press()
-                    await _until(pilot, lambda: request._submitted is not None or request.safe_outcome is not None)
+                    await _until(pilot, lambda: request._submitted is not None or request._outcome is not None)
                     submitted = request._submitted
                     assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                     request.query_one("#automation-request-review", Button).press()
@@ -241,15 +241,15 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                     assert password.password and password.value == ""
                     password.value = PROFILE_INPUT
                     decision.query_one("#automation-decision-confirm", Button).press()
-                    await _until(pilot, lambda: decision.settled_outcome is not None and not decision._busy)
-                    decision_outcome = decision.settled_outcome
+                    await _until(pilot, lambda: decision._outcome is not None and not decision._busy)
+                    decision_outcome = decision._outcome
                     assert decision_outcome is not None and decision_outcome.completed
                     assert password.value == "" and decision._pending_proof is None
                     decision.action_close()
                     await _until(pilot, lambda: pilot.app.screen is inventory)
                     inventory.action_close()
-                    await _until(pilot, lambda: pilot.app.screen is request and request.safe_outcome is not None)
-                    outcome = request.safe_outcome
+                    await _until(pilot, lambda: pilot.app.screen is request and request._outcome is not None)
+                    outcome = request._outcome
                     assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                     assert not outcome.uncertain and outcome.request_id == submitted.request_id
                     assert outcome.credential_reference is not None
@@ -585,9 +585,9 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
                                 modal.query_one("#automation-decision-confirm", Button).press()
                                 await _until(
                                     pilot,
-                                    lambda modal=modal: modal.settled_outcome is not None and not modal._busy,
+                                    lambda modal=modal: modal._outcome is not None and not modal._busy,
                                 )
-                                settled = modal.settled_outcome
+                                settled = modal._outcome
                                 assert settled is not None and settled.completed and not settled.access_lost
                                 if decision == "approve":
                                     wiped_password = modal.query_one("#automation-decision-password", Input)

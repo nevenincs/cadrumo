@@ -266,33 +266,33 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                     assert submitted.profile_id == profile_id
                     approval = pool.submit(copy_context().run, approve, submitted.request_id)
                     runtime_owner.auxiliary.append(approval)
-                    await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=30)
+                    await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=30)
                     if approval.done():
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
                         )
                         if approval_error is not None:
-                            annotate_approval_error(approval_error, request.safe_outcome)
+                            annotate_approval_error(approval_error, request._outcome)
                             raise approval_error
-                    if request.safe_outcome is None:
-                        await _until(pilot, lambda: request.safe_outcome is not None, timeout=30)
+                    if request._outcome is None:
+                        await _until(pilot, lambda: request._outcome is not None, timeout=30)
                     try:
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
                         )
                     except TimeoutError as error:
-                        annotate_approval_error(error, request.safe_outcome)
+                        annotate_approval_error(error, request._outcome)
                         error.add_note(
                             f"Approval thread did not settle: stage={approval_stage[0]}, "
                             f"decision_updated={approval_updated[0]}, client_closed={approval_client_closed[0]}, "
-                            f"outcome_arrived={request.safe_outcome is not None}, "
+                            f"outcome_arrived={request._outcome is not None}, "
                             f"future_done={approval.done()}, future_cancelled={approval.cancelled()}"
                         )
                         raise
                     if approval_error is not None:
-                        annotate_approval_error(approval_error, request.safe_outcome)
+                        annotate_approval_error(approval_error, request._outcome)
                         raise approval_error
-                    outcome = request.safe_outcome
+                    outcome = request._outcome
                     assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                     assert not outcome.uncertain
                     assert outcome.request_id == submitted.request_id
@@ -563,12 +563,12 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 raise AssertionError(f"request refused before submit: {status.render()}")
                             await _until(
                                 pilot,
-                                lambda: request._submitted is not None or request.safe_outcome is not None,
+                                lambda: request._submitted is not None or request._outcome is not None,
                                 timeout=20,
                             )
                             if request._submitted is None:
                                 status = request.query_one("#automation-request-status", Static)
-                                outcome = request.safe_outcome
+                                outcome = request._outcome
                                 raise AssertionError(
                                     f"request did not submit: {status.render()}; "
                                     f"safe reason={None if outcome is None else outcome.reason}"
@@ -577,21 +577,21 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
                             runtime_owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=45)
+                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
                             if approval.done():
                                 approval_error = await await_cancellation_complete(
                                     asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
                                 )
                                 if approval_error is not None:
                                     raise approval_error
-                            if request.safe_outcome is None:
-                                await _until(pilot, lambda: request.safe_outcome is not None, timeout=45)
+                            if request._outcome is None:
+                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
                             approval_error = await await_cancellation_complete(
                                 asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
                             )
                             if approval_error is not None:
                                 raise approval_error
-                            outcome = request.safe_outcome
+                            outcome = request._outcome
                             assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                             assert not outcome.uncertain and outcome.request_id == submitted.request_id
                             if selected_kind is not EnrollmentKind.ROTATE:

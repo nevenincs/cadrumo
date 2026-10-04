@@ -88,7 +88,7 @@ async def test_below_110_columns_the_crumb_names_a_filter_that_hides_something_a
             await pilot.press("o")
             await _settle(pilot)
             sorted_crumb = str(screen.query_one("#wb-crumb", Static).render())
-            order = screen.box_order
+            order = screen._sort
             app.exit(None)
 
     assert _filter_words(WorkbenchFilter.ALL) not in default
