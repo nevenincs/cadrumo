@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-10-03'
-body_hash: 'sha256:7092e555e53447229d2a8613b4a59e98beb6a432de788593609d4a2b0bf0169d'
+modified: '2026-10-04'
+body_hash: 'sha256:c89c481dc15d0f566160f3c597af297b7791524a19931ecbef36e05cfbc8c667'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
+  - '[[2026-10-04-taxpayer-bank-accounts-adr]]'
 ---
-
 # `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -224,3 +224,7 @@ account; it is a refund destination, not a debit mandate. Current U continues to
 charge/refund specimens must prove the correct source. Casilla 111 requires a negative
 casilla 71, so U is already sign-incompatible whenever Nota 3 applies; that fail-closed
 invariant is retained rather than inventing a combined-account precedence rule.
+
+## Amendment (2026-10-04): charge and refund accounts come from the ledger register
+
+Applied under `2026-10-04-taxpayer-bank-accounts-adr`. Where this record calls `ChargeAccount` "distinct encrypted durable profile data", read: a CHARGE designation (or per-filing choice) of an own account in the encrypted ledger register `cadrumo.ledger.own_accounts`; the refund account is the REFUND designation of the same register. Charge and refund stay distinct roles and neither is inferred from the other. U admissibility moves from a 303-only branch to each modelo's declared disposition keys, and U refuses after the window's `payment_cutoff_on`. Receipts and events may carry the role and opaque `own_account_id`, still never account material.

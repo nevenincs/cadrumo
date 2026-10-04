@@ -5,12 +5,12 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c29540545c6bf1afd2acc489eca143d5d5756c34be70f5c0d5296e831e73359'
+body_hash: 'sha256:de557bf6bc677af08bd55d688964eb2000cde7d0cef97c13a2dd80760071b1b5'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-adr]]"
   - '[[2026-10-04-modelo-360-solicitud-custody-reference]]'
+  - '[[2026-10-04-taxpayer-bank-accounts-adr]]'
 ---
-
 # `modelo-360-solicitud-custody` adr: `Modelo 360 solicitud facts and refund account in encrypted profile custody` | (**status:** `accepted`)
 
 Accepted 2026-10-04 on the operator's approval, given that day, to build encrypted persisted storage for the modelo 360 refund application and bank-account data.
@@ -48,3 +48,7 @@ The register mirrors a working analogue on the same storage kernel, keeps bankin
 ## Consequences
 
 Modelo 360 export now passes the producer boundary from persisted facts. A later move of the facts into filing-instance evidence, or a second solicitud per period, would require a migration of this register. The published página 2 layout still refuses an ordinary solicitud at its page marker, which is a registry-layout matter outside this decision.
+
+## Amendment (2026-10-04): the solicitud references an own account or embeds the representative's
+
+Applied under `2026-10-04-taxpayer-bank-accounts-adr`. The entry's embedded `RefundAccount` is replaced in place by an account choice: a reference to a ledger own account when the holder is the solicitante (campo 114 "A", BIC required at selection), or an embedded account with holder name when the holder is the representante ("R"). The register had no production writer, so no migration applies. The open operator write surface is now planned (registered operation, CLI and TUI). Modelo 360 resolves the fixed disposition DEVOLUCION from a declared spec instead of the INGRESO fallback, which is removed; the disposition is not rendered, since the layout has no Tipo de declaración slot, and a missing account becomes a typed refusal rather than `FAIL_MODELO_EXPORT`. The per-period singleton custody stands.
