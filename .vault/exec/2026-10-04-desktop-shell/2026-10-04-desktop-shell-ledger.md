@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f8bb70ba29f604871856735f70ab0f8f38a6ab86bb469af952e3d202b9eeb4e'
+body_hash: 'sha256:25d149f26c892b0c755aec4826d76a9ab834de424363b67bb9034e34a9cdbe3b'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `desktop-shell` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `native/desktop/src-tauri/src/environment.rs`
 - `S02` `M` `native/desktop/src-tauri/src/python/environment.py`
@@ -85,6 +59,34 @@ related:
 - `S03` `verify:` `after moving the bridge to the browser-reported parent origin (plan: origins computed at runtime): pytest -m integration test_docs_desktop_flavor.py 16 tests` -> `pass`
 - `S03` `verify:` `mutation check: bridge without the source check, with a document bubble-phase key listener, or without the top-window check is each caught by one browser gate` -> `pass`
 - `S03` `verify:` `desktop English whole-scope build re-run with the final conf.py: 561 pages, 0 remote loaded resources, bridge first on every page, pagefind present` -> `pass`
+- `S01` `A` `dev/packaging/native/docs_build.py`
+- `S01` `A` `dev/packaging/native/docs_stage.py`
+- `S01` `A` `dev/packaging/native/package_inventory.py`
+- `S01` `A` `native/cmake/Docs.cmake`
+- `S01` `A` `dev/packaging/tests/test_native_docs_staging.py`
+- `S01` `A` `dev/packaging/tests/test_native_delegated_inventory.py`
+- `S01` `M` `dev/packaging/native/assemble.py`
+- `S01` `M` `dev/packaging/native/cmake_build.py`
+- `S01` `M` `dev/packaging/native/installation.py`
+- `S01` `M` `dev/packaging/tests/test_native_installation.py`
+- `S01` `M` `native/cmake/BuildPaths.cmake`
+- `S01` `M` `native/cmake/Packaging.cmake`
+- `S01` `M` `native/desktop/CMakeLists.txt`
+- `S01` `M` `native/CONTRACT.md`
+- `S01` `M` `native/package-layout.json`
+- `S01` `M` `native/interpreter/bootstrap.py`
+- `S01` `M` `native/application/src/package.rs`
+- `S01` `M` `native/application/tests/application.rs`
+- `S01` `M` `dev/docs/terminology/cli_projection.py`
+- `S01` `verify:` `pytest dev/packaging docs staging, delegated inventory, installation, layout entrypoints (79 passed, 2 skipped)` -> `pass`
+- `S01` `verify:` `cargo test application crate via CTest application.rust` -> `pass`
+- `S01` `verify:` `real python.exe --check-package with delegated docs, tamper and unlisted falsifiers` -> `pass`
+- `S01` `verify:` `CADRUMO-BUILD-RUNTIME verify-package docs-off Release ZIP` -> `pass`
+- `S01` `verify:` `cmake desktop-host-build full four-language docs build` -> `fail`
+- `S01` `by:` `orchestrator`
+- `S01` `M` `dev/packaging/native/docs_build.py`
+- `S01` `M` `dev/packaging/tests/test_native_docs_staging.py`
+- `S01` `verify:` `pytest test_native_docs_staging.py (15 passed) and ruff, format, ty` -> `pass`
 
 ## Notes
 
@@ -92,3 +94,5 @@ related:
 - `S03` docs-build recipe not run to completion: the full build refuses at the cli-sequence gate on the stale shared .authority (pre-existing; reproduced on the web flavor without S03 involvement)
 - `S03` `test_docs_build.py:` `test_a_changed_source_check_builds_the_stub_its_build_generates` (stale authority) and `test_docs_build_directory_contains_only_canonical_html` (doctrees, locale-logs left in the shared build root on 2026-10-03/04 by other runs) fail pre-existing
 - `S02` Added the plan's `channel_interceptor` (shell/channel.rs) and a table-driven dispatcher token test after first logging; tauri test feature added as a dev-dependency for mock-runtime tests.
+- `S01` S01 stays open: en refuses at the stale-authority sequence gate; no-op rebuild, touch-rebuild, Release docs bundle and runtime rendering unproven until one full docs build succeeds
+- `S01` Committed jointly with CADRUMO-BUILD-RUNTIME's console entrypoint change in a87038dd6d; `cli_projection` stale-import fix in 233a8c2e33

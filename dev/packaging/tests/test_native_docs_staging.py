@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dev.docs.build import DOCS_FLAVOR_ENV, docs_build_flavor
+
+from ..native.docs_build import _owner_environment
 from ..native.docs_stage import (
     DocsPackagingError,
     csp_hash,
@@ -170,3 +173,11 @@ def test_language_declaration_must_be_unique_supported_languages(languages: obje
 def test_assembly_with_documentation_refuses_a_missing_stage_and_names_the_remedy(tmp_path: Path) -> None:
     with pytest.raises(DocsPackagingError, match="has not run for this CMake binary directory"):
         verified_stage(tmp_path / "user-docs/stage", load_layout()["user_docs"])
+
+
+def test_owner_builds_pin_the_desktop_flavor_over_an_ambient_web_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
+    environment = _owner_environment(tmp_path / "build", tmp_path / "storage", check_sequences=True, jobs=1)
+    assert docs_build_flavor(environment) == "desktop"

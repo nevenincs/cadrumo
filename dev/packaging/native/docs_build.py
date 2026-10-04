@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.docs.build import DOCS_FLAVOR_ENV
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from dev.docs.serve_languages import language_build_command
@@ -32,6 +33,7 @@ def _owner_environment(build_root: Path, storage: Path, *, check_sequences: bool
     environment.update(
         {
             DOCS_BUILD_ROOT_ENV: str(build_root),
+            DOCS_FLAVOR_ENV: "desktop",
             "CADRUMO_DOCS_JOBS": str(jobs),
             "CADRUMO_DOCS_PAGEFIND_MODE": "full",
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),
