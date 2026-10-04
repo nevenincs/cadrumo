@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:abd89ac2a6a071e4bad77956023f6d9365a465e238ee979f3326c58dde24b4ed'
+body_hash: 'sha256:35b307607e7c1341db08869eb4c567718a9fbe650b82459da9fb17e12eeac94c'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3522,6 +3522,13 @@ related:
 - `S05` `verify:` `dev.quality.suite all12configured gates exactfrozensource+checkeddata0drift` -> `pass`
 - `S05` `verify:` `canonicalregistry20targetsCURRENT/58modelos160revisions validity+runtime-load+integrity` -> `pass`
 - `S05` `verify:` `finalM190copiedregistryreplay runner--timeout600 assertions+cleanup` -> `pass`
+- `S05` `M` `src/cadrumo/application/operator_surface/contract.py`
+- `S05` `M` `src/cadrumo/application/tests/test_provisioning_browser.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-eight-owner-repairs.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-lease-summary-locales.json`
+- `S05` `verify:` `five complete affected modules:46PASS/13.02s;fourPython Ruff/format/ty;fourlocale YAML+placeholders` -> `pass`
 
 ## Notes
 
@@ -3543,3 +3550,4 @@ related:
 - `S05` Remove duplicate/nondefining imports preserving function/class AST. Restore three original current M347 invoice request fields consumed by unchanged operation and TUI. Keep cache test declaration consistent with independently configured storage owner. The three registry snapshot type-narrowing repairs are recorded in66registry merge, not omitted. Configured12 aggregate and portable226 acceptance are running; no finalgreen claim. Nativecode/metadata corrections separately committed.
 - `S05` Real minimal adapter reproduction fails `invalid_value` for old explicitspace semanticseed. Captured66 source explicitly permitsdeclaredC orabsentprincipal; officialDR145row2 remainsblank/C atbyte10. Omit optionalmarker inonlytwo testpreparations, preserving all610byte/hash/event/receipt andX/c/CC refusaloracles. No production/data/authority/checkerguardchanges. CurrentSerialinterpreter stillusesoldseeds; itsaffected failures/source drift retained; wholeaffectedM145owner/familyreplay queued. Finalbehavioralgreen notclaimed.
 - `S05` Finalize real source integrationcommit mappings 8be18/74d6/c2a/ca956; preserve everyearlier source disposition and pendinginstalledwithholding execution qualifier. SixoriginalMCPsources freshobservedzero laterdeltas/zerocapturedrift/unchangedindexes. Add boundedindependentcombinedreview withno remaininghigh/criticalstaticfinding, reviewstatusPENDINGforbehavioral/native/landing. Source2literalM145testchanges have applicable scopedRuff/format/ty supplements; rawfailed/unavailablequalityruns preservedbesidefinal12PASS. Portable226execution scripts/collectionreceipt record3238selected; activeSerial/M145replay/Parallelresults are not staged asfinalproof. Actual6configuredWindowsCMakepasses areworker-reported butfinalsourcefingerprintrecheck/nativebundle remainsinflight. OriginalactiveTUIworktree/index untouched; notlanded.
+- `S05` Resolved at source and covering behavior. The defining operator contract retires the stale app.runtime mount already absent from the accepted command graph. A real missing invoice lease summary dropped the supplied premises; canonical locale set-batch adds both placeholders in all four supported languages without changing the caller or assertions. Browser tests now establish the actual controlled-category environment, and the atomic reconciliation test addresses the public PreparedModeloReconciliation.persist owner while retaining actual SQL rollback and grounding assertions. Whole five-owner replay passes46 cases in13.02s, including unchanged refusal-target and leased-premises TUI assertions. Scoped Ruff/format/ty and four YAML/placeholder checks pass. Authority is unchanged. Current installed payload proof must include these real contract and locale changes in the coordinated final rebuild. All original-source dispositions are retained. Final combined quality/native/Mac/destination proof remains pending; active original worktrees/indexes remain untouched.

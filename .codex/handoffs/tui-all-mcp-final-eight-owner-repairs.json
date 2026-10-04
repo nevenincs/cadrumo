@@ -1,0 +1,85 @@
+{
+  "status": "Eight-path corrective slice frozen; whole five-owner replay green; recovery diagnosis remains separate",
+  "base_commit": "ca956c57b6919f10412833e68412178af0f46527",
+  "paths": [
+    {
+      "path": "src/cadrumo/application/operator_surface/contract.py",
+      "before_sha256": "1e88a8d972ed91a2734c1aa5b66144227a16101938ddf466fc5ff8196bfb65cf",
+      "after_sha256": "2431bd7298cce93cd91eed213ced8d9577da11f1f7369c99475071c77db15c42",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/locales/ca/common.yml",
+      "before_sha256": "319cd12b8607a1806ede9ff6599b39ece00c28de4707009869bcbde28e601dbb",
+      "after_sha256": "2b8ecdee6b788df4daa3001dfbdff6bb883dabe7681c3cd8d6a3715d04fbd237",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/locales/en/common.yml",
+      "before_sha256": "e706545b527389f5b92294cf6bd3f5874177ed515bfd55da5e2ea7625ca5906c",
+      "after_sha256": "89d15b7586cec3c3ef43f36af935d32d35c01699fd1c2ef9704b1125d341a646",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/locales/es/common.yml",
+      "before_sha256": "27fc84e861f646db15853ff56cea4e0bd3e8d0666fddf1b7aac6bcf2b7070787",
+      "after_sha256": "ed8c75ca7bcb50a44f74978784d829c813afa79164cd15980db97fcd45a78bad",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/locales/hu/common.yml",
+      "before_sha256": "660c4d5a8d5f22ffff5f5d4802fc833faacd446ccabb6ddc43639cd0f40e2625",
+      "after_sha256": "a074c025e85acd6a8014650cbbde7435b70d817464c6248eeea0c3d4b44a59f0",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "before_sha256": "329a615aad460a5e9721f8fc134f483839725eb3409431692963841cd6f3adf3",
+      "after_sha256": "3ed6302fb63d2f15b631dbf3d98e5aeeb446abe113d7c8ef073837dcd3fd8acb",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
+      "before_sha256": "51bea8e620852975a052ba1a39a3e92e2238fd43986c9d322bc9202877b56d6d",
+      "after_sha256": "15b800e648f54407a79bea8bd38ac735f1ff712c134a2fd5fd68311bb079c2d3",
+      "status": "incorporated corrective integration"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py",
+      "before_sha256": "74e6b5297e36834f2a7bab1904bfc9841aeb7f0611f3c95a11bf32f47dbad323",
+      "after_sha256": "456287bb9c1d123b39db3571fd1e03feefb7773f59c8d3ef8834f367b8e2f756",
+      "status": "incorporated corrective integration"
+    }
+  ],
+  "dispositions": {
+    "app_runtime": "Superseded by accepted runtime-without-service-manager decision. Current CLI graph already contains no app.runtime route. Retired stale defining mount, required child and purpose suffix rather than adding any service manager command or gate exemption.",
+    "lease_summary": "Actual defining caller supplies situacion/referencia; missing key returned humanized Lease and dropped premises. Canonical dev.locales set-batch authored meaningful translations for all four supported locales; caller and assertions unchanged. No fallback policy change.",
+    "browser_default": "Clear controlled category env solely when asserting absence/default, preserving category precedence assertions.",
+    "browser_missing": "Pin supported CADRUMO_PLAYWRIGHT_BROWSERS_DIR empty cache, rather than uncontrolled vendor env product intentionally ignores. Exact refusal/action/evidence assertions retained.",
+    "atomic_reconciliation": "Move existing structural one-call proof to current direct public PreparedModeloReconciliation.persist. Existing real SQL rollback and stored grounding tests preserved; no obsolete private facade."
+  },
+  "verification": {
+    "ruff": "PASS all four Python paths",
+    "format": "PASS all four Python paths",
+    "ty": "PASS all four Python paths",
+    "locale_yaml": "PASS all four catalogs; both placeholders present",
+    "behavior": {
+      "passed": 46,
+      "warnings": 67,
+      "duration_seconds": 13.02,
+      "exit_code": 0,
+      "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T022629.318362Z-pytest-90720-2faa4832/run.log",
+      "stdout": ".logs/tui-all-mcp-final-bounded-five-owner-replay.txt",
+      "whole_modules": [
+        "src/cadrumo/application/tests/test_provisioning_browser.py",
+        "src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
+        "src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py",
+        "src/cadrumo/entrypoints/cli/tests/test_refusal_target_reconciliation.py",
+        "src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py"
+      ]
+    }
+  },
+  "authority_changed": false,
+  "source_frozen": true,
+  "artifact_freshness": "One final shipping wheel/native artifact refresh must include contract and four locale changes after all other corrections freeze."
+}

@@ -2038,6 +2038,8 @@ tui:
         amounts: Base imponible {base} {currency} · tipo de IVA {rate}
         counterparty: 'Contraparte: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} con fecha {date}
+        lease: Arrendamiento de local de negocio · situación {situacion} · referencia
+          catastral {referencia}
         operation: Clave del modelo 349 {code} · fecha de la operación {date}
         recargo: Recargo de equivalencia {amount} {currency}
         rectifies: Rectifica la factura {number}

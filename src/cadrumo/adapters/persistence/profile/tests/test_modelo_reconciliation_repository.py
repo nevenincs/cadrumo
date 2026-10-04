@@ -34,6 +34,7 @@ from pydantic import ValidationError
 
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
+    PreparedModeloReconciliation,
 )
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
@@ -428,11 +429,8 @@ def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() ->
     """
     import ast
     import inspect
-    from importlib import import_module
 
-    reconcile_module = import_module(".....application.modelo.reconciliation", __package__)
-
-    source = inspect.getsource(reconcile_module._finalise_reconciliation)
+    source = inspect.getsource(PreparedModeloReconciliation.persist)
     tree = ast.parse(textwrap.dedent(source))
     atomic_calls = [
         node

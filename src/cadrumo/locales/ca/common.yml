@@ -2026,6 +2026,8 @@ tui:
         amounts: Base imposable {base} {currency} · tipus d'IVA {rate}
         counterparty: 'Contrapart: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} amb data {date}
+        lease: Arrendament de local de negoci · situació {situacion} · referència
+          cadastral {referencia}
         operation: Clau del model 349 {code} · data de l'operació {date}
         recargo: Recàrrec d'equivalència {amount} {currency}
         rectifies: Rectifica la factura {number}

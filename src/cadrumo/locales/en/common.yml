@@ -1982,6 +1982,8 @@ tui:
         amounts: Taxable base {base} {currency} · VAT rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
+        lease: Business premises lease · situación {situacion} · referencia catastral
+          {referencia}
         operation: Modelo 349 key {code} · operation date {date}
         recargo: Equivalence surcharge {amount} {currency}
         rectifies: Corrects invoice {number}

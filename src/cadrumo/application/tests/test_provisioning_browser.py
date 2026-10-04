@@ -156,7 +156,10 @@ def test_browsers_root_ignores_uncontrolled_vendor_override(tmp_path: Path) -> N
     assert playwright_browsers_root(tmp_path, env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == tmp_path
 
 
-def test_browsers_root_defaults_under_the_configured_storage_root(tmp_path: Path) -> None:
+def test_browsers_root_defaults_under_the_configured_storage_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", raising=False)
     settings = Settings(cadrumo_local_storage_root=tmp_path)
 
     assert playwright_browsers_root(settings=settings) == (tmp_path / "components" / "playwright").resolve()

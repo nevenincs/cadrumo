@@ -58,7 +58,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
     ),
     RootSurface(
         name=RootSurfaceName.APP,
-        purpose="operational tax workflow and profile-free local runtime status",
+        purpose="operational tax workflow",
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
         required_children=(
@@ -69,7 +69,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "review",
             "quickfile",
             "diagnostics",
-            "runtime",
         ),
     ),
 )
@@ -246,14 +245,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         ),
         service_owner="cadrumo.application.diagnostics_run_health",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.RUNTIME,
-        root=RootSurfaceName.APP,
-        child="runtime",
-        operator_question="observe local runtime listener readiness and manager provisioning without profile admission",
-        service_owner="cadrumo.application.runtime",
-        mutability=OperatorMutability.READ_ONLY,
     ),
 )
 

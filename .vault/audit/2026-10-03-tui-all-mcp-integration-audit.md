@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:86aef48f4e716ef8d62d5a4d4a8dead4c337b82f9d42948434645b9ae7e380a1'
+body_hash: 'sha256:6331a512560d1bea7cd011bf5e1ce26916b6b60236fe9b7d8b791387eaebaf6a'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -146,6 +146,10 @@ Independent final66 integrated static review found no remaining high or critical
 ### m145-fixture-premise | medium | Old explicit-space semantic seeds conflict with the retained source-backed optional C indicator
 
 Resolved fixture premise at source; affected behavioral replay pending. The real minimal adapter reproducer returns invalid_value because the captured66 casilla explicitly allows declared C and uses an absent optional value for principal. Official DR145 row2 still requires byte10blank or C. Two test-only preparation files omit the marker instead of submitting literalspace; every610byte/hash/receipt and invalidX/c/CC oracle remains. Scoped Ruff/format/ty pass; production code and authority are unchanged. The in-flight Serial interpreter retains old seeds, so its affected failures and source drift will remain visible. Final M145 owner/family cases replay separately; unchanged family results are reusable only within that stated scope.
+
+### current-operator-and-fixture-owners | medium | Current runtime contract and meaningful invoice summary restored with independent fixture premises
+
+Resolved at source and covering behavior. The defining operator contract retires the stale app.runtime mount already absent from the accepted command graph. A real missing invoice lease summary dropped the supplied premises; canonical locale set-batch adds both placeholders in all four supported languages without changing the caller or assertions. Browser tests now establish the actual controlled-category environment, and the atomic reconciliation test addresses the public PreparedModeloReconciliation.persist owner while retaining actual SQL rollback and grounding assertions. Whole five-owner replay passes46 cases in13.02s, including unchanged refusal-target and leased-premises TUI assertions. Scoped Ruff/format/ty and four YAML/placeholder checks pass. Authority is unchanged. Current installed payload proof must include these real contract and locale changes in the coordinated final rebuild.
 
 ## Recommendations
 
