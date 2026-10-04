@@ -2008,6 +2008,87 @@ tui:
       areas: Areas of Records
       quality: Data quality and unresolved work
       title: 'Records: overview'
+    own_accounts:
+      cancel: Cancel
+      choose_account: Choose an account in the list first.
+      column:
+        account: IBAN
+        holding: Holding
+        id: Account
+        label: Name
+        roles: Used for
+        state: State
+      confirm: Save reviewed change
+      detail:
+        absent: not recorded
+        account: '%{id} · %{label} · %{account}'
+        bank: 'SWIFT-BIC: %{bic} · foreign bank: %{block}'
+        dates: 'Opened: %{opened} · %{state}'
+        holding: 'Holding: %{holding} · country %{country} · %{currency}'
+        present: recorded
+        roles: 'Used for: %{roles}'
+      empty: No own accounts yet.
+      field:
+        bank_address: Bank address
+        bank_block: Foreign bank (only outside SEPA)
+        bank_city: Bank city
+        bank_country: Bank country (ISO code)
+        bank_name: Bank name
+        closed_on: Closed on
+        currency: Currency
+        date_placeholder: YYYY-MM-DD
+        holding: Your holding (you must hold the account)
+        iban: IBAN (hidden)
+        label: Name for the account
+        modelo: Modelo (blank for every modelo)
+        opened_on: Opened on (optional)
+        role: Role
+        swift_bic: SWIFT-BIC (hidden; required outside SEPA)
+      field_name:
+        bank_address: bank address
+        bank_city: bank city
+        bank_country_code: bank country
+        bank_name: bank name
+        currency: currency
+        holding: holding
+        iban: IBAN
+        label: name
+        opened_on: opening date
+        swift_bic: SWIFT-BIC
+      holding:
+        cotitular: Joint holder
+        titular: Holder
+      mode:
+        add: Adding a new account.
+        edit: Editing %{label} (%{account}). Leave IBAN or SWIFT-BIC blank to keep
+          the stored value.
+      new: New account
+      open: Own bank accounts
+      prompt: Accounts you hold, shown masked. Choose one to edit it, close it or
+        use it for charges or refunds.
+      review: Review account
+      review_close: Review closing
+      review_designate: Review use for role
+      review_remove: Review removal
+      review_undesignate: Review removing role
+      role:
+        charge: Charge (direct debit)
+        refund: Refund (devolución)
+      scope:
+        all: every modelo
+        modelo: Modelo %{modelo}
+      stage:
+        add: Add %{label} · %{account} · %{holding}
+        close: Close %{account} on %{date}
+        designate: Use %{account} for %{role} · %{scope}
+        remove: Remove %{label} (%{account}); an account with ledger entries is refused,
+          close it instead
+        undesignate: Stop using an account for %{role} · %{scope}
+        update: 'Change %{account}: %{fields}'
+      state:
+        closed: Closed on %{date}
+        open: Open
+      title: Own bank accounts
     reconciliation:
       affected: Affected declarations
       amount_match: Amount matches

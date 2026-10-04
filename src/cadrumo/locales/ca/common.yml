@@ -2052,6 +2052,87 @@ tui:
       areas: Àrees de Registres
       quality: Qualitat de les dades i feina pendent
       title: 'Registres: resum'
+    own_accounts:
+      cancel: Cancel·la
+      choose_account: Tria primer un compte de la llista.
+      column:
+        account: IBAN
+        holding: Titularitat
+        id: Compte
+        label: Nom
+        roles: S'utilitza per a
+        state: Estat
+      confirm: Desa el canvi revisat
+      detail:
+        absent: sense registrar
+        account: '%{id} · %{label} · %{account}'
+        bank: 'SWIFT-BIC: %{bic} · banc estranger: %{block}'
+        dates: 'Obertura: %{opened} · %{state}'
+        holding: 'Titularitat: %{holding} · país %{country} · %{currency}'
+        present: registrat
+        roles: 'S''utilitza per a: %{roles}'
+      empty: Encara no hi ha comptes propis.
+      field:
+        bank_address: Adreça del banc
+        bank_block: Banc estranger (només fora de la zona SEPA)
+        bank_city: Ciutat del banc
+        bank_country: País del banc (codi ISO)
+        bank_name: Nom del banc
+        closed_on: Data de tancament
+        currency: Moneda
+        date_placeholder: AAAA-MM-DD
+        holding: La teva titularitat (has de ser titular del compte)
+        iban: IBAN (ocult)
+        label: Nom del compte
+        modelo: Model (en blanc per a tots)
+        opened_on: Data d'obertura (opcional)
+        role: Rol
+        swift_bic: SWIFT-BIC (ocult; obligatori fora de la zona SEPA)
+      field_name:
+        bank_address: adreça del banc
+        bank_city: ciutat del banc
+        bank_country_code: país del banc
+        bank_name: nom del banc
+        currency: moneda
+        holding: titularitat
+        iban: IBAN
+        label: nom
+        opened_on: data d'obertura
+        swift_bic: SWIFT-BIC
+      holding:
+        cotitular: Cotitular
+        titular: Titular
+      mode:
+        add: Afegiràs un compte nou.
+        edit: Edites %{label} (%{account}). Deixa l'IBAN o el SWIFT-BIC en blanc per
+          conservar el valor desat.
+      new: Compte nou
+      open: Comptes bancaris propis
+      prompt: Comptes dels quals ets titular, emmascarats. Tria'n un per editar-lo,
+        tancar-lo o fer-lo servir per a càrrecs o devolucions.
+      review: Revisa el compte
+      review_close: Revisa el tancament
+      review_designate: Revisa l'ús per al rol
+      review_remove: Revisa l'eliminació
+      review_undesignate: Revisa la retirada del rol
+      role:
+        charge: Càrrec (domiciliació)
+        refund: Devolució
+      scope:
+        all: tots els models
+        modelo: Model %{modelo}
+      stage:
+        add: Afegir %{label} · %{account} · %{holding}
+        close: Tancar %{account} el %{date}
+        designate: Fer servir %{account} per a %{role} · %{scope}
+        remove: Eliminar %{label} (%{account}); si té moviments al llibre es rebutja
+          i l'has de tancar
+        undesignate: Deixar de fer servir un compte per a %{role} · %{scope}
+        update: 'Canviar %{account}: %{fields}'
+      state:
+        closed: Tancat el %{date}
+        open: Obert
+      title: Comptes bancaris propis
     reconciliation:
       affected: Declaracions afectades
       amount_match: Coincideix l'import

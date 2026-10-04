@@ -880,6 +880,8 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ....application.operator_actions.catalogue import lookup_action
     from ....application.operator_actions.models import ActionReference
     from ..ledger.controller import LedgerWorkspaceController
+    from ..ledger.own_accounts import LedgerOwnAccountDoorV1
+    from ..ledger.tests.own_account_fixtures import MemoryOwnAccountDoor
 
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
@@ -890,6 +892,7 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
+            own_account_door=cast(LedgerOwnAccountDoorV1, MemoryOwnAccountDoor()),
         ),
     )
     # The scenarios that used to be handed an injected classification target now

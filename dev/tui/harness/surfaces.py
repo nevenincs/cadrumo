@@ -243,12 +243,28 @@ def _profile_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _ledger_own_account_surfaces() -> tuple[Surface, ...]:
+    """Every state of the own bank account setup screen over a synthetic register."""
+    from .ledger_fixtures import OwnAccountFixtureState, build_own_account_fixture, own_account_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-own-accounts-{state.value}",
+            f"Own bank account setup: {state.value}",
+            partial(build_own_account_fixture, state),
+            interfaces=own_account_fixture_interfaces(state),
+        )
+        for state in OwnAccountFixtureState
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
         *_declarations_surfaces(),
         *_profile_surfaces(),
+        *_ledger_own_account_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

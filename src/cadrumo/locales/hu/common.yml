@@ -2042,6 +2042,87 @@ tui:
       areas: A Nyilvántartás területei
       quality: Adatminőség és megoldatlan feladatok
       title: 'Nyilvántartás: áttekintés'
+    own_accounts:
+      cancel: Mégse
+      choose_account: Előbb válassz egy számlát a listából.
+      column:
+        account: IBAN
+        holding: Tulajdonosi viszony
+        id: Számla
+        label: Név
+        roles: Felhasználás
+        state: Állapot
+      confirm: Ellenőrzött módosítás mentése
+      detail:
+        absent: nincs rögzítve
+        account: '%{id} · %{label} · %{account}'
+        bank: 'SWIFT-BIC: %{bic} · külföldi bank: %{block}'
+        dates: 'Nyitás: %{opened} · %{state}'
+        holding: 'Tulajdonosi viszony: %{holding} · ország %{country} · %{currency}'
+        present: rögzítve
+        roles: 'Felhasználás: %{roles}'
+      empty: Még nincs saját számla.
+      field:
+        bank_address: Bank címe
+        bank_block: Külföldi bank (csak SEPA-n kívül)
+        bank_city: Bank városa
+        bank_country: Bank országa (ISO-kód)
+        bank_name: Bank neve
+        closed_on: Lezárás dátuma
+        currency: Pénznem
+        date_placeholder: ÉÉÉÉ-HH-NN
+        holding: Tulajdonosi viszonyod (a számla a tiéd kell legyen)
+        iban: IBAN (rejtett)
+        label: A számla neve
+        modelo: Modelo (üresen mindegyikre)
+        opened_on: Nyitás dátuma (nem kötelező)
+        role: Szerepkör
+        swift_bic: SWIFT-BIC (rejtett; SEPA-n kívül kötelező)
+      field_name:
+        bank_address: bank címe
+        bank_city: bank városa
+        bank_country_code: bank országa
+        bank_name: bank neve
+        currency: pénznem
+        holding: tulajdonosi viszony
+        iban: IBAN
+        label: név
+        opened_on: nyitás dátuma
+        swift_bic: SWIFT-BIC
+      holding:
+        cotitular: Társtulajdonos
+        titular: Tulajdonos
+      mode:
+        add: Új számlát adsz hozzá.
+        edit: 'Szerkeszted: %{label} (%{account}). Hagyd üresen az IBAN-t vagy a SWIFT-BIC-et
+          a tárolt érték megtartásához.'
+      new: Új számla
+      open: Saját bankszámlák
+      prompt: A saját számláid maszkolva. Válassz egyet a szerkesztéshez, lezáráshoz,
+        vagy hogy terhelésre vagy visszatérítésre használd.
+      review: Számla ellenőrzése
+      review_close: Lezárás ellenőrzése
+      review_designate: Szerepkör ellenőrzése
+      review_remove: Törlés ellenőrzése
+      review_undesignate: Szerepkör törlésének ellenőrzése
+      role:
+        charge: Terhelés (csoportos beszedés)
+        refund: Visszatérítés (devolución)
+      scope:
+        all: minden modelo
+        modelo: Modelo %{modelo}
+      stage:
+        add: 'Hozzáadás: %{label} · %{account} · %{holding}'
+        close: '%{account} lezárása: %{date}'
+        designate: '%{account} használata: %{role} · %{scope}'
+        remove: '%{label} (%{account}) törlése; főkönyvi tételekkel rendelkező számla
+          nem törölhető, zárd le helyette'
+        undesignate: 'Számla használatának megszüntetése: %{role} · %{scope}'
+        update: '%{account} módosítása: %{fields}'
+      state:
+        closed: 'Lezárva: %{date}'
+        open: Nyitott
+      title: Saját bankszámlák
     reconciliation:
       affected: Érintett bevallások
       amount_match: Összeg egyezik

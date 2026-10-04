@@ -35,6 +35,7 @@ from .home import HomeScreen
 from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
 from .ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from .ledger.runtime_invoice_add import compose_runtime_invoice_add_door
+from .ledger.runtime_own_accounts import compose_runtime_own_account_door
 from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
@@ -270,6 +271,7 @@ class RuntimeWorkbenchRoot:
                 profile_label=self._label,
             ),
             evidence_door=RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label),
+            own_account_door=compose_runtime_own_account_door(client=self._client, profile_label=self._label),
         )
 
     def _aeat_sync_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:

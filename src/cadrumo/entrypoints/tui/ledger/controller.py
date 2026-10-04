@@ -154,6 +154,7 @@ class LedgerWorkspaceController:
         self.link_submitter = injection.link_submitter
         self.activity_asset_actions = injection.activity_asset_actions
         self.record_doors = injection.record_doors
+        self.own_account_door = injection.own_account_door
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:

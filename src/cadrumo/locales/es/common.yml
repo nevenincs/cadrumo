@@ -2064,6 +2064,87 @@ tui:
       areas: Áreas de Registros
       quality: Calidad de los datos y trabajo pendiente
       title: 'Registros: resumen'
+    own_accounts:
+      cancel: Cancelar
+      choose_account: Elige primero una cuenta de la lista.
+      column:
+        account: IBAN
+        holding: Titularidad
+        id: Cuenta
+        label: Nombre
+        roles: Se usa para
+        state: Estado
+      confirm: Guardar el cambio revisado
+      detail:
+        absent: sin registrar
+        account: '%{id} · %{label} · %{account}'
+        bank: 'SWIFT-BIC: %{bic} · banco extranjero: %{block}'
+        dates: 'Apertura: %{opened} · %{state}'
+        holding: 'Titularidad: %{holding} · país %{country} · %{currency}'
+        present: registrado
+        roles: 'Se usa para: %{roles}'
+      empty: Aún no hay cuentas propias.
+      field:
+        bank_address: Dirección del banco
+        bank_block: Banco extranjero (solo fuera de la zona SEPA)
+        bank_city: Ciudad del banco
+        bank_country: País del banco (código ISO)
+        bank_name: Nombre del banco
+        closed_on: Fecha de cierre
+        currency: Moneda
+        date_placeholder: AAAA-MM-DD
+        holding: Tu titularidad (debes ser titular de la cuenta)
+        iban: IBAN (oculto)
+        label: Nombre de la cuenta
+        modelo: Modelo (en blanco para todos)
+        opened_on: Fecha de apertura (opcional)
+        role: Rol
+        swift_bic: SWIFT-BIC (oculto; obligatorio fuera de la zona SEPA)
+      field_name:
+        bank_address: dirección del banco
+        bank_city: ciudad del banco
+        bank_country_code: país del banco
+        bank_name: nombre del banco
+        currency: moneda
+        holding: titularidad
+        iban: IBAN
+        label: nombre
+        opened_on: fecha de apertura
+        swift_bic: SWIFT-BIC
+      holding:
+        cotitular: Cotitular
+        titular: Titular
+      mode:
+        add: Vas a añadir una cuenta nueva.
+        edit: Editas %{label} (%{account}). Deja el IBAN o el SWIFT-BIC en blanco
+          para conservar el valor guardado.
+      new: Nueva cuenta
+      open: Cuentas bancarias propias
+      prompt: Cuentas de las que eres titular, enmascaradas. Elige una para editarla,
+        cerrarla o usarla para cargos o devoluciones.
+      review: Revisar cuenta
+      review_close: Revisar cierre
+      review_designate: Revisar uso para el rol
+      review_remove: Revisar eliminación
+      review_undesignate: Revisar retirada del rol
+      role:
+        charge: Cargo (domiciliación)
+        refund: Devolución
+      scope:
+        all: todos los modelos
+        modelo: Modelo %{modelo}
+      stage:
+        add: Añadir %{label} · %{account} · %{holding}
+        close: Cerrar %{account} el %{date}
+        designate: Usar %{account} para %{role} · %{scope}
+        remove: Eliminar %{label} (%{account}); si tiene movimientos en el libro se
+          rechaza y debes cerrarla
+        undesignate: Dejar de usar una cuenta para %{role} · %{scope}
+        update: 'Cambiar %{account}: %{fields}'
+      state:
+        closed: Cerrada el %{date}
+        open: Abierta
+      title: Cuentas bancarias propias
     reconciliation:
       affected: Declaraciones afectadas
       amount_match: Coincide el importe

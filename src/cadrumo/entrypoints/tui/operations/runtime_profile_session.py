@@ -10,9 +10,11 @@ from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.operations.error_detail import OperationErrorDetailKind
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.operations import OperationTerminalCondition, profile_operation_subject
 from ..account import AccountSessionExpiredError
 from ..runtime_account_session import read_runtime_account_session, session_expired_with_receipt
@@ -84,6 +86,7 @@ class RuntimeProfileSession:
         admit: Callable[[OperationPublicProjectionV1], None] = lambda _terminal: None,
         result_version: int = 1,
         allow_refusal_detail: bool = False,
+        explain_failure: bool = False,
     ) -> ResultT:
         """Submit, observe and read one typed terminal result in this session.
 
@@ -93,6 +96,8 @@ class RuntimeProfileSession:
         raises when the result disagrees with the receipt, or to surface a
         declared refusal. A denial is ordinary only while the originating
         session remains live, so a lost session reports the receipt it had.
+        With ``explain_failure``, a refused or failed operation that recorded a
+        registered error raises that error, so the screen can say why.
         """
         self.require_binding()
         if getattr(request, "profile_id", None) != self._profile_id:
@@ -129,6 +134,7 @@ class RuntimeProfileSession:
                 result_type=result_type,
                 result_version=result_version,
                 allow_refusal_detail=allow_refusal_detail,
+                explain_failure=explain_failure,
                 admit=admit,
                 settle=settle,
             )
@@ -149,6 +155,7 @@ class RuntimeProfileSession:
         result_type: type[ResultT],
         result_version: int,
         allow_refusal_detail: bool,
+        explain_failure: bool,
         admit: Callable[[OperationPublicProjectionV1], None],
         settle: Callable[[ResultT, OperationTerminalCondition, OperationPublicProjectionV1, str], None],
     ) -> ResultT:
@@ -158,6 +165,8 @@ class RuntimeProfileSession:
         if condition is not OperationTerminalCondition.SUCCEEDED and not _refusal_detail_is_allowed(
             condition, terminal, allow_refusal_detail
         ):
+            if explain_failure:
+                await self._raise_recorded_error(controller, terminal)
             raise RuntimeFrontendRefusedError(
                 terminal.refusal_ref or terminal.failure_error_code or "operation_not_successful"
             )
@@ -171,6 +180,22 @@ class RuntimeProfileSession:
         self.require_binding()
         settle(result, condition, terminal, str(controller.operation_id))
         return result
+
+    async def _raise_recorded_error(
+        self,
+        controller: RuntimeOperationController,
+        terminal: OperationPublicProjectionV1,
+    ) -> None:
+        """Raise the executor's recorded registered error, if it recorded one, while the session is live."""
+        detail = await controller.settled_error_detail(terminal)
+        if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
+            return
+        self.require_binding()
+        raise RecordedRegisteredError(
+            detail.error_code,
+            context=detail.context_mapping(),
+            translated_message=detail.message_key,
+        )
 
 
 def _refusal_detail_is_allowed(

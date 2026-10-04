@@ -355,5 +355,5 @@ def profile_fixture_interfaces(state: ProfileFixtureState) -> tuple[str, ...]:
         ProfileFixtureState.HELP_QUESTION,
         ProfileFixtureState.OPTIONAL_EDIT,
     }:
-        return ("cadrumo.entrypoints.tui.profile.overview.FieldEditScreen",)
+        return ("cadrumo.entrypoints.tui.profile.edit_screens.FieldEditScreen",)
     return ("cadrumo.entrypoints.tui.profile.overview.ProfileManagerScreen",)

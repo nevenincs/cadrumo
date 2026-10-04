@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:908b45497ee31c8b0dea56b90e2e022b6cd8c42af76ef24394ae9c0a502ace89'
+body_hash: 'sha256:45706661f464d69d3def5be7d09649a3b043a62c56afbdfd0b76133c09df1d59'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -300,6 +300,31 @@ related:
 - `S07` `verify:` `pytest test_app_*command_spec*.py` -> `pass`
 - `S07` `verify:` `ty and ruff on touched files` -> `pass`
 - `S07` `by:` `vaultspec-standard-executor`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/runtime_own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/own_account_fixtures.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_own_accounts.py`
+- `S18` `A` `dev/tui/harness/ledger_fixtures.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/tests/workbench_fixtures.py`
+- `S18` `M` `dev/tui/harness/surfaces.py`
+- `S18` `M` `dev/tui/harness/profile_fixtures.py`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest test_own_accounts.py test_runtime_own_accounts.py (12 passed)` -> `pass`
+- `S18` `verify:` `pytest tui/ledger/tests tui/operations/tests test_workbench_responsive test_theme test_tui_review_elements (346 passed; 6 pre-existing failures in other modules)` -> `pass`
+- `S18` `verify:` `ruff check, ruff format, ty on touched files; dev.quality.types reports no touched file` -> `pass`
+- `S18` `verify:` `python -m dev.locales audit (no missing keys)` -> `pass`
+- `S18` `verify:` `dev.tui visual review: snapshot own-accounts-before, render ledger-overview--ready and 7 ledger-own-accounts-* surfaces at default viewports in both themes (64 frames, no failures, no missing glyphs or geometry findings), diff, frames inspected for layout, truncation and masking; inventory covers LedgerOwnAccountsScreen` -> `pass`
+- `S18` `by:` `lane-e`
 
 ## Notes
 
@@ -317,3 +342,4 @@ related:
 - `S11` every 303 quarterly window in the 2026-y-siguientes revision declares no `payment_cutoff_on` (only the monthly ones do), so a quarterly 303 U export advises rather than refuses until the registry authors those cutoffs
 - `S15` campo 114 is enforced as an invariant of the entry (the facts' `titular_en_calidad_de` must state the holder the account choice implies) rather than stored nowhere; the snapshot keeps reading it from the facts
 - `S07` ledger list/view display payloads do not show `own_account_id` yet; adding it to the canonical payload churns 36 CLI-sequence goldens, left for the display work
+- `S18` pre-existing failures left: `test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports` (every `runtime_*.py` door imports `adapters.local_runtime;` `runtime_own_accounts.py` follows that pattern), `test_theme` hardcoded measures in grouped.py and `overview_contracts.py,` declarations-overview heading rhythm; fixed the stale FieldEditScreen interface path in `dev/tui/harness/profile_fixtures.py` that blocked every render
