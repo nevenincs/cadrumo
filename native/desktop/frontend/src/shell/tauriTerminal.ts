@@ -1,13 +1,16 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
-import type { HostFailure, ShellToken } from "../ipc/contract";
+import {
+  TerminalFrameTag,
+  type HostFailure,
+  type ShellToken,
+  type TerminalWriteBody,
+  type TerminalWriteHeaders,
+} from "../ipc/contract";
 import type { TerminalEvent, TerminalKind, TerminalSession } from "./host";
+import type { HostCall } from "./hostCall";
 
 // One channel per session carries tagged frames in order: a tag byte, then
 // the payload. Data frames are the only bytes acknowledgements count.
-const TAG_DATA = 0;
-const TAG_STARTED = 1;
-const TAG_EXITED = 2;
-const TAG_FAILED = 3;
 
 /** Bytes per write call; the host's JSON fallback accepts at most 64 KiB. */
 const WRITE_CHUNK = 16384;
@@ -57,6 +60,7 @@ const pause = (ms: number) =>
 
 export async function openTauriTerminal(
   token: ShellToken,
+  call: HostCall,
   kind: TerminalKind,
   size: { cols: number; rows: number },
   listener: (event: TerminalEvent) => void,
@@ -83,7 +87,7 @@ export async function openTauriTerminal(
       return;
     const offset = rendered;
     inFlight = true;
-    invoke("terminal_ack", { token, session, offset }).then(
+    call("terminal_ack", { session, offset }).then(
       () => {
         inFlight = false;
         acknowledged = Math.max(acknowledged, offset);
@@ -101,21 +105,21 @@ export async function openTauriTerminal(
     else scheduleAck();
   };
 
-  const output = new Channel<unknown>();
-  output.onmessage = (message) => {
+  const frames = new Channel<ArrayBuffer>();
+  frames.onmessage = (message) => {
     const frame = frameBytes(message);
     if (!frame || frame.length === 0) return;
     const payload = frame.subarray(1);
     switch (frame[0]) {
-      case TAG_DATA: {
+      case TerminalFrameTag.data: {
         const length = payload.length;
         listener({ type: "data", bytes: payload, drawn: () => drawn(length) });
         break;
       }
-      case TAG_STARTED:
+      case TerminalFrameTag.started:
         listener({ type: "started" });
         break;
-      case TAG_EXITED: {
+      case TerminalFrameTag.exited: {
         const code = readJson(payload).code;
         listener({
           type: "exited",
@@ -123,7 +127,7 @@ export async function openTauriTerminal(
         });
         break;
       }
-      case TAG_FAILED: {
+      case TerminalFrameTag.failed: {
         const error = readJson(payload).error as
           Partial<HostFailure> | undefined;
         // The host's message is fixed English; the shell names the typed code.
@@ -137,20 +141,22 @@ export async function openTauriTerminal(
     }
   };
 
-  const opened = await invoke<{ session: number }>("terminal_open", {
-    token,
+  const opened = await call("terminal_open", {
     kind,
     cols: clampSize(size.cols),
     rows: clampSize(size.rows),
-    output,
+    frames,
   });
   session = opened.session;
   const id = opened.session;
   // Frames drawn while the open was in flight are acknowledged now.
   flushAck();
-  const headers = { "x-cadrumo-token": token, "x-cadrumo-session": String(id) };
+  const headers: TerminalWriteHeaders = {
+    "x-cadrumo-token": token,
+    "x-cadrumo-session": String(id),
+  };
 
-  const writeChunk = async (chunk: Uint8Array) => {
+  const writeChunk = async (chunk: TerminalWriteBody) => {
     // A full queue is backpressure, not loss: wait and send the same bytes,
     // until the session is being closed.
     for (
@@ -180,8 +186,7 @@ export async function openTauriTerminal(
       }
     },
     async resize(cols, rows) {
-      await invoke("terminal_resize", {
-        token,
+      await call("terminal_resize", {
         session: id,
         cols: clampSize(cols),
         rows: clampSize(rows),
@@ -190,7 +195,7 @@ export async function openTauriTerminal(
     async close() {
       closing = true;
       window.clearTimeout(ackTimer);
-      await invoke("terminal_close", { token, session: id });
+      await call("terminal_close", { session: id });
     },
   };
 }

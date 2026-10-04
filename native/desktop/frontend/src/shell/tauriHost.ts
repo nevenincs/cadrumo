@@ -1,13 +1,7 @@
-import { Channel, invoke } from "@tauri-apps/api/core";
-import type {
-  HostCommand,
-  HostCommands,
-  ContextMenuItem,
-  HostResult,
-  LogBatch,
-  ShellToken,
-} from "../ipc/contract";
+import { Channel } from "@tauri-apps/api/core";
+import type { ContextMenuItem, LogBatch, ShellToken } from "../ipc/contract";
 import type { Host } from "./host";
+import { hostCall } from "./hostCall";
 import { openTauriTerminal } from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
@@ -25,15 +19,7 @@ function takeToken(): ShellToken | null {
 /** The desktop host, reached only through the published command contract. */
 export function tauriHost(): Host {
   const token = takeToken();
-  const call = <C extends HostCommand>(
-    command: C,
-    args: Omit<HostCommands[C]["args"], "token">,
-  ): Promise<HostResult<C>> =>
-    token
-      ? invoke<HostResult<C>>(command, { ...args, token })
-      : Promise.reject(
-          new Error("The desktop host did not provide a launch token."),
-        );
+  const call = hostCall(token);
 
   return {
     available: true,
@@ -41,7 +27,7 @@ export function tauriHost(): Host {
     environment: () => call("desktop_environment", {}),
     openTerminal: (kind, size, listener) =>
       token
-        ? openTauriTerminal(token, kind, size, listener)
+        ? openTauriTerminal(token, call, kind, size, listener)
         : Promise.reject(
             new Error("The desktop host did not provide a launch token."),
           ),

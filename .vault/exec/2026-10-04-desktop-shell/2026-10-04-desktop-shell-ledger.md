@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:d3f25194b8599153be7c53ceeb110cdb9d374455215a7f77b0a62a5c7df7c34f'
+body_hash: 'sha256:a315071b9b0ff625907703312805c028a317f3c4ddef90da424f85f751f7d892'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -259,6 +259,10 @@ related:
 - `S08` `verify:` `npm run check` -> `pass`
 - `S08` `verify:` `grep -P step-id and ADR-stem patterns in contract.ts zero matches` -> `pass`
 - `S08` `by:` `implementation-engineer-high`
+- `S09` `A` `native/desktop/frontend/src/shell/hostCall.ts`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `verify:` `mutation: terminal_open argument renamed back to output -> tsc rejects` -> `pass`
 
 ## Notes
 
