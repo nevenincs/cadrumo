@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2cda27862fe615ebc3e7fb6a290cadf718151d60b6f908ee7bd3ce145ab4821'
+body_hash: 'sha256:bfc9eb7fa6c4152371cf3733a468c1d8dfcfe3d5d497ed245d2ab169ba3981ac'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -67,7 +67,22 @@ related:
 - `S10` `verify:` `ruff check + ruff format --check on touched files` -> `pass`
 - `S10` `verify:` `ty on touched files` -> `pass`
 - `S10` `by:` `lane-c`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/profile/own_accounts.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/profile/tests/test_own_account_register_roundtrip.py`
+- `S02` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S02` `verify:` `pytest test_own_account_register_roundtrip.py test_namespace_registry.py` -> `pass`
+- `S02` `verify:` `pytest adapters/persistence/storage/tests adapters/persistence/profile/tests` -> `fail`
+- `S02` `verify:` `ruff check and format on touched files` -> `pass`
+- `S02` `verify:` `ty on touched files` -> `pass`
+- `S02` `by:` `lane-a`
 
 ## Notes
 
 - `S01` import-boundary gate: 15/15 contracts kept; its failure is the pre-existing `dev/docs/serve_languages.py` re-export and stale import-load-target metadata. 2 pre-existing failures in core/errors exception-hygiene tests name unrelated modules.
+- `S02` Directory run: own-account and namespace tests pass; 39 failures are pre-existing and unrelated (OS keyring logon-session probe, evidence-draft extraction, composing-write declarations naming other modules).

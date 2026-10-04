@@ -265,6 +265,10 @@ adapters:
           load_inventory_ledger_failed: No s'ha pogut carregar el registre d'inventari
             xifrat.
           movement_already_exists: Aquest moviment d'inventari ja existeix.
+      own_accounts:
+        errors:
+          load_register_failed: No es pot carregar el registre xifrat de comptes bancaris
+            propis.
   sede:
     errors:
       censal_bad_landing: La pàgina de dades censals de l'AEAT no s'ha carregat correctament;

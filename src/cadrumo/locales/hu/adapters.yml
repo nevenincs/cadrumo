@@ -248,6 +248,10 @@ adapters:
           load_inventory_ledger_failed: A titkosított készletnyilvántartás nem tölthető
             be.
           movement_already_exists: Ez a készletmozgás már létezik.
+      own_accounts:
+        errors:
+          load_register_failed: A titkosított saját bankszámla-nyilvántartás nem tölthető
+            be.
   sede:
     errors:
       censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;

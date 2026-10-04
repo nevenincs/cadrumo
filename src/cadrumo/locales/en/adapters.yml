@@ -236,6 +236,9 @@ adapters:
           load_inventory_ledger_failed: Unable to load the encrypted inventory record
             book.
           movement_already_exists: That inventory movement already exists.
+      own_accounts:
+        errors:
+          load_register_failed: Unable to load the encrypted own bank account register.
   sede:
     errors:
       censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate

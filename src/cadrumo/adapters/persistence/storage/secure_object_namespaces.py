@@ -659,6 +659,21 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# The taxpayer's own bank accounts and their modelo charge and refund designations.
+# FINANCIAL: every account carries an IBAN and possibly a BIC and bank block, so the
+# register is ciphertext at rest under a fixed key; no account material or derived
+# identifier ever reaches the object key.
+LEDGER_OWN_ACCOUNTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_own_accounts",
+    namespace="cadrumo.ledger.own_accounts",
+    owner="cadrumo.adapters.persistence.profile.own_accounts",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_borrador_100_snapshot",
     namespace="cadrumo.application.live.borrador_100_snapshot",

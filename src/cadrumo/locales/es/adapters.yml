@@ -267,6 +267,10 @@ adapters:
           load_inventory_ledger_failed: No se pudo cargar el registro de inventario
             cifrado.
           movement_already_exists: Ese movimiento de inventario ya existe.
+      own_accounts:
+        errors:
+          load_register_failed: No se puede cargar el registro cifrado de cuentas
+            bancarias propias.
   sede:
     errors:
       censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;

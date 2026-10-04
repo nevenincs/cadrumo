@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:a4a5fa0941d4484cb1a450b0c24ff90892770826fd8c8d107e126fcb62d87862'
+body_hash: 'sha256:3f9131b8d416d5a653c634195ebcc87754e6ef5c53c7e7462cdba3d5c18cf985'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -38,7 +38,7 @@ Out of scope, recorded for their owners: the 303 envelope software identity (exp
 Delivers the ledger-owned own bank account entity, its encrypted register with role designations, the registered ledger operations and the app ledger account CLI.
 
 - [x] `P01.S01` - add the OwnBankAccount, designation and OwnAccountRegister domain types with ordinal ids, IBAN, BIC and bank-block validation and unit tests; `src/cadrumo/domain/transactions/own_accounts.py (new)`.
-- [ ] `P01.S02` - register the cadrumo.ledger.own_accounts FINANCIAL namespace and the revision-guarded OwnAccountRepository on the secure-model-document kernel, with encrypted round-trip and no-plaintext tests; `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, src/cadrumo/adapters/persistence/profile/own_accounts.py (new)`.
+- [x] `P01.S02` - register the cadrumo.ledger.own_accounts FINANCIAL namespace and the revision-guarded OwnAccountRepository on the secure-model-document kernel, with encrypted round-trip and no-plaintext tests; `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, src/cadrumo/adapters/persistence/profile/own_accounts.py (new)`.
 - [ ] `P01.S03` - add registered ledger operations to add, list, show, update, close and designate own accounts with masked projections and refusal of deleting a referenced account; `src/cadrumo/application/ledger/, src/cadrumo/entrypoints/operation_composition.py`.
 - [ ] `P01.S04` - add the app ledger account CLI fragment with IBAN and bank fields read through the secret input channel and locale keys in all four languages; `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py, new account command spec module, src/cadrumo/locales/*/cli.yml`.
 

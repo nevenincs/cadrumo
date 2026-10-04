@@ -105,6 +105,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "ledger_confirmation_record",
     "ledger_confirmed_counterparty_facts",
     "ledger_classification_rules",
+    "ledger_own_accounts",
     "live_borrador_100_snapshot",
     "live_m036_declaration",
     "m145_communication_record",
