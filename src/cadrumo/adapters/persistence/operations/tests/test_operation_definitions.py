@@ -50,11 +50,11 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
+    ProfileLogoutOperationRequest,
     ProfileMutationOperationResult,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
-    build_profile_logout_operation_request,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
@@ -64,6 +64,7 @@ from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
+    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -353,7 +354,11 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
                         authority_operation=authority_operation,
                     )
                     created = await supervisor.submit(
-                        build_profile_logout_operation_request(profile_id),
+                        OperationRequest(
+                            definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
+                            subject_ref=profile_operation_subject(str(profile_id)),
+                            payload=ProfileLogoutOperationRequest(profile_id=profile_id),
+                        ),
                         operation_id="d" * 64,
                     )
                     terminal = await run_to_settlement(supervisor, created)

@@ -283,7 +283,7 @@ def changed[T: BaseModel](model: T, **values: object) -> T:
 
 
 def owner_id() -> str:
-    if sys.platform == "linux":
+    if sys.platform != "win32":
         return str(os.getuid())
     import win32api
     import win32security

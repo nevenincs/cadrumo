@@ -47,6 +47,7 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
@@ -67,7 +68,6 @@ from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILIT
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
-from dev._paths import prepare_temporary_directory
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden

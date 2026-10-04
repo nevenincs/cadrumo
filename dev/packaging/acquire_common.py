@@ -42,7 +42,6 @@ _UTF_8: Final[str] = UTF_8
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public
 # reacquisition proves this closed set, and only this set, byte-for-byte. The
-PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = PRODUCT_IDENTITY.cohort_distributions
 
 
 _REFUSAL_PREFIX: Final[str] = "public reacquisition unavailable"
@@ -228,7 +227,7 @@ def match_downloaded_cohort_wheels(
             published) or resolves to more than one file.
     """
     resolved: dict[str, Path] = {}
-    for distribution in PYTHON_COHORT_WHEEL_NAMES:
+    for distribution in PRODUCT_IDENTITY.cohort_distributions:
         distribution_version = cohort.version
         prefix = _wheel_distribution_prefix(distribution, distribution_version)
         matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
@@ -508,7 +507,6 @@ def run_installed_cli_oracle(
 
 
 __all__ = [
-    "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
     "capture_owned_server_launch",
     "expected_oracle_target_value",

@@ -208,7 +208,7 @@ class ModeloReconciliationRecord(BaseModel):
 class ModeloReconciliationHistoryEntry(BaseModel):
     """One past reconciliation read back from the reconciliation record store.
 
-    ``modelo_reconcile`` DOES persist a stored record. Each run writes a
+    A reconciliation run DOES persist a stored record. Each run writes a
     :class:`ModeloReconciliationRecord` into the encrypted profile-scoped
     reconciliation store selected by :class:`ModeloReconciliationPersistencePort`,
     in the same unit of work as the slim ``MODELO_RECONCILED``

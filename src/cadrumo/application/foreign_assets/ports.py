@@ -31,12 +31,4 @@ class ForeignAssetRegisterRepositoryProtocol(Protocol):
         ...
 
 
-class ForeignAssetRegisterRepositoryFactory(Protocol):
-    """Construct the register capability bound to one profile bucket."""
-
-    def __call__(self, *, bucket_id: str) -> ForeignAssetRegisterRepositoryProtocol:
-        """Return the required register capability for ``bucket_id``."""
-        ...
-
-
-__all__ = ["ForeignAssetRegisterRepositoryFactory", "ForeignAssetRegisterRepositoryProtocol"]
+__all__ = ["ForeignAssetRegisterRepositoryProtocol"]

@@ -34,7 +34,7 @@ from .....core.errors.error_codes import build_error_envelope, resolve_error_mes
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError
 from .....domain.attachments.models import Attachment
-from ..attachment import AttachmentStore, resolve_attachment_store
+from ..attachment import AttachmentStore
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
@@ -359,32 +359,3 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
                     "surface": "attachment_store",
                     "violation": "manifest_payload",
                 }, f"{case_label}:{read_path}"
-
-
-def test_the_resolver_hands_back_the_injected_port_untouched(tmp_path: Path) -> None:
-    """An injected store must be used as given, never wrapped or replaced.
-
-    Every service accepting an optional custody port for testability relies on
-    this identity: a resolver that re-constructed the default would silently
-    write a test's bytes into the ambient store instead of the injected one.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        injected = AttachmentStore()
-
-        assert resolve_attachment_store(injected) is injected
-
-
-def test_the_resolver_constructs_the_encrypted_default_when_nothing_is_injected(tmp_path: Path) -> None:
-    """Omitting the port yields the concrete encrypted store, not a stand-in.
-
-    This is the single construction site the consuming packages delegate to, so
-    the assertion that matters is that what comes back genuinely writes to
-    encrypted custody rather than merely satisfying the protocol.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        resolved = resolve_attachment_store(None)
-
-        assert isinstance(resolved, AttachmentStore)
-        payload = b"%PDF-1.4\nresolved-default-store"
-        digest = resolved.put_bytes(payload)
-        assert AttachmentStore().read_bytes(digest) == payload

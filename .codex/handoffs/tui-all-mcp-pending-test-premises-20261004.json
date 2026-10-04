@@ -1,0 +1,88 @@
+{
+  "status": "fixture corrections implemented after parent freeze release",
+  "active_serial_session": 21300,
+  "records": [
+    {
+      "paths": [
+        "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+        "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py"
+      ],
+      "cases": [
+        "modelo.m145.export"
+      ],
+      "cause": "Required page indicator omitted from fixture; omitted producer value correctly refused by canonical fixed-width codec.",
+      "canonical_evidence": "Official bundled dr145v20.pdf.extracted.json row2: obligatory blank or C(complementaria); real current renderer produces610 bytes when explicit ordinary-page space supplied.",
+      "repair": "Supply explicit comunicacion.pagina-complementaria space and assert payload byte10 is blank independently. Keep existing digest/length/offset/lifecycle assertions.",
+      "production_change": false,
+      "source_sha256_before": {
+        "src/cadrumo/entrypoints/tests/conformance_m145_support.py": "e22b52aa6f3489a60b9c61cbfa972ed74dd291fe7ac4b55cba8761fc67e4b943",
+        "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py": "c77871a3512c440f87f3ee9836fa65944b33fae8e48b930735647a00d9c8783b"
+      },
+      "source_sha256_after": {
+        "src/cadrumo/entrypoints/tests/conformance_m145_support.py": "2431e6ca4f655e522037f32f1111b9a954e60c15a4449194116fdf945baa7692",
+        "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py": "80913150d797c820a2d86db47abf399e3d12b3c72be8735af577620d6b92df0c"
+      },
+      "status": "implemented; Ruff and format/ty scoped pass; behavioral replay pending serial414 completion"
+    },
+    {
+      "paths": [
+        "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py"
+      ],
+      "cases": [
+        "modelo.spreadsheet.calculate",
+        "modelo.spreadsheet.export",
+        "modelo.spreadsheet.pull",
+        "modelo.spreadsheet.verify"
+      ],
+      "cause": "Repository save intentionally refreshes WorkflowState.updated_at; setup compares persisted timestamp to pre-save object.",
+      "canonical_evidence": "adapters/persistence/workflow.py prepare_state_write sets updated_at=utc_now; existing test_workflow_state_persistence_roundtrip normalizes timestamp and checks monotonicity.",
+      "repair": "After save, capture real persisted before_workflow; assert all seed fields except timestamp unchanged and timestamp monotonic, then retain full exact post-operation persisted equality.",
+      "production_change": false,
+      "source_sha256_before": {
+        "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py": "4ae93c5a7c14e4f12eb80c7a7a139efcfeb8c2b2d46aa6183df63ba2a7cf345e"
+      },
+      "source_sha256_after": {
+        "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py": "aefc801b5d74fd2209570eb4c29c92bc73ea218bdcc25904eb333e482870f078"
+      },
+      "status": "implemented; Ruff and format/ty scoped pass; behavioral replay pending serial414 completion"
+    },
+    {
+      "paths": [
+        "src/cadrumo/entrypoints/tests/conformance_archive_support.py"
+      ],
+      "cases": [
+        "profile.archive.export"
+      ],
+      "cause": "Fixture names unsupported .cadrumo extension, correctly refused by sealed archive writer; historical expected version1 conflicts with canonical current framing4.",
+      "canonical_evidence": "sealed_archive_writer.py requires .cadrumo-bucket.tar.gz; export_archive_header.py ARCHIVE_SCHEMA_VERSION=4; capsule_archive.py delegates actual profile_custody framing version.",
+      "repair": "Use explicit current archive suffix and independent version4 expectations; retain real header/profile/password-envelope/size and public receipt assertions.",
+      "production_change": false,
+      "source_sha256_before": {
+        "src/cadrumo/entrypoints/tests/conformance_archive_support.py": "8f60c24aa04e44fb150dc25d67e61a4dc763cfcf41d5cd3dcbf9c356eca55bda"
+      },
+      "source_sha256_after": {
+        "src/cadrumo/entrypoints/tests/conformance_archive_support.py": "fa7b3fe9c00888a6c4d19ed60255957d1bffe1e501dd391b08cf656d14eb0d44"
+      },
+      "status": "implemented; Ruff and format/ty scoped pass; behavioral replay pending serial414 completion"
+    }
+  ],
+  "shipping_quality_repair": {
+    "path": "src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py",
+    "symbol": "resolve_active_bucket",
+    "disposition": "superseded unused callable-registration guard removed",
+    "caller_proof": "Exact named symbol search src/dev showed defining function only. Current live CLI family handlers invoke runtime_* defining bridges; bridges require_active_bucket_id and require_profile_client(expected_profile_id), submit registered profile operations and validate exact-profile settled projection.",
+    "replacement_evidence": [
+      "src/cadrumo/entrypoints/cli/runtime_expedientes_read.py:63",
+      "src/cadrumo/entrypoints/cli/runtime_verify_read.py",
+      "src/cadrumo/entrypoints/cli/runtime_profile_binding.py",
+      "src/cadrumo/entrypoints/cli/runtime_profile_operation.py"
+    ],
+    "sha256_after": "663f0e5d61e2fbe4af35349f83270203c5c504ee58e73907fa2b9b109a52c81e",
+    "verification": {
+      "ruff": "pass",
+      "format": "pass",
+      "ty": "pass",
+      "affected existing CLI runtime tests": "serial414/runtime tests plus later affected corpus"
+    }
+  }
+}

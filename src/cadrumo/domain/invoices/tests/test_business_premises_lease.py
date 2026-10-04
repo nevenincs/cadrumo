@@ -155,3 +155,56 @@ def test_only_the_four_record_design_codes_are_a_situacion() -> None:
     for typed in ("0", "5", "uno", ""):
         with pytest.raises(InvoiceValidationError, match="1, 2, 3 or 4"):
             require_situacion_inmueble(typed)
+
+
+@pytest.mark.parametrize("selected", [False, True])
+def test_historical_flat_invoice_facts_hydrate_only_the_nested_family(selected: bool) -> None:
+    payload = _lease_invoice().model_dump(mode="python")
+    payload.pop("business_premises_lease")
+    payload.update(
+        arrendamiento_local_negocio=selected,
+        situacion_inmueble="1" if selected else None,
+        referencia_catastral=" 9872023vh5797s0001wx " if selected else None,
+    )
+
+    loaded = Invoice.model_validate(payload)
+
+    expected = (
+        BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral="9872023VH5797S0001WX",
+        )
+        if selected
+        else None
+    )
+    assert loaded.business_premises_lease == expected
+    assert loaded.invoice_id == payload["invoice_id"]
+    assert (
+        not {"arrendamiento_local_negocio", "situacion_inmueble", "referencia_catastral"} & loaded.model_dump().keys()
+    )
+
+
+def test_historical_and_nested_invoice_lease_facts_cannot_disagree() -> None:
+    payload = _lease_invoice(business_premises_lease=BusinessPremisesLease()).model_dump(mode="python")
+    payload["arrendamiento_local_negocio"] = False
+
+    with pytest.raises(ValidationError, match="facts disagree"):
+        Invoice.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "legacy",
+    [
+        {"arrendamiento_local_negocio": "false"},
+        {"arrendamiento_local_negocio": False, "situacion_inmueble": "1"},
+        {"arrendamiento_local_negocio": True, "situacion_inmueble": "5"},
+        {"arrendamiento_local_negocio": True, "situacion_inmueble": "3", "referencia_catastral": "REF"},
+    ],
+)
+def test_historical_invoice_lease_hydration_preserves_validation(legacy: dict[str, object]) -> None:
+    payload = _lease_invoice().model_dump(mode="python")
+    payload.pop("business_premises_lease")
+    payload.update(legacy)
+
+    with pytest.raises(ValidationError):
+        Invoice.model_validate(payload)

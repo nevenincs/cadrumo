@@ -1,0 +1,97 @@
+{
+  "status": "Complete final-source affected M145 replay PASS26/26; authority stable; unrelated probe-test drift scoped explicitly",
+  "paths": [
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py",
+      "before_sha256": "6d6492c4388e19b58ff9728f5337504002c6c7ff5d88698e0c4e4a09aaeee1f4",
+      "after_sha256": "19906d7b4e77d4d6b35f14379aae1b51534595d261891d271b6ede911b45691c",
+      "integration_commits": [
+        "ca956c57b6919f10412833e68412178af0f46527"
+      ],
+      "integration_commit": "ca956c57b6919f10412833e68412178af0f46527",
+      "disposition": "incorporated"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "before_sha256": "73c695fbdf7fdca9ef883647439b6ec98623bc6699a747f6e6626ce0a79c177b",
+      "after_sha256": "1564cb3125d3cc6b8ccfc81ea95d65927670c899c41e6a9b573b7af027be7d37",
+      "blank_premise_fixed_sha256": "db0ba54115bd29d11a701d9aa114cd45eb906b12308bfdfbed839a2344f4e36a",
+      "integration_commits": [
+        "ca956c57b6919f10412833e68412178af0f46527",
+        "208dad820d8a82598da8cbd950d03432adc3a454"
+      ],
+      "integration_commit": "208dad820d8a82598da8cbd950d03432adc3a454",
+      "disposition": "incorporated"
+    }
+  ],
+  "diagnostic_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T014818.056960Z-pytest-47228-da38b65a/run.log",
+  "source_frozen": true,
+  "production_changed": false,
+  "authority_changed": false,
+  "static_verification": "Ruff check/format and ty PASS on both paths",
+  "source_evidence": {
+    "official": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf.extracted.md:9",
+    "physical_meaning": "DR145 row2 mandates byte10blank for principal or C for complementary; whole record610bytes with unchanged start/end tokens.",
+    "old_source": "efb85a8a5bd7fb1b0104bb37ab887f339617a731 optional unconstrained TEXT accepted explicitspace",
+    "new_source": "66b785a1418ef48cb2f56711c83933c0828c46f8 constraints enum=[C], absentdeclaredvalue explicitly principal ejemplar"
+  },
+  "preserved_oracles": [
+    "principal trueabsence -> literal byte10space",
+    "complementary C -> literal byte10C",
+    "X/c/CC exact invalid_value refusal before export",
+    "independent complete610byte payload and exact receipt hash",
+    "required/constrained blank refusals and optional unconstrained TEXT semantics unchanged"
+  ],
+  "inflight_serial": {
+    "session_id": 42022,
+    "captured_old_preparation": true,
+    "source_bookend_expected_drift": [
+      "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py",
+      "src/cadrumo/entrypoints/tests/conformance_m145_support.py"
+    ],
+    "reuse_limit": "Unchanged subjects only; all M145 primary/supplementary family rows and whole adapter module require final-source replay. Do not claim full changed-source Serial PASS.",
+    "completed": {
+      "passed": 424,
+      "failed": 13,
+      "selected": 437,
+      "deselected": 9,
+      "duration_seconds": 3589.89,
+      "exit_code": 1,
+      "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T013636.846141Z-pytest-46560-9fb57583/run.log"
+    }
+  },
+  "additional_oracle_correction": {
+    "actual_failure": "Current typed physical layout uses CasillaDataType.DECIMAL, not legacy money. Existing seed has no amounts, requiring independently zero-filled slots. Actual service export610bytes succeeded; complete oracle failed on stale type-name assertion.",
+    "changed": "Replace legacy numeric money label with defining decimal type value; no shared codec, no payload expectation relaxation.",
+    "source_frozen": true
+  },
+  "final_replay": {
+    "exit_code": 0,
+    "passed": 26,
+    "warnings": 193,
+    "duration_seconds": 103.29,
+    "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T023939.911068Z-pytest-42888-5e4a3983/run.log",
+    "stdout": ".logs/tui-all-mcp-final-m145-replay.txt",
+    "selected_scope": "whole adapter14 +primary5 +supplementary5 +completeness/duplicates2",
+    "stability": {
+      "before": ".logs\\tui-all-mcp-final-m145-replay-before.json",
+      "after": ".logs\\tui-all-mcp-final-m145-replay-after.json",
+      "source_changed_paths": [
+        "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+        "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+        "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py"
+      ],
+      "authority_changed": false,
+      "head_changed": false,
+      "stable_execution_inputs": false
+    },
+    "reuse_qualification": "Three changed paths are unrelated CLI capability fixture/probe owners; affected M145 preparation, tested oracles, production and authority stayed unchanged during replay. Later runtime admission changes require owning runtime replay; this does not establish final all-cohort green.",
+    "case_counts": {
+      "adapter": 14,
+      "completeness": 2,
+      "primary": 5,
+      "supplementary": 5
+    }
+  },
+  "checkpoint_mapping_note": "Real committed source mapping added after coherent source checkpoint; original command outcomes, hashes and verification limits retained."
+}

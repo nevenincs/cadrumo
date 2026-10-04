@@ -117,10 +117,10 @@ class FamilyFieldOverride(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_patch(self) -> FamilyFieldOverride:
-        spec = _require_keyed_family(self.family)
+        identity = _require_keyed_family_identity(self.family)
         _require_nonempty_family_patch(self)
         _require_nonoverlapping_family_patch(self.fields, self.removed_fields)
-        _require_family_identity_unchanged(spec.identity, self.fields, self.removed_fields)
+        _require_family_identity_unchanged(identity, self.fields, self.removed_fields)
         _require_valid_family_sequence_paths(self)
         return self
 
@@ -197,13 +197,13 @@ def _require_no_inherited_from_patch(fields: Mapping[str, object], removed_field
         raise RegistryValidationError("inherited_from is loader-owned and cannot be overridden")
 
 
-def _require_keyed_family(family: str):
+def _require_keyed_family_identity(family: str) -> str:
     from .keyed_families import family_spec
 
     spec = family_spec(family)
-    if spec is None or not spec.keyed:
+    if spec is None or not spec.keyed or spec.identity is None:
         raise RegistryValidationError(f"family field override requires an inherited keyed family, got {family!r}")
-    return spec
+    return spec.identity
 
 
 def _require_nonempty_family_patch(override: FamilyFieldOverride) -> None:

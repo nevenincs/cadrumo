@@ -7,10 +7,11 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
-from .docs_delivery_contracts import _UTF_8, CANONICAL_DOCS_BASE_URL
+from .docs_delivery_contracts import CANONICAL_DOCS_BASE_URL
 
 
 def site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
@@ -200,7 +201,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "<noscript>\n<ul>\n"
         + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in localized_languages())
         + "</ul>\n</noscript>\n</body>\n</html>\n",
-        encoding=_UTF_8,
+        encoding=UTF_8,
         newline="\n",
     )
     print(f"Wrote language entry: {entry}", flush=True)

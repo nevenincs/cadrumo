@@ -263,6 +263,55 @@ def test_shared_failure_writer_drops_non_public_diagnostic_values(tmp_path: Path
     }
 
 
+@pytest.mark.parametrize("refusal_code", (None, "workbench.home.refresh_unavailable", "private-profile-value"))
+@pytest.mark.asyncio
+async def test_public_root_diagnostic_distinguishes_pending_and_refused_home_without_values(
+    refusal_code: str | None, tmp_path: Path
+) -> None:
+    """Actual public controls retain finite codes and flags while their other content is discarded."""
+    from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
+    from cadrumo.core.i18n.render import tr
+
+    class RootApp(App[None]):
+        home_refresh_refusal_code = refusal_code
+        workbench_search_refusal_code = None
+        account_session = HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="private-profile-value",
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        )
+
+        @override
+        def compose(self) -> ComposeResult:
+            yield Static("updating", id="root-updating")
+            yield Static(tr("tui.root.account.unavailable"), id="root-account-refusal", markup=False)
+            yield Static("private-profile-value", id="root-navigation-refusal", markup=False)
+
+    async with RootApp().run_test() as pilot:
+        await pilot.pause()
+        diagnostic = public_surface_diagnostic(pilot)
+        assert diagnostic["root_updating_visible"] is True
+        assert diagnostic["root_account_refusal_shown"] is True
+        assert diagnostic["root_navigation_refusal_shown"] is False
+        assert diagnostic["account_session_posture"] == "active"
+        assert diagnostic["account_session_present"] is True
+        assert diagnostic["account_session_has_expiry"] is True
+        assert diagnostic["account_session_expired"] is False
+        if refusal_code == "private-profile-value":
+            assert "home_refresh_refusal_code" not in diagnostic
+        else:
+            assert diagnostic["home_refresh_refusal_code"] == refusal_code
+        receipt = tmp_path / "root-failure.json"
+        write_installed_tui_failure_receipt(
+            path=receipt,
+            schema_version="root-diagnostic-test",
+            error=InstalledTuiChildError("installed Home did not settle", diagnostic=diagnostic),
+        )
+        observed = json.loads(receipt.read_text())["diagnostic"]
+        assert observed == diagnostic
+        assert "private-profile-value" not in receipt.read_text()
+
+
 def test_profile_manager_field_opens_the_visible_canonical_row_without_field_selector() -> None:
     class Table:
         rows = (SimpleNamespace(value="identity.tax_id"), SimpleNamespace(value="activities.description"))
@@ -312,6 +361,8 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     executable.write_text("", encoding="utf-8")
     receipt = tmp_path / "artifacts" / "financial.json"
     credential = f"{tmp_path.name}-test-credential"
+    runtime_socket_dir = tmp_path / "private-runtime"
+    runtime_socket_dir.mkdir(mode=0o700)
     observed: dict[str, object] = {}
 
     def fake_run(argv, **kwargs):
@@ -334,6 +385,7 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
         storage_root=tmp_path / "store",
         receipt_path=receipt,
         passphrase=credential,
+        runtime_socket_dir=runtime_socket_dir,
     )
 
     environment = observed["environment"]
@@ -341,6 +393,9 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     assert "PYTHONPATH" not in environment
     assert "CADRUMO_UNRELATED" not in environment
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_RUNTIME_SOCKET_DIR"] == str(runtime_socket_dir.resolve())
+    assert "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" not in environment
     assert json.loads(str(observed["input"])) == {"profile_passphrase": credential}
     assert evidence.returncode == 0
     assert evidence.receipt_status == "proven"

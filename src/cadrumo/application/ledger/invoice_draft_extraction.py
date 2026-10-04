@@ -71,7 +71,7 @@ See Also:
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive that turns a text-native PDF into the
         reading-order transcription the semantic reader is handed.
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.persist_prepared_invoice_confirmation`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
     :mod:`~llm.evidence_draft_vision`

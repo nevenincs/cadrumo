@@ -264,27 +264,6 @@ def auth_diagnostic_view_verdict(diagnostic_id: str) -> PreconditionVerdict:
     )
 
 
-def record_auth_diagnostic_phone_state(
-    diagnostic_id: str,
-    phone_state: str,
-    *,
-    persistence: AuthDiagnosticPersistencePort,
-) -> AuthDiagnosticReportResult | None:
-    """Attach the operator-observed Cl@ve app state to an encrypted diagnostic.
-
-    The update writes the selected closed phone-state token back into the same
-    encrypted diagnostic payload. It does not create a plaintext report file.
-
-    Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
-    diagnostic is not found.
-    """
-    prepared = prepare_auth_diagnostic_phone_state(diagnostic_id, phone_state, persistence=persistence)
-    if prepared is None:
-        return None
-    persist_auth_diagnostic_phone_state(prepared, persistence=persistence)
-    return prepared.result
-
-
 @dataclass(frozen=True, slots=True)
 class PreparedAuthDiagnosticPhoneStateReport:
     """Validated encrypted-record update awaiting its one guarded save."""
@@ -594,5 +573,4 @@ __all__ = [
     "load_auth_diagnostic",
     "persist_auth_diagnostic_phone_state",
     "prepare_auth_diagnostic_phone_state",
-    "record_auth_diagnostic_phone_state",
 ]

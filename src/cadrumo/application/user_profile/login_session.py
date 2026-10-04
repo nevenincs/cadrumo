@@ -444,19 +444,6 @@ def _distinct_bucket_ids(*bucket_ids: str | None) -> tuple[str, ...]:
     return tuple(dict.fromkeys(value for value in bucket_ids if value is not None))
 
 
-def has_live_profile_session() -> bool:
-    """Report whether this process currently holds an open profile session.
-
-    A durable active pointer is NOT the same fact: a registered profile keeps
-    its selection across a logout, so the pointer can name a profile whose
-    session is closed. A caller that needs profile-bound encrypted storage --
-    anything that reads or writes through the secure object store -- must ask
-    this rather than reading the pointer, because only an open session carries
-    the key that store needs.
-    """
-    return _profile_login_sessions().current_session() is not None
-
-
 def logout_active_profile() -> str | None:
     """Strong-close the selected profile without any provider fallback.
 
@@ -1795,7 +1782,6 @@ __all__ = [
     "bind_resumed_profile_session",
     "borrow_profile_receipt_key",
     "close_profile_session_artefacts",
-    "has_live_profile_session",
     "login_profile",
     "logout_active_profile",
     "publish_created_profile_session",

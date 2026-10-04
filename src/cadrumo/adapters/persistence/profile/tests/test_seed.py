@@ -1,7 +1,7 @@
 """Carried-prior-definitive seed coverage over real filed observations.
 
 See Also:
-    :func:`~application.prorrata_register._seed.evaluate_carried_prior_definitiva_seed`
+    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed_from_observations`
         Seed evaluator under test for happy-path and divergent-revision outcomes.
     :class:`~application.calculations.CalculationObservationRepository`
         Real encrypted observation repository that stores the prior Modelo 303
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from .....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed_from_observations
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataProvisionalProvenance
@@ -84,9 +84,9 @@ def test_seed_happy_path_uses_prior_settlement_observation(
         repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(repo, percentage=Decimal("87"), stamped_revision_id=_prior_revision_id())
 
-        evaluation = evaluate_carried_prior_definitiva_seed(
+        evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
             ejercicio=_CURRENT_YEAR,
-            observation_repository=repo,
+            observations=tuple(repo.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
 
@@ -114,9 +114,9 @@ def test_seed_divergent_revision_stamp_blocks(tmp_path: Path, *, operation: Pinn
             stamped_revision_id=_DIVERGENT_REVISION_ID,
         )
 
-        evaluation = evaluate_carried_prior_definitiva_seed(
+        evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
             ejercicio=_CURRENT_YEAR,
-            observation_repository=repo,
+            observations=tuple(repo.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
 

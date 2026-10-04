@@ -39,7 +39,6 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentReceipt,
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.automation_execution import ThreadedAutomationAdministration
 from cadrumo.application.user_profile.automation_operations import (
     AutomationAdministrationExecutor,
     AutomationOperationRequest,
@@ -47,6 +46,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -1212,7 +1212,7 @@ def _registry_filing_date(filing_year: int, period: str) -> date:
     context production would never produce.
 
     This is deliberately NOT the deadline authority's
-    ``resolve_filing_closes_on``. Three distinct dates exist for one Modelo 130
+    ``resolve_filing_window``. Three distinct dates exist for one Modelo 130
     quarter and only one of them is this key's contract: the payment cutoff
     (the 20th of the following month), the plazo voluntario close
     (weekend-adjusted, and 30 January for 4T), and the calculation filing

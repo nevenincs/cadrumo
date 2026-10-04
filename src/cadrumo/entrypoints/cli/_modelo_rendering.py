@@ -18,18 +18,11 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
-from ...application.modelo.calculation import (
-    visible_calculation_casilla_values,
-    visible_calculation_observations,
-)
 from ...application.modelo.lifecycle_advisories import Modelo184SocioHandoffV1
-from ...application.modelo.result_summary import calculation_result_summary
-from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo.work_plazo import (
     M210PlazoResolution,
@@ -38,18 +31,15 @@ from ...application.modelo.work_plazo import (
 )
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecord
-from ...domain.modelos.row_models import Modelo184MemberRow
 from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._filing_chain_payloads import aeat_register_lines, aeat_register_payload
 from ._modelo_bindings_payloads import BindingEncodedOptionPayload
 from ._modelo_payloads import (
-    CalculationRevisionPayload,
     ExternalEvidencePayload,
     FindingPayload,
     ModeloRecordPayload,
@@ -58,13 +48,8 @@ from ._modelo_payloads import (
     WorkDeadlinePosturePayload,
     WorkUnitPayload,
 )
-from ._modelo_revision_payload_parts import (
-    DetailRowPayload,
-    ObservationPayload,
-    SourceProvenancePayload,
-)
 from .common import resolve_cli_precondition_action
-from .modelo_revision_rendering import calculation_observation_payload_lines, calculation_revision_state_label
+from .modelo_revision_rendering import calculation_revision_state_label
 
 if TYPE_CHECKING:
     # Annotation-only: `from __future__ import annotations` keeps this lazy so the
@@ -72,7 +57,6 @@ if TYPE_CHECKING:
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...application.modelo.printed_boxes import PrintedBoxes
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _modelo_rendering_value(key: str) -> str:
@@ -99,48 +83,6 @@ def m210_plazo_notice(resolution: M210PlazoResolution) -> Notice:
         ),
         context=dict(resolution.context),
     )
-
-
-def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
-    """Return per-socio Modelo 184 régimen-de-atribución handoff info Notices.
-
-    ``revision`` is the :class:`CalculationRevision` whose member rows provide
-    the handoff values.
-
-    When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
-    rows, the entity operator who files the M184 is handed, per socio, the exact
-    attributed base plus the ``attribution_received`` fact keys the socio records
-    on their OWN profile. The cross-bucket value is carried by hand onto the
-    registry-declared target casilla, not auto-flowed across profiles. Grounding
-    is carried by the selected registry declaration.
-    Returns an empty list for any revision without member rows (non-M184, or an
-    M184 with no socios), so the handoff stays silent unless there is a real
-    per-socio value to relay.
-    """
-    handoff_declarations: tuple[str, str, str] | None = None
-    notices: list[Notice] = []
-    for row in revision.detail_rows:
-        if not isinstance(row, Modelo184MemberRow):
-            continue
-        if handoff_declarations is None:
-            handoff_declarations = (
-                _modelo_rendering_value("m184.socio_handoff.code"),
-                _modelo_rendering_value("m184.socio_handoff.target_casilla"),
-                _modelo_rendering_value("m184.socio_handoff.legal_refs"),
-            )
-        handoff_code, target_casilla, legal_refs = handoff_declarations
-        notices.append(
-            _m184_socio_handoff_notice(
-                nif=row.nif,
-                nombre=row.nombre,
-                porcentaje=row.porcentaje,
-                importe=row.importe,
-                code=handoff_code,
-                target_casilla=target_casilla,
-                legal_refs=legal_refs,
-            )
-        )
-    return notices
 
 
 def m184_socio_handoff_advisory_notices(handoffs: Sequence[Modelo184SocioHandoffV1]) -> list[Notice]:
@@ -181,20 +123,6 @@ def _m184_socio_handoff_notice(
             "target_casilla": target_casilla,
             "legal_refs": legal_refs,
         },
-    )
-
-
-def binding_encoded_option_payloads(
-    options: tuple[BooleanBindingEncodedValue, ...],
-) -> tuple[BindingEncodedOptionPayload, ...]:
-    """Project registry boolean-encoding rows onto :class:`BindingEncodedOptionPayload` rows."""
-    return tuple(
-        BindingEncodedOptionPayload(
-            encoded_value=option.encoded_value,
-            boolean_meaning=option.boolean_meaning,
-            registry_value=option.registry_value,
-        )
-        for option in options
     )
 
 
@@ -574,16 +502,6 @@ def _work_unit_deadline_output_from_posture(
     ]
 
 
-def work_unit_deadline_output(unit: WorkUnit) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
-    """Project a work unit's filing deadline onto payload and notice rows.
-
-    The JSON branch emits
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
-    plus warning-severity :class:`~cadrumo.core.json_contract.Notice` rows.
-    """
-    return _work_unit_deadline_output_from_posture(modelo_work_deadline_posture(unit))
-
-
 def work_deadline_output_from_posture(
     posture: ModeloWorkDeadlinePosture | None, *, fallback_legal_ref: str | None
 ) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
@@ -596,136 +514,6 @@ def work_deadline_output_from_posture(
     ):
         raise ValueError("an overdue posture without preview requires its pinned legal reference")
     return _work_unit_deadline_output_from_posture(posture, fallback_legal_ref=fallback_legal_ref)
-
-
-def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...]:
-    """Return materialised :class:`DetailRowPayload` rows for the JSON calculation payload.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    rows: list[DetailRowPayload] = []
-    for index, detail_row in enumerate(rev.detail_rows, start=1):
-        dumped = detail_row.model_dump(mode="json", exclude={"row_type"})
-        rows.append(
-            DetailRowPayload(
-                index=index,
-                row_type=str(detail_row.row_type),
-                fields={key: None if value is None else str(value) for key, value in dumped.items()},
-            ),
-        )
-    return tuple(rows)
-
-
-def calculation_revision_payload(
-    rev: CalculationRevision,
-    *,
-    operation: PinnedAuthorityOperation,
-    work_unit: WorkUnit | None = None,
-    include_result_summary: bool = True,
-) -> CalculationRevisionPayload:
-    """Project a calculation revision into the shared JSON payload.
-
-    The returned
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
-    carries visible casilla values, nested
-    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
-    rows,
-    :class:`~cadrumo.application.modelo.result_summary_payload.ResultSummaryRowPayload`
-    headline rows, and
-    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.SourceProvenancePayload`
-    resolver-trace rows for envelope-aware commands.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    if include_result_summary and work_unit is None:
-        raise TypeError("calculation revision payload requires its selected work unit for result summary")
-    observations, source_provenance = _calculation_revision_evidence(rev, operation)
-    return CalculationRevisionPayload(
-        calculation_revision_id=rev.calculation_revision_id,
-        work_unit_id=rev.work_unit_id,
-        registry_snapshot_ref=rev.registry_snapshot_ref,
-        state=rev.state.value,
-        casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev, operation=operation).items()},
-        observations=observations,
-        result_summary=(
-            result_summary_payload(
-                rev,
-                operation=operation,
-                work_unit=work_unit,
-            )
-            if include_result_summary and work_unit is not None
-            else ()
-        ),
-        detail_rows=detail_row_payloads(rev),
-        source_provenance=source_provenance,
-        binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
-        relation_overrides={key: str(value) for key, value in rev.relation_overrides.items()},
-        input_values_by_casilla_id=dict(rev.input_values_by_casilla_id),
-        created_at=rev.created_at.isoformat(),
-        updated_at=rev.updated_at.isoformat(),
-        verified_at=_optional_revision_timestamp(rev.verified_at),
-        verified_by=rev.verified_by,
-        filed_at=_optional_revision_timestamp(rev.filed_at),
-        filed_by=rev.filed_by,
-        superseded_at=_optional_revision_timestamp(rev.superseded_at),
-    )
-
-
-def result_summary_lines(
-    rev: CalculationRevision,
-    *,
-    operation: PinnedAuthorityOperation,
-    work_unit: WorkUnit,
-) -> list[str]:
-    """Return the headline-result summary block for a calculation revision.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
-    if summary is None or not summary.rows:
-        return []
-    header = tr(
-        "cli.app.modelo.work.result_summary_header",
-        modelo=summary.modelo,
-        year=summary.filing_year,
-        period=summary.period.registry_token,
-    )
-    lines = [header, "role\tcasilla\tvalue\tlabel"]
-    for row in summary.rows:
-        label = row.label
-        lines.append(f"{row.role}\t{row.casilla_id}\t{row.value}\t{label}")
-    return lines
-
-
-def result_summary_payload(
-    rev: CalculationRevision,
-    *,
-    operation: PinnedAuthorityOperation,
-    work_unit: WorkUnit,
-) -> tuple[ResultSummaryRowPayload, ...]:
-    """Return headline-result summary rows for the JSON payload.
-
-    Each row is a
-    :class:`~cadrumo.application.modelo.result_summary_payload.ResultSummaryRowPayload`.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
-    if summary is None:
-        return ()
-    return tuple(
-        ResultSummaryRowPayload(
-            role=row.role,
-            casilla_id=row.casilla_id,
-            value=str(row.value),
-            label=row.label,
-        )
-        for row in summary.rows
-    )
 
 
 def casilla_inline_trace(obs: CasillaObservation) -> str | None:
@@ -822,111 +610,6 @@ def casilla_trace_verbose_line(obs: CasillaObservation) -> str:
             f"operand_values={','.join(str(operand) for operand in obs.operand_values)}",
         ),
     )
-
-
-def _calculation_revision_lifecycle_lines(rev: CalculationRevision) -> list[str]:
-    lines: list[str] = []
-    if rev.verified_at is not None:
-        lines.append(f"verified_at\t{rev.verified_at.isoformat()}")
-        lines.append(f"verified_by\t{rev.verified_by}")
-    if rev.filed_at is not None:
-        lines.append(f"filed_at\t{rev.filed_at.isoformat()}")
-        lines.append(f"filed_by\t{rev.filed_by}")
-    if rev.superseded_at is not None:
-        lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
-    return lines
-
-
-def _calculation_casilla_row(
-    casilla: str,
-    value: str,
-    observation: CasillaObservation | None,
-    *,
-    verbose: bool,
-) -> list[str]:
-    line = f"casilla\t{casilla}\t{value}"
-    if observation is None:
-        return [line]
-    trace = casilla_inline_trace(observation)
-    if trace is None:
-        return [line]
-    lines = [f"{line}\t{trace}"]
-    if verbose:
-        lines.append(casilla_trace_verbose_line(observation))
-    return lines
-
-
-def _calculation_casilla_lines(
-    rev: CalculationRevision,
-    *,
-    operation: PinnedAuthorityOperation,
-    verbose: bool,
-) -> list[str]:
-    observation_by_casilla = {obs.casilla_id: obs for obs in visible_calculation_observations(rev, operation=operation)}
-    lines: list[str] = []
-    for casilla, value in sorted(visible_calculation_casilla_values(rev, operation=operation).items()):
-        lines.extend(
-            _calculation_casilla_row(
-                casilla,
-                str(value),
-                observation_by_casilla.get(casilla),
-                verbose=verbose,
-            ),
-        )
-    return lines
-
-
-def _calculation_detail_lines(rev: CalculationRevision) -> list[str]:
-    lines: list[str] = []
-    for index, detail_row in enumerate(rev.detail_rows, start=1):
-        fields = detail_row.model_dump(mode="json", exclude={"row_type"})
-        field_str = " ".join(f"{key}={value}" for key, value in fields.items())
-        lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
-    return lines
-
-
-def calculation_revision_lines(
-    rev: CalculationRevision,
-    *,
-    operation: PinnedAuthorityOperation,
-    work_unit: WorkUnit | None = None,
-    include_result_summary: bool = True,
-    verbose: bool = False,
-) -> list[str]:
-    if include_result_summary and work_unit is None:
-        raise TypeError("calculation revision lines require their selected work unit for result summary")
-    lines = [
-        f"calculation_revision_id\t{rev.calculation_revision_id}",
-        f"work_unit_id\t{rev.work_unit_id}",
-        f"state\t{calculation_revision_state_label(rev.state.value)}",
-        f"created_at\t{rev.created_at.isoformat()}",
-        f"updated_at\t{rev.updated_at.isoformat()}",
-    ]
-    lines.extend(_calculation_revision_lifecycle_lines(rev))
-    summary_lines = (
-        result_summary_lines(
-            rev,
-            operation=operation,
-            work_unit=work_unit,
-        )
-        if include_result_summary and work_unit is not None
-        else []
-    )
-    if summary_lines:
-        lines.extend(summary_lines)
-    lines.extend(_calculation_casilla_lines(rev, operation=operation, verbose=verbose))
-    lines.extend(_calculation_detail_lines(rev))
-    return lines
-
-
-def calculation_observation_lines(rev: CalculationRevision, *, operation: PinnedAuthorityOperation) -> list[str]:
-    """Return a stable text view of a revision's typed casilla observations.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    payload = calculation_revision_payload(rev, operation=operation, include_result_summary=False)
-    return calculation_observation_payload_lines(payload)
 
 
 def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
@@ -1208,44 +891,3 @@ def verification_report_lines(
 def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
     """Render one persisted locale key and its typed facts at the CLI boundary."""
     return tr(finding.message_locale_key, **finding.message_facts)
-
-
-def _calculation_revision_evidence(
-    rev: CalculationRevision, operation: PinnedAuthorityOperation
-) -> tuple[tuple[ObservationPayload, ...], tuple[SourceProvenancePayload, ...]]:
-    """Project visible observations followed by their ordered source provenance."""
-    observations = tuple(
-        ObservationPayload(
-            casilla_id=obs.casilla_id,
-            value=str(obs.value),
-            formula_id=obs.formula_id,
-            op=obs.op,
-            operand_refs=tuple(obs.operand_refs),
-            operand_casilla_refs=tuple(obs.operand_casilla_refs),
-            operand_values=tuple(str(v) for v in obs.operand_values),
-            legal_refs=tuple(obs.legal_refs),
-            source_refs=tuple(obs.source_refs),
-            absent_by_design=obs.absent_by_design,
-        )
-        for obs in visible_calculation_observations(rev, operation=operation)
-    )
-    source_provenance = tuple(
-        SourceProvenancePayload(
-            resolver_id=ref.resolver_id,
-            resolved_binding_source=ref.resolved_binding_source,
-            contributor_source_kind=ref.contributor_source_kind,
-            contributor_binding_source=ref.contributor_binding_source,
-            lineage_role=ref.lineage_role,
-            source_ref=ref.source_ref,
-            parent_source_ref=ref.parent_source_ref,
-            fingerprint=ref.fingerprint,
-            dependency_treatment=ref.dependency_treatment,
-        )
-        for ref in rev.source_provenance
-    )
-    return observations, source_provenance
-
-
-def _optional_revision_timestamp(value: datetime | None) -> str | None:
-    """Keep the established ISO spelling of a present revision timestamp."""
-    return value.isoformat() if value else None

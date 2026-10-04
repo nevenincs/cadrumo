@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     ParameterConstraint,
     ParameterDefault,

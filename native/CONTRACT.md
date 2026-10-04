@@ -1,7 +1,8 @@
 # Native distribution contract
 
-Status: Windows CMake Debug/Release ZIP acceptance and Release installation pass.
-Current acceptance evidence is recorded below; historical evidence is labeled separately.
+Status: CMake build, installation and ZIP packaging are implemented. Verification
+of this reconciled source tree is pending. The Windows acceptance evidence below
+belongs to the prior tested artifacts and does not certify a new build.
 Linux and macOS are mappings to
 prove, not supported native builds. The existing Python product owns application
 behavior. Native code owns bootstrap before Python exists.

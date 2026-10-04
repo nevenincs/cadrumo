@@ -184,7 +184,7 @@ class RuntimeProfileConnections(
     def _remove_retired_host(self, host: RuntimeProfileHost) -> None:
         """Forget only the contained incarnation; old connections gain no new lease."""
         profile_id = host.store.binding.profile_id
-        self._enrollments.retire_profile(profile_id)
+        self._enrollments.retire_profile(profile_id, host=host)
         with self._guard:
             if self._profiles.get(profile_id) is host:
                 self._profiles.pop(profile_id)

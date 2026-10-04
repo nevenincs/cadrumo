@@ -9,10 +9,10 @@ from pydantic import BaseModel, Field
 
 from ..core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .diagnostics_run_health import LlmRunHealthProviderMetrics, LlmUsageModelMetrics, LlmUsageReport
-from .diagnostics_timing_contracts import _native_timing_values, _public_timing_values, _TimingSnapshot
+from .diagnostics_timing_contracts import TimingSnapshot, native_timing_values, public_timing_values
 
 
-class DiagnosticsUsageModelSnapshot(_TimingSnapshot):
+class DiagnosticsUsageModelSnapshot(TimingSnapshot):
     """Canonical per-model metrics, restored for existing success-rate calculation."""
 
     model: str = ""
@@ -21,14 +21,14 @@ class DiagnosticsUsageModelSnapshot(_TimingSnapshot):
     @classmethod
     def from_metrics(cls, value: LlmUsageModelMetrics) -> DiagnosticsUsageModelSnapshot:
         """Copy the complete model row without recomputing metrics."""
-        return cls.model_validate(_public_timing_values(value))
+        return cls.model_validate(public_timing_values(value))
 
     def to_metrics(self) -> LlmUsageModelMetrics:
         """Restore the existing per-model metrics and derived success rate."""
-        return LlmUsageModelMetrics.model_validate(_native_timing_values(self))
+        return LlmUsageModelMetrics.model_validate(native_timing_values(self))
 
 
-class DiagnosticsUsageProviderSnapshot(_TimingSnapshot):
+class DiagnosticsUsageProviderSnapshot(TimingSnapshot):
     """Canonical per-provider/model metrics with closed nested schemas."""
 
     provider: Annotated[str, Field(min_length=1)]
@@ -40,7 +40,7 @@ class DiagnosticsUsageProviderSnapshot(_TimingSnapshot):
         """Copy the complete canonical provider row and its ordered model rows."""
         return cls.model_validate(
             {
-                **_public_timing_values(value, exclude={"models"}),
+                **public_timing_values(value, exclude={"models"}),
                 "models": tuple(DiagnosticsUsageModelSnapshot.from_metrics(row) for row in value.models),
             }
         )
@@ -49,7 +49,7 @@ class DiagnosticsUsageProviderSnapshot(_TimingSnapshot):
         """Restore existing provider metrics and their canonical derived properties."""
         return LlmRunHealthProviderMetrics.model_validate(
             {
-                **_native_timing_values(self, exclude={"models"}),
+                **native_timing_values(self, exclude={"models"}),
                 "models": tuple(row.to_metrics() for row in self.models),
             }
         )

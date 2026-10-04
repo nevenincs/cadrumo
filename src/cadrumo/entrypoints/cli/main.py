@@ -256,7 +256,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
         raise RuntimeError("temporary storage location must declare its environment setting")
     temporary_base = storage_directory(
         temporary_location.settings_field.upper(),
-        temporary_location.relative_path(),
+        temporary_location.relative_path().as_posix(),
     )
     temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:

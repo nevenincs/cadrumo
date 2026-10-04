@@ -38,8 +38,8 @@ from ....domain.calculations.registry.invoice_bindings import (
 )
 from ....domain.calculations.registry.m347_threshold import (
     m347_threshold_decimal,
-    resolve_m347_clave_c_declaration_threshold,
     resolve_m347_counterparty_annual_threshold,
+    resolve_m347_threshold_buckets,
 )
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 
@@ -61,7 +61,9 @@ def _m347_threshold() -> Decimal:
 
 
 def _m347_clave_c_threshold() -> Decimal:
-    return m347_threshold_decimal(resolve_m347_clave_c_declaration_threshold(effective_date=_M347_EFFECTIVE_DATE))
+    bucket = resolve_m347_threshold_buckets(effective_date=_M347_EFFECTIVE_DATE).bucket_of("C")
+    assert bucket.floor_fact is not None
+    return m347_threshold_decimal(bucket.floor_fact)
 
 
 def _revision(revision_id: str):
@@ -425,6 +427,8 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
         record.row_field_casilla_ids["importe_q3"],
         record.row_field_casilla_ids["importe_q4"],
         record.row_field_casilla_ids["residence_country_code"],
+        record.row_field_casilla_ids["business_premises_lease_mark"],
+        record.row_field_casilla_ids["provincia_code"],
     }
     conditional_casillas: set[CasillaId] = {
         field.casilla_id

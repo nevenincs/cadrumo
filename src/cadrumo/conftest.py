@@ -277,7 +277,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
-    from .entrypoints.adapter_composition import _calculation_revision_catalogue_repository
+    from .entrypoints.adapter_composition import calculation_revision_catalogue_repository
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
@@ -290,7 +290,7 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
         bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),
-        bind_calculation_revision_catalogue_repository_factory(_calculation_revision_catalogue_repository),
+        bind_calculation_revision_catalogue_repository_factory(calculation_revision_catalogue_repository),
         bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
         bind_justificante_repository_factory(JustificanteRepository),
         bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),

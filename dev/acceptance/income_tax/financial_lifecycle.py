@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .financial_contracts import _EDIT_SECONDS
-from .financial_navigation import _open_work
+from .financial_navigation import open_work
 from .installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -66,23 +66,23 @@ async def _run_lifecycle(
     )
     completed: list[str] = []
     if calculate:
-        await _open_work(pilot, work_unit_id=work_unit_id)
+        await open_work(pilot, work_unit_id=work_unit_id)
         terminal = await activate_tui_operation(pilot, binding=contract.calculate)
         if terminal.outcome.value != "proven":
             raise InstalledTuiChildError("modelo.work.calculate did not reach a succeeded terminal")
         await wait_for_tui_refresh(pilot, binding=contract.calculate)
         completed.append(contract.calculate.operation_id)
     for binding in (contract.verify, contract.local_file):
-        await _open_work(pilot, work_unit_id=work_unit_id)
+        await open_work(pilot, work_unit_id=work_unit_id)
         if binding is contract.verify and await _confirm_assumed_values(pilot, contract=contract):
             completed.append(contract.apply.operation_id)
-            await _open_work(pilot, work_unit_id=work_unit_id)
+            await open_work(pilot, work_unit_id=work_unit_id)
         terminal = await activate_tui_operation(pilot, binding=binding)
         if terminal.outcome.value != "proven":
             raise InstalledTuiChildError(f"{binding.operation_id} did not reach a succeeded terminal")
         await wait_for_tui_refresh(pilot, binding=binding)
         completed.append(binding.operation_id)
-    await _open_work(pilot, work_unit_id=work_unit_id)
+    await open_work(pilot, work_unit_id=work_unit_id)
     await open_workbench_export(pilot, output_path=str(export_path))
     terminal = await activate_tui_operation(pilot, binding=contract.export)
     if terminal.outcome.value != "proven":

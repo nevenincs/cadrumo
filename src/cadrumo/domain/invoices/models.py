@@ -49,7 +49,7 @@ from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_mem
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
-from .business_premises import BusinessPremisesLease
+from .business_premises import BusinessPremisesLease, normalise_legacy_business_premises_lease
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -573,6 +573,7 @@ class Invoice(BaseModel):
             _normalization.normalise_invoice_dates,
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
+            normalise_legacy_business_premises_lease,
             _normalization.normalise_invoice_counterparty,
             _normalization.normalise_invoice_currency,
             _normalization.normalise_invoice_monetary_fields,

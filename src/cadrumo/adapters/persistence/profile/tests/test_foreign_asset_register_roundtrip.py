@@ -27,7 +27,6 @@ from .....domain.foreign_assets.register import (
     M720AssetIdentifier,
     M720DeclarantCondition,
     M720IdentifierScheme,
-    mint_asset_ref,
 )
 from ...storage.secure_object_namespaces import PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE
 from ...storage.sql.engine import get_engine
@@ -37,8 +36,8 @@ from ..foreign_assets import ForeignAssetRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_ACCOUNT_REF = mint_asset_ref(lambda: "a" * 32)
-_REAL_ESTATE_REF = mint_asset_ref(lambda: "b" * 32)
+_ACCOUNT_REF = "m720a_" + "a" * 32
+_REAL_ESTATE_REF = "m720a_" + "b" * 32
 
 
 def _account() -> ForeignAssetRegisterEntry:
@@ -117,7 +116,7 @@ def test_registering_the_same_official_identifier_twice_is_refused(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7d3e1b2a-5c4f-4e90-9b32-7208c3d4e5f6"):
         repository = ForeignAssetRegisterRepository()
         repository.register_asset(_account())
-        duplicate = _account().model_copy(update={"asset_ref": mint_asset_ref(lambda: "c" * 32)})
+        duplicate = _account().model_copy(update={"asset_ref": "m720a_" + "c" * 32})
 
         with pytest.raises(ValueError, match="same official identifier"):
             repository.register_asset(duplicate)

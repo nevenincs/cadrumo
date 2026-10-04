@@ -5,8 +5,8 @@ declarado, ``I`` for an inmueble. The inmueble record is the lessor's statement
 of a business-premises lease (RD 1065/2007 art. 34.1.d), so a filer without
 lease data files the type 1 record and one ``D`` record per declarado, and no
 ``I`` record at all. A lease recorded on an issued invoice files exactly one.
-The 2011-2024 edition holds calculation grade only, so a filing-grade export of
-it refuses before any record is rendered.
+Both the 2011-2024 and 2025-and-later editions hold filing authority in the
+current typed registry, and their real exported record occurrences are checked.
 
 The fichero bytes come from the canonical layout renderer the export writes
 with, fed the rows the real 347 resolver produced for synthetic counterparties.
@@ -20,13 +20,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
-
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
     resolve_invoice_binding_row_values,
@@ -36,8 +34,8 @@ from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ..draft_construction import build_draft
 from ..export import render_filing_layout
 from ..export_producer import filing_producer_values
-from ..runtime import ModeloOperatorProfile
-from .export_support import _schema_provider, m151_producer_snapshot
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .export_support import m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -53,7 +51,7 @@ class _Edition:
 
 
 _FILING_EDITION = _Edition("2025-y-siguientes", 2025)
-_CALCULATION_GRADE_EDITION = _Edition("2011-2024", 2024)
+_HISTORICAL_FILING_EDITION = _Edition("2011-2024", 2024)
 
 
 def _observation(
@@ -82,8 +80,10 @@ def _observation(
     )
 
 
-def _resolved_inputs(edition: _Edition, *leases: InvoiceObservation) -> dict[str, ModeloInputValue]:
-    revision = published_revision("347", edition.revision)
+def _resolved_inputs(
+    operation: PinnedAuthorityOperation, edition: _Edition, *leases: InvoiceObservation
+) -> dict[str, ModeloInputValue]:
+    revision = operation.revision_with_export_layouts("347", edition.revision)
     observations = (
         _observation("inv-cliente", "B12345674", "CLIENTE NACIONAL SL", edition.year, "B"),
         _observation("inv-proveedor", "A58818501", "PROVEEDOR NACIONAL SA", edition.year, "A"),
@@ -108,8 +108,15 @@ def _resolved_inputs(edition: _Edition, *leases: InvoiceObservation) -> dict[str
     return inputs
 
 
-def _fichero_lines(edition: _Edition, inputs: dict[str, ModeloInputValue]) -> list[str]:
-    provider = _schema_provider(filing_year=edition.year, period="0A", modelos=("347",))
+def _fichero_lines(
+    operation: PinnedAuthorityOperation, edition: _Edition, inputs: dict[str, ModeloInputValue]
+) -> list[str]:
+    provider = build_runtime_schema_provider(
+        filing_year=edition.year,
+        period=Period.from_year_and_code(edition.year, "0A"),
+        modelos=("347",),
+        operation=operation,
+    )
     draft = build_draft(
         modelo="347",
         period=Period.from_year_and_code(edition.year, "0A"),
@@ -134,15 +141,15 @@ def _type_2_kinds(lines: list[str]) -> list[str]:
     return [line[_KIND_POSITION - 1] for line in lines if line.startswith("2347")]
 
 
-def test_a_filer_without_leases_files_no_inmueble_record() -> None:
-    lines = _fichero_lines(_FILING_EDITION, _resolved_inputs(_FILING_EDITION))
+def test_a_filer_without_leases_files_no_inmueble_record(operation: PinnedAuthorityOperation) -> None:
+    lines = _fichero_lines(operation, _FILING_EDITION, _resolved_inputs(operation, _FILING_EDITION))
 
     assert len(lines) == 3
     assert lines[0].startswith("1347")
     assert _type_2_kinds(lines) == ["D", "D"]
 
 
-def test_a_recorded_lease_files_one_inmueble_record() -> None:
+def test_a_recorded_lease_files_one_inmueble_record(operation: PinnedAuthorityOperation) -> None:
     lease = _observation(
         "inv-arrendamiento",
         "B87654323",
@@ -152,7 +159,7 @@ def test_a_recorded_lease_files_one_inmueble_record() -> None:
         referencia_catastral="9872023VH5797S0001WX",
     )
 
-    lines = _fichero_lines(_FILING_EDITION, _resolved_inputs(_FILING_EDITION, lease))
+    lines = _fichero_lines(operation, _FILING_EDITION, _resolved_inputs(operation, _FILING_EDITION, lease))
 
     assert len(lines) == 5
     assert sorted(_type_2_kinds(lines)) == ["D", "D", "D", "I"]
@@ -161,8 +168,11 @@ def test_a_recorded_lease_files_one_inmueble_record() -> None:
     assert inmueble[115:140] == "9872023VH5797S0001WX".ljust(25)
 
 
-def test_the_calculation_grade_edition_refuses_a_filing_export() -> None:
-    edition = _CALCULATION_GRADE_EDITION
+def test_the_historical_filing_edition_exports_without_inmueble_records(operation: PinnedAuthorityOperation) -> None:
+    edition = _HISTORICAL_FILING_EDITION
 
-    with pytest.raises(RegistryValidationError, match=r"'calculation' authority grade.*'filing' snapshot authority"):
-        _fichero_lines(edition, _resolved_inputs(edition))
+    lines = _fichero_lines(operation, edition, _resolved_inputs(operation, edition))
+
+    assert len(lines) == 3
+    assert lines[0].startswith("13472024")
+    assert _type_2_kinds(lines) == ["D", "D"]

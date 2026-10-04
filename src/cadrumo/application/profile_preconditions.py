@@ -23,7 +23,7 @@ from ..core.operator_action_enums import (
 )
 from ..core.profile_session import ProfileSessionRefusalReason
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from .operator_actions.preconditions import conditionality_for_binding, no_action_precondition_verdict
+from .operator_actions.preconditions import no_action_precondition_verdict
 
 
 class ProfilePreconditionCondition(StrEnum):
@@ -107,38 +107,6 @@ def inspect_active_profile_precondition(
         argument_bindings=(_missing_argument("name"),),
         missing_argument_names=("name",),
         conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
-    )
-
-
-def inspect_filing_taxpayer_identity_precondition(
-    *,
-    declared_tax_id: str,
-    profile_name: str | None,
-) -> PreconditionVerdict | None:
-    """Return the profile-edit verdict when filing identity is undeclared."""
-    if declared_tax_id:
-        return None
-
-    condition_id = ProfilePreconditionCondition.TAX_ID_DECLARED.value
-    binding = _verdict_context_argument("profile_name", profile_name)
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            _evidence(
-                condition_id=condition_id,
-                evidence_id=ProfilePreconditionEvidence.TAXPAYER_IDENTITY.value,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values={
-                    "declared_tax_id_present": False,
-                    "missing_selector": "tax.id",
-                    "profile_name_available": profile_name is not None,
-                },
-            ),
-        ),
-        action=ActionReference(action_id="operator.profile.edit"),
-        argument_bindings=(binding,),
-        missing_argument_names=("profile_name",) if binding.status is ActionArgumentStatus.MISSING else (),
-        conditionality=conditionality_for_binding(binding),
     )
 
 
@@ -300,18 +268,6 @@ def _missing_argument(argument_name: str) -> ActionArgumentBinding:
     )
 
 
-def _verdict_context_argument(argument_name: str, value: str | None) -> ActionArgumentBinding:
-    if value is None:
-        return _missing_argument(argument_name)
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.RESOLVED,
-        value=value,
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key=argument_name,
-    )
-
-
 def _evidence(
     *,
     condition_id: str,
@@ -334,7 +290,6 @@ __all__ = [
     "ProfileSelectionFailure",
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
-    "inspect_filing_taxpayer_identity_precondition",
     "profile_deletion_requires_logout_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",

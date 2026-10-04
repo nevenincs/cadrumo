@@ -12,14 +12,13 @@ from ..operations.access_resolution import (
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
-    OperationAccessRequest,
     ResolvedOperationAccess,
     bind_operation_access_profile,
     with_commit_action,
 )
 from ..operations.models import OperationRequest
 from ..operations.profile_guard import require_access_request_payload
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode
+from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessRequest
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 

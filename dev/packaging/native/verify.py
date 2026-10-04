@@ -11,12 +11,13 @@ from dev._paths import REPO_ROOT
 from .layout import backend, load_layout
 
 
-def _verification_destination(
+def verification_destination(
     destination: Path | None,
     build_root: Path,
     *,
     repository_root: Path = REPO_ROOT,
 ) -> Path:
+    """Resolve a fresh verification root within the declared caller boundaries."""
     candidate = destination or Path("verification") / f"package-{uuid4().hex}"
     if destination is not None and candidate.is_absolute():
         resolved = candidate.resolve()

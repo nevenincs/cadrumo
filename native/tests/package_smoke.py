@@ -65,7 +65,7 @@ require(
 )
 authority_root = configured_authority_root()
 if authority_root is None:
-    raise AssertionError("Packaged authority root is not configured")
+    raise AssertionError("Bundled authority root is unavailable")
 require_authority_store_available(authority_root / "authority.current.json")
 runpy.run_path(str(Path(__file__).with_name(manifest["layout"]["smoke_test"])))
 with pikepdf.Pdf.new() as document:

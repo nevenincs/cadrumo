@@ -23,7 +23,7 @@ Core types:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, Literal, Protocol, Self
+from typing import TYPE_CHECKING, Literal, Protocol, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -53,9 +53,6 @@ from .search.installed_workbench import (
 from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
-
-_AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
-_AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
 
 if TYPE_CHECKING:

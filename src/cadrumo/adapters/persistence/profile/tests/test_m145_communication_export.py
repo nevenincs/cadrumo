@@ -47,6 +47,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark
 
 def _field_values(**overrides: str) -> dict[str, str]:
     values = {
+        # Principal-page input omits the optional marker; DR145 row 2 renders
+        # that absence as a blank wire slot. A declared marker must be C.
         "perceptor.nif": "12345678Z",
         "perceptor.primer-apellido": "Garcia",
         "perceptor.segundo-apellido": "Lopez",
@@ -115,6 +117,7 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(
     assert result.source_refs == tuple(sorted(str(ref) for ref in resolved.layout.source_refs))
     assert result.payload.startswith(b"<T145010>")
     assert result.payload.endswith(b"</T145010>")
+    assert result.payload[9:10] == b" "
     assert _payload_slice(result.payload, nif) == b"12345678Z"
     assert first_surname.length is not None
     assert _payload_slice(result.payload, first_surname) == b"Garcia" + (b" " * (first_surname.length - 6))
@@ -283,10 +286,15 @@ def test_a_page_indicator_that_validates_also_exports(
 ) -> None:
     indicator = _resolved_layout().fields_by_id["modelo-145-dr-02-page-complementaria"]
 
+    field_values = _field_values(**overrides)
+    if _PAGE_INDICATOR not in overrides:
+        # Prove genuine input absence alongside the literal blank wire oracle.
+        assert _PAGE_INDICATOR not in field_values
+
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values(**overrides)),
+            M145CommunicationCreateCommand(communication_year=2026, field_values=field_values),
             bucket_id=runtime.bucket_id,
             ports=ports,
             operation=operation,

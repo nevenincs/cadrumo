@@ -358,8 +358,7 @@ def build_pipeline_health_report(
             revision yet.
         reports_by_revision_id: Mapping of ``calculation_revision_id`` to its
             :class:`~VerificationReport` rows, sorted
-            oldest-first (the shape :func:`~application.modelo.filing_actions.list_verification_reports`
-            returns). The latest (last) report is used.
+            oldest-first by run time. The latest (last) report is used.
 
     Returns:
         A :class:`PipelineHealthReport` with one :class:`ModeloHealthRow` per

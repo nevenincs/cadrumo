@@ -115,7 +115,7 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     situacion_inmueble: SituacionInmueble | None = None
-    referencia_catastral: str | None = None
+    referencia_catastral: str | None = Field(default=None, max_length=25)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

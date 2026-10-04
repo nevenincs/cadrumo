@@ -13,7 +13,8 @@ if TYPE_CHECKING:
     from .runtime_catalogues import PublishedIvaPlaceOfSupplyRule, RuntimeRegistryCatalogues
 
 
-def _require_place_of_supply_grounding(rule: PublishedIvaPlaceOfSupplyRule) -> None:
+def require_place_of_supply_grounding(rule: PublishedIvaPlaceOfSupplyRule) -> None:
+    """Validate the legal grounding and validity window of a place-of-supply rule."""
     if len(rule.legal_references) != len(set(rule.legal_references)):
         raise RegistryValidationError(f"place-of-supply rule {rule.rule_id!r} repeats legal references")
     if rule.legal_basis_exempt:
@@ -36,7 +37,8 @@ def _require_grounded_place_of_supply(rule: PublishedIvaPlaceOfSupplyRule) -> No
         raise RegistryValidationError("place-of-supply establishing reference must be among its legal refs")
 
 
-def _require_catalogue_record_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_catalogue_record_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Require catalogue mapping keys to match each record identity."""
     collections = (
         (catalogues.countries, "code"),
         (catalogues.territory_carve_outs, "code"),
@@ -53,26 +55,30 @@ def _require_record_keys(records: Mapping[str, object], identity_name: str) -> N
             raise RegistryValidationError(f"runtime catalogue key {key!r} does not match record identity")
 
 
-def _require_postal_territory_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_postal_territory_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Require each postal-territory key to belong to its declared prefixes."""
     for prefix, record in catalogues.spanish_postal_territories.items():
         if prefix not in record.postal_prefixes:
             raise RegistryValidationError(f"postal-territory key {prefix!r} is not declared by its record")
 
 
-def _require_tax_catalogue_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_tax_catalogue_keys(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Require tax catalogue keys to match category and rule identities."""
     if any(key != record.category for key, record in catalogues.iva_regulations.items()):
         raise RegistryValidationError("IVA regulation key does not match its category")
     if any(key != record.rule_id for key, record in catalogues.iva_place_of_supply.items()):
         raise RegistryValidationError("place-of-supply key does not match its rule id")
 
 
-def _require_unique_country_alpha3(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_unique_country_alpha3(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Refuse repeated alpha-3 codes across the country vocabulary."""
     alpha3 = tuple(record.alpha3 for record in catalogues.countries.values())
     if len(alpha3) != len(set(alpha3)):
         raise RegistryValidationError("country vocabulary repeats an alpha-3 code")
 
 
-def _require_unique_country_names(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_unique_country_names(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Refuse blank country names or names shared by different countries."""
     names: dict[str, str] = {}
     for code, record in catalogues.countries.items():
         for name in record.names:
@@ -84,7 +90,8 @@ def _require_unique_country_names(catalogues: RuntimeRegistryCatalogues) -> None
                 raise RegistryValidationError(f"printed country name {name!r} belongs to multiple countries")
 
 
-def _require_complete_recargo_bands(catalogues: RuntimeRegistryCatalogues) -> None:
+def require_complete_recargo_bands(catalogues: RuntimeRegistryCatalogues) -> None:
+    """Require contiguous recargo bands from zero through an open-ended tail."""
     ordered_bands = sorted(catalogues.recargo_bands.values(), key=lambda band: band.min_completed_months)
     if not ordered_bands:
         return

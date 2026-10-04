@@ -92,7 +92,7 @@ async def _await_workbench_refresh(pilot: Any, *, binding: TuiOperationBinding) 
         raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
 
 
-async def _open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
+async def open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
     """Open the selected declaration in a fresh workbench, whose notice starts empty, once it has read its form."""
     await _close_modals(pilot)
     await _open_declarations(pilot)

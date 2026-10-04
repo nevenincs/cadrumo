@@ -1668,7 +1668,8 @@ def setup(app):
         """
         if _skip_generated_output_for_i18n("legal_reference"):
             return
-        from dev.docs.legal_reference import LEGAL_REFERENCE_DIR, generate_legal_reference
+        from dev.docs.legal_reference import generate_legal_reference
+        from dev.docs.legal_reference_routing import LEGAL_REFERENCE_DIR
 
         if not _build_reads(LEGAL_REFERENCE_DIR):
             return

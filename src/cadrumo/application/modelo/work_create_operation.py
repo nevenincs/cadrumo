@@ -364,6 +364,7 @@ def build_modelo_work_create_definition(factory: ActiveWorkLifecyclePortsFactory
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         refusal_detail_codes=frozenset({MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE}),
+        public_error_detail=True,
     )
 
 

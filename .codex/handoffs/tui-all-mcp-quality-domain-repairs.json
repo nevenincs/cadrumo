@@ -1,0 +1,222 @@
+{
+  "feature": "tui-all-mcp-integration",
+  "step": "S05",
+  "source_base": "4d3455f47dfc87a24e9b88a3cb4338789a539de8",
+  "status": "owned code frozen; focused verification passed; root final gates and refreshed shipping artifacts pending",
+  "symbols": [
+    {
+      "symbol": "resolve_m347_clave_c_declaration_threshold",
+      "path": "src/cadrumo/domain/calculations/registry/m347_threshold.py",
+      "status": "superseded",
+      "replacement": "resolve_m347_threshold_buckets(...).bucket_of(\"C\").floor_fact",
+      "rationale": "The scalar convenience resolver has test-only callers. Runtime invoice binding already consumes the typed complete clave bucket partition, retaining its distinct scalar floor fact and statutory provenance. All C-floor tests use that real owner; no floor value or authority policy changed."
+    },
+    {
+      "symbol": "next_business_day",
+      "path": "src/cadrumo/domain/deadlines/festivos.py",
+      "status": "superseded",
+      "replacement": "shift_deadline(...).adjusted_close_date; is_business_day for single-calendar year refusal",
+      "rationale": "Test-only single-calendar date projection retired. Production shift retains its 14-day bounded walk, per-year calendar selection, explicit coverage and refusal for an unpublished next year. Existing walk cases now traverse that production path; isolated calendar-year classification refusal remains covered."
+    },
+    {
+      "symbol": "resolve_filing_closes_on",
+      "path": "src/cadrumo/domain/deadlines/plazo.py",
+      "status": "superseded",
+      "replacement": "resolve_filing_window(...), with explicit None refusal/absence and .closes_on projection",
+      "rationale": "Production calendar/workflow/effective-deadline callers already consume the typed window. Tests now assert window presence before projecting the closing date; unknown-modelo, support-floor, future-window nonborrowing and M210 scoped-window refusals are preserved."
+    },
+    {
+      "symbol": "mint_asset_ref",
+      "path": "src/cadrumo/domain/foreign_assets/register.py",
+      "status": "superseded",
+      "replacement": "Caller-supplied persisted M720AssetRef validated by ForeignAssetRegisterEntry / ForeignAssetDeclarationEntry",
+      "rationale": "No production minting/registration action calls this test-only UUID formatter. Production register/aggregation models retain explicit opaque identity, lexical shape, unique-reference and declaration-join invariants. Fixtures declare deterministic identities directly; the entropy-helper test is replaced with real typed-entry refusal cases for noncanonical identities. No random-identity generation claim added."
+    },
+    {
+      "symbol": "load_recargo_rate_table",
+      "path": "src/cadrumo/domain/iva/recargo_equivalencia.py",
+      "status": "superseded",
+      "replacement": "PinnedAuthorityOperation.governed_fact metadata; recargo_rate_record_for_applied_rate for supported date/selector windows",
+      "rationale": "The table-wide projection was used only by tests. Historical variants still all undergo legal-reference assertions through the pinned fact metadata owner; supported windows resolve through the exact temporal authority lookup. A test initially queried1993 outside the publication support envelope; its scope was corrected to intersect each dated variant with the actual support envelope, preserving refusal rather than relaxing production admission."
+    },
+    {
+      "symbol": "recargo_rate_for_applied_rate",
+      "path": "src/cadrumo/domain/iva/recargo_equivalencia.py",
+      "status": "superseded",
+      "replacement": "recargo_rate_record_for_applied_rate(...).recargo_rate after an explicit non-None check",
+      "rationale": "Runtime invoice IVA binding already consumes the provenance-bearing record. Scalar-only tests now use that record, retaining independent legal rate examples, zero-versus-absence, dated selection and legal provenance."
+    }
+  ],
+  "paths": [
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py",
+      "before_sha256": "165d69fb40e60ada8b652ecb2efedb667dfcf69367098adc7f726a4920bc07ce",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "c19617df5c2bf6a3f3af93f4df0ee1270eb609a16dc968e7837e2006091bdf8e",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/application/aggregation/tests/test_recargo_rate_advisory.py",
+      "before_sha256": "7993e2ca1f9ec4fd3e5ee1540b7205119388b300fc89d3757565d2ef8e4dfa05",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "5a7b0d41dc53154ebe576070a8e490c312837d204e246d4a3384c03176ce8726",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/tests/test_modelo_calculate_recargo_notice.py",
+      "before_sha256": "31f198d2216db6b381c9b4350521a394b8ada4d948280a56630d7eb67eaf4061",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "03ae4897b11aac416284b1dfc973e6c0f894750ca11842623a7405114899b0b2",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/tests/test_work_plazo_m303_recargo.py",
+      "before_sha256": "bc57af28e1121def01606775ccbe5c04a75cdf9006aef62a7c73faaac8e13802",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "ed5bd371dba94cf0c9ed4dde015c7ae03d7d7ee89abb22ffca9ae8629dd0f2e9",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/application/overview/tests/test_calendar_deadline_domain_delegation.py",
+      "before_sha256": "ed0f8ad5cd5339122b58097e6239dfc90ba9a662283e1910bb2a97ab866212e5",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "dcd62cf93d135cb835da3240d3d9e4e01c26b132684d6e8d7bccf5380e9dfbbc",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/m347_threshold.py",
+      "before_sha256": "fe621ff057ba2b75a0ce178ab9ac43f7fc48212991d306fe6e09b12f7c1294bf",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "2799aa3a0c37e7928843dd2ff8d202daaa4dfdcee12363eade9bfba536234a69",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py",
+      "before_sha256": "67dc8289a5cfe9cedd342bb112d856f9d16e9cee0d4d058f0c94368a43d9b068",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "71b3abef20eca68cd43a210ff80af1fd5b7bbf609ed0cfcd620a6cf9c2a5f784",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py",
+      "before_sha256": "912ced314ab23804de4f3079171e954d5781a5457850b8f8d3618be35222bd9f",
+      "before_hash_kind": "canonical committed blob",
+      "after_sha256": "80d1b9f6513c957ff4d3d1a7bb9357dc7da40bd068ad0ebce321d70c4810e822",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py",
+      "before_sha256": "b8dbffd9e426c6ade6fcccd106bb0f1f66c5a1a0b27a2dd81ae2bd4032b5aa49",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "e8fc85df9b714f3c5639a48c4209bf3d441cea91a323e9ec6821a2c94965b3e0",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/deadlines/festivos.py",
+      "before_sha256": "e86b0020ae46c01dc34e72620afd87e85227606d3772eda909e173ac55a92a4d",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "bd882f47d7adbc2b97ce8a4a93ffaecb4b8e925a9089c3fca1cf946eeddfa693",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/deadlines/plazo.py",
+      "before_sha256": "31234517f5b84e87b365cd15490eaad6e6d2cb05c3165644672af397b325567e",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "b052dead559b98d91ae89b8242430daf0c3455b381ce4c082e47c9d3ddd880bb",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py",
+      "before_sha256": "8c6fb88bec9538889d33ff8db72207a7c203e88db35f51bd0075328b320c0ddc",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "294bfcc44fb0311b0d45b9f8d486ea898cf89150b021890e00d0f7ba4f7a383f",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/deadlines/tests/test_festivos.py",
+      "before_sha256": "8f3cf05a5d12a4ec51867b34ef57ac13c73b18ec2a4d2ccfbe946d03b7e96e5f",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "358f1460dbc71a87d36e9d342f235ef1713f95dabbdcf04f3d10e988423bfc56",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/foreign_assets/register.py",
+      "before_sha256": "ac04228bf65e6231e8a46000a8064b8edafae6f244e7ed31827e71c453259f4d",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "2cedb2f715889d558aa08d101cd13843d69356705b40fb549a8cdcd84d95f8de",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/foreign_assets/tests/test_register.py",
+      "before_sha256": "2adeb7526197746a012dc8017dbe720306bf58cb191707c2e84df78641b57946",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "e86803a281999c4c62961d08fa49cfa02ac453e29e5f76b66ce7c26c8eb0e1a5",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/recargo_equivalencia.py",
+      "before_sha256": "9eac2f7e2ec8f2dee5e0a7967e8c8f22ebbd64ea87a86f3067c98c31c79d850b",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "13cce8ab02ca277d8a02c0bf2b930c9f044f3984797801720fb027c8554ba78e",
+      "owner": "history domain-quality worker"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py",
+      "before_sha256": "c8cdb78523eb09ff87be99ba1982d6bc2956a7bc090cd65f5111cca308344ed8",
+      "before_hash_kind": "physical bytes captured before edit",
+      "after_sha256": "e56c3240d381e4fdc4c3591c65cce59590cd8528974edf89f505e037d5bcc30d",
+      "owner": "history domain-quality worker"
+    }
+  ],
+  "coordinated_other_owner_callers": [
+    {
+      "path": "src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py",
+      "owner": "baseline",
+      "after_sha256": "21c14823aa41f1839caa2c07fefa03cfb3e1f9a3b439a477d51d9dc8651f15ba"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_calculate_recargo_notice.py",
+      "owner": "baseline",
+      "after_sha256": "e4d4ac584f3172c13c6fc7741a5cb1cf6c2c1facb520c5ffac82f2c6e8fe7b45"
+    }
+  ],
+  "verification": {
+    "pure_domain_and_application": "299 passed in7.58s",
+    "run_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T231910.268668Z-pytest-66316-5ee00de6/run.log",
+    "recargo_focused": "8 passed in8.79s after supported-window correction",
+    "ruff_check": "pass17 owned paths",
+    "ruff_format_check": "pass17 owned paths",
+    "ty_check": "pass17 owned paths",
+    "diff_check": "pass",
+    "remaining_retired_symbol_references_in_src_dev": "zero",
+    "exact_pytest_command": "uv run --no-sync pytest -o addopts='' -n0 -m 'unit and not os_keychain and not external_tool' src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py src/cadrumo/domain/deadlines/tests/test_festivos.py src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py src/cadrumo/domain/foreign_assets/tests/test_register.py src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py src/cadrumo/application/overview/tests/test_calendar_deadline_domain_delegation.py src/cadrumo/application/modelo/tests/test_modelo_calculate_recargo_notice.py src/cadrumo/application/modelo/tests/test_work_plazo_m303_recargo.py src/cadrumo/application/aggregation/tests/test_recargo_rate_advisory.py"
+  },
+  "pending": [
+    "Root final configured source-quality gates",
+    "Encrypted foreign-asset persistence fixture replay after serial runtime lane release",
+    "Fresh product wheel and owning Windows bundle after all source-quality repairs stabilize",
+    "Canonical test-windows after baseline releases serial414 lane"
+  ],
+  "artifact_proof_scope": "Previously green Windows artifacts91095c/manifestb04d remain preserved for source4d before these domain repairs; no current-source final artifact claim.",
+  "checkpoint_paths": [
+    "src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py",
+    "src/cadrumo/application/aggregation/tests/test_recargo_rate_advisory.py",
+    "src/cadrumo/application/modelo/tests/test_modelo_calculate_recargo_notice.py",
+    "src/cadrumo/application/modelo/tests/test_work_plazo_m303_recargo.py",
+    "src/cadrumo/application/overview/tests/test_calendar_deadline_domain_delegation.py",
+    "src/cadrumo/domain/calculations/registry/m347_threshold.py",
+    "src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py",
+    "src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py",
+    "src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py",
+    "src/cadrumo/domain/deadlines/festivos.py",
+    "src/cadrumo/domain/deadlines/plazo.py",
+    "src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py",
+    "src/cadrumo/domain/deadlines/tests/test_festivos.py",
+    "src/cadrumo/domain/foreign_assets/register.py",
+    "src/cadrumo/domain/foreign_assets/tests/test_register.py",
+    "src/cadrumo/domain/iva/recargo_equivalencia.py",
+    "src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py",
+    ".codex/handoffs/tui-all-mcp-quality-domain-repairs.json",
+    ".codex/handoffs/tui-all-mcp-later-native-packaging-reconciliation.json"
+  ]
+}

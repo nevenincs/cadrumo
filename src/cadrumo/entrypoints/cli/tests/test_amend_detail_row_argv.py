@@ -29,9 +29,9 @@ import typer
 import yaml
 
 from ....application.modelo.edit_apply_row_contracts import Modelo232VinculadaRowWireV1
-from .._command_parameter_contracts import OptionSpec
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
+from ..command_parameter_contracts import OptionSpec
 from ..command_spec import CommandSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

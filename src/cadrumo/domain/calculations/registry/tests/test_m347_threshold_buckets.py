@@ -34,7 +34,6 @@ from ..m347_threshold import (
     M347ThresholdBuckets,
     m347_declarable_party_buckets,
     m347_threshold_decimal,
-    resolve_m347_clave_c_declaration_threshold,
     resolve_m347_counterparty_annual_threshold,
     resolve_m347_threshold_buckets,
 )
@@ -116,7 +115,9 @@ def _general_floor() -> Decimal:
 
 
 def _clave_c_floor() -> Decimal:
-    return m347_threshold_decimal(resolve_m347_clave_c_declaration_threshold(effective_date=_FILING_2025))
+    bucket = resolve_m347_threshold_buckets(effective_date=_FILING_2025).bucket_of("C")
+    assert bucket.floor_fact is not None
+    return m347_threshold_decimal(bucket.floor_fact)
 
 
 def test_the_scenario_amounts_straddle_the_published_floors() -> None:

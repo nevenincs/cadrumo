@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import date
-from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ..core.errors.hierarchy import InternalInvariantError
 from ..core.time.utc import UtcInstant
@@ -65,17 +65,11 @@ from .overview.home import (
 from .user_profile.projections import projection_for_taxpayer
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCalendarWork, WorkbenchCaptureMemory
 
-WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
-
-_AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
-_AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
-
-
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-def _declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
+def declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
     """Return the profile's own NIF, never the schema's placeholder default."""
     declared = raw_values.get("identity.tax_id")
     if not isinstance(declared, str) or not declared.strip():
@@ -83,10 +77,11 @@ def _declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
     return declared.strip()
 
 
-def _declarations_observation(
+def declarations_observation(
     zone: DeclarationsWorkspaceZone,
     observed_at: UtcInstant,
 ) -> DeclarationsWorkspaceZoneObservationV1:
+    """Wrap the measured declarations zone with its observation time."""
     return DeclarationsWorkspaceZoneObservationV1(
         zone=zone,
         availability=DeclarationsWorkspaceAvailability.AVAILABLE,
@@ -138,7 +133,7 @@ _TAXPAYER_MODEL_UNDECLARED: Final = "workbench.calendar.taxpayer_model_undeclare
 
 
 @dataclass(frozen=True, slots=True)
-class _WorkbenchCalendarInputs:
+class WorkbenchCalendarInputs:
     """The calendar-derived Home and Declarations inputs, or why there are none.
 
     ``refusal`` is set exactly when the calendar could not be built at all;
@@ -191,17 +186,18 @@ class RevisionedCatalogueStore(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
-class _CalendarMemo:
+class CalendarMemo:
     """Where one capture may reuse its calendar work, and under which input identity."""
 
     memory: WorkbenchCaptureMemory | None
     key: WorkbenchCalendarMemoKey
 
     def reuse(self, build: Callable[[], WorkbenchCalendarWork]) -> WorkbenchCalendarWork:
+        """Reuse this generation calendar work when capture memory is available."""
         return build() if self.memory is None else self.memory.calendar.reuse(self.key, build)
 
 
-def _read_workbench_calendar_inputs(
+def read_workbench_calendar_inputs(
     *,
     record: UserProfileRecord,
     raw_values: Mapping[str, str],
@@ -210,10 +206,10 @@ def _read_workbench_calendar_inputs(
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
-    memo: _CalendarMemo,
+    memo: CalendarMemo,
     invoice_source_ports: InvoiceSourceResolverPorts,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
-) -> _WorkbenchCalendarInputs:
+) -> WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
 
     A profile the taxpayer projection refuses is an incomplete profile, not a
@@ -234,7 +230,7 @@ def _read_workbench_calendar_inputs(
         )
     except (ProfileError, UserProfileValidationError):
         refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
-        return _WorkbenchCalendarInputs(
+        return WorkbenchCalendarInputs(
             agenda_evidence_state=refusal,
             declarations_calendar=_refused_declarations_calendar(refusal, as_of=as_of, observed_at=observed_at),
             agenda=None,
@@ -264,7 +260,7 @@ def _read_workbench_calendar_inputs(
         # The schedule observation already says why the calendar is empty; the
         # agenda derived from the same missing model must say so too rather
         # than read as a verified absence of dates.
-        return _WorkbenchCalendarInputs(
+        return WorkbenchCalendarInputs(
             agenda_evidence_state=evidence.aeat_state,
             declarations_calendar=declarations_calendar,
             agenda=None,
@@ -274,7 +270,7 @@ def _read_workbench_calendar_inputs(
             ),
             refusal=None,
         )
-    return _WorkbenchCalendarInputs(
+    return WorkbenchCalendarInputs(
         agenda_evidence_state=evidence.aeat_state,
         declarations_calendar=declarations_calendar,
         agenda=agenda,
@@ -337,7 +333,8 @@ def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
     )
 
 
-def _unbound_calendar_aeat_evidence() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+def unbound_calendar_aeat_evidence() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+    """Report an unavailable AEAT calendar reader without inventing evidence."""
     return CalendarEvidenceReadOutcome(
         state=HomeZoneState(
             availability=HomeAvailability.NEVER_CAPTURED,
@@ -355,7 +352,7 @@ def _build_workbench_calendar_inputs(
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
-    memo: _CalendarMemo,
+    memo: CalendarMemo,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
@@ -372,7 +369,7 @@ def _build_workbench_calendar_inputs(
                     ),
                 ),
             ),
-            aeat=aeat_evidence or _unbound_calendar_aeat_evidence(),
+            aeat=aeat_evidence or unbound_calendar_aeat_evidence(),
             expected_tax_id=taxpayer.tax_id,
         )
         addresses = {

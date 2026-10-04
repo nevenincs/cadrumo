@@ -8,12 +8,49 @@ use std::{
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, RecvTimeoutError, SyncSender, TryRecvError, TrySendError},
     },
-    thread,
-    time::Duration,
+    thread::{self, JoinHandle},
+    time::{Duration, Instant},
 };
 
 const CHUNK: usize = 8192;
 const QUEUE: usize = 8;
+const STOP_TIMEOUT: Duration = Duration::from_secs(3);
+
+#[derive(Default)]
+struct Workers {
+    reader: Option<JoinHandle<()>>,
+    writer: Option<JoinHandle<()>>,
+    closer: Option<JoinHandle<()>>,
+}
+
+impl Workers {
+    fn reap_finished(&mut self) -> Result<bool, String> {
+        for worker in [&mut self.reader, &mut self.writer, &mut self.closer] {
+            if worker.as_ref().is_some_and(JoinHandle::is_finished) {
+                worker
+                    .take()
+                    .ok_or("Terminal worker ownership is missing")?
+                    .join()
+                    .map_err(|_| "Terminal worker panicked")?;
+            }
+        }
+        Ok(self.reader.is_none() && self.writer.is_none() && self.closer.is_none())
+    }
+
+    fn join_until(&mut self, deadline: Instant) -> Result<(), String> {
+        loop {
+            if self.reap_finished()? {
+                return Ok(());
+            }
+            if Instant::now() >= deadline {
+                return Err(
+                    "Terminal workers have not settled before the shutdown deadline".into(),
+                );
+            }
+            thread::sleep(Duration::from_millis(5));
+        }
+    }
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,6 +72,9 @@ pub struct Session {
     child: Box<dyn Child + Send + Sync>,
     output: Receiver<ReadEvent>,
     stopped: Arc<AtomicBool>,
+    writer_stopped: Arc<AtomicBool>,
+    workers: Workers,
+    cleanup_error: Option<String>,
     exit_code: Option<u32>,
 }
 
@@ -76,8 +116,9 @@ impl Session {
         let (input_sender, input_receiver) = mpsc::sync_channel::<Vec<u8>>(QUEUE);
         let write_error = Arc::new(Mutex::new(None));
         let write_failure = write_error.clone();
-        let writer_stop = stopped.clone();
-        thread::spawn(move || {
+        let writer_stopped = Arc::new(AtomicBool::new(false));
+        let writer_stop = writer_stopped.clone();
+        let writer_worker = thread::spawn(move || {
             while !writer_stop.load(Ordering::Acquire) {
                 match input_receiver.recv_timeout(Duration::from_millis(50)) {
                     Ok(bytes) => {
@@ -94,7 +135,7 @@ impl Session {
             }
         });
         let stop = stopped.clone();
-        thread::spawn(move || {
+        let reader_worker = thread::spawn(move || {
             let mut buffer = [0; CHUNK];
             loop {
                 let mut event = match reader.read(&mut buffer) {
@@ -128,6 +169,13 @@ impl Session {
             child,
             output,
             stopped,
+            writer_stopped,
+            workers: Workers {
+                reader: Some(reader_worker),
+                writer: Some(writer_worker),
+                closer: None,
+            },
+            cleanup_error: None,
             exit_code: None,
         })
     }
@@ -176,33 +224,78 @@ impl Session {
             if self.exit_code.is_some() {
                 // ConPTY signals EOF only after its master closes. Close on a separate
                 // thread while polling drains the bounded output queue.
-                if let Some(master) = self.master.take() {
-                    thread::spawn(move || drop(master));
-                }
+                self.close_master();
             }
         }
+        let joined = self.workers.reap_finished()?;
         // Drain the PTY before reporting exit so the final screen is preserved.
         Ok(Output {
             bytes,
-            exit_code: if eof { self.exit_code } else { None },
+            exit_code: if eof && joined { self.exit_code } else { None },
             error,
         })
     }
 
-    pub fn stop(&mut self) {
-        self.stopped.store(true, Ordering::Release);
-        if self.child.try_wait().ok().flatten().is_none() {
-            let _ = self.child.kill();
+    fn close_master(&mut self) {
+        self.writer_stopped.store(true, Ordering::Release);
+        if let Some(master) = self.master.take() {
+            self.workers.closer = Some(thread::spawn(move || drop(master)));
         }
-        let _ = self.child.wait();
+    }
+
+    fn settle(&mut self, deadline: Instant) -> Result<(), String> {
+        self.stopped.store(true, Ordering::Release);
+        self.writer_stopped.store(true, Ordering::Release);
+        if self.exit_code.is_none() {
+            self.exit_code = self
+                .child
+                .try_wait()
+                .map_err(|e| e.to_string())?
+                .map(|status| status.exit_code());
+        }
+        if self.exit_code.is_none() {
+            self.child.kill().map_err(|e| e.to_string())?;
+        }
         // The reader keeps draining (discarding after cancellation) while ConPTY closes.
-        self.master.take();
+        self.close_master();
+        while self.exit_code.is_none() {
+            self.exit_code = self
+                .child
+                .try_wait()
+                .map_err(|e| e.to_string())?
+                .map(|status| status.exit_code());
+            if self.exit_code.is_none() {
+                if Instant::now() >= deadline {
+                    return Err("Terminal child has not exited before the shutdown deadline".into());
+                }
+                thread::sleep(Duration::from_millis(5));
+            }
+        }
+        self.workers.join_until(deadline)
+    }
+
+    pub fn stop(&mut self) -> Result<(), String> {
+        match self.settle(Instant::now() + STOP_TIMEOUT) {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                let primary = self.cleanup_error.get_or_insert_with(|| error.clone());
+                if *primary == error {
+                    Err(error)
+                } else {
+                    Err(format!("{primary}; cleanup retry: {error}"))
+                }
+            }
+        }
     }
 }
 
 impl Drop for Session {
     fn drop(&mut self) {
-        self.stop();
+        if let Err(error) = self.stop() {
+            // Normal window closure retains the Session on failure. Unexpected host
+            // destruction cannot establish joined cleanup; do not report it as success.
+            eprintln!("Terminal teardown did not settle: {error}");
+        }
     }
 }
 
@@ -211,11 +304,22 @@ pub struct TerminalState {
     pub session: Mutex<Option<Session>>,
 }
 
+impl TerminalState {
+    pub fn stop(&self) -> Result<(), String> {
+        let mut owned = self.session.lock().map_err(|e| e.to_string())?;
+        if let Some(session) = owned.as_mut() {
+            session.stop()?;
+        }
+        owned.take();
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[cfg(feature = "live-package-tests")]
-    use std::{path::PathBuf, time::Instant};
+    use std::path::PathBuf;
 
     #[cfg(feature = "live-package-tests")]
     fn wait_for(session: &mut Session, needle: &str) -> Vec<u8> {
@@ -247,6 +351,38 @@ mod tests {
         assert!(size(0, 24).is_err());
         assert!(size(80, 1001).is_err());
         assert!(size(132, 40).is_ok());
+    }
+
+    #[test]
+    fn unfinished_worker_stays_owned_after_deadline_and_can_be_joined_on_retry() {
+        let (release, wait) = mpsc::channel();
+        let worker = thread::spawn(move || wait.recv().unwrap());
+        let mut workers = Workers {
+            reader: Some(worker),
+            ..Workers::default()
+        };
+        let error = workers.join_until(Instant::now()).unwrap_err();
+        assert!(error.contains("shutdown deadline"));
+        assert!(workers.reader.is_some(), "timed-out worker was detached");
+        release.send(()).unwrap();
+        workers
+            .join_until(Instant::now() + Duration::from_secs(1))
+            .unwrap();
+        assert!(workers.reader.is_none());
+    }
+
+    #[test]
+    fn panicked_worker_is_reported_as_cleanup_failure() {
+        let mut workers = Workers {
+            writer: Some(thread::spawn(|| panic!("controlled worker failure"))),
+            ..Workers::default()
+        };
+        assert_eq!(
+            workers
+                .join_until(Instant::now() + Duration::from_secs(1))
+                .unwrap_err(),
+            "Terminal worker panicked",
+        );
     }
 
     #[cfg(feature = "live-package-tests")]
@@ -295,21 +431,23 @@ mod tests {
         .unwrap();
         wait_for(&mut blocked, "WAITING");
         let began = Instant::now();
-        blocked.stop();
+        blocked.stop().unwrap();
         assert!(began.elapsed() < Duration::from_secs(5));
         assert!(blocked.child.try_wait().unwrap().is_some());
+        assert!(blocked.workers.reap_finished().unwrap());
 
         let mut flood = Session::start(&launch, 80, 24, &["-u", "-c",
             "import time; print('FLOOD',flush=True); time.sleep(0.2); print('Z'*10000000,flush=True); time.sleep(120)"]).unwrap();
         wait_for(&mut flood, "FLOOD");
         thread::sleep(Duration::from_millis(500));
         let began = Instant::now();
-        flood.stop();
+        flood.stop().unwrap();
         assert!(
             began.elapsed() < Duration::from_secs(5),
             "full output queue blocked cleanup"
         );
         assert!(flood.child.try_wait().unwrap().is_some());
+        assert!(flood.workers.reap_finished().unwrap());
     }
 
     #[cfg(feature = "live-package-tests")]
@@ -325,7 +463,8 @@ mod tests {
         assert!(!output.is_empty());
         session.resize(100, 30).unwrap();
         session.input(b"\x1b[B\t").unwrap();
-        session.stop();
+        session.stop().unwrap();
         assert!(session.child.try_wait().unwrap().is_some());
+        assert!(session.workers.reap_finished().unwrap());
     }
 }

@@ -219,7 +219,9 @@ def _register_for(observations: tuple[ForeignAssetIngestObservation, ...]) -> Fo
     )
 
 
-def _m720_row(index: int, *, label: str, asset_class: str, country: str, valuation: str, acquired: str) -> dict:
+def _m720_row(
+    index: int, *, label: str, asset_class: str, country: str, valuation: str, acquired: str
+) -> dict[tuple[str, int], str | Decimal]:
     return {
         ("modelo-720-asset-row-asset-ref", index): _asset_ref(label),
         ("modelo-720-asset-row-valuation-event", index): "year_end",

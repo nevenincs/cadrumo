@@ -31,6 +31,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
 from ...domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...tests.fixtures.borrador import generate as borrador_fixtures
+from ...tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
 from ..adapter_composition import build_borrador_100_snapshot_repository
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -96,7 +97,6 @@ def _prepare_read(context: ConformanceFamilyContext) -> ConformancePreparation:
                 binding_count=2,
                 state=SnapshotLifecycleState.ACTIVE,
                 source_url=_SOURCE_URL,
-                # Sorted by binding id (application/operations/public_scalar.py:44).
                 binding_values=(
                     PublicNamedScalar(key="casilla.0505", value=PublicDecimal(decimal="1234.56")),
                     PublicNamedScalar(key="casilla.0545", value=PublicDecimal(decimal="0")),
@@ -115,9 +115,6 @@ def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
         expected_result=Borrador100QueryProjection(
             profile_id=context.profile_id,
             kind="list",
-            # The default list filter keeps only the active capture
-            # (application/live/borrador_100_contracts.py:36), and the agent
-            # summary withholds the source URL.
             rows=(
                 Borrador100QuerySummary(
                     snapshot_id=active.snapshot_id,
@@ -154,7 +151,6 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         result = outcome.resolve_result(Borrador100ImportProjection)
         assert result.profile_id == profile_id
         assert result.extraction_profile_id == profile.id
-        # The fixture prints every target casilla, so coverage is complete.
         assert Decimal(result.extraction_coverage.decimal) == Decimal(1)
         assert result.artefact_kind == "BORRADOR"
         assert result.source_pdf_sha256 == digest
@@ -164,8 +160,6 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         assert summary.period == PublicPeriod(filing_year=year, code=_ANNUAL)
         assert summary.binding_count == len(expected_values)
         assert summary.state is SnapshotLifecycleState.ACTIVE
-        # Provenance is the PDF digest, never the operator's path
-        # (application/live/borrador_100_import.py:43).
         assert summary.source_url == "file-import:sha256:" + digest
         (persisted,) = _service(context).list_snapshots(operation=context.operation)
         assert persisted.snapshot_id == summary.snapshot_id
@@ -194,11 +188,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     raise AssertionError(f"no borrador conformance scenario for {definition_id}")
 
 
-# Every definition is single-phase and publishes its own id
-# (application/live/borrador_100_operation.py:142,233).
 LIVE_BORRADOR_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        # Reads never write (borrador_100_operation.py:187).
         RegisteredExecutorConformanceCase(
             BORRADOR_100_READ_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
@@ -211,8 +202,6 @@ LIVE_BORRADOR_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationEffect.NONE,
             (BORRADOR_100_QUERY_OPERATION_DEFINITION_ID,),
         ),
-        # A local PDF import with a confirmed snapshot save settles UPDATED
-        # (borrador_100_operation.py:275-276).
         RegisteredExecutorConformanceCase(
             BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
@@ -221,4 +210,99 @@ LIVE_BORRADOR_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
+)
+
+
+def _retained_borrador_prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
+    profile = str(context.profile_id)
+    support = published_supported_filing_years()
+    assert support is not None
+    year = max(year for year in corpus_years() if year in support.years)
+    period = Period.from_year_and_code(year, "0A")
+    repository = build_borrador_100_snapshot_repository(bucket_id=profile)
+    service = Borrador100SnapshotService(bucket_id=profile, repository=repository)
+    if context.definition.definition_id == "live.borrador.100.import":
+        source = context.input_root / "borrador.pdf"
+        payload = (
+            Path(__file__).parents[2] / "tests" / "fixtures" / "borrador" / f"modelo_100_{year}.pdf"
+        ).read_bytes()
+        source.write_bytes(payload)
+        printed = corpus_casilla_values(year)
+        expected = {
+            f"casilla.{key}": value for key, value in printed.items() if key in {"0505", "0545", "0546", "0585", "0586"}
+        }
+
+        def verify(outcome: ConformanceOutcome) -> None:
+            result = outcome.resolve_result(Borrador100ImportProjection)
+            assert result.profile_id == context.profile_id and result.source_pdf_sha256 == sha256_hex(payload)
+            assert (
+                Decimal(result.extraction_coverage.decimal) == 1
+                and result.extraction_profile_id == "modelo-100-borrador-pdf"
+            )
+            assert (
+                result.blank_casillas == ()
+                and result.snapshot.source_url == f"file-import:sha256:{sha256_hex(payload)}"
+            )
+            stored = service.list_snapshots(operation=context.operation)
+            assert len(stored) == 1 and stored[0].snapshot_id == result.snapshot.snapshot_id
+            assert dict(stored[0].binding_values) == expected and str(source) not in stored[0].source_url
+
+        return ConformancePreparation(
+            profile_operation_subject(profile),
+            Borrador100ImportRequest(
+                profile_id=context.profile_id,
+                source_path=source,
+                filing_year=year,
+                period=PublicPeriod.from_period(period),
+            ),
+            verify=verify,
+        )
+    bindings = {"casilla.0505": Decimal("23000.50"), "casilla.0545": Decimal("1720.25")}
+    captured = datetime(2026, 4, 1, tzinfo=UTC)
+    snapshot = service.capture(
+        filing_year=year,
+        period=period,
+        captured_at=captured,
+        source_url="https://example.invalid/synthetic-borrador",
+        binding_values=bindings,
+        operation=context.operation,
+    )
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        projection_type = (
+            Borrador100QueryProjection
+            if context.definition.definition_id.endswith("query")
+            else Borrador100ReadProjection
+        )
+        result = outcome.resolve_result(projection_type)
+        assert result.profile_id == context.profile_id and result.snapshot is not None and (result.rows == ())
+        assert (
+            result.snapshot.snapshot_id == snapshot.snapshot_id
+            and result.snapshot.state is SnapshotLifecycleState.ACTIVE
+        )
+        assert result.snapshot.captured_at == captured and result.snapshot.binding_map() == bindings
+        if isinstance(result, Borrador100ReadProjection):
+            assert result.snapshot.source_url == snapshot.source_url
+        else:
+            assert "source_url" not in result.snapshot.model_dump()
+        assert service.show(snapshot.snapshot_id, operation=context.operation) == snapshot
+
+    return ConformancePreparation(
+        profile_operation_subject(profile),
+        Borrador100ReadRequest(profile_id=context.profile_id, kind="view", snapshot_id=snapshot.snapshot_id[:16]),
+        verify=verify,
+    )
+
+
+BORRADOR_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
+    cases=tuple(
+        RegisteredExecutorConformanceCase(
+            f"live.borrador.100.{verb}",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED if verb == "import" else OperationEffect.NONE,
+            (f"live.borrador.100.{verb}",),
+        )
+        for verb in ("import", "query", "read")
+    ),
+    prepare=_retained_borrador_prepare,
 )

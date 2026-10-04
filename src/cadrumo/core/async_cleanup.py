@@ -13,7 +13,7 @@ import sys
 from collections.abc import Awaitable
 from typing import Protocol
 
-from .errors.hierarchy import CoreError
+from .errors.hierarchy import CoreError, InternalInvariantError
 
 
 class AsyncCloseable(Protocol):
@@ -292,17 +292,20 @@ def attach_async_cleanup_error(
     """Retain a secondary cleanup failure on ``primary`` without replacing it.
 
     The failure is stored as ``async_cleanup_error``, merged after any owner
-    already retained there so earlier retry ownership survives. Attaching the
+    already retained directly on the primary error so earlier retry ownership survives. Attaching the
     already-retained failure again is a no-op merge. The retained failure is
     returned for callers that mirror it onto another attachment.
     """
-    previous = primary.__dict__.get("async_cleanup_error")
-    if isinstance(previous, AsyncResourceCleanupError) and previous is not cleanup_error:
-        cleanup_error = previous.merged_with(cleanup_error)
+    previous = merged_cleanup_owner(primary)
     primary.__dict__["async_cleanup_error"] = cleanup_error
+    if isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+        primary.__dict__["cleanup_error"] = cleanup_error
+    retained = retain_merged_cleanup(primary, previous)
+    if retained is None:
+        raise InternalInvariantError("an attached cleanup failure must retain its retry owner")
     if note is not None:
         primary.add_note(note)
-    return cleanup_error
+    return retained
 
 
 def direct_cleanup_owners(error: BaseException) -> tuple[AsyncResourceCleanupError, ...]:

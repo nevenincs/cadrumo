@@ -14,7 +14,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ..compiler.loader import load_modelo_directory
 from . import constants as _constants
 from .adjudications import AdjudicationSet
-from .errors import AeipError
 from .identity import derive_slug
 from .types import AeipEvent, AeipInventory, AeipOccurrence
 
@@ -86,11 +85,11 @@ def extract_occurrences(
 def _load_modelo(modelos_root: Path, modelo_id: str) -> ModeloDefinition:
     modelo_root = modelos_root / modelo_id
     if not modelo_root.is_dir():
-        raise AeipError(f"no registry directory for modelo {modelo_id} at {modelo_root}")
+        raise RegistryLoadError(f"no registry directory for modelo {modelo_id} at {modelo_root}")
     try:
         return load_modelo_directory(modelo_root)
     except RegistryLoadError as error:
-        raise AeipError(f"cannot load modelo {modelo_id} registry: {error}") from error
+        raise RegistryLoadError(f"cannot load modelo {modelo_id} registry: {error}") from error
 
 
 def _event_occurrence(revision_id: str, casilla: CasillaDefinition, locale: str) -> AeipOccurrence:

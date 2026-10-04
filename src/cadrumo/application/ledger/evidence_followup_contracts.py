@@ -64,9 +64,6 @@ _AttachmentRows = Annotated[tuple[AttachmentReviewItem, ...], Field(max_length=M
 _BlockerRows = Annotated[tuple[ConfirmationBlockerProjectionV1, ...], Field(max_length=128)]
 
 
-_UTC_AFTER_VALIDATOR = pydantic_validation_boundary(validate_utc_aware)
-
-
 class AttachmentStoreFactory(Protocol):
     """Compose the encrypted attachment capability for one active profile."""
 
@@ -170,7 +167,12 @@ class ConsentedDispatchProjection(BaseModel):
     model: str
     surface: str
     recorded_at: datetime
-    _recorded_at_is_utc = field_validator("recorded_at", mode="after")(_UTC_AFTER_VALIDATOR)
+
+    @field_validator("recorded_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _recorded_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
 
     @classmethod
     def from_dispatch(cls, value: ConsentedDispatch) -> ConsentedDispatchProjection:
@@ -186,7 +188,12 @@ class CloudDerivedArtefactProjection(BaseModel):
     provenance_stamp: str
     transport: str | None = None
     drafted_at: datetime
-    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
+
+    @field_validator("drafted_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _drafted_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
 
     @classmethod
     def from_artefact(cls, value: CloudDerivedArtefact) -> CloudDerivedArtefactProjection:
@@ -243,11 +250,16 @@ class EvidenceReviewQueueRowProjection(BaseModel):
     evidence_reference: _Reference
     extractor: _ShortText
     drafted_at: datetime
-    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
     blocking_count: NonNegativeInt
     reasons: Annotated[tuple[ConfirmationBlockReason, ...], Field(max_length=64)] = ()
     advisory_count: NonNegativeInt
     advisories: Annotated[tuple[ReviewAdvisoryKind, ...], Field(max_length=16)] = ()
+
+    @field_validator("drafted_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _drafted_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _correlate_counts_and_unique_summaries(self) -> EvidenceReviewQueueRowProjection:
@@ -332,12 +344,17 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     evidence_reference: _Reference
     extractor: _ShortText
     drafted_at: datetime
-    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
     draft: InvoiceDraftProjectionV1
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
     blockers: _BlockerRows = ()
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
     country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | None = None
+
+    @field_validator("drafted_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _drafted_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _blocker_ids_are_unique(self) -> LedgerEvidenceReviewViewProjection:

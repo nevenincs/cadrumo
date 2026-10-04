@@ -13,9 +13,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import date
 from decimal import Decimal
-from enum import Enum
 from pathlib import Path
 from typing import Never
 from uuid import UUID
@@ -48,7 +46,6 @@ from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.type_guards import is_object_list_or_tuple
 from ...domain.invoices.business_premises import business_premises_lease_from_inputs
 from ...domain.invoices.enums import (
     InvoiceClass,
@@ -90,72 +87,6 @@ from .runtime_invoice_catalogue import (
     view_invoice_catalogue,
 )
 from .runtime_invoice_intake import submit_invoice_import, submit_invoice_wizard
-
-# The domain-invoice fields shared by mutation readback and evidence-confirm.
-# Authenticated list/view use the closed application snapshot instead.
-_SHARED_INVOICE_FIELDS: tuple[str, ...] = (
-    "invoice_id",
-    "kind",
-    "invoice_number",
-    "issued_at",
-    "counterparty_name",
-    "counterparty_tax_id",
-    "counterparty_country",
-    "base_total",
-    "iva_total",
-    "grand_total",
-    "currency",
-    "payment_status",
-    "linked_transaction_ids",
-    "notes",
-    # Settlement-side retención sits outside the totals and recargo inside, so
-    # neither is recoverable from the three totals above.
-    "retention_rate",
-    "retention_amount",
-    "recargo_amount",
-    # The euro conversion and its provenance. A foreign-currency invoice
-    # rendered as totals plus a currency code told the operator nothing about
-    # whether those figures had reached euro at all -- and an unconverted
-    # invoice is precisely the one held back from the modelo totals, so the
-    # surface stayed silent on the fact that most needed saying. All six are
-    # ``None`` on a euro invoice (nothing was converted) and the eur trio is
-    # ``None`` on a foreign invoice with no resolvable rate, which is what makes
-    # the refusal visible rather than merely correct.
-    "fx_rate",
-    "fx_rate_date",
-    "fx_rate_source",
-    "base_total_eur",
-    "iva_total_eur",
-    "grand_total_eur",
-)
-
-
-def _wire_scalar(value: object) -> object:
-    """Render one invoice field in its string wire form.
-
-    The evidence-confirm envelope declares every field as ``str``, so its
-    projection needs the rendered form where the catalogue envelope wants the
-    native typed value. Keeping the rendering here means the two differ only in
-    FORM, never in which fields they carry.
-    """
-    if isinstance(value, Decimal):
-        return format(value, "f")
-    if isinstance(value, date):
-        return value.isoformat()
-    if isinstance(value, Enum):
-        return value.value
-    if is_object_list_or_tuple(value):
-        return list(value)
-    return value
-
-
-def catalogue_invoice_shared_fields(invoice: Invoice) -> dict[str, object]:
-    """Project the :class:`Invoice` identity/total fields in their string wire form.
-
-    Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
-    :data:`_SHARED_INVOICE_FIELDS` with the canonical evidence-confirm payload.
-    """
-    return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
 
 
 def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:

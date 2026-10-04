@@ -24,7 +24,7 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.period import Period
-from cadrumo.entrypoints.cli._command_shared_contracts import SchemaState
+from cadrumo.entrypoints.cli.command_shared_contracts import SchemaState
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 
 from ...tests.cli_runner import invoke_cached_cli

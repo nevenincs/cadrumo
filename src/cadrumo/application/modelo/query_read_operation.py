@@ -450,6 +450,7 @@ def _read_definition(
     build_executor: Callable[[], object],
     *,
     sensitive: bool = False,
+    public_error_detail: bool = False,
     permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(
         {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
     ),
@@ -462,6 +463,7 @@ def _read_definition(
         build=build_executor,
         capabilities=modelo_query_read_capabilities(sensitive=sensitive),
         permitted_frontends=permitted_frontends,
+        public_error_detail=public_error_detail,
     )
 
 
@@ -509,6 +511,7 @@ def build_modelo_readiness_definition(factory: ModeloQueryReadPortsFactory) -> O
         ModeloReadinessProjection,
         ModeloReadinessExecutor,
         lambda: ModeloReadinessExecutor(factory),
+        public_error_detail=True,
     )
 
 

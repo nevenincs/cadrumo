@@ -153,6 +153,12 @@ class CommandIndex:
         connection.commit()
         return connection
 
+    def close(self) -> None:
+        """Release the in-memory FTS5 connection once searching is finished."""
+        connection, self._connection = self._connection, None
+        if connection is not None:
+            connection.close()
+
     def search(self, query: str, *, limit: int = 20) -> tuple[CommandHit, ...]:
         """Return up to ``limit`` ranked command hits for ``query``.
 

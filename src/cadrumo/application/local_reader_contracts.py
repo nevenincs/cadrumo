@@ -41,11 +41,8 @@ __all__ = [
     "LocalReaderSetupStepState",
     "build_local_reader_install_request",
     "build_local_reader_load_request",
-    "build_local_reader_pull_request",
     "build_local_reader_remove_request",
     "build_local_reader_setup_request",
-    "build_local_reader_start_request",
-    "build_local_reader_verify_request",
     "local_reader_fact_mapping",
     "local_reader_public_verdict",
     "local_reader_setup_phase",
@@ -167,26 +164,11 @@ def build_local_reader_install_request(*, consent: bool) -> OperationRequest[Loc
     return _request(LocalReaderProvisionAction.INSTALL, consent=consent)
 
 
-def build_local_reader_start_request() -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that starts the local runtime when it is not answering."""
-    return _request(LocalReaderProvisionAction.START)
-
-
-def build_local_reader_pull_request(role: ModelRole | None = None) -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that pulls ``role``'s model, or every reader role's model."""
-    return _request(LocalReaderProvisionAction.PULL, role=role)
-
-
 def build_local_reader_load_request(
     role: ModelRole | None = None, model: str | None = None
 ) -> OperationRequest[LocalReaderProvisionRequest]:
     """Build the request that loads ``role``'s model, a named model, or every role's model."""
     return _request(LocalReaderProvisionAction.LOAD, role=role, model=model)
-
-
-def build_local_reader_verify_request(role: ModelRole | None = None) -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that verifies ``role``'s model, or every reader role's model."""
-    return _request(LocalReaderProvisionAction.VERIFY, role=role)
 
 
 def build_local_reader_remove_request(

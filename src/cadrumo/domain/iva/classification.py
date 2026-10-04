@@ -56,12 +56,12 @@ from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import unique_mapping_tokens
 from ._classification_engine import (
-    _fallback_classification,
-    _first_matching_classification,
-    _registry_iva_classification_catalogue,
-    _resolve_classification_rules,
-    _resolve_rate_category_mapping,
-    _resolve_rate_territories,
+    fallback_classification,
+    first_matching_classification,
+    registry_iva_classification_catalogue,
+    resolve_classification_rules,
+    resolve_rate_category_mapping,
+    resolve_rate_territories,
 )
 from ._fact_mapping_entries import iva_mapping_entries
 from .errors import IvaValidationError
@@ -304,14 +304,14 @@ class TransactionKindCatalogue:
         return matches
 
 
-def _required_classification_entry(entries: Mapping[str, str], key: str) -> str:
+def required_classification_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
     if value is None or not value.strip():
         raise IvaValidationError(f"IVA classification mapping is missing {key!r}")
     return value.strip()
 
 
-def _classification_csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
+def classification_csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     try:
         tokens = unique_mapping_tokens(
             entries, key, subject="IVA classification mapping", requirement="must declare unique tokens"
@@ -338,10 +338,10 @@ def _classification_vocabulary_group[T: _RegistryProjectedToken](
     alias_names: frozenset[str],
 ) -> tuple[tuple[T, ...], Mapping[str, T]]:
     """Project one membership order and its named aliases from fact 0083."""
-    raw_tokens = _classification_csv(entries, order_key)
+    raw_tokens = classification_csv(entries, order_key)
     tokens: list[T] = []
     for raw_token in raw_tokens:
-        declared = _required_classification_entry(entries, f"{prefix}.{raw_token}.value")
+        declared = required_classification_entry(entries, f"{prefix}.{raw_token}.value")
         if declared != raw_token:
             raise IvaValidationError(
                 f"IVA classification mapping {prefix}.{raw_token!s}.value declares {declared!r}, not {raw_token!r}",
@@ -378,7 +378,7 @@ def resolve_iva_classification_catalogue(
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
-    resolved = _registry_iva_classification_catalogue(effective_date or today_madrid(), operation=operation)
+    resolved = registry_iva_classification_catalogue(effective_date or today_madrid(), operation=operation)
     entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
     territorial_scopes, territorial_aliases = _classification_vocabulary_group(
         entries,
@@ -448,12 +448,12 @@ def resolve_transaction_kind_catalogue(
     operation: GovernedFactSource,
 ) -> TransactionKindCatalogue:
     """Resolve all transaction-kind membership through the 0083 fact query."""
-    resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
+    resolved = registry_iva_classification_catalogue(effective_date, operation=operation)
     entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
     definitions: list[TransactionKindDefinition] = []
-    for token in _classification_csv(entries, "transaction_kind.order"):
+    for token in classification_csv(entries, "transaction_kind.order"):
         prefix = f"transaction_kind.{token}"
-        declared_token = _required_classification_entry(entries, f"{prefix}.value")
+        declared_token = required_classification_entry(entries, f"{prefix}.value")
         if declared_token != token:
             raise IvaValidationError(
                 f"IVA classification mapping {prefix!r} declares value {declared_token!r}, not {token!r}",
@@ -461,7 +461,7 @@ def resolve_transaction_kind_catalogue(
         definitions.append(
             TransactionKindDefinition(
                 token=TransactionKind(token),
-                description=_required_classification_entry(entries, f"{prefix}.description"),
+                description=required_classification_entry(entries, f"{prefix}.description"),
                 legal_refs=entries.get(f"{prefix}.legal_refs"),
                 supply_nature=entries.get(f"{prefix}.supply_nature"),
                 oss_regime=entries.get(f"{prefix}.oss_regime"),
@@ -470,8 +470,8 @@ def resolve_transaction_kind_catalogue(
         )
     return TransactionKindCatalogue(
         definitions=tuple(definitions),
-        common_semantics=_required_classification_entry(entries, "transaction_kind.common_semantics"),
-        union_scheme_semantics=_required_classification_entry(entries, "transaction_kind.union_scheme_semantics"),
+        common_semantics=required_classification_entry(entries, "transaction_kind.common_semantics"),
+        union_scheme_semantics=required_classification_entry(entries, "transaction_kind.union_scheme_semantics"),
     )
 
 
@@ -760,7 +760,7 @@ def resolve_iva_classification_inputs(
     from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
     from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
-    resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
+    resolved = registry_iva_classification_catalogue(effective_date, operation=operation)
     entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
     vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
     kind_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
@@ -773,9 +773,9 @@ def resolve_iva_classification_inputs(
         authority=operation,
     )
 
-    rate_categories = _resolve_rate_category_mapping(entries, rate_catalogue, category_catalogue)
-    rate_territories = _resolve_rate_territories(entries, vocabulary)
-    rules = _resolve_classification_rules(
+    rate_categories = resolve_rate_category_mapping(entries, rate_catalogue, category_catalogue)
+    rate_territories = resolve_rate_territories(entries, vocabulary)
+    rules = resolve_classification_rules(
         entries,
         vocabulary=vocabulary,
         kind_catalogue=kind_catalogue,
@@ -812,7 +812,7 @@ def classify_iva(
     from ..calculations.registry.iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue
     from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
-    _registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
+    registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     vocabulary = resolve_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     category_catalogue = resolve_iva_category_catalogue(
         effective_date=criteria.transaction_date,
@@ -848,7 +848,7 @@ def classify_iva(
         if rate_territories is None:
             rate_territories = registry_inputs.rate_territories
     projected_rules = tuple(rules)
-    result = _first_matching_classification(
+    result = first_matching_classification(
         projected_rules,
         criteria,
         category_catalogue=category_catalogue,
@@ -859,7 +859,7 @@ def classify_iva(
     )
     if result is not None:
         return result
-    return _fallback_classification(projected_rules, criteria, category_catalogue, operation)
+    return fallback_classification(projected_rules, criteria, category_catalogue, operation)
 
 
 __all__ = [

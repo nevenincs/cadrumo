@@ -1,0 +1,121 @@
+{
+  "status": "current_5737_native_scope_proven_with_retained_deep_path_failure",
+  "configure_head": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+  "build_number": 1828,
+  "build_date": "2026-10-04T03:47:50Z",
+  "ctest": {
+    "passed": 6,
+    "failed": 0
+  },
+  "desktop": {
+    "passed": 5,
+    "failed": 0,
+    "ignored": 0,
+    "product_origin": "genuine fresh assembled stage"
+  },
+  "owning_product_fingerprint": "851667cb74b619a4c2d796d6f22721f3816e1d0346fd601dc6510d7d6ffc22b0",
+  "fingerprint_after_package_equal": true,
+  "cohort": [
+    {
+      "wheel": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\windows-native-final-20261004-probes\\product\\build\\wheels\\cadrumo-0.5.1-py3-none-any.whl",
+      "sha256": "4599836d0bd433a79cc77aeb26be52673b62db0dfc70d2d509133c3ea26e8642",
+      "size": 73116938,
+      "owning_snapshot_members_compared": 6145,
+      "current_working_CRLF_LF_only": [
+        "cadrumo/adapters/local_runtime/macos_worker_process.py",
+        "cadrumo/application/diagnostics_run_report_contracts.py",
+        "cadrumo/application/diagnostics_timing_contracts.py",
+        "cadrumo/application/diagnostics_usage_contracts.py",
+        "cadrumo/application/local_reader_contracts.py",
+        "cadrumo/application/workbench_generation_calendar.py",
+        "cadrumo/application/workbench_generation_home.py",
+        "cadrumo/application/aggregation/invoice_retencion.py",
+        "cadrumo/application/auth/diagnostics.py",
+        "cadrumo/application/calculations/row_set_assembly.py",
+        "cadrumo/application/invoices/catalogue_intake_contracts.py",
+        "cadrumo/application/modelo/profile_export_binding.py",
+        "cadrumo/application/modelo/verification_finding_contracts.py",
+        "cadrumo/application/modelo/verification_iva_evidence.py",
+        "cadrumo/application/modelo/verification_oss_evidence.py",
+        "cadrumo/application/modelo/verification_report_read_operation.py",
+        "cadrumo/application/modelo/verification_revision_findings.py",
+        "cadrumo/application/modelo/work_form.py",
+        "cadrumo/application/operator_surface/command_ports.py",
+        "cadrumo/application/runtime/enrollment_recipient.py",
+        "cadrumo/application/user_profile/automation_execution.py",
+        "cadrumo/application/user_profile/censal_operation.py",
+        "cadrumo/application/user_profile/google_configuration_operation_contracts.py",
+        "cadrumo/application/user_profile/profile_operation_contracts.py",
+        "cadrumo/core/atomic_write.py",
+        "cadrumo/core/logging.py",
+        "cadrumo/domain/calculations/registry/iva_legal_vocabulary.py",
+        "cadrumo/domain/calculations/registry/iva_regime_vocabulary.py",
+        "cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py",
+        "cadrumo/domain/calculations/registry/runtime_catalogue_validation.py",
+        "cadrumo/domain/calculations/registry/runtime_catalogues.py",
+        "cadrumo/domain/calculations/registry/schema_overrides.py",
+        "cadrumo/domain/iva/_classification_engine.py",
+        "cadrumo/domain/iva/_classification_predicates.py",
+        "cadrumo/domain/iva/_component_fact_projection.py",
+        "cadrumo/domain/iva/_component_row_projection.py",
+        "cadrumo/entrypoints/cli/_modelo_cli_support.py",
+        "cadrumo/entrypoints/cli/_modelo_rendering.py",
+        "cadrumo/entrypoints/cli/command_shared_contracts.py",
+        "cadrumo/entrypoints/cli/command_spec.py",
+        "cadrumo/entrypoints/cli/config/google_consent_admission.py",
+        "cadrumo/entrypoints/runtime/macos_worker_guardian.py"
+      ]
+    },
+    {
+      "wheel": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\windows-native-final-20261004-probes\\product\\build\\wheels\\cadrumo_data_manuals-0.5.1-py3-none-any.whl",
+      "sha256": "6e2e02430a2833c011edc55ce33c14580e04daa9d41322f35893ee8cdb94fbac",
+      "size": 96673670,
+      "owning_snapshot_members_compared": 18,
+      "current_working_CRLF_LF_only": []
+    },
+    {
+      "wheel": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\windows-native-final-20261004-probes\\product\\build\\wheels\\cadrumo_data_official-0.5.1-py3-none-any.whl",
+      "sha256": "c1341c72f5b8b6e2094edd409ab6b8d1361f6f40f4de079d8d8c9c840572d39a",
+      "size": 67743646,
+      "owning_snapshot_members_compared": 248,
+      "current_working_CRLF_LF_only": []
+    }
+  ],
+  "deep_zip_failure": {
+    "reason": "pikepdf loader exceeded path length at deep physical extracted root",
+    "phase": "zip-hostile-unicode-relocation",
+    "full_package_pass_claimed": false
+  },
+  "short_verification": {
+    "public_owner": "dev.packaging.native.verify.verify",
+    "physical_root": "Y:/cadrumo-native-1828-verify/app",
+    "receipt": "Y:\\cadrumo-native-1828-verify\\verification.json",
+    "receipt_sha256": "0e52538306b1226a2fd8a910d85c5347c47e218b9397343a805c49e9436f6d48",
+    "kdf_pre_secret_readiness": {
+      "ready_environment_keys": [
+        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "CADRUMO_LOG_DIR",
+        "HOME",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONHASHSEED",
+        "PYTHONNOUSERSITE",
+        "PYTHONPATH",
+        "SYSTEMROOT",
+        "USERPROFILE"
+      ],
+      "worker_joined": true,
+      "neutral_directory_removed": true,
+      "noncanonical_invocation_refused": true,
+      "refused_worker_joined": true,
+      "password_or_request_sent": false
+    },
+    "package_unchanged": true
+  },
+  "native_execution_receipt_sha256": "94874a86074231ed40e6a5c4b249a1c6bf45b2f443bf7c0ac6facaafce90e531",
+  "source_mutations": false,
+  "test_only_owner_move_status": "external_prepared_awaiting_root_release",
+  "immutable_external_receipt": {
+    "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\native-final5737-combined-proof.json",
+    "sha256": "a508eb6a05147254ab9d3210c67ab638a6861983c881eab06296eabe210b8106"
+  }
+}

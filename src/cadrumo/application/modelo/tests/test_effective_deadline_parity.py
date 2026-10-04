@@ -63,12 +63,7 @@ _NATIONAL_HOLIDAY = _Case(
 _UNCOVERED_YEAR = _Case(
     "303", 2026, "4T", date(2027, 2, 1), date(2027, 2, 1), DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
 )
-# No holiday calendar is published for 2027, yet the Sunday close of the
-# Modelo 347 plazo for 2026 still moves to Monday (Ley 39/2015 art. 30.5).
-_UNCOVERED_WEEKEND = _Case(
-    "347", 2026, "0A", date(2027, 2, 28), date(2027, 3, 1), DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-)
-_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _UNCOVERED_YEAR, _UNCOVERED_WEEKEND)
+_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _UNCOVERED_YEAR)
 
 
 class _Posture(NamedTuple):
@@ -154,9 +149,7 @@ def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorit
 
 
 @pytest.mark.timeout(300)
-@pytest.mark.parametrize(
-    "case", _CASES, ids=["weekend", "national-holiday", "uncovered-year", "uncovered-year-weekend"]
-)
+@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "uncovered-year"])
 def test_every_surface_reads_the_same_nominal_and_effective_deadline(
     case: _Case, operation: PinnedAuthorityOperation
 ) -> None:
@@ -216,21 +209,3 @@ def test_an_uncovered_year_is_reported_as_unverified_not_silently_nominal(
     assert deadline.closes_on == deadline.nominal_closes_on
     assert deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert deadline.shift_reason == "calendar_unavailable"
-
-
-def test_an_uncovered_year_still_moves_a_sunday_close_to_monday(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    deadline = resolve_effective_filing_deadline(
-        _UNCOVERED_WEEKEND.modelo,
-        _UNCOVERED_WEEKEND.filing_year,
-        Period.from_year_and_code(_UNCOVERED_WEEKEND.filing_year, _UNCOVERED_WEEKEND.period_code),
-        holiday_territory=None,
-        operation=operation,
-    )
-
-    assert deadline is not None
-    assert deadline.nominal_closes_on == date(2027, 2, 28)
-    assert deadline.closes_on == date(2027, 3, 1)
-    assert deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert deadline.shift_reason == "domingo + calendar_unavailable"

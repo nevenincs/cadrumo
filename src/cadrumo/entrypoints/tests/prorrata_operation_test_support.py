@@ -49,7 +49,7 @@ from ...application.prorrata_register.seed import (
     ProrrataPriorDefinitivaSeed,
     ProrrataSeedFinding,
     cross_check_prorrata_entry_against_observations,
-    evaluate_carried_prior_definitiva_seed,
+    evaluate_carried_prior_definitiva_seed_from_observations,
 )
 from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.casilla_id import CasillaId, validated_casilla_id
@@ -415,9 +415,9 @@ def _prepare_case(
             observation_repository=observations,
             operation=operation,
         )
-        evaluation = evaluate_carried_prior_definitiva_seed(
+        evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
             ejercicio=_SEED_TARGET_YEAR,
-            observation_repository=observations,
+            observations=tuple(observations.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
         if evaluation.seed is None or evaluation.blocked:
@@ -579,9 +579,9 @@ def prepare_prorrata_whole_seed_refusal_case(
                 operation=operation,
             )
         else:
-            evaluation = evaluate_carried_prior_definitiva_seed(
+            evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
                 ejercicio=_SEED_TARGET_YEAR,
-                observation_repository=observations,
+                observations=tuple(observations.iter_modelo(Modelo("303").value)),
                 operation=operation,
             )
             if evaluation.seed is None or evaluation.blocked:

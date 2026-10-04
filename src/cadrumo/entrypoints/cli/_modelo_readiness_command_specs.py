@@ -7,8 +7,8 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,

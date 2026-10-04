@@ -9,10 +9,11 @@ from collections.abc import Iterator
 from typing import cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from dev._paths import UTF_8
 from dev.quality.unread_inputs import report_unread
 
 from .unreachable_memo import _walked
-from .unreachable_policy import _COMMAND_TOKEN, _DATA_TOKEN, _DOTTED_SPEC, _UTF_8
+from .unreachable_policy import _COMMAND_TOKEN, _DATA_TOKEN, _DOTTED_SPEC
 from .unreachable_tree import ShippedTreeSpec
 
 # ---------------------------------------------------------------------------
@@ -235,7 +236,7 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
             if not path.is_file():
                 continue
             try:
-                text = path.read_text(encoding=_UTF_8)
+                text = path.read_text(encoding=UTF_8)
             except (OSError, UnicodeDecodeError) as error:
                 # A REFERENCE set: a token here is the evidence that a field or
                 # enum value is addressed by data rather than by a Python
@@ -278,7 +279,7 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
             if not path.is_file():
                 continue
             try:
-                text = path.read_text(encoding=_UTF_8)
+                text = path.read_text(encoding=UTF_8)
                 parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)
             except (OSError, UnicodeDecodeError, TomlDecodeError, json.JSONDecodeError) as error:
                 unread.append(f"{path}: {type(error).__name__}: {error}")

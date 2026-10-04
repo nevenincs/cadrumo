@@ -33,8 +33,9 @@ from ...domain.calculations.registry.binding_value_contract import BindingValueC
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.schema import BindingDefinition, CasillaDefinition, ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors

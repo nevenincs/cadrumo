@@ -22,10 +22,10 @@ from cadrumo.application.modelo.work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
+    ModeloWorkAddress,
     ModeloWorkCaptureError,
     ModeloWorkCurrentCoordinate,
     capture_modelo_work_resolution,
-    resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import (
@@ -57,7 +57,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -403,18 +403,17 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
     work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        resolve_modelo_revision_for_operator_target(
-            calculation_revision_id=work_unit.work_unit_id,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision_id=None,
-            selector=ModeloCalculationRevisionSelector.CURRENT,
-            default_for=default_for,
+        resolve_modelo_revision_pick(
+            target=ModeloWorkAddress(),
+            pick=ModeloRevisionPick(
+                selector=ModeloCalculationRevisionSelector.EXPLICIT,
+                calculation_revision_id=work_unit.work_unit_id,
+                default_for=default_for,
+            ),
             catalogue=work_repository.load(),
             resolved_bucket_id=bucket_id,
-            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            calculation_repository=_calculation_repository,
+            operation=operation,
         )
 
     failure = raised.value.precondition_failure
@@ -466,21 +465,20 @@ def test_positional_work_unit_id_resolves_its_current_revision_after_calculation
         ),
     )
 
-    resolved = resolve_modelo_revision_for_operator_target(
-        calculation_revision_id=work_unit.work_unit_id,
-        work_unit_id=None,
-        modelo=None,
-        year=None,
-        period=None,
-        registry_revision_id=None,
-        selector=ModeloCalculationRevisionSelector.CURRENT,
-        default_for=default_for,
+    resolved = resolve_modelo_revision_pick(
+        target=ModeloWorkAddress(),
+        pick=ModeloRevisionPick(
+            selector=ModeloCalculationRevisionSelector.EXPLICIT,
+            calculation_revision_id=work_unit.work_unit_id,
+            default_for=default_for,
+        ),
         catalogue=work_repository.load(),
         resolved_bucket_id=bucket_id,
-        ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        calculation_repository=calculation_repository,
+        operation=operation,
     )
 
-    assert resolved == revision
+    assert resolved.calculation_revision_id == revision.calculation_revision_id
     assert resolved.work_unit_id == work_unit.work_unit_id
 
 
@@ -507,18 +505,17 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     )
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        resolve_modelo_revision_for_operator_target(
-            calculation_revision_id=work_unit.work_unit_id,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision_id=None,
-            selector=ModeloCalculationRevisionSelector.CURRENT,
-            default_for=default_for,
+        resolve_modelo_revision_pick(
+            target=ModeloWorkAddress(),
+            pick=ModeloRevisionPick(
+                selector=ModeloCalculationRevisionSelector.EXPLICIT,
+                calculation_revision_id=work_unit.work_unit_id,
+                default_for=default_for,
+            ),
             catalogue=work_repository.load(),
             resolved_bucket_id=bucket_id,
-            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            calculation_repository=_calculation_repository,
+            operation=operation,
         )
 
     failure = raised.value.precondition_failure

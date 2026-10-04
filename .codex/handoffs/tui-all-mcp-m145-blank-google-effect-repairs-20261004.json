@@ -1,0 +1,39 @@
+{
+  "status": "final real owner23 and registered matrix6 replay pass; source frozen",
+  "source_sha256": {
+    "src/cadrumo/application/modelo/m145_communication_records.py": "bda8ddd4a120c1c98342d74a826118bcd546127554534c103ff5eaf1bfc8b73d",
+    "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_validate.py": "1a5b98170f21fb325a08c26bf388bb3ecef1b44ced532be60730191e87e2b171",
+    "src/cadrumo/entrypoints/tests/conformance_google_support.py": "b157a0e9585d09bc9553a46ee8ff21952bb21cb8a5dfa2cd50eda5cdc11d8b10"
+  },
+  "m145": {
+    "classification": "demonstrated production validation defect",
+    "cause": "Official DR145 row2 ordinary page is explicit blank but generic shape predicate rejected every blank text value.",
+    "repair": "Optional TEXT blank passes shape predicate; required-field guard, all constraints, registry dated family-token guard, and nontext validators remain.",
+    "independent_proofs": "Real ordinary-page byte10 retained; added real validation cases accept explicit blank page and refuse blank required surname, constrained family token, optional numeric year."
+  },
+  "google": {
+    "classification": "test effect premise correction",
+    "cause": "Credentials acquisition is an admitted authority boundary before hydration; missing client leaves it unacknowledged and effectUNKNOWN is canonical.",
+    "repair": "Expected UNKNOWN plus exact NONE/UNKNOWN/UNKNOWN public effect trace; unchanged root folder and absent credentials plus exact refusal preserved.",
+    "production_change": false
+  },
+  "final_verification": {
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "canonical_run": "20261003T235135.282841Z-pytest-49712-7c84e299",
+    "log": ".logs/tui-all-mcp-m145-google-final-replay-20261004.txt",
+    "covered": "Entire real M145 validation/export modules23passed. Six registered subjects were deselected by configured default marker, not executed in this run; explicit marker replay pending.",
+    "deselected": 6
+  },
+  "registered_matrix_verification": {
+    "passed": 6,
+    "failed": 0,
+    "deselected": 0,
+    "exit": 0,
+    "canonical_run": "20261003T235411.558494Z-pytest-66868-2f01a56b",
+    "log": ".logs/tui-all-mcp-m145-google-matrix-final-20261004.txt",
+    "marker": "unit or integration"
+  }
+}

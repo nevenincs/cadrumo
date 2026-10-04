@@ -118,28 +118,6 @@ def resolve_bien_inversion_disposal(
     return BienInversionDisposal(year=disposal_year, regime=disposal_regime)
 
 
-def declare_bien_inversion(
-    command: BienInversionDeclarationCommand,
-    *,
-    service: BienesInversionRegisterService,
-) -> BienInversionDeclarationResultV1:
-    """Build one register record from operator intent and persist it.
-
-    Args:
-        command: The operator's declaration.
-        service: Required register service composed for the target profile.
-
-    Returns:
-        The record as persisted, with the updated register.
-
-    Raises:
-        BienInversionDisposalIncompleteError: When only one half of a disposal
-            was supplied.
-    """
-    record = build_bien_inversion_record(command)
-    return persist_bien_inversion_record(record, service=service)
-
-
 def build_bien_inversion_record(command: BienInversionDeclarationCommand) -> BienInversionIvaRecord:
     """Validate operator intent into a complete record before persistence.
 
@@ -178,7 +156,6 @@ __all__ = [
     "BienInversionDeclarationResultV1",
     "BienInversionDisposalIncompleteError",
     "build_bien_inversion_record",
-    "declare_bien_inversion",
     "persist_bien_inversion_record",
     "resolve_bien_inversion_disposal",
 ]

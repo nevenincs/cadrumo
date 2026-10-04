@@ -1,0 +1,30 @@
+{
+  "code_baseline": "all missing MCP intent reconciled across six snapshots and original bases; all original3069pairs accounted",
+  "baseline_merge": "4410d43bbf",
+  "destination_cut": "60c063bba1fc3d53f7d0c2522405a81966a6a0a8",
+  "verification": "deferred by user after concrete baseline; plan S03/S04/S05 remainopen and auditPENDING",
+  "live_feature_tui": "not landed; activewriter checkout untouched; coordinate latest committed/relevantdirty TUI changes beforelanding",
+  "native_proof": {
+    "containment": "11passed",
+    "keychain": "3passed1mutually-exclusive locked-contextskip",
+    "derived_endpoint_namespace": "3passed",
+    "terminal_driver": "7focusedpassed",
+    "full_installed_withholding": "unproven; current Home-transition correction awaits rerun"
+  },
+  "preservation_only_artifacts": {
+    "original_paths": [
+      ".codex/handoffs/tui-all-mcp-later-product-merge/30.merged",
+      ".codex/handoffs/tui-all-mcp-later-product-merge/31.merged"
+    ],
+    "location": "Y:/code/cadrumo-worktrees/main/.git/integration-evidence/tui-all-mcp-20261003/retired-merge-previews",
+    "reason": "Unresolved intermediate preview evidence retained outside committed baseline; neverproductcode"
+  },
+  "next_verification": [
+    "republish current authority after M347 generation, final target currentness",
+    "replay57newregistered scenarios/completeness plusknownbrowser/custody/native fixturefailures and41uncompleted oldaffectedcases",
+    "remaining168portablemodules, configuredWindowsnative cohort",
+    "regenerateowner importinventories for latest modules; frozen style/format/types/dependency/importgate",
+    "build fresh finalwheel matching source and updateisolatedMac before installedcontinuation rerun",
+    "finalcombined review; safe landingcoordination"
+  ]
+}

@@ -1,8 +1,6 @@
 """Integration tests for the ``--row`` typed flag on ``work calculate``.
 
 Tests the row-input flow:
-  * ``_parse_row_spec`` parses valid TYPE FIELD=value specs
-  * ``_parse_row_spec`` raises BadParameter on malformed input
   * domain row validators enforce aggregate legal constraints outside the CLI layer
   * Row type discrimination routes to correct pydantic model
 
@@ -18,19 +16,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-import typer
 
 from ....core.config import override_settings
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
-    Modelo232VinculadaRow,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
     validate_m184_member_share_sum,
 )
 from ....tests.os_keychain_hook import require_os_credential_store
-from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -44,105 +37,6 @@ def _output_language(language: str):
     rather than the assertion rewritten in Spanish.
     """
     return override_settings(cadrumo_output_language=language)
-
-
-# ---------------------------------------------------------------------------
-# _parse_row_spec — valid inputs
-# ---------------------------------------------------------------------------
-
-
-class TestParseRowSpecValid:
-    def test_parse_miembro_minimal(self) -> None:
-        """Minimal miembro spec with required fields parses correctly."""
-        result = _parse_row_spec("miembro nif=12345678A porcentaje=40 importe=10000 clave=D")
-        assert isinstance(result, Modelo184MemberRow)
-        assert result.nif == "12345678A"
-        assert result.porcentaje == Decimal("40")
-        assert result.importe == Decimal("10000")
-
-    def test_parse_miembro_with_optional_fields(self) -> None:
-        """miembro spec with nombre and pais round-trips."""
-        result = _parse_row_spec("miembro nif=11111111A nombre=Sòcia1 pais=ES porcentaje=60 importe=18000 clave=D")
-        assert isinstance(result, Modelo184MemberRow)
-        assert result.nombre == "Sòcia1"
-        assert result.pais == "ES"
-
-    def test_parse_vinculada_minimal(self) -> None:
-        """Minimal vinculada spec parses correctly."""
-        # pais is required and deliberately not defaulted: defaulting to Spain
-        # would infer a fact the operator never stated, and would silently
-        # declare a cross-border related-party operation as domestic. So the
-        # minimal spec that parses is one that states the country.
-        result = _parse_row_spec("vinculada nif=A12345678 pais=ES importe=50000")
-        assert isinstance(result, Modelo232VinculadaRow)
-        assert result.nif == "A12345678"
-        assert result.pais == "ES"
-        assert result.importe == Decimal("50000")
-
-    def test_parse_vinculada_full_spec(self) -> None:
-        """Full vinculada spec with all optional fields."""
-        result = _parse_row_spec(
-            "vinculada nif=B87654321 nombre=EntidadSL pais=DE "
-            "tipo_vinculacion=B tipo_operacion=05 metodo=1E importe=75000",
-        )
-        assert isinstance(result, Modelo232VinculadaRow)
-        assert result.nif == "B87654321"
-        assert result.pais == "DE"
-        assert result.tipo_vinculacion == "B"
-        assert result.metodo == "1E"
-        assert result.importe == Decimal("75000")
-
-    def test_row_type_is_case_insensitive(self) -> None:
-        """TYPE token is lowercased before dispatch."""
-        result = _parse_row_spec("MIEMBRO nif=12345678A porcentaje=50 importe=5000 clave=D")
-        assert isinstance(result, Modelo184MemberRow)
-
-
-# ---------------------------------------------------------------------------
-# _parse_row_spec — invalid inputs
-# ---------------------------------------------------------------------------
-
-
-class TestParseRowSpecInvalid:
-    def test_empty_spec_raises(self) -> None:
-        """Empty spec raises BadParameter."""
-        with _output_language("en"), pytest.raises(typer.BadParameter, match="empty"):
-            _parse_row_spec("   ")
-
-    def test_unknown_type_raises(self) -> None:
-        """Unknown row type raises BadParameter."""
-        with _output_language("en"), pytest.raises(typer.BadParameter, match="not recognised"):
-            _parse_row_spec("socio nif=X12345678 importe=1000")
-
-    def test_missing_equals_in_field_raises(self) -> None:
-        """Token without '=' raises BadParameter."""
-        with _output_language("en"), pytest.raises(typer.BadParameter, match="KEY=VALUE"):
-            _parse_row_spec("miembro nif 12345678A porcentaje=50 importe=0")
-
-    def test_empty_key_raises(self) -> None:
-        """Token with empty key raises BadParameter."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec("miembro =value porcentaje=50 importe=0")
-
-    def test_porcentaje_above_100_raises(self) -> None:
-        """porcentaje > 100 raises BadParameter via model validation."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec("miembro nif=12345678A porcentaje=101 importe=0")
-
-    def test_invalid_pais_raises(self) -> None:
-        """Lowercase pais raises BadParameter."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec("miembro nif=12345678A pais=es porcentaje=50 importe=0")
-
-    def test_missing_required_field_raises(self) -> None:
-        """Missing required field (porcentaje for miembro) raises BadParameter."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec("miembro nif=12345678A importe=0")
-
-    def test_non_numeric_decimal_field_raises(self) -> None:
-        """Non-numeric value for a Decimal field raises BadParameter, not a crash."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec("miembro nif=12345678A porcentaje=abc importe=0")
 
 
 # ---------------------------------------------------------------------------
@@ -207,118 +101,6 @@ class TestValidateM184ShareSum:
 # ---------------------------------------------------------------------------
 # _parse_row_spec — M349 operador and rectificacion inputs
 # ---------------------------------------------------------------------------
-
-
-class TestParseRowSpecM349:
-    def test_parse_operador_missing_razon_social_raises(self) -> None:
-        """M349 operador rows require the official apellidos/razon-social field."""
-        with pytest.raises(typer.BadParameter, match="razon_social"):
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
-
-    def test_parse_operador_with_razon_social(self) -> None:
-        """operador spec with required razon_social round-trips."""
-        result = _parse_row_spec(
-            "operador codigo_pais=FR nif_comunitario=FR12345678901 "
-            "razon_social=EntidadFR clave_operacion=S importe=30000",
-        )
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.razon_social == "EntidadFR"
-        assert result.clave_operacion == "S"
-
-    def test_parse_operador_with_quoted_razon_social_spaces(self) -> None:
-        """M349 legal names with spaces parse when quoted inside the --row value."""
-        result = _parse_row_spec(
-            'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
-            "clave_operacion=E importe=1500.00",
-        )
-
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.razon_social == "DE Auto GmbH"
-        assert result.importe == Decimal("1500.00")
-
-    def test_parse_operador_with_unquoted_underscore_razon_social(self) -> None:
-        """M349 underscore/no-space legal names remain accepted."""
-        result = _parse_row_spec(
-            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=DE_Auto_GmbH "
-            "clave_operacion=E importe=1500.00",
-        )
-
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.razon_social == "DE_Auto_GmbH"
-
-    def test_parse_operador_type_case_insensitive(self) -> None:
-        """TYPE token is lowercased before dispatch."""
-        result = _parse_row_spec(
-            "OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 razon_social=EntidadIT "
-            "clave_operacion=M importe=1000",
-        )
-        assert isinstance(result, Modelo349OperadorRow)
-
-    @pytest.mark.parametrize("clave_operacion", ("H", "D", "C"))
-    def test_parse_operador_accepts_current_consignment_and_import_claves(self, clave_operacion: str) -> None:
-        result = _parse_row_spec(
-            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
-            f"clave_operacion={clave_operacion} importe=1000",
-        )
-
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.clave_operacion == clave_operacion
-
-    def test_parse_operador_invalid_nif_format_raises(self) -> None:
-        """operador with NIF not matching the country pattern raises BadParameter."""
-        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
-            # DE requires 9 digits; this has only 8
-            _parse_row_spec(
-                "operador codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
-                "clave_operacion=E importe=1000",
-            )
-
-    def test_parse_operador_unsupported_country_rejected(self) -> None:
-        """operador rejects country prefixes absent from the Modelo 349 table."""
-        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
-            _parse_row_spec(
-                "operador codigo_pais=ZZ nif_comunitario=BADVAT razon_social=EntidadZZ clave_operacion=E importe=1000",
-            )
-
-    def test_parse_operador_malformed_clave_raises(self) -> None:
-        """A clave_operacion that is not one character is refused while parsing.
-
-        Which single-character keys exist belongs to the registry revision the
-        calculation selects, so membership is checked there, not here.
-        """
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec(
-                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
-                "clave_operacion=ZZ importe=1000",
-            )
-
-    def test_parse_operador_negative_importe_raises(self) -> None:
-        """Negative importe raises BadParameter."""
-        with pytest.raises(typer.BadParameter):
-            _parse_row_spec(
-                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
-                "clave_operacion=E importe=-100",
-            )
-
-    def test_parse_rectificacion_with_quoted_razon_social(self) -> None:
-        result = _parse_row_spec(
-            'rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
-            "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
-        )
-
-        assert isinstance(result, Modelo349RectificacionRow)
-        assert result.razon_social == "DE Auto GmbH"
-        assert result.ejercicio == "2025"
-        assert result.periodo == "2T"
-        assert result.base_rectificada == Decimal("1100.00")
-        assert result.base_anterior == Decimal("1000.00")
-
-    def test_parse_rectificacion_invalid_nif_format_raises(self) -> None:
-        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
-            _parse_row_spec(
-                "rectificacion codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
-                "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
-            )
 
 
 # ---------------------------------------------------------------------------

@@ -312,7 +312,7 @@ def _validate(
 ) -> ValidatedGeneratedExportTree:
     """Validate with the isolated tree's real render profile and source evidence."""
     render_profile, render_evidence = isolated_render_profile()
-    return validate_generated_export_tree(
+    validated = validate_generated_export_tree(
         context=context,
         joined=joined,
         semantic_map=semantic_map,
@@ -320,6 +320,8 @@ def _validate(
         render_profile=render_profile,
         render_profile_source_evidence=render_evidence,
     )
+    assert isinstance(validated, ValidatedGeneratedExportTree), "the supported fixture must establish filing authority"
+    return validated
 
 
 def _rollback_siblings(target_export_root: Path) -> tuple[Path, ...]:

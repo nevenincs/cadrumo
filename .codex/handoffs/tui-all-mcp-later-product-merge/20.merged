@@ -1,0 +1,536 @@
+"""Contract tests for the safe Declarations full-calendar projection."""
+
+from __future__ import annotations
+
+import ast
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import cast
+
+import pytest
+from pydantic import TypeAdapter, ValidationError
+
+from ....core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ....domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
+from ...overview.calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarEntrySource,
+    OverviewCalendarEvent,
+    OverviewCalendarEventType,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
+    OverviewLocalFilingState,
+    OverviewPeriodState,
+)
+from ...overview.evidence import CalendarEvidenceProjection
+from ...overview.home import HomeAvailability, HomeZoneState
+from ...overview.next_actions import declare_next_action
+from ..declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionError,
+    DeclarationsCalendarSource,
+    DeclarationsCalendarSourceObservationV1,
+    project_declarations_calendar,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
+_RANGE = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+_WORK = cast("WorkUnitId", "a" * 64)
+_REVISION = cast("CalculationRevisionId", "b" * 64)
+_FILING = cast("FilingRecordId", "c" * 64)
+
+
+def _state(
+    availability: HomeAvailability = HomeAvailability.AVAILABLE,
+    *,
+    observed_at: datetime | None = None,
+) -> HomeZoneState:
+    return HomeZoneState(
+        availability=availability,
+        observed_at=observed_at,
+        reason_code=None if availability is HomeAvailability.AVAILABLE else f"calendar.{availability.value}",
+    )
+
+
+def _schedule(
+    availability: HomeAvailability = HomeAvailability.AVAILABLE,
+    *,
+    observed_at: datetime | None = None,
+) -> DeclarationsCalendarSourceObservationV1:
+    return DeclarationsCalendarSourceObservationV1(
+        source=DeclarationsCalendarSource.SCHEDULE,
+        availability=availability,
+        observed_at=observed_at,
+        reason_code=None if availability is HomeAvailability.AVAILABLE else f"calendar.{availability.value}",
+    )
+
+
+def _filing_evidence(
+    *,
+    modelo: str = "303",
+    period: Period | None = None,
+    local: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE,
+    aeat: OverviewAeatSubmissionState = OverviewAeatSubmissionState.NOT_OBSERVED,
+) -> OverviewCalendarFilingEvidence:
+    resolved_period = period or Period.from_year_and_code(2026, "1T")
+    verified = aeat is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    return OverviewCalendarFilingEvidence(
+        modelo=modelo,
+        filing_year=resolved_period.filing_year,
+        period=resolved_period,
+        local_filing_state=local,
+        local_filing_record_id=_FILING if local is not OverviewLocalFilingState.NOT_READY_TO_FILE else None,
+        local_calculation_revision_id=_REVISION if local is not OverviewLocalFilingState.NOT_READY_TO_FILE else None,
+        aeat_submission_state=aeat,
+        aeat_reference_id="private-aeat-reference" if aeat is not OverviewAeatSubmissionState.NOT_OBSERVED else None,
+        aeat_snapshot_id="d" * 64 if aeat is not OverviewAeatSubmissionState.NOT_OBSERVED else None,
+        aeat_evidence_kind="private-source-kind" if aeat is not OverviewAeatSubmissionState.NOT_OBSERVED else None,
+        verified_justificante_csv="ABCDEF1234567890" if verified else None,
+        justificante_verified=verified,
+    )
+
+
+def _entry(
+    *,
+    modelo: str = "303",
+    period: Period | None = None,
+    close: date = date(2026, 4, 20),
+    evidence: OverviewCalendarFilingEvidence | None = None,
+) -> OverviewCalendarEntry:
+    resolved_period = period or Period.from_year_and_code(2026, "1T")
+    return OverviewCalendarEntry(
+        modelo=modelo,
+        period=resolved_period,
+        opens_on=close.replace(day=1),
+        closes_on=close,
+        adjusted_closes_on=close,
+        shift_reason="none",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        evaluated_on=date(2026, 1, 1),
+        status=ObligationStatus.UPCOMING,
+        user_state=OverviewPeriodState.DUE,
+        filing_year=resolved_period.filing_year,
+        filing_evidence=evidence or _filing_evidence(modelo=modelo, period=resolved_period),
+        source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
+        local_work_unit_id=_WORK,
+        local_work_unit_name="Private taxpayer declaration label",
+        local_work_unit_revision_id="private-registry-revision",
+    )
+
+
+def _recovery() -> Recovery:
+    return Recovery(
+        recargo_band=RecargoBand(
+            id="completed_months_1",
+            min_completed_months=1,
+            max_completed_months=1,
+            surcharge_pct=Decimal("2"),
+            interest_applies=False,
+            legal_ref="ley-58-2003:art-27.2",
+        )
+    )
+
+
+def _calendar(*entries: OverviewCalendarEntry) -> OverviewCalendar:
+    return OverviewCalendar(
+        range=_RANGE,
+        evaluated_on=date(2026, 1, 1),
+        entries=entries,
+        generated_at=_NOW,
+        events=(
+            OverviewCalendarEvent(
+                event_type=OverviewCalendarEventType.MESSAGE,
+                event_date=date(2026, 4, 21),
+                source="private-source",
+                summary="Private event prose and taxpayer facts",
+                reference_id="private-event-reference",
+            ),
+        ),
+    )
+
+
+def _provider(
+    *rows: OverviewCalendarFilingEvidence,
+    local: HomeAvailability = HomeAvailability.AVAILABLE,
+    aeat: HomeAvailability = HomeAvailability.AVAILABLE,
+    observed_at: datetime | None = None,
+) -> CalendarEvidenceProjection:
+    return CalendarEvidenceProjection(
+        local_state=_state(local, observed_at=observed_at),
+        aeat_state=_state(aeat, observed_at=observed_at),
+        evidence=rows,
+    )
+
+
+def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
+    evidence = _filing_evidence(
+        local=OverviewLocalFilingState.READY_TO_FILE,
+        aeat=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    entry = _entry(evidence=evidence)
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+
+    assert tuple((source.source, source.availability, source.item_count) for source in projection.sources) == (
+        (DeclarationsCalendarSource.SCHEDULE, HomeAvailability.AVAILABLE, 1),
+        (DeclarationsCalendarSource.LOCAL_FILING, HomeAvailability.AVAILABLE, 1),
+        (DeclarationsCalendarSource.AEAT_EVIDENCE, HomeAvailability.AVAILABLE, 1),
+    )
+    row = projection.entries[0]
+    assert row.semantic_key() == ("303", 2026, "1T")
+    assert (row.opens_on, row.closes_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
+        date(2026, 4, 1),
+        date(2026, 4, 20),
+        date(2026, 4, 20),
+        None,
+    )
+    assert row.evaluated_on == date(2026, 1, 1)
+    assert row.days_overdue is None
+    assert row.evidence_conflicted is False
+    assert row.legal_status is ObligationStatus.UPCOMING
+    assert row.user_state is OverviewPeriodState.DUE
+    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+    assert row.justificante_verified is False
+    assert row.source is OverviewCalendarEntrySource.REGISTRY_DEADLINE
+    assert row.recovery_action == action
+    assert "operator.modelo.work.create" not in projection.model_dump_json()
+
+
+def test_exact_evidence_join_counts_only_the_matching_scheduled_address() -> None:
+    evidence = _filing_evidence(
+        local=OverviewLocalFilingState.READY_TO_FILE,
+        aeat=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    projection = project_declarations_calendar(
+        calendar=_calendar(_entry(evidence=evidence)),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    assert tuple(source.item_count for source in projection.sources) == (1, 1, 1)
+    assert projection.entries[0].local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert projection.entries[0].aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+
+
+def test_overdue_row_projects_only_conditional_unassessed_recargo_guidance() -> None:
+    recovery = _recovery()
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    entry = _entry().model_copy(
+        update={
+            "evaluated_on": date(2026, 5, 30),
+            "status": ObligationStatus.OVERDUE,
+            "user_state": OverviewPeriodState.LATE,
+            "days_overdue": 40,
+            "recovery": recovery,
+            "recovery_action": action,
+        }
+    )
+
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(entry.filing_evidence),
+        as_of=date(2026, 5, 30),
+        schedule_observation=_schedule(),
+    )
+
+    preview = projection.entries[0].conditional_recargo_preview
+    assert preview is not None
+    assert preview.band_id == "completed_months_1"
+    assert preview.surcharge_pct == Decimal("2")
+    assert preview.interest_applies is False
+    assert preview.legal_ref == "ley-58-2003:art-27.2"
+    assert preview.rate_reference_on == date(2026, 5, 30)
+    assert preview.assessment_status == "unassessed"
+    assert not hasattr(preview, "amount")
+    assert not hasattr(preview, "liability")
+
+
+def test_projection_strips_every_protected_identity_name_event_and_reference() -> None:
+    evidence = _filing_evidence(
+        local=OverviewLocalFilingState.READY_TO_FILE,
+        aeat=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    projection = project_declarations_calendar(
+        calendar=_calendar(_entry(evidence=evidence)),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    exposed = projection.model_dump_json() + repr(projection)
+    for secret in (
+        _WORK,
+        _REVISION,
+        _FILING,
+        "Private taxpayer declaration label",
+        "private-registry-revision",
+        "private-aeat-reference",
+        "d" * 64,
+        "ABCDEF1234567890",
+        "private-source-kind",
+        "Private event prose and taxpayer facts",
+        "private-event-reference",
+    ):
+        assert secret not in exposed
+
+
+def test_known_not_observed_and_unobservable_aeat_are_distinct() -> None:
+    entry = _entry()
+    known = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    unknown = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(aeat=HomeAvailability.NEVER_CAPTURED),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    assert known.entries[0].aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
+    assert known.entries[0].justificante_verified is False
+    assert unknown.entries[0].aeat_submission_state is None
+    assert unknown.entries[0].justificante_verified is None
+    assert unknown.sources[-1].item_count is None
+
+
+def test_known_empty_unavailable_and_stale_are_not_conflated() -> None:
+    known_empty = project_declarations_calendar(
+        calendar=_calendar(),
+        evidence=_provider(),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    unavailable = project_declarations_calendar(
+        calendar=_calendar(),
+        evidence=_provider(local=HomeAvailability.UNAVAILABLE, aeat=HomeAvailability.LOCKED),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(HomeAvailability.UNAVAILABLE),
+    )
+    stale_evidence = _filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED)
+    stale = project_declarations_calendar(
+        calendar=_calendar(_entry(evidence=stale_evidence)),
+        evidence=_provider(stale_evidence, aeat=HomeAvailability.STALE, observed_at=_NOW),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(HomeAvailability.STALE, observed_at=_NOW),
+    )
+    assert known_empty.sources[0].item_count == 0
+    assert unavailable.sources[0].item_count is None
+    assert stale.entries[0].aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+    assert stale.sources[-1].observed_at == _NOW
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "calendar_year_disagreement",
+        "duplicate_entry",
+        "local_evidence_year_disagreement",
+        "aeat_evidence_year_disagreement",
+        "orphan_evidence_address",
+        "partial_evidence_address",
+        "local_unobservable_claim",
+        "aeat_unobservable_claim",
+        "local_authority_mismatch",
+        "aeat_authority_mismatch",
+        "wrong_recovery_address",
+        "unavailable_schedule_rows",
+    ),
+)
+def test_contradictory_inputs_fail_closed(case: str) -> None:
+    evidence = _filing_evidence(
+        local=OverviewLocalFilingState.READY_TO_FILE,
+        aeat=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    entry = _entry(evidence=evidence)
+    calendar = _calendar(entry)
+    provider = _provider(evidence)
+    schedule = _schedule()
+    if case == "calendar_year_disagreement":
+        calendar = _calendar(entry.model_copy(update={"filing_year": 2025}))
+    elif case == "duplicate_entry":
+        calendar = _calendar(entry, entry)
+    elif case == "local_evidence_year_disagreement":
+        mismatched = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE).model_copy(
+            update={"filing_year": 2025}
+        )
+        provider = _provider(mismatched)
+        calendar = _calendar(_entry())
+    elif case == "aeat_evidence_year_disagreement":
+        mismatched = _filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED).model_copy(
+            update={"filing_year": 2025}
+        )
+        provider = _provider(mismatched)
+        calendar = _calendar(_entry())
+    elif case == "orphan_evidence_address":
+        provider = _provider(_filing_evidence(modelo="130"))
+        calendar = _calendar(_entry())
+    elif case == "partial_evidence_address":
+        partial = OverviewCalendarFilingEvidence(modelo="303")
+        provider = _provider(partial)
+        calendar = _calendar(_entry())
+    elif case == "local_unobservable_claim":
+        provider = _provider(local=HomeAvailability.LOCKED)
+    elif case == "aeat_unobservable_claim":
+        provider = _provider(aeat=HomeAvailability.NEVER_CAPTURED)
+    elif case == "local_authority_mismatch":
+        provider = _provider(_filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED))
+    elif case == "aeat_authority_mismatch":
+        provider = _provider(_filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE))
+    elif case == "wrong_recovery_address":
+        action = declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+        calendar = _calendar(entry.model_copy(update={"recovery": _recovery(), "recovery_action": action}))
+    elif case == "unavailable_schedule_rows":
+        schedule = _schedule(HomeAvailability.UNAVAILABLE)
+    with pytest.raises(DeclarationsCalendarProjectionError):
+        project_declarations_calendar(
+            calendar=calendar,
+            evidence=provider,
+            as_of=date(2026, 3, 1),
+            schedule_observation=schedule,
+        )
+
+
+def test_order_is_deterministic_by_deadline_then_natural_identity() -> None:
+    rows = (
+        _entry(modelo="303", close=date(2026, 4, 20)),
+        _entry(modelo="130", close=date(2026, 4, 20)),
+        _entry(modelo="111", period=Period.from_year_and_code(2026, "01"), close=date(2026, 2, 20)),
+    )
+    forward = project_declarations_calendar(
+        calendar=_calendar(*rows),
+        evidence=_provider(),
+        as_of=date(2026, 1, 1),
+        schedule_observation=_schedule(),
+    )
+    reverse = project_declarations_calendar(
+        calendar=_calendar(*reversed(rows)),
+        evidence=_provider(),
+        as_of=date(2026, 1, 1),
+        schedule_observation=_schedule(),
+    )
+    assert forward == reverse
+    assert tuple(row.semantic_key() for row in forward.entries) == (
+        ("111", 2026, "01"),
+        ("130", 2026, "1T"),
+        ("303", 2026, "1T"),
+    )
+
+
+def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> None:
+    path = Path(__file__).parents[1] / "declarations_calendar.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
+        node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
+    }
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    assert not any(
+        forbidden in imported
+        for imported in imports
+        for forbidden in ("adapters", "entrypoints", "pathlib", "requests", "httpx", "socket")
+    )
+    assert calls.isdisjoint({"open", "print", "input", "read", "write"})
+
+
+def _entry_ref_payload() -> dict[str, object]:
+    """One valid entry ref, taken from a real projection."""
+    evidence = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE)
+    entry = _entry(evidence=evidence)
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    dumped = projection.entries[0].model_dump()
+    # Rebuild rather than cast: model_dump() is dict[str, Any], and the
+    # declared return promises object values, which this comprehension
+    # actually produces instead of merely asserting.
+    return {str(key): value for key, value in dumped.items()}
+
+
+def test_a_directly_built_entry_refuses_a_foreign_recovery_action() -> None:
+    """The invariant has to hold on the MODEL, not only in the projector.
+
+    A frontend receives the entry, never the projector, so a projection built
+    by hand -- a fixture, a cache reload, a test double -- reached the screen
+    with no check at all. Everything else here goes through
+    project_declarations_calendar, which is exactly why this case was
+    uncovered: the projector's own check masks the model's.
+    """
+    payload = _entry_ref_payload()
+    payload["recovery_action"] = declare_next_action("operator.profile.create")
+
+    with pytest.raises(ValidationError, match="not the canonical create action"):
+        DeclarationsCalendarEntryRefV1.model_validate(payload)
+
+
+def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() -> None:
+    """The right action against the wrong obligation is the sharper defect.
+
+    It names the operation the operator expects, so nothing reads as wrong,
+    and acting on it creates a declaration for a period they were not looking
+    at.
+    """
+    payload = _entry_ref_payload()
+    payload["recovery_action"] = declare_next_action(
+        "operator.modelo.work.create", modelo="100", year=1999, period="1T"
+    )
+
+    with pytest.raises(ValidationError, match="contradicts its natural address"):
+        DeclarationsCalendarEntryRefV1.model_validate(payload)
+
+
+def _territory_projection(operation: PinnedAuthorityOperation, territory: str) -> DeclarationsCalendarEntryRefV1:
+    """Project one row whose territory comes from the calendar CCAA catalogue."""
+    entry = _entry().model_copy(
+        update={
+            "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "holiday_territory": resolve_calendar_ccaa_catalogue(authority=operation).require(territory),
+        }
+    )
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    return projection.entries[0]
+
+
+def test_a_projected_holiday_territory_round_trips_through_json(operation: PinnedAuthorityOperation) -> None:
+    """A frontend decodes the row with no pinned authority, so the territory crosses as its text."""
+    row = _territory_projection(operation, "ES-MD")
+
+    decoded = DeclarationsCalendarEntryRefV1.model_validate_json(row.model_dump_json(), strict=True)
+
+    assert decoded == row
+    assert decoded.holiday_territory == "ES-MD"
+    assert type(decoded.holiday_territory) is str
+
+
+def test_an_undeclared_holiday_territory_is_refused_before_projection(operation: PinnedAuthorityOperation) -> None:
+    """Membership is decided by the catalogue, and the token itself still refuses bare text."""
+    with pytest.raises(RegistryValidationError, match="not declared"):
+        _territory_projection(operation, "ES-ZZ")
+    with pytest.raises(ValidationError, match="registry-projected token"):
+        TypeAdapter(CalendarCCAA).validate_python("ES-MD")

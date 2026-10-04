@@ -18,7 +18,6 @@ import pytest
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.calculation_actions import get_calculation_revision
-from cadrumo.application.modelo.filing_actions import get_filing_record
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.hashing import sha256_hex
@@ -33,6 +32,7 @@ from cadrumo.entrypoints.adapter_composition import (
     build_filing_action_ports,
     build_work_lifecycle_ports,
 )
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,
@@ -217,7 +217,7 @@ def test_import_of_a_declared_correction_amends_the_prior_filing(
         declared_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
-    refreshed_first = get_filing_record(
+    refreshed_first = persisted_filing_record(
         first.filing_record_id,
         ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
     )
@@ -315,7 +315,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
         )
 
     assert amended.amends_filing_record_id == imported.filing_record_id
-    refreshed_baseline = get_filing_record(
+    refreshed_baseline = persisted_filing_record(
         imported.filing_record_id,
         ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
     )

@@ -13,12 +13,13 @@ from collections.abc import Mapping, Set
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.module_target_inventory import (
     assert_all_target_sets_current,
     compile_inventory,
     load_all_target_sets,
 )
-from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 from dev.packaging.command_execution import run_command
 

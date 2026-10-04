@@ -28,6 +28,7 @@ from ...application.user_profile.access_contracts import AccessDenialCode, Acces
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
 from .linux_worker_process import LinuxProcessScope
+from .macos_worker_process import MacosProcessScope
 from .profile_worker_lifetime import ProfileWorkerNativeLifetime
 from .runtime_frame_io import read_document, write_document, write_secret
 from .runtime_transport_cleanup import RuntimeTransportCleanup
@@ -162,7 +163,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         channel = self._operation_channel if operation else self._channel
         if channel is None or self._stopping.is_set():
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-        if isinstance(self._scope, LinuxProcessScope):
+        if isinstance(self._scope, LinuxProcessScope | MacosProcessScope):
             with self._native_guard:
                 if self._stopping.is_set() or not self._scope.owns_process(self._scope.worker_pid):
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)

@@ -49,7 +49,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.operations import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.conftest import authority_operation
 from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings

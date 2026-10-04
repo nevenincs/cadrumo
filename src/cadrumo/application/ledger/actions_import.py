@@ -528,27 +528,6 @@ def import_ledger_transactions(
     )
 
 
-def import_ledger_source(
-    command: LedgerSourceImportCommand,
-    *,
-    ports: LedgerImportPorts,
-    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
-    currency_normalizer: CurrencyNormalizationService | None = None,
-) -> LedgerSourceImportResult:
-    """Validate, ingest, and optionally persist one ledger source file.
-
-    Returns a :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
-    """
-    staged = prepare_ledger_source_import(command, ports=ports)
-    return persist_prepared_ledger_source_import(
-        staged,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=bucket_event_repository,
-        currency_normalizer=currency_normalizer,
-    )
-
-
 def prepare_ledger_source_import(
     command: LedgerSourceImportCommand,
     *,
@@ -787,7 +766,7 @@ def aggregate_ledger_import_results(
 ) -> LedgerSourceImportResult:
     """Fold the per-file results of a directory import into one result.
 
-    :func:`import_ledger_source` produces one result per file, so a directory
+    :func:`persist_prepared_ledger_source_import` produces one result per file, so a directory
     import holds several and the operator is owed a single answer. Summing them
     is a statement about what an import IS -- which counts add, which references
     concatenate, and which fields may not differ between files -- so it belongs
@@ -900,7 +879,6 @@ __all__ = [
     "LedgerProviderID",
     "PreparedLedgerSourceImport",
     "aggregate_ledger_import_results",
-    "import_ledger_source",
     "import_ledger_transactions",
     "persist_prepared_ledger_source_import",
     "plan_ledger_import_sources",

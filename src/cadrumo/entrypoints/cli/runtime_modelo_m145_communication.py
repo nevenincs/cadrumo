@@ -48,8 +48,6 @@ from .registered_operation_errors import invalid_completion_error, submitted_ope
 from .runtime_profile_binding import bound_profile_client
 from .runtime_registered_operation import run_registered_operation
 
-_NOT_FOUND_CODE = M145_COMMUNICATION_RECORD_NOT_FOUND_REFUSAL_CODE
-
 
 def create_m145_record(
     ctx: typer.Context,

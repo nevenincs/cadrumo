@@ -1,0 +1,210 @@
+{
+  "source_cut": "a8a7fb7d26e4b3b43ac7288a2e8574f8935638b9",
+  "integration_before": "0992a5d689d2a06fa832b0df0c2139d32525d45b",
+  "paths": [
+    {
+      "path": "CMakeLists.txt",
+      "selection": "incoming",
+      "semantic_rationale": "Keep earlier out-of-source refusal and preset scratch initialization.",
+      "before_sha256": "4070dfc6f30de18e73e1a3725aa015966f237739462bd91ea2fe20e40d940115",
+      "after_sha256": "631ddcff3cb9580dd37fe85a858f9ce99b0226435baf3fd2d1c24ef4d02540f5",
+      "stage_sha256": {
+        "2": "3963fe0a0647aaeea4680f5bca825ee8d2d5de4d0cc7582d94ec8ac74fec4332",
+        "3": "631ddcff3cb9580dd37fe85a858f9ce99b0226435baf3fd2d1c24ef4d02540f5"
+      }
+    },
+    {
+      "path": "CMakePresets.json",
+      "selection": "incoming",
+      "semantic_rationale": "Keep configuration-specific Debug/Release targets and explicit build-root TEMP/TMP/TMPDIR controls.",
+      "before_sha256": "6002fa0c2f24bd740ca210c92c98838408e3403c5d313ad2c77b90b998cdc8a2",
+      "after_sha256": "f9076f661773aac08902b65536ed5961ea164ac337dd5c8f64470e42c0539ee9",
+      "stage_sha256": {
+        "2": "109e99064c66046b7cff0ef5c04c5368f58c11285981d08f41f22856ea10496f",
+        "3": "f9076f661773aac08902b65536ed5961ea164ac337dd5c8f64470e42c0539ee9"
+      }
+    },
+    {
+      "path": "dev/packaging/native/artifact_verify.py",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt exact archive/manifest identity refusal before resetting prior evidence and archive stability after probes.",
+      "before_sha256": "563fc83f166187625e7418b5da382d6d9b7158e4e61da283993b0cf89fe7d8f6",
+      "after_sha256": "b00685ed02497eb3ec82338b3d7d69e62c55eb7c1e3e3645f1dc4ed6c9eeb82a",
+      "stage_sha256": {
+        "2": "965b4e0f95165e29d6079c5f8158ae8c7f0ea204d75e2817a543f83778831b0d",
+        "3": "b00685ed02497eb3ec82338b3d7d69e62c55eb7c1e3e3645f1dc4ed6c9eeb82a"
+      }
+    },
+    {
+      "path": "dev/packaging/native/assemble.py",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt parent creation, contract-owned optional Tk pruning with match/path validation and manifest removal receipts.",
+      "before_sha256": "f2363665a3d452b89a1ebadb39bafa4b0ccb241592f1548c72bf7a0313571dfb",
+      "after_sha256": "456cfb20f6a478e707397511561adab8bea7b01a25faa361cab0325e15f7ec3f",
+      "stage_sha256": {
+        "1": "4880126540fa48d6e4912cc6cf04011e7c38626fdb16832f81a67d3ef619a2e4",
+        "2": "4eedb61d8b9eefdd8fa0e4f6aa4776c8e8f4f3736b02f626a446a26a20093f5f",
+        "3": "456cfb20f6a478e707397511561adab8bea7b01a25faa361cab0325e15f7ec3f"
+      }
+    },
+    {
+      "path": "dev/packaging/native/layout.py",
+      "selection": "ours",
+      "semantic_rationale": "Retain finite enrolled Windows backend import; incoming generic dynamic import restores unresolved target authority.",
+      "before_sha256": "2c31bdcc7aea438e128aed30ca5ca977de9b90373ced046454f64fd825623450",
+      "after_sha256": "28c6dcfe483131110144025b2b8c5c21ca19bbec6808fb1e2d55d7496fcd958d",
+      "stage_sha256": {
+        "2": "28c6dcfe483131110144025b2b8c5c21ca19bbec6808fb1e2d55d7496fcd958d",
+        "3": "de40fb27e2e5ad2a7ae40b0add93d8a0388bc602066c4692f92b1b2beba8a17a"
+      }
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows.py",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt CPython extension qualification and inspected transitive PE extension/DLL lookup with missing/collision refusal.",
+      "before_sha256": "7354394660ab1e4dc44b8994f4c8ab72c7e4eaa0abf6617deb425cbbbdb94ef5",
+      "after_sha256": "4f38ef3617097814d781292146835d234a4b4f5d12c3780f1c71ecf10398f2d5",
+      "stage_sha256": {
+        "2": "d709751f7ca86d04d810f4943b80197bb74602ddf7e67b5a5fb15f6283d039af",
+        "3": "4f38ef3617097814d781292146835d234a4b4f5d12c3780f1c71ecf10398f2d5"
+      }
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_trace.ps1",
+      "selection": "incoming",
+      "semantic_rationale": "Retain canonical storage controls and put WPR recording scratch under the bounded trace root.",
+      "before_sha256": "7d27f2b44ec0fa594356bad451bccbc63479835aaa7b4237d5aa96f289db3f27",
+      "after_sha256": "48b877b3a979fdf7576080fd0ba8a1c4c65544630431c76181d71a130a0b7c2f",
+      "stage_sha256": {
+        "2": "d9aca1139cff0f23ee306a7dee8876418fdc797850b306e6642255b3fbf40b67",
+        "3": "48b877b3a979fdf7576080fd0ba8a1c4c65544630431c76181d71a130a0b7c2f"
+      }
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_verify.py",
+      "selection": "ours",
+      "semantic_rationale": "The only incoming delta re-privatizes verification_destination; retain public defining owner and callers.",
+      "before_sha256": "08d63b8ce72e96c4a1dd8fa32a04298d9ab72cb39dae1c046ad78c23feaa0ed6",
+      "after_sha256": "c3fb38ad2d26b0f24bdf375ea00e3ea1c3cc63b240f6e9d30ff073037b8d51b0",
+      "stage_sha256": {
+        "2": "c3fb38ad2d26b0f24bdf375ea00e3ea1c3cc63b240f6e9d30ff073037b8d51b0",
+        "3": "59b4686636f5af4614d7b8c67725f1c730683c1e5a75be09be27f425f086cf69"
+      }
+    },
+    {
+      "path": "dev/packaging/native/verify.py",
+      "selection": "ours",
+      "semantic_rationale": "Retain canonical public verification_destination plus fresh contained/explicit external root validation.",
+      "before_sha256": "18b1a8f6d032d98e2190fbd3a329a92d8cf3bad0fd3acf009adf2c2ed1f180da",
+      "after_sha256": "fd8e84669c72f90e98cbee0eff3fcc92253b3018a2de919aa664feb4440f67a9",
+      "stage_sha256": {
+        "1": "ce052aba31511483338ab3164ce6c3e8955f649ad06439905f0d916416b40b56",
+        "2": "fd8e84669c72f90e98cbee0eff3fcc92253b3018a2de919aa664feb4440f67a9",
+        "3": "4f3b34f26a4a514ca9454c7610c94fd911ee48527e022ed2cdfcf9137a423150"
+      }
+    },
+    {
+      "path": "native/CMakeLists.txt",
+      "selection": "incoming",
+      "semantic_rationale": "Include shared CMake Cargo command and application crate after platform setup; preserve existing host/platform targets.",
+      "before_sha256": "9978b03a00a6096499c83008e9ffa141cd1dc5c1e9ca85096d871bbf86bdf161",
+      "after_sha256": "1dac41322fa1e65320bb7ca01c30c64c1f6a73a6afbc61097d77161c8626db32",
+      "stage_sha256": {
+        "1": "3165851bc8763d5921cba842bf3dfe68d3725c0c5daa46eac62072e8c6d179e8",
+        "2": "e6a386ac976be046190abed6312bd3aee860b1497370e558c03f12c0b625184d",
+        "3": "1dac41322fa1e65320bb7ca01c30c64c1f6a73a6afbc61097d77161c8626db32"
+      }
+    },
+    {
+      "path": "native/CONTRACT.md",
+      "selection": "incoming",
+      "semantic_rationale": "Preserve newer Rust compatibility/readiness and artifact integrity contract, scope source evidence to its prior tested artifacts.",
+      "before_sha256": "948025926050ab46ec5386f3185e0c50c4e1d31c1f1fae5dafe8d205bb410988",
+      "after_sha256": "63db784e11b4d9d873ed077557e25d5e6ece014eb5fc95f1cc259dadf8ef156c",
+      "stage_sha256": {
+        "1": "d11047d100f170affb4314c0025ddaf6287bfb4e54a242c0aeda277145b28739",
+        "2": "2128df90f0580279edef625692c1beb2017aa7e453f47fdfbff438357b8031f2",
+        "3": "e1c15a843721425273a9c710b6b2db99732c01f0e9548622054d5b8355c7755d"
+      }
+    },
+    {
+      "path": "native/cmake/Packaging.cmake",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt precise packaging input census, serialized package tests, Cargo application dependency and post-package hashed locators.",
+      "before_sha256": "01b076b8b7bce11ea818098b1750d6f20a698930aec36856501a4d4ef8127183",
+      "after_sha256": "8f16ca87c637d7c515e2954665f4ff7fa0ea915bb2f8e6f2b6bae2b0ab5146f0",
+      "stage_sha256": {
+        "2": "507209ef2e4ab6051cbb18fe5e3deb79211762043648a198f67f3dfc47c09ed1",
+        "3": "8f16ca87c637d7c515e2954665f4ff7fa0ea915bb2f8e6f2b6bae2b0ab5146f0"
+      }
+    },
+    {
+      "path": "native/cmake/platforms/Windows.cmake",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt shared Cargo compiler/linker environment and long-path host manifest while retaining platform static/dynamic consumer outputs.",
+      "before_sha256": "291022bb5afc521a5b75a7434fda7a68335327785914877f131c9999c0b2d148",
+      "after_sha256": "5363e7c63ea22bcf165ad521566d7aa466b1f3ed0a74683f80601b348610ea44",
+      "stage_sha256": {
+        "2": "0f6930685421ca28ee5202f34743476cb2905457aa1714498e85ac375d8db751",
+        "3": "5363e7c63ea22bcf165ad521566d7aa466b1f3ed0a74683f80601b348610ea44"
+      }
+    },
+    {
+      "path": "native/interpreter/bootstrap.py",
+      "selection": "ours",
+      "semantic_rationale": "Incoming changes only undo typing override and runtime builtin-module resolution; retain integrated explicit loader and sys build attribute handling.",
+      "before_sha256": "08ace0b4275864ea032c5da896733f2ba657e6dd87bfab6624b64fc10a46374b",
+      "after_sha256": "b16e38c1528e96f887a8d167bd68e636dc5a0b491dcc141cc0378c7ab90d85ea",
+      "stage_sha256": {
+        "1": "159b19db1518fc7d055db216a4758e5c15266941acb946df67b079648963b965",
+        "2": "b16e38c1528e96f887a8d167bd68e636dc5a0b491dcc141cc0378c7ab90d85ea",
+        "3": "0442abf85ba6d7ab5bc4603f276d0ccd4aad264388a770c36884916b6e761cbf"
+      }
+    },
+    {
+      "path": "native/interpreter/windows/bootstrap.py",
+      "selection": "ours",
+      "semantic_rationale": "Incoming only removes Windows platform refusal; retain guard and confined DLL directory validation.",
+      "before_sha256": "cc1fcdb3de56b1aee94b416f3083c0643a2e248fa997a7b8518112bad73ec46f",
+      "after_sha256": "dace95143698951a63cb3ad6952768d23fb850911c2a3b9a25516150050d3f90",
+      "stage_sha256": {
+        "2": "dace95143698951a63cb3ad6952768d23fb850911c2a3b9a25516150050d3f90",
+        "3": "0069681c7106a29af0d319239617d26734f6735902e8c8213bf17864b3eb25ae"
+      }
+    },
+    {
+      "path": "native/platforms/windows-x64.json",
+      "selection": "incoming",
+      "semantic_rationale": "Adopt authored optional Tk exclusions and dde prerequisite win32ui in Windows contract.",
+      "before_sha256": "4330480fc22915eeb5dc96debeaf62431cb554836a5a8e3f9c9d987765778d0a",
+      "after_sha256": "6fcdb06a72153af42b10c442c1db09184c9799e8638b3e2880ea812b0c68eeda",
+      "stage_sha256": {
+        "2": "0ed7be1a7bef4bf9434f05fe64af3838b6d47d4de4e6afd537ab7584f05036fe",
+        "3": "6fcdb06a72153af42b10c442c1db09184c9799e8638b3e2880ea812b0c68eeda"
+      }
+    },
+    {
+      "path": "native/tests/package_smoke.py",
+      "selection": "combined",
+      "semantic_rationale": "Add owner-declared native module prerequisites while retaining authority refusal diagnostic and current smoke checks.",
+      "before_sha256": "cd3a2d69f86dd78659609033f6765666b09d187b53ab0ae61a02ae454ae4093f",
+      "after_sha256": "83b5b1f6976449fe8ba51ccefcb338b98f688523558a709778973eb5441e845c",
+      "stage_sha256": {
+        "2": "d932e0980bcd69a707894615ed9f5bf16c9d25f3ded9b6f181358f7eb056419a",
+        "3": "1f213766f46aac25ac83e306c814e9686ad8da56a897de70a766b10f5e36dc05"
+      }
+    },
+    {
+      "path": "native/tests/windows_smoke.py",
+      "selection": "ours",
+      "semantic_rationale": "Incoming only deletes genuine platform guard; retain explicit Windows refusal and real PE checks.",
+      "before_sha256": "aef32c1748748688eea9dd3922b1864ac5cd7adc1dd1df4ee527f766b7ed7f0b",
+      "after_sha256": "7066f653268565521b579e7692d811a6acba2d5da8e55f9bfe2eeb0e1501adc4",
+      "stage_sha256": {
+        "2": "7066f653268565521b579e7692d811a6acba2d5da8e55f9bfe2eeb0e1501adc4",
+        "3": "5dd054e326f842e3feef2bba7fe48d2ec143fde8449cea7676b9befe8df69751"
+      }
+    }
+  ],
+  "validation": "pending focused checks; no index/stage/commit/vault mutations"
+}

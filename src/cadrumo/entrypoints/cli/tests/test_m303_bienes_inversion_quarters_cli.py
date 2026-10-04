@@ -39,8 +39,7 @@ from ....domain.iva_compensation.reconciliation import IvaCompensationReconcilia
 from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
 from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -63,7 +62,7 @@ _COMPENSATION_DECIDED_AT = datetime(2025, 1, 2, 10, tzinfo=UTC)
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(["--format", "json", *args])
+    return invoke_seeded_profile_cli(["--format", "json", *args])
 
 
 def _seed_operator(request: pytest.FixtureRequest, *, activity_start_date: str) -> str:
@@ -316,9 +315,8 @@ def test_a_record_naming_no_ledger_row_refuses_the_quarters_of_its_year(
         error = require_error_document(refused.output)["error"]
         assert isinstance(error, dict)
         assert error["code"] == "REFUSED_PROFILE_BIENES_INVERSION_VALIDATION", quarter
-        assert error["message"] == (
-            "bienes-inversion assets acquired in the filing year have no reciprocal ledger observation: " + _ASSET_ID
-        ), quarter
+        assert error["message"] == "A capital-goods IVA regularisation record failed validation.", quarter
+        assert error["context"]["investment_asset_ids"] == _ASSET_ID, quarter
 
 
 def test_a_good_acquired_in_an_earlier_year_leaves_every_later_quarter_calculating(

@@ -8,7 +8,7 @@ the helper performs no calculation, persistence, or selection policy itself.
 from __future__ import annotations
 
 from ....tests.cli_envelope import require_schema_envelope
-from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import invoke_seeded_profile_cli
 from .native_profile_cli_support import invoke_native_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
@@ -23,8 +23,8 @@ def create_modelo_work_unit_via_cli(
 ) -> str:
     """Create a real modelo work unit and return its validated envelope id.
 
-    Native-profile callers use the registered secret transport; other callers
-    keep the cached CLI path used by this test suite.
+    Native-profile callers use the registered secret transport; seeded portable
+    callers use their joined human runtime through the same CLI parser.
     """
     command = [
         "app",
@@ -41,7 +41,7 @@ def create_modelo_work_unit_via_cli(
         revision,
     ]
     if native_profile is None:
-        result = invoke_cached_cli(["--format", "json", *command])
+        result = invoke_seeded_profile_cli(["--format", "json", *command])
     else:
         result = invoke_native_cli(native_profile, *command)
     assert result.exit_code == 0, result.output

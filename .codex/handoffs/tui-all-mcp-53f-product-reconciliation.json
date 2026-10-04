@@ -1,0 +1,689 @@
+{
+  "ours": "dd69ed8c349",
+  "incoming": "53f01bc87bb080a043dc871f7972da925efe5814",
+  "status": "source resolved; behavioral replay pending final publication/freeze",
+  "records": [
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/session.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "05e66302344866599c04b9b695c70d4a5a47af93f0f53dd6353bd8b9d11f4eee",
+      "stage2_sha256": "32e77b25c4f7e7b84a9d8f507929ee0bfa36a1e761a75599a3326f2783b55c36",
+      "stage3_sha256": "177c70ca15a3d689ef4719e92c9b767dcd87e764a0f38515e616400008afee5d",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "32e77b25c4f7e7b84a9d8f507929ee0bfa36a1e761a75599a3326f2783b55c36"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "2f55dcf7ded20eb71a17f9bcbc380b59ef004f3c49f52d771cfca194c9924338",
+      "stage2_sha256": "aa6ac7384cef90423dcf0bfdd9eff46a8540a3d9d27f5962875a001bf6cb5946",
+      "stage3_sha256": "3e770cfb6254ae02b76ad6fafb838de37126aef021b808242015e828d3b7c6a3",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "aa6ac7384cef90423dcf0bfdd9eff46a8540a3d9d27f5962875a001bf6cb5946"
+    },
+    {
+      "path": "src/cadrumo/application/aeat_sync/workspace_reader.py",
+      "status": "semantically reconciled",
+      "stage1_sha256": "b3d38f3ba20ddc33401a939bcf67cafd24b66f780eb6977f2fa5d9b121998dfd",
+      "stage2_sha256": "862d52f7fab0522d4979463c5030196e8ce871740776c97c7dec4fc8427113d9",
+      "stage3_sha256": "c85a4ee98e89dcf94d5a290ee0da3aca85bcc2da960fb6105125f5c5ab57ef8e",
+      "rationale": "Incoming equivalent mutually-exclusive census/filed branch ordering and doc clarifications retained; typed observation zero/unavailable semantics unchanged.",
+      "after_sha256": "c85a4ee98e89dcf94d5a290ee0da3aca85bcc2da960fb6105125f5c5ab57ef8e"
+    },
+    {
+      "path": "src/cadrumo/application/ledger/read_access.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "f2d68d3e64a60c456c4f35a29612d7e4b35d445b18e19c56205bf936a70c7fa4",
+      "stage2_sha256": "1a9a587644ab647960674c91ca1016eaf1dff0d7f868d99380ce13abce4da8e5",
+      "stage3_sha256": "c2140fb2e4ed7a738ca584a197478890a0b5eb96790099310ab6ee888c079f2d",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "1a9a587644ab647960674c91ca1016eaf1dff0d7f868d99380ce13abce4da8e5"
+    },
+    {
+      "path": "src/cadrumo/application/provisioning_browser.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "bcc045ec630ed863465adfb9f475331db65744e972fe74dfb147645dd2f36991",
+      "stage2_sha256": "de9809742a17ac588fb21e651923b144bb8ae6f3186ab8485248b46aafb23cb1",
+      "stage3_sha256": "079c0ce4b55814b2e346a5fe600ab7a24420a11cb0973a3cb4ce970a9f81f0dc",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "de9809742a17ac588fb21e651923b144bb8ae6f3186ab8485248b46aafb23cb1"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "status": "semantically reconciled",
+      "stage1_sha256": "e343c3758b61650aded3c64eb8683d69657430c99eea55a0ef79063265ff8652",
+      "stage2_sha256": "329a615aad460a5e9721f8fc134f483839725eb3409431692963841cd6f3adf3",
+      "stage3_sha256": "22034cb15203268c2ca2ec4e7e755cc0498897af2be2804abaf48c7885ff8dee",
+      "rationale": "Current application-only tests retained; unique incoming real installer environment proof moved to canonical outbound owner to obey application inward dependencies.",
+      "after_sha256": "329a615aad460a5e9721f8fc134f483839725eb3409431692963841cd6f3adf3"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_host.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "9e7a08f6686733303f3d636a5ce05cdd9092e9123270ab695ca1adf34f940f3e",
+      "stage2_sha256": "78c795838a542d0992d095587b87a5ea0f20c5901d4b9b8303aa6f9681fb0c76",
+      "stage3_sha256": "8971c82594022c4f2aea2a7a8c0465fbfab2127b94adda6fab016f24a1f6d7a9",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "78c795838a542d0992d095587b87a5ea0f20c5901d4b9b8303aa6f9681fb0c76"
+    },
+    {
+      "path": "src/cadrumo/core/config_state_root.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "5942f4e13e9bea3b4dcc3b57e353c71bc39292e68003476e075c85c825e35d47",
+      "stage2_sha256": "fc0e2bf3277e1555aa86b99b42a08da5b94a270b2e2760d0f9c2b04629567ee7",
+      "stage3_sha256": "c9422fba5f918243858c95ca27eb9a36d24299bedf90e21123cb044b8fa59e70",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "fc0e2bf3277e1555aa86b99b42a08da5b94a270b2e2760d0f9c2b04629567ee7"
+    },
+    {
+      "path": "src/cadrumo/core/storage_taxonomy_locations.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "6844e326108097a69a1bd41f8acf253fef796879e179f2d7da990f541695b2bd",
+      "stage2_sha256": "b346fc1b13ec8f50bb789a2316b1fc613f591d365f98e939b2d78b560fa07a67",
+      "stage3_sha256": "77ec5cae420c2c55d6a900df51cd8e09b07e99f4ae7cde1d6f16685b04e3c17e",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "b346fc1b13ec8f50bb789a2316b1fc613f591d365f98e939b2d78b560fa07a67"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "ff5e3e569c7ee0343342b9816b7ff8022a70ec314bf5917db37127c76e2e83d9",
+      "stage2_sha256": "b1fb4c6a33546cb494ec785aa983de05273cc3e51a3f534335e9847a199581ee",
+      "stage3_sha256": "01731ee456f02301429f7fd5ab95c13ab52fed051c79485ed8aeb95f86bd0065",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "b1fb4c6a33546cb494ec785aa983de05273cc3e51a3f534335e9847a199581ee"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_parser.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "8c75cea0daf124588c64c05ce166a9108282815e50cb2da4a4887f07c1ce0c45",
+      "stage2_sha256": "84f6c125ac5bb2e2d5eef6ef67bc24cc7f0e331a8bed2079d8a8c3825f806a08",
+      "stage3_sha256": "f765878e3f0d25eec7adac20e45580a27a524a026ab49c110c7d1a09f2f962e3",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "84f6c125ac5bb2e2d5eef6ef67bc24cc7f0e331a8bed2079d8a8c3825f806a08"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "24a5aa5b36fa9ee56dd730c4547c5a172e1fc787de3c4e501419e15e1f2bb0fc",
+      "stage2_sha256": "536402e34e27c5ec271fa3ec819ee5c0a4f4531a07f3e7312ba270c81e68d3bf",
+      "stage3_sha256": "acc4e0a02571a0b745711aee32e8d32e2fc8ea440368920e87dfab4332020fc2",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "536402e34e27c5ec271fa3ec819ee5c0a4f4531a07f3e7312ba270c81e68d3bf"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_row_bindings_are_consumed.py",
+      "status": "semantically reconciled",
+      "stage1_sha256": "466b37343fadcb036db0cede4d2030d0555a3afb5151f2e03698057f4a10fac9",
+      "stage2_sha256": "db086d6513df0ea43ec4d2cafba0af1abf7a88f4f1094f79b545f980028fd26e",
+      "stage3_sha256": "35d142a3c107da1095b404e06ba3d25b136fd790bf21fc74bff2100162326745",
+      "rationale": "Incoming stronger real-row repeat/reachability controls retained, including mutation witnesses on actual M347 published revision; no production relaxation.",
+      "after_sha256": "35d142a3c107da1095b404e06ba3d25b136fd790bf21fc74bff2100162326745"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/classification.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "e8e1f686b086bf8df049dbe7c529ff15f991e2d1bd0f308a2c4e8f03264f6bd0",
+      "stage2_sha256": "a753714d273a4448f69a72dc8a84a1fb122b491eda0c7be09af6d78b6dd07444",
+      "stage3_sha256": "6946f7fb394c92202161c2a18f91b0579fb6f1b841a472509b307ab3daa3b619",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "a753714d273a4448f69a72dc8a84a1fb122b491eda0c7be09af6d78b6dd07444"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/main.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "28ba8988e51454f662f87a3caf636cf14542adb701eb216438007ec968b16b65",
+      "stage2_sha256": "d2a8fc6bb9e0552ef39faa6d869b997a4c18b5709dc8de0d4ef6b2c74bf078f7",
+      "stage3_sha256": "e0beb9235ba9fa8958f6f07364f57778251acb1a7cc26ea697fca5688f211b7e",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "d2a8fc6bb9e0552ef39faa6d869b997a4c18b5709dc8de0d4ef6b2c74bf078f7"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
+      "status": "semantically reconciled",
+      "stage1_sha256": "eb54d238713ba556ab18cbb4aba175c6f5caec6142c0e4f7bb0185e6fd0f9dd7",
+      "stage2_sha256": "049b22f860b1c41049a98307dd7e2c3b00d24904a246f91d6257e60a086ebba4",
+      "stage3_sha256": "06e47b34f74c9a24d295c6fcfed3fd2bbf6a46ca77b2104f3549b78b7c93c09a",
+      "rationale": "Incoming Modelo100 live authority fixture2021 to supported2022 correction retained; all published-IBAN refusal assertions unchanged.",
+      "after_sha256": "06e47b34f74c9a24d295c6fcfed3fd2bbf6a46ca77b2104f3549b78b7c93c09a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_families.py",
+      "status": "pending semantic reconciliation",
+      "stage2_sha256": "e8d12388edc06f743d25d46327ee896a0d693b1fbc3d04d250c935be448ae98f",
+      "stage3_sha256": "82e96e14b5ea0327c87f215fee3def36135f77af101155bfa6fa33f21ad2d98c",
+      "after_sha256": "82e96e14b5ea0327c87f215fee3def36135f77af101155bfa6fa33f21ad2d98c"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_google_support.py",
+      "status": "pending semantic reconciliation",
+      "stage2_sha256": "4ff23f2005e1e36774e0f5072cf83332260350405f4b47d237bf238aab586d05",
+      "stage3_sha256": "a4df14a8ea59b422be74eb880ca660afc5f49affdfde40df6850b89344095579",
+      "after_sha256": "df7f5c64c1723417e61a34d3c83cf078308ab65ac00efb18a848ca03e8d43ed2"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "status": "pending semantic reconciliation",
+      "stage2_sha256": "2431e6ca4f655e522037f32f1111b9a954e60c15a4449194116fdf945baa7692",
+      "stage3_sha256": "98f5d87d5946e67a206065dcc6716df529ea268bbcb6b7dec366ec45e0185b81",
+      "after_sha256": "d015a1f5b75fa8dd4c08219233f790b6d9a241e63e1277936c013bfefb82dd1a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py",
+      "status": "pending semantic reconciliation",
+      "stage1_sha256": "c41f562bd00087b633d15386f5e960630df01f7a84a0813e8565eeb37ed4e0ca",
+      "stage2_sha256": "a507abd93e07285415443c5be44062b9fb1028ebca9450a091ee26de83565c94",
+      "stage3_sha256": "2cadb753cdc35ad860ec8450d0db75a16268cde320ac728467e69ded6065d508",
+      "after_sha256": "053c1e643796666fa7a45479e18a24d61426465ba9cedcb6fbee059c308f0eb5"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "673e40bfa2924401f6d5ceaf7e49ae60c7491b17aab3a288cd21c72208c606ca",
+      "stage2_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e",
+      "stage3_sha256": "098c476827f782658547cb865906b525d3db80d9c9f5be4b3548c002894f4990",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/posix_endpoint.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "82439ebb22f8ca0de198a4e517801542978ed2600f1f48a1d44f3f548bb9d39c",
+      "stage2_sha256": "9a713e39c8f6fa868a5bbbb49ebd4a3e3062101c8702b22d8a06bbdc63ce7775",
+      "stage3_sha256": "274a9e9b9550763858300f45c42ee301554ca3ac184f6452e66405c18237f634",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "9a713e39c8f6fa868a5bbbb49ebd4a3e3062101c8702b22d8a06bbdc63ce7775"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "549ee12ed724f9be60ac60c50d5ef8909d91f4c8f7ccfcba83f9b38d692f6580",
+      "stage2_sha256": "fc8bc64e94efcc9c38e15b3acd3061c831690bdfaf32058cc5284ff54dd4634a",
+      "stage3_sha256": "11fca4d7557a5071eb95178205d1440198fa0d0ffe0fbf842b88d3aaefa9dcd6",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "fc8bc64e94efcc9c38e15b3acd3061c831690bdfaf32058cc5284ff54dd4634a"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "dc82857be7a51bcd54966dac4316a9725149af8111a3cb621e72cc39f131ab3a",
+      "stage2_sha256": "b2a342103bc6856b0d2cbab2303b3c8f499f9e30e285a418073dfcaea8a59858",
+      "stage3_sha256": "39346e6b38e4feaf03bcb1ef3a8a296c24e54967c2cb789433218fc22cea6592",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "b2a342103bc6856b0d2cbab2303b3c8f499f9e30e285a418073dfcaea8a59858"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_posix.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "d3d374ae5b3235613f2bfefb4af13950b831bd64923f8592b9fb469f0bb73eab",
+      "stage2_sha256": "2769d79614366af97db0bdccd50868b31ec034e649cada1c9df1f3f07a21408d",
+      "stage3_sha256": "497fa5121c28fe5740a7645a3bc7939b31c89ffc0ab7859f857e05c58d51df0c",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "2769d79614366af97db0bdccd50868b31ec034e649cada1c9df1f3f07a21408d"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "89d791f5fce0cce7f69302d919d4bd114b11bbbd71f4530534ce5105facd3d74",
+      "stage2_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da",
+      "stage3_sha256": "0970a9bac4c755dcf59545ec89e52743f4fbf5752957fc1ff45458dd674f2198",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "dcf6100ce793ac932151648002ad35821c639426dcab5541445a3bb7f45eecb1",
+      "stage2_sha256": "ca93010d9125c562ae3994bcc8e64c919b491fff5cc70fada355e1ef4799d321",
+      "stage3_sha256": "fa54c46cc6f3faa0816579469c7d048eb0476887c35a06cc3467599de3a7617f",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "ca93010d9125c562ae3994bcc8e64c919b491fff5cc70fada355e1ef4799d321"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/gnome_login_observer.py",
+      "status": "retained superseded deletion",
+      "stage1_sha256": "ce8714a39dcb467a2c409f70b468a6885b5dd9019c2bf206ff0754b02483767c",
+      "stage3_sha256": "b991a9f91c51d90dc3a1e15512abb690def2c3686d5563200f9e068e79a5e991",
+      "rationale": "Resource-only installation moved into isolated dev/packaging utility by accepted no-management owner; retained GNOME observation consumer/resources remain. No product provisioning resurrection.",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "d46b810dfbfe4c00f3be3885c8661e95a88c7c714cc419ad8c5161a5b7775090",
+      "stage2_sha256": "aa73638fda3894179e6ea6a89d397cb6a8904ef605e5d7ad8db30a267766defd",
+      "stage3_sha256": "03e5a55fa8b8ab343325bae0a4d760cc5425b59825ff266440ce145859ea9d2f",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "aa73638fda3894179e6ea6a89d397cb6a8904ef605e5d7ad8db30a267766defd"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py",
+      "status": "retained current authoritative adapted owner",
+      "stage1_sha256": "961dd9929aa19dd92dc082ab3c369d795b66c8bab98a7168143fad268f8b0bcd",
+      "stage2_sha256": "7babccac81e38923378b97f014fb665a15f97215563b0e7cbbcb00b8ce11ec11",
+      "stage3_sha256": "604075874a7e340e8cb49c59f7bb4c779c3107949e1eb873d0c4fa2dafc4a9cb",
+      "rationale": "Incoming differences restore prior captured private names/type regressions/format-only text. Preserve current defining public APIs and verified native resource/lifetime/namespace safeguards.",
+      "after_sha256": "7babccac81e38923378b97f014fb665a15f97215563b0e7cbbcb00b8ce11ec11"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py",
+      "status": "new owning adapter test preserving incoming assertion",
+      "replacement_of": "src/cadrumo/application/tests/test_provisioning_browser.py::test_browser_installer_passes_configured_storage_and_temp_roots_to_playwright",
+      "rationale": "Actual adapter subprocess delegation belongs to adapter layer, retaining every canonical/vendor/temp environment assertion.",
+      "after_sha256": "ebb543df213256c0f8ca711e0aa62429daeecc165cfcff68c2d141135443abe0"
+    }
+  ],
+  "family_migrations": [
+    {
+      "source": "conformance_archive_support.py",
+      "replacement": "conformance_profile_archive_support.py",
+      "variant": "ARCHIVE_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_borrador_support.py",
+      "replacement": "conformance_live_borrador_support.py",
+      "variant": "BORRADOR_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_censo_support.py",
+      "replacement": "conformance_m036_support.py",
+      "variant": "M036_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_ledger_extended_support.py",
+      "replacement": "conformance_ledger_seed_support.py",
+      "variant": "LEDGER_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_maritime_quickfile_support.py",
+      "replacement": "conformance_maritime_preview_support.py",
+      "variant": "MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_modelo_reports_support.py",
+      "replacement": "conformance_modelo_spreadsheet_support.py",
+      "variant": "MODELO_REPORTS_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_review_exchange_support.py",
+      "replacement": "conformance_review_package_exchange_support.py",
+      "variant": "REVIEW_EXCHANGE_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_workstation_support.py",
+      "replacement": "conformance_workstation_check_support.py",
+      "variant": "WORKSTATION_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_google_support.py",
+      "replacement": "conformance_google_support.py",
+      "variant": "GOOGLE_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    },
+    {
+      "source": "conformance_m145_support.py",
+      "replacement": "conformance_m145_support.py",
+      "variant": "M145_MATERIAL_CONFORMANCE_FAMILY",
+      "rationale": "Preserve the existing real seeded success/refusal, persistence, bytes and cleanup witnesses beside incoming distinct independent DTO/negative scenarios; execute through the same actual registered supervisor, without duplicate primary ownership."
+    }
+  ],
+  "variant_enrollment": "One primary family per registered definition; material/negative premises independently executed through shared real supervisor.",
+  "primary_operations": 272,
+  "supplemental_variants": 54,
+  "verification": {
+    "scope_source_checks": "AST UTF8 parse, Ruff check/format, ty all surviving owned/coupled files PASS",
+    "collection": {
+      "tests": 339,
+      "errors": 0,
+      "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T001949.324523Z-pytest-52872-32ad8f04/run.log"
+    },
+    "pure_owner_tests": {
+      "passed": 3,
+      "seconds": 18.95,
+      "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T002016.931407Z-pytest-56412-b4df5012/run.log"
+    },
+    "behavioral_tests": "Not launched; newly merged preparations need fresh replay after final source freeze. Previous passing per-subject receipts are historical evidence, not verification of these new variants.",
+    "collection_failure_history": [
+      {
+        "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T001803.722670Z-pytest-12676-68b12dd4/run.log",
+        "error": "Removed SituacionInmueble defining type with retained catalogue/CLI/TUI callers. Restored HEAD invoice lease fields/validator."
+      },
+      {
+        "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T001906.379786Z-pytest-38736-8dbb7791/run.log",
+        "error": "Registered public schema rejected UtcInstant custom schema in evidence follow-up DTO. Restored HEAD plain datetime plus UTC validators."
+      }
+    ],
+    "frozen_source_count": 45,
+    "human_refusal_replay": {
+      "passed": 7,
+      "failed": 0,
+      "seconds": 37.36,
+      "warnings": 31,
+      "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T003014.691321Z-pytest-28920-d7f2081d/run.log",
+      "session": 51601,
+      "exit_code": 0,
+      "source_hashes_unchanged": true,
+      "source_checks": "Ruff check/format and ty PASS JSON module",
+      "scope": "Entire six-case JSON error module plus actual native registered human-text refusal case; no provider bypass or fake handler."
+    }
+  },
+  "adjacent_repairs": [
+    {
+      "path": "src/cadrumo/domain/invoices/models.py",
+      "intent": "Restore HEAD invoice-backed M347 leased-premises type, fields, validator and public input normalizer while preserving incoming direct require_eu_member_state defining import."
+    },
+    {
+      "path": "src/cadrumo/domain/invoices/_payload_normalisation.py",
+      "intent": "Restore referencia_catastral canonical uppercase/blank normalization while preserving incoming direct require_eu_member_state import."
+    },
+    {
+      "path": "src/cadrumo/application/ledger/evidence_followup_contracts.py",
+      "intent": "Retain HEAD public plain datetime fields plus UTC validators; incoming UtcInstant custom schema prevents registered closed-schema startup. Equivalent UTC semantics preserved, no schema guard relaxation."
+    }
+  ],
+  "final_paths": [
+    {
+      "path": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "status": "written",
+      "after_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/posix_endpoint.py",
+      "status": "written",
+      "after_sha256": "9a713e39c8f6fa868a5bbbb49ebd4a3e3062101c8702b22d8a06bbdc63ce7775"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "status": "written",
+      "after_sha256": "fc8bc64e94efcc9c38e15b3acd3061c831690bdfaf32058cc5284ff54dd4634a"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
+      "status": "written",
+      "after_sha256": "b2a342103bc6856b0d2cbab2303b3c8f499f9e30e285a418073dfcaea8a59858"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_posix.py",
+      "status": "written",
+      "after_sha256": "2769d79614366af97db0bdccd50868b31ec034e649cada1c9df1f3f07a21408d"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "written",
+      "after_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/session.py",
+      "status": "written",
+      "after_sha256": "32e77b25c4f7e7b84a9d8f507929ee0bfa36a1e761a75599a3326f2783b55c36"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py",
+      "status": "written",
+      "after_sha256": "aa6ac7384cef90423dcf0bfdd9eff46a8540a3d9d27f5962875a001bf6cb5946"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py",
+      "status": "written",
+      "after_sha256": "ebb543df213256c0f8ca711e0aa62429daeecc165cfcff68c2d141135443abe0"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
+      "status": "written",
+      "after_sha256": "ca93010d9125c562ae3994bcc8e64c919b491fff5cc70fada355e1ef4799d321"
+    },
+    {
+      "path": "src/cadrumo/application/aeat_sync/workspace_reader.py",
+      "status": "written",
+      "after_sha256": "c85a4ee98e89dcf94d5a290ee0da3aca85bcc2da960fb6105125f5c5ab57ef8e"
+    },
+    {
+      "path": "src/cadrumo/application/ledger/evidence_followup_contracts.py",
+      "status": "written",
+      "after_sha256": "2c074ef5570c9524a8468d2f711a497b55ab04bd757044ce97b3ea12d94c46f0"
+    },
+    {
+      "path": "src/cadrumo/application/ledger/read_access.py",
+      "status": "written",
+      "after_sha256": "1a9a587644ab647960674c91ca1016eaf1dff0d7f868d99380ce13abce4da8e5"
+    },
+    {
+      "path": "src/cadrumo/application/provisioning_browser.py",
+      "status": "written",
+      "after_sha256": "de9809742a17ac588fb21e651923b144bb8ae6f3186ab8485248b46aafb23cb1"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "status": "written",
+      "after_sha256": "329a615aad460a5e9721f8fc134f483839725eb3409431692963841cd6f3adf3"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_host.py",
+      "status": "written",
+      "after_sha256": "78c795838a542d0992d095587b87a5ea0f20c5901d4b9b8303aa6f9681fb0c76"
+    },
+    {
+      "path": "src/cadrumo/core/config_state_root.py",
+      "status": "written",
+      "after_sha256": "fc0e2bf3277e1555aa86b99b42a08da5b94a270b2e2760d0f9c2b04629567ee7"
+    },
+    {
+      "path": "src/cadrumo/core/storage_taxonomy_locations.py",
+      "status": "written",
+      "after_sha256": "b346fc1b13ec8f50bb789a2316b1fc613f591d365f98e939b2d78b560fa07a67"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+      "status": "written",
+      "after_sha256": "b1fb4c6a33546cb494ec785aa983de05273cc3e51a3f534335e9847a199581ee"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_parser.py",
+      "status": "written",
+      "after_sha256": "84f6c125ac5bb2e2d5eef6ef67bc24cc7f0e331a8bed2079d8a8c3825f806a08"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py",
+      "status": "written",
+      "after_sha256": "536402e34e27c5ec271fa3ec819ee5c0a4f4531a07f3e7312ba270c81e68d3bf"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_row_bindings_are_consumed.py",
+      "status": "written",
+      "after_sha256": "35d142a3c107da1095b404e06ba3d25b136fd790bf21fc74bff2100162326745"
+    },
+    {
+      "path": "src/cadrumo/domain/invoices/_payload_normalisation.py",
+      "status": "written",
+      "after_sha256": "2b225917198d0a1081d92b77be41bdbc98c5e637c073f1587dcb54aee4eb996a"
+    },
+    {
+      "path": "src/cadrumo/domain/invoices/models.py",
+      "status": "written",
+      "after_sha256": "5d338cadd2762d09558d96f82b05ec59659e1e59acca8e5feb7ff4f04eed8d71"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/classification.py",
+      "status": "written",
+      "after_sha256": "a753714d273a4448f69a72dc8a84a1fb122b491eda0c7be09af6d78b6dd07444"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/main.py",
+      "status": "written",
+      "after_sha256": "d2a8fc6bb9e0552ef39faa6d869b997a4c18b5709dc8de0d4ef6b2c74bf078f7"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
+      "status": "written",
+      "after_sha256": "06e47b34f74c9a24d295c6fcfed3fd2bbf6a46ca77b2104f3549b78b7c93c09a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/gnome_login_observer.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "status": "written",
+      "after_sha256": "aa73638fda3894179e6ea6a89d397cb6a8904ef605e5d7ad8db30a267766defd"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py",
+      "status": "written",
+      "after_sha256": "7babccac81e38923378b97f014fb665a15f97215563b0e7cbbcb00b8ce11ec11"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_archive_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_auth_apoderado_support.py",
+      "status": "written",
+      "after_sha256": "22be925163aeb1baaa37806b9503fc6b0833276a4e0faaffd3400ded1c604250"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_auth_diagnostic_report_support.py",
+      "status": "written",
+      "after_sha256": "aa8b55f1587d98cff4dc3c9ffe16cf58fcfdecbe13c0967ccd327b7d6d00b790"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_borrador_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_censo_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_families.py",
+      "status": "written",
+      "after_sha256": "82e96e14b5ea0327c87f215fee3def36135f77af101155bfa6fa33f21ad2d98c"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_google_support.py",
+      "status": "written",
+      "after_sha256": "df7f5c64c1723417e61a34d3c83cf078308ab65ac00efb18a848ca03e8d43ed2"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_ledger_extended_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py",
+      "status": "written",
+      "after_sha256": "e1cb14a711db317982edcf61fd2a0c72d7e8d20186f1a3e99d381019cd322e8d"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py",
+      "status": "written",
+      "after_sha256": "92b58d408a2a7da02d493d92d45e78b8152c03ba94ebfa616dd79d1bdd045cfd"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m036_support.py",
+      "status": "written",
+      "after_sha256": "4cd94556449e9137b5253aa702ac69d583cc883b1138bf07dddc789c94b024e9"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "status": "written",
+      "after_sha256": "d015a1f5b75fa8dd4c08219233f790b6d9a241e63e1277936c013bfefb82dd1a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_maritime_preview_support.py",
+      "status": "written",
+      "after_sha256": "866e520bdcf59d7ab0788618b84def037a0dd8fc6c70e0e97c29d9e7f13df853"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_maritime_quickfile_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py",
+      "status": "written",
+      "after_sha256": "ec96f30b5dff736b9c570cf98d240205dee50769f21559d932b0fe49b66b6a4b"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_profile_archive_support.py",
+      "status": "written",
+      "after_sha256": "cf0046d4af8302b5ff78fb5267b91bf5ff296ebe34567f63d1dcc5c77c1910c1"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_review_exchange_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_review_package_exchange_support.py",
+      "status": "written",
+      "after_sha256": "d5ad355889b0faa71fccaec19dc73e84884d710dc5d7f00514997f375c7be399"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_variants.py",
+      "status": "written",
+      "after_sha256": "a70d08872f97325e52a24245e0d4427a08c16f64edd18ac2c2b699eeb17e28f9"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py",
+      "status": "written",
+      "after_sha256": "f353e8d639648a6ae207ed6aa8ff20c3cfd7219bb46fb25020a98d88c57de95a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_workstation_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py",
+      "status": "written",
+      "after_sha256": "053c1e643796666fa7a45479e18a24d61426465ba9cedcb6fbee059c308f0eb5"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py",
+      "status": "written",
+      "after_sha256": "7e4ecee290d18daf1c8ccad1514696dbff46ebdd150b1bee8e888d8ae3cbd53b"
+    }
+  ],
+  "deleted_paths": [
+    "src/cadrumo/entrypoints/runtime/gnome_login_observer.py",
+    "src/cadrumo/entrypoints/tests/conformance_archive_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_borrador_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_censo_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_ledger_extended_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_maritime_quickfile_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_review_exchange_support.py",
+    "src/cadrumo/entrypoints/tests/conformance_workstation_support.py"
+  ],
+  "new_defining_modules": [
+    "src/cadrumo/entrypoints/tests/conformance_variants.py",
+    "src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py"
+  ],
+  "additional_intent_dispositions": [
+    {
+      "incoming_path": "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py",
+      "test": "test_text_mode_domain_refusal_renders_for_a_human_not_as_json",
+      "status": "already present under actual admitted native CLI owner; JSON module documentation identifies defining owner",
+      "replacement": "src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py",
+      "rationale": "All five incoming outer assertions AST-identical: exit2, nonJSON, typed prefix echoed, human Prefix label, exact cli.ledger.transaction_id.resolves action condition. Additional credential secrecy assertion survives inside real admission fixture.",
+      "evidence": ".codex/handoffs/tui-all-mcp-53f-cli-human-refusal-reconciliation.json"
+    }
+  ]
+}

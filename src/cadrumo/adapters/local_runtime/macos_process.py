@@ -6,11 +6,19 @@ import ctypes
 import errno
 import math
 import os
+import struct
 import sys
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError
+
+# Darwin libproc PROC_PIDUNIQIDENTIFIERINFO: the kernel's private record carrying
+# the per-incarnation pidversion that audit tokens and exact signalling compare.
+_PROC_PIDUNIQIDENTIFIERINFO = 17
+_MAXIMUM_PID = 2_147_483_647
+_MAXIMUM_NATIVE_ID = 0xFFFFFFFF
 
 
 class _BsdProcessInfo(ctypes.Structure):
@@ -37,6 +45,18 @@ class _BsdProcessInfo(ctypes.Structure):
         ("nice", ctypes.c_int32),
         ("started_seconds", ctypes.c_uint64),
         ("started_microseconds", ctypes.c_uint64),
+    )
+
+
+class _UniqueIdentifierInfo(ctypes.Structure):
+    _fields_ = (
+        ("executable_uuid", ctypes.c_uint8 * 16),
+        ("unique_id", ctypes.c_uint64),
+        ("parent_unique_id", ctypes.c_uint64),
+        ("version", ctypes.c_int32),
+        ("original_parent_version", ctypes.c_int32),
+        ("reserved_first", ctypes.c_uint64),
+        ("reserved_second", ctypes.c_uint64),
     )
 
 
@@ -121,6 +141,131 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat
         )
     except (AttributeError, OSError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+
+
+@dataclass(frozen=True, slots=True)
+class MacosProcessIncarnation:
+    """One exact process lifetime: a PID is reusable, its kernel version is not.
+
+    Darwin assigns a fresh pidversion at creation and again at each exec, so an
+    incarnation names one program image of one process, never a later reuse.
+    """
+
+    pid: int
+    version: int
+    unique_id: int
+
+
+class MacosSignalDelivery(StrEnum):
+    """Outcome of exact-incarnation signalling; refusal is raised, never returned."""
+
+    DELIVERED = "delivered"
+    GONE = "gone"
+
+
+def decode_macos_incarnation(payload: bytes, *, pid: int) -> MacosProcessIncarnation:
+    """Validate a complete native unique-identifier record for one expected PID.
+
+    Args:
+        payload: Exact native proc_uniqidentifierinfo record.
+        pid: Kernel PID the record was requested for.
+    """
+    if len(payload) != ctypes.sizeof(_UniqueIdentifierInfo) or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    value = _UniqueIdentifierInfo.from_buffer_copy(payload)
+    if not 0 < value.version <= _MAXIMUM_PID or value.unique_id <= 0:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    return MacosProcessIncarnation(pid=pid, version=int(value.version), unique_id=int(value.unique_id))
+
+
+def read_macos_incarnation(pid: int) -> MacosProcessIncarnation | None:
+    """Read the live incarnation of a PID; None means no live process holds it.
+
+    Exited and zombie processes are absent. Any other native failure refuses,
+    so an unreadable process is never mistaken for a gone one.
+
+    Args:
+        pid: Kernel PID, bounded before native integer conversion.
+    """
+    if sys.platform != "darwin" or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    try:
+        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        query = native.proc_pidinfo
+        query.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int)
+        query.restype = ctypes.c_int
+        value = _UniqueIdentifierInfo()
+        ctypes.set_errno(0)
+        count = query(pid, _PROC_PIDUNIQIDENTIFIERINFO, 0, ctypes.byref(value), ctypes.sizeof(value))
+        if count <= 0 and ctypes.get_errno() == errno.ESRCH:
+            return None
+        if count != ctypes.sizeof(value):
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        return decode_macos_incarnation(ctypes.string_at(ctypes.byref(value), ctypes.sizeof(value)), pid=pid)
+    except (AttributeError, OSError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+
+
+def macos_audit_token(incarnation: MacosProcessIncarnation, *, user_id: int, group_id: int) -> bytes:
+    """Encode the eight-word audit token that names one exact incarnation.
+
+    The kernel resolves the token by PID and pidversion, so a stale token can
+    never reach a later process that reused the PID.
+
+    Args:
+        incarnation: Exact target process lifetime.
+        user_id: Native owner UID placed in the audit and credential words.
+        group_id: Native owner GID placed in the credential words.
+    """
+    if (
+        not 0 < incarnation.pid <= _MAXIMUM_PID
+        or not 0 < incarnation.version <= _MAXIMUM_PID
+        or not 0 <= user_id <= _MAXIMUM_NATIVE_ID
+        or not 0 <= group_id <= _MAXIMUM_NATIVE_ID
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    # audit_token_t words: auid, euid, egid, ruid, rgid, pid, asid, pidversion.
+    return struct.pack("=8I", user_id, user_id, group_id, user_id, group_id, incarnation.pid, 0, incarnation.version)
+
+
+def signal_macos_incarnation(incarnation: MacosProcessIncarnation, signal_number: int) -> MacosSignalDelivery:
+    """Deliver a signal only to the exact incarnation, through its kernel audit token.
+
+    Args:
+        incarnation: Exact target process lifetime.
+        signal_number: Native BSD signal number to deliver.
+    """
+    if type(signal_number) is not int or not 0 < signal_number < 32:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    if sys.platform == "darwin":
+        token = (ctypes.c_uint32 * 8).from_buffer_copy(
+            macos_audit_token(incarnation, user_id=os.getuid(), group_id=os.getgid())
+        )
+        try:
+            native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+            deliver = native.proc_signal_with_audittoken
+            deliver.argtypes = (ctypes.c_void_p, ctypes.c_int)
+            deliver.restype = ctypes.c_int
+            ctypes.set_errno(0)
+            result = deliver(ctypes.byref(token), signal_number)
+            # libproc returns the native errno directly; tolerate a -1/errno form too.
+            return macos_signal_delivery(ctypes.get_errno() if result == -1 else result)
+        except (AttributeError, OSError):
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+    raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
+def macos_signal_delivery(result: int) -> MacosSignalDelivery:
+    """Classify a native exact-token signal result; any refusal raises.
+
+    Args:
+        result: Native errno-style result of proc_signal_with_audittoken.
+    """
+    if result == 0:
+        return MacosSignalDelivery.DELIVERED
+    if result == errno.ESRCH:
+        return MacosSignalDelivery.GONE
+    raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
 class MacosProcessWatch:

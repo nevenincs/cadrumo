@@ -8,15 +8,13 @@ result fields whose disclosure was authorized for the MCP destination.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.schema_scalars import CalendarDate, DecimalValue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -49,9 +47,6 @@ from .query_read_operation import (
     require_modelo_query_worker_identity,
     resolve_modelo_query_read_access,
 )
-
-_DECIMAL = TypeAdapter[Decimal](DecimalValue)
-_CALENDAR_DATE = TypeAdapter[str](CalendarDate)
 
 
 def _readiness_summary(

@@ -12,8 +12,8 @@ from ._app_ledger_rule_ratio_command_spec_support import (
     _RATIOS_OUTPUT_LANGUAGE_OPTION,
     _RATIOS_YEAR_OPTION,
 )
-from ._command_parameter_contracts import ArgumentSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,

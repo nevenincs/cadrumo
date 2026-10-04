@@ -36,7 +36,6 @@ from ..nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     READ_GUARD_POLICY,
     NifIvaCheckResult,
-    NifIvaCheckSedeDriver,
     SedeNifIvaCheckObservation,
     _assert_query_browser_action,
     assert_nif_iva_read_landing,
@@ -47,45 +46,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _AEAT = Settings.external_constants().aeat
 _NIF_IVA_ENTRY_URL = f"{_AEAT.domains.sede}{_AEAT.help_pages.nif_iva_landing}"
 _AUTH_GATE_4033_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033}"
-
-
-def test_driver_mode_is_live() -> None:
-    assert NifIvaCheckSedeDriver().mode == "live"
-
-
-def test_planned_operations_lists_entry_form_open_per_nif_discard() -> None:
-    driver = NifIvaCheckSedeDriver()
-
-    operations = driver.planned_operations(
-        b"",
-        expected={"FR12345678901": "valid", "DE111222333": "valid"},
-    )
-
-    # Six steps: entry GET, form GET, open-form, two per-NIF checks (sorted), discard.
-    assert len(operations) == 6
-    _ext = Settings.external_constants()
-    assert operations[0].kind == "http"
-    assert operations[0].method == "GET"
-    assert str(operations[0].url) == f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
-    assert operations[1].kind == "http"
-    assert operations[1].method == "GET"
-    assert str(operations[1].url) == _ext.aeat.oracles.nif_iva_verification
-    assert operations[2].kind == "browser_action"
-    assert operations[2].action == "open-nif-iva-form"
-    # Per-NIF checks emitted in sorted order so the operation list is deterministic.
-    assert operations[3].kind == "browser_action"
-    assert operations[3].action == "check-nif-DE111222333"
-    assert operations[4].kind == "browser_action"
-    assert operations[4].action == "check-nif-FR12345678901"
-    assert operations[5].kind == "browser_action"
-    assert operations[5].action == "discard-session"
-
-
-def test_planned_operations_rejects_empty_expected() -> None:
-    driver = NifIvaCheckSedeDriver()
-
-    with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
-        driver.planned_operations(b"", expected={})
 
 
 def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:

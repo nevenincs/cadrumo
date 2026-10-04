@@ -124,7 +124,7 @@ import time
 from pathlib import Path
 
 from playwright.async_api import async_playwright
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.linux_worker_process import linux_process_start_identity
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.entrypoints.runtime.worker import run

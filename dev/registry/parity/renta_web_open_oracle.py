@@ -12,11 +12,11 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
 from cadrumo.core.decimal.coercion import coerce_finite_european_decimal, normalize_decimal_separators
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import OracleId
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
+from ..checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
 from .external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     require_bundled_oracle_evidence_locator,

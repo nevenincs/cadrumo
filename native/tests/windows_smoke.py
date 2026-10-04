@@ -13,6 +13,8 @@ def require(condition, message):
 
 
 require(bool(shell.__file__), "COM extension did not load")
+if sys.platform != "win32":
+    raise RuntimeError("Windows PE acceptance requires Windows")
 kernel = ctypes.WinDLL("kernel32", use_last_error=True)
 kernel.LoadLibraryExW.argtypes = (ctypes.c_wchar_p, ctypes.c_void_p, ctypes.c_uint)
 kernel.LoadLibraryExW.restype = ctypes.c_void_p

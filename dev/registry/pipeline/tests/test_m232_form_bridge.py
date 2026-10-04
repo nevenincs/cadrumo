@@ -16,9 +16,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
-from .. import cli, m232_form_bridge
+from .. import cli, generated_form_bridge
+from ..generated_form_bridge import GeneratedFormBridge, prepare_generated_form_bridge, registry_evidence_content_digest
 from ..historical_static_repair import validated_historical_repair_source
-from ..m232_form_bridge import M232FormBridge, m232_evidence_content_digest, prepare_m232_form_bridge
 from ..tree_publication_contracts import GeneratedExportPublicationJournal, GeneratedExportTransactionPaths
 from ..tree_publication_journal import write_generated_export_publication_journal
 
@@ -44,9 +44,10 @@ def test_historical_repair_refuses_another_target_or_old_manifest() -> None:
 
 def test_bridge_refuses_unreviewed_old_manifest_before_any_file_access(tmp_path: Path) -> None:
     with pytest.raises(RegistryValidationError, match="exact reviewed source and old target"):
-        prepare_m232_form_bridge(
+        prepare_generated_form_bridge(
             registry_root=tmp_path / "absent-registry",
             candidate_root=tmp_path / "absent-candidate",
+            modelo="232",
             revision="2016-2017",
             source_ref="aeat-dr-232-2016",
             source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
@@ -80,15 +81,17 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
     form_root = prepared.candidate_root / "modelos" / "232" / "revisions" / revision_id / "form_layouts"
     fragment = next(form_root.glob("*.toml"))
     assert fragment.name == "0001-complete-edition.toml"
-    generated = m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+    generated = generated_form_bridge._candidate_generated_form_bytes(
+        prepared.candidate_root, "232", revision_id, source_root
+    )
     assert sha256(generated).hexdigest() == "a4e2d574372a6539b15d0467d566e6b1a03f75bb1ae3f75978ff352e09863405"
     fragment.rename(form_root / "unreviewed-form.toml")
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
-        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
     (form_root / "unreviewed-form.toml").rename(fragment)
     (form_root / "unexpected.txt").write_text("extra staged form content", encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
-        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
     (form_root / "unexpected.txt").unlink()
     original = fragment.read_text(encoding="utf-8")
     changed, count = re.subn(
@@ -100,7 +103,7 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
     assert count == 1
     fragment.write_text(changed, encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="candidate form differs from its fresh canonical generation"):
-        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
 
 
 def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -117,11 +120,13 @@ def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, mon
         state = binary.stat()
         return ((str(binary), state.st_size, state.st_mtime_ns),)
 
-    monkeypatch.setattr(m232_form_bridge, "collect_source_evidence_fingerprints", evidence)
-    monkeypatch.setattr(m232_form_bridge, "m232_interpreting_input_digest", lambda: "unchanged")
-    monkeypatch.setattr(m232_form_bridge, "bundled_path", lambda: source_root)
-    digest_before = m232_evidence_content_digest(source_root)
-    bridge = M232FormBridge(
+    monkeypatch.setattr(generated_form_bridge, "collect_source_evidence_fingerprints", evidence)
+    monkeypatch.setattr(generated_form_bridge, "generated_form_interpreting_input_digest", lambda _modelo: "unchanged")
+    monkeypatch.setattr(generated_form_bridge, "bundled_path", lambda: source_root)
+    digest_before = registry_evidence_content_digest(source_root)
+    bridge = GeneratedFormBridge(
+        modelo="232",
+        old_manifest_sha256=sha256(b"old manifest").hexdigest(),
         revision="2016-2017",
         source_ref="aeat-dr-232-2016",
         source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
@@ -131,13 +136,13 @@ def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, mon
         other_files={},
         interpreting_digest="unchanged",
         evidence_content_digest=digest_before,
-        profile_schema_fingerprint=m232_form_bridge.fingerprint_tree(profile_root),
+        profile_schema_fingerprint=generated_form_bridge.fingerprint_tree(profile_root),
     )
     binary.write_bytes(b"CD")
     os.utime(binary, ns=(first_stat.st_atime_ns, first_stat.st_mtime_ns))
     assert binary.stat().st_size == first_stat.st_size
     assert binary.stat().st_mtime_ns == first_stat.st_mtime_ns
-    assert m232_evidence_content_digest(source_root) != digest_before
+    assert registry_evidence_content_digest(source_root) != digest_before
     with pytest.raises(RegistryValidationError, match="inputs changed after prevalidation"):
         bridge.require_export_cutover(tmp_path / "not-live")
 
@@ -150,12 +155,14 @@ def test_form_owner_failure_after_export_commit_reports_incomplete(tmp_path: Pat
         nonlocal reached_full_live
         reached_full_live = True
 
-    class RefusingOwner(M232FormBridge):
+    class RefusingOwner(GeneratedFormBridge):
         @override
         def finish_with_form_owner(self, registry_root: Path, source_root: Path) -> None:
             raise RegistryValidationError("selected form owner failed after export commit")
 
     bridge = RefusingOwner(
+        modelo="232",
+        old_manifest_sha256="0" * 64,
         revision="2016-2017",
         source_ref="aeat-dr-232-2016",
         source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
@@ -170,7 +177,7 @@ def test_form_owner_failure_after_export_commit_reports_incomplete(tmp_path: Pat
     with pytest.raises(
         RegistryValidationError, match="source was installed but companion/currentness closure is incomplete"
     ):
-        cli._finish_m232_republication(
+        cli._finish_form_republication(
             tmp_path,
             bridge,
             final_live_validator=full_live,
@@ -200,28 +207,30 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         sha256(old_bytes).hexdigest(),
         sha256(b"old form").hexdigest(),
     )
-    monkeypatch.setattr(m232_form_bridge, "_REVIEWED", {"2016-2017": reviewed})
-    monkeypatch.setattr(m232_form_bridge, "bundled_path", lambda: source_root)
-    monkeypatch.setattr(m232_form_bridge, "m232_interpreting_input_digest", lambda: "same")
-    monkeypatch.setattr(m232_form_bridge, "m232_evidence_content_digest", lambda _source_root: "same")
+    monkeypatch.setattr(generated_form_bridge, "_REVIEWED", {("232", "2016-2017"): reviewed})
+    monkeypatch.setattr(generated_form_bridge, "bundled_path", lambda: source_root)
+    monkeypatch.setattr(generated_form_bridge, "generated_form_interpreting_input_digest", lambda _modelo: "same")
+    monkeypatch.setattr(generated_form_bridge, "registry_evidence_content_digest", lambda _source_root: "same")
     monkeypatch.setattr(
-        m232_form_bridge,
+        generated_form_bridge,
         "verify_generated_export_package",
         lambda _root: SimpleNamespace(
             modelo="232", revision_id="2016-2017", source_ref=reviewed[0], source_sha256=reviewed[1]
         ),
     )
-    bridge = M232FormBridge(
+    bridge = GeneratedFormBridge(
+        modelo="232",
+        old_manifest_sha256=sha256(b"old manifest").hexdigest(),
         revision="2016-2017",
         source_ref=reviewed[0],
         source_sha256=reviewed[1],
         old_form_sha256=reviewed[3],
         candidate_form_sha256=sha256(b"new form").hexdigest(),
         candidate_manifest_sha256=sha256(new_bytes).hexdigest(),
-        other_files=m232_form_bridge._other_files(registry_root, "2016-2017"),
+        other_files=generated_form_bridge._other_files(registry_root, "232", "2016-2017"),
         interpreting_digest="same",
         evidence_content_digest="same",
-        profile_schema_fingerprint=m232_form_bridge.fingerprint_tree(profile_root),
+        profile_schema_fingerprint=generated_form_bridge.fingerprint_tree(profile_root),
     )
     paths = GeneratedExportTransactionPaths(target_root=registry_root, modelo="232", revision_id="2016-2017")
     backup = registry_root / f"{paths.backup_prefix}reviewed"

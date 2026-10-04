@@ -108,22 +108,6 @@ class ReviewPackageSigningKeypair(BaseModel):
         return ed25519_public_key_from_hex(self.public_key_hex)
 
 
-class ReviewPackageSigningPublicKey(BaseModel):
-    """The exportable, non-secret half of a profile's signing keypair.
-
-    Safe to hand to a receiving accountant so they can verify a package's
-    signature independently. Carries no secrecy requirement -- unlike
-    :class:`ReviewPackageSigningKeypair`, this model is fine to write to a
-    plaintext file, print, or transmit.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: UtcInstant
-
-
 class SignedReviewPackage(BaseModel):
     """Signature envelope binding a review package's manifest digest to a signer.
 
@@ -161,21 +145,6 @@ def ensure_review_package_signing_keypair(
             timestamp (tests only); defaults to the current UTC time.
     """
     return signing_keypair.ensure_keypair(bucket_id=bucket_id, generated_at=generated_at)
-
-
-def review_package_signing_public_key(
-    keypair: ReviewPackageSigningKeypair,
-) -> ReviewPackageSigningPublicKey:
-    """Project the exportable public half out of a full keypair.
-
-    The projection never touches ``private_key_hex``; the returned model is
-    safe to hand to a receiving accountant.
-    """
-    return ReviewPackageSigningPublicKey(
-        bucket_id=keypair.bucket_id,
-        public_key_hex=keypair.public_key_hex,
-        created_at=keypair.created_at,
-    )
 
 
 def sign_review_package(
@@ -252,7 +221,7 @@ def verify_review_package_signature(
         signed_package: The :class:`SignedReviewPackage` envelope produced by
             :func:`sign_review_package`.
         public_key_hex: The signer's raw public key, as 64 lowercase hex
-            characters (see :attr:`~ReviewPackageSigningPublicKey.public_key_hex`).
+            characters (see :attr:`~ReviewPackageSigningKeypair.public_key_hex`).
             Passed explicitly (never read off ``signed_package``) so a
             verifier must supply the key it actually trusts, rather than
             trusting whatever key the envelope claims.
@@ -299,10 +268,8 @@ def _package_manifest_sha256(package_path: Path) -> str:
 __all__ = [
     "ReviewPackageSigningError",
     "ReviewPackageSigningKeypair",
-    "ReviewPackageSigningPublicKey",
     "SignedReviewPackage",
     "ensure_review_package_signing_keypair",
-    "review_package_signing_public_key",
     "sign_review_package",
     "verify_review_package_signature",
 ]

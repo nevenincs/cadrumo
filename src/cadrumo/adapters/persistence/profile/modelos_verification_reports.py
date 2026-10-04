@@ -27,9 +27,9 @@ See Also:
     :mod:`~adapters.persistence.profile.modelos_calculation`
         Sibling calculation-revision repository whose revisions are assessed by
         verification reports stored here.
-    :func:`~application.modelo.filing_actions.list_verification_reports`
-        Read-side application service that loads reports through this repository
-        boundary.
+    :func:`~application.calculations.verification_report_gate.require_verification_report_coordinates_current`
+        Application gate that checks the coordinates of reports loaded through
+        this repository boundary.
 """
 
 from __future__ import annotations

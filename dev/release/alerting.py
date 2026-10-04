@@ -45,7 +45,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0

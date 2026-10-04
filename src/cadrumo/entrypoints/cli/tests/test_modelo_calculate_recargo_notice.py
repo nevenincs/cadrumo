@@ -10,7 +10,7 @@ These tests drive a real Modelo 130 calculate through the CLI and the profile
 worker over an enrolled profile and a real ledger income row. The worker
 observes the voluntary deadline from its own Europe/Madrid civil date, so the
 expected overdue / in-time posture is derived from the registry deadline
-windows the engine itself resolves (``resolve_filing_closes_on``) around the
+windows the engine itself resolves (``resolve_filing_window``) around the
 date the worker actually reads, bracketed by sampling that date before and
 after the run.
 
@@ -63,7 +63,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
-from ....domain.deadlines.plazo import resolve_filing_closes_on
+from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -261,13 +261,13 @@ def _calculate_m130(session: NativeApiCliSession[None], work_unit_id: str, *, ou
 
 
 def _closes_on(filing_year: int, period_token: str) -> date:
-    closes_on = resolve_filing_closes_on(
+    window = resolve_filing_window(
         "130",
         filing_year,
         Period.from_year_and_code(filing_year, period_token),
     )
-    assert closes_on is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
-    return closes_on
+    assert window is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
+    return window.closes_on
 
 
 def _registered_quarterly_closes() -> list[tuple[int, str, date]]:

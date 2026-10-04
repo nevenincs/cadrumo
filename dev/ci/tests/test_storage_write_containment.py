@@ -109,7 +109,7 @@ def _string_constants(tree: ast.Module) -> dict[str, str]:
     return constants
 
 
-def _literal(node: ast.expr | None, constants: dict[str, str]) -> str | None:
+def _literal(node: ast.AST | None, constants: dict[str, str]) -> str | None:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     if isinstance(node, ast.Name):
@@ -123,13 +123,13 @@ def _documented_storage_overrides() -> frozenset[str]:
     try:
         lines = (REPO_ROOT / "env" / ".env.example").read_text(encoding=UTF_8).splitlines()
     except (OSError, UnicodeDecodeError):
-        return frozenset()
-    return frozenset(
-        name
-        for line in lines
-        if (name := line.partition("=")[0].strip()).startswith("CADRUMO_")
-        and name.endswith(("_ROOT", "_DIR", "_PATH", "_BASE"))
-    )
+        return frozenset[str]()
+    names: set[str] = set()
+    for line in lines:
+        name = line.partition("=")[0].strip()
+        if name.startswith("CADRUMO_") and name.endswith(("_ROOT", "_DIR", "_PATH", "_BASE")):
+            names.add(name)
+    return frozenset(names)
 
 
 def _environment_key(
@@ -274,8 +274,8 @@ def _path_origin(
                         controlled_transports=controlled_transports,
                     )
                     is None
-                    and _environment_key(part, constants, modules, symbols) is not None
-                    and _environment_key(part, constants, modules, symbols).startswith("CADRUMO_")
+                    and (environment_key := _environment_key(part, constants, modules, symbols)) is not None
+                    and environment_key.startswith("CADRUMO_")
                     for part in ast.walk(subject)
                 ):
                     found.add("home")
@@ -547,13 +547,16 @@ def _first_temp_use(tree: ast.Module) -> int | None:
         for statement in tree.body
         if not isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
         for node in ast.walk(statement)
-        if (
-            isinstance(node, ast.Attribute)
-            and node.attr == "tempdir"
-            and isinstance(node.ctx, ast.Load)
-            and modules.get(_attribute_path(node)[0], _attribute_path(node)[0]) == "tempfile"
+        if isinstance(node, (ast.stmt, ast.expr))
+        and (
+            (
+                isinstance(node, ast.Attribute)
+                and node.attr == "tempdir"
+                and isinstance(node.ctx, ast.Load)
+                and modules.get(_attribute_path(node)[0], _attribute_path(node)[0]) == "tempfile"
+            )
+            or _environment_key(node, constants, modules, symbols) in _TEMP_ENV
         )
-        or _environment_key(node, constants, modules, symbols) in _TEMP_ENV
     ]
     uses = (*calls, *loads)
     return min(uses) if uses else None

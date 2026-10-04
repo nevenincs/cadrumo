@@ -183,34 +183,3 @@ def build_modelo_verification_report_view_registration(
         public_result_type=ModeloVerificationReportViewProjection,
         access_resolver=resolve,
     )
-
-
-def build_modelo_verification_report_read_definitions(
-    factory: VerificationRepositoryBundleFactory,
-) -> tuple[OperationDefinition, OperationDefinition]:
-    """Return the complete canonical definition population for report reads."""
-    return (
-        build_modelo_verification_report_list_definition(factory),
-        build_modelo_verification_report_view_definition(factory),
-    )
-
-
-def build_modelo_verification_report_read_registrations(
-    definitions: tuple[OperationDefinition, ...],
-    factory: VerificationRepositoryBundleFactory,
-) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
-    """Bind both report-read definitions to their public schemas and policies."""
-    builders = {
-        MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID: build_modelo_verification_report_list_registration,
-        MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID: build_modelo_verification_report_view_registration,
-    }
-    registrations: list[OperationPublicDefinitionRegistrationV1] = []
-    for definition in definitions:
-        try:
-            builder = builders[definition.definition_id]
-        except KeyError:
-            raise ValueError("unexpected verification-report read definition") from None
-        registrations.append(builder(definition, factory))
-    if len(registrations) != len(builders):
-        raise ValueError("verification-report read registration population is incomplete")
-    return tuple(registrations)

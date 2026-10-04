@@ -483,12 +483,14 @@ from .aggregate_operation_test_support import aggregate_conformance_command
 from .censal_review_test_support import review_censal_with_services
 from .conformance_families import CONFORMANCE_FAMILIES, conformance_family_for
 from .conformance_family_contract import (
+    ConformanceFamily,
     ConformanceFamilyContext,
     ConformanceOutcome,
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
     closed_model_runtime,
 )
+from .conformance_variants import CONFORMANCE_VARIANT_FAMILIES
 from .evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
 from .invoice_evidence_operation_test_support import (
     assert_invoice_evidence_confirmation_persisted,
@@ -1613,10 +1615,15 @@ def _model_runtime_for(definition_id: str) -> AbstractContextManager[object]:
 
 
 def _prepare_family_case(
-    definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path, operation: PinnedAuthorityOperation
+    definition: OperationDefinition,
+    *,
+    profile_id: UUID,
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    family: ConformanceFamily | None = None,
 ) -> ConformancePreparation | None:
     """Seed and build the request of an operation whose family owns its scenario."""
-    family = conformance_family_for(definition.definition_id)
+    family = family or conformance_family_for(definition.definition_id)
     if family is None:
         return None
     input_root = tmp_path / "family-inputs"
@@ -2044,7 +2051,7 @@ def _seeded_expedientes_snapshot(profile_id: UUID):
                 period=Period.from_year_and_code(2025, "1T"),
                 expediente_id="12345678901234567890",
                 estado="ALTA",
-                tipo_solicitud="Presentación",
+                tipo_solicitud="PresentaciÃ³n",
                 observaciones="Conformance snapshot",
                 presented_at=captured_at,
                 justificante_link_text="Justificante",
@@ -4016,28 +4023,28 @@ def _assert_calculation_report_verification_projection(
     assert check.reason is CalculationSummaryVerificationReason.PDF_UNREADABLE
 
 
-@pytest.mark.parametrize("definition_id", _registered_definition_ids())
-@pytest.mark.timeout(90)
-def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
-    tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
+def _run_registered_executor_conformance_case(
+    tmp_path: Path,
+    case: RegisteredExecutorConformanceCase,
+    *,
+    operation: PinnedAuthorityOperation,
+    family: ConformanceFamily | None = None,
 ) -> None:
-    """Actual execution, effects, settlement, review, cleanup, and truthful control refusal."""
-    case = _EXPECTATIONS.get(definition_id)
-    if case is None:
-        pytest.fail(
-            f"{definition_id} is composed into the production registry but declares no conformance "
-            "scenario, so nothing proves its executor settles, cleans up, or refuses truthfully"
-        )
-    assert case is not None
+    """Exercise the actual admitted operation, settlement, review and cleanup owners."""
+    definition_id = case.definition_id
     cleanup = _CloseWitness()
     with (
-        _model_runtime_for(definition_id),
+        (
+            closed_model_runtime()
+            if family is not None and family.closes_model_runtime
+            else _model_runtime_for(definition_id)
+        ),
         _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
         family_preparation = _prepare_family_case(
-            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
         )
         projection_history_case = (
             prepare_modelo_projection_history_conformance_case(
@@ -5852,6 +5859,38 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 registry=registry,
             )
         )
+
+
+@pytest.mark.parametrize("definition_id", _registered_definition_ids())
+@pytest.mark.timeout(90)
+def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
+    tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Every registered operation has exactly one primary composed-runtime witness."""
+    case = _EXPECTATIONS.get(definition_id)
+    assert case is not None, f"{definition_id} has no registered conformance scenario"
+    _run_registered_executor_conformance_case(tmp_path, case, operation=operation)
+
+
+@pytest.mark.parametrize(
+    ("family", "case"),
+    [(family, case) for family in CONFORMANCE_VARIANT_FAMILIES for case in family.cases],
+    ids=[
+        f"variant-{index}-{case.definition_id}"
+        for index, family in enumerate(CONFORMANCE_VARIANT_FAMILIES)
+        for case in family.cases
+    ],
+)
+@pytest.mark.timeout(90)
+def test_registered_executor_material_and_refusal_variants(
+    tmp_path: Path,
+    family: ConformanceFamily,
+    case: RegisteredExecutorConformanceCase,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Distinct local premises retain both source snapshots' material and negative oracles."""
+    _run_registered_executor_conformance_case(tmp_path, case, operation=operation, family=family)
 
 
 @pytest.mark.timeout(90)

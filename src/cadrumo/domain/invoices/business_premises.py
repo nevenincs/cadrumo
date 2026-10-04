@@ -93,10 +93,40 @@ def business_premises_lease_from_inputs(
     return candidate
 
 
+def normalise_legacy_business_premises_lease(payload: dict[str, object]) -> dict[str, object]:
+    """Hydrate historical flat invoice facts into the sole nested lease family.
+
+    Older encrypted catalogues carry these three fields on the invoice. Keep
+    their recorded facts, refuse contradictions with a concurrently supplied
+    nested family, and emit only the current canonical representation.
+    """
+    legacy_fields = ("arrendamiento_local_negocio", "situacion_inmueble", "referencia_catastral")
+    if not any(field in payload for field in legacy_fields):
+        return payload
+    migrated = dict(payload)
+    selected = migrated.pop("arrendamiento_local_negocio", False)
+    if type(selected) is not bool:
+        raise InvoiceValidationError("arrendamiento_local_negocio must be a boolean")
+    legacy = business_premises_lease_from_inputs(
+        lease_selected=selected,
+        situacion_inmueble=migrated.pop("situacion_inmueble", None),
+        referencia_catastral=migrated.pop("referencia_catastral", None),
+    )
+    if "business_premises_lease" in migrated:
+        nested = migrated["business_premises_lease"]
+        if nested is not None and not isinstance(nested, BusinessPremisesLease):
+            nested = BusinessPremisesLease.model_validate(nested)
+        if nested != legacy:
+            raise InvoiceValidationError("historical and nested business-premises lease facts disagree")
+    migrated["business_premises_lease"] = legacy
+    return migrated
+
+
 __all__ = [
     "SITUACIONES_CON_REFERENCIA_CATASTRAL",
     "BusinessPremisesLease",
     "SituacionInmueble",
     "business_premises_lease_from_inputs",
+    "normalise_legacy_business_premises_lease",
     "require_situacion_inmueble",
 ]

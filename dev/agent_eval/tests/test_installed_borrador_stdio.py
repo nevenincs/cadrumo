@@ -24,13 +24,15 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.application.live.borrador_100 import Borrador100SnapshotService
+from cadrumo.application.live.borrador_100_contracts import (
+    Borrador100ImportRequest,
+    Borrador100QueryProjection,
+    Borrador100ReadRequest,
+)
 from cadrumo.application.live.borrador_100_operation import (
     BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
     BORRADOR_100_QUERY_OPERATION_DEFINITION_ID,
     BORRADOR_100_READ_OPERATION_DEFINITION_ID,
-    Borrador100ImportRequest,
-    Borrador100QueryProjection,
-    Borrador100ReadRequest,
 )
 from cadrumo.application.live.snapshot_base import SnapshotStateFilter
 from cadrumo.application.operations.frontend_requests import (

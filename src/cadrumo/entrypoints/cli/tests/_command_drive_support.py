@@ -18,26 +18,30 @@ from enum import Enum
 from pathlib import Path
 from types import CodeType
 from typing import Final
+from uuid import UUID
 
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....application.auth.operator import configure_operator_auth
+from ....application.user_profile.automation_custody_port import AutomationSecretStore
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
-from .._command_parameter_contracts import ArgumentSpec, OptionSpec
-from .._command_shared_contracts import DefaultKind, DeferredTarget
 from .._command_target import resolve_deferred_target
 from ..command_graph import CommandSpecGraph
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import DefaultKind, DeferredTarget
 from ..command_spec import CommandSpec
+from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
 
-PROBE_PROFILE_ID: Final = "0ac1e000-0000-4000-8000-000000515077"
 PROBE_PROFILE_LABEL: Final = "Governed fact declaration probe"
 PROBE_PROFILE_TAX_ID: Final = "12345678Z"
 
@@ -69,6 +73,10 @@ def _synthetic_value(spec: CommandSpec, parameter: ArgumentSpec | OptionSpec, wo
     if annotation is int:
         minimum = parameter.constraint.minimum
         return str(int(minimum) if minimum is not None else 1)
+    if annotation is UUID:
+        return "00000000-0000-4000-8000-000000000001"
+    if parameter.name == "review_digest":
+        return "0" * 64
     if isinstance(annotation, type) and issubclass(annotation, Path):
         location = workdir / f"{spec.key}-{parameter.name}.bin"
         if parameter.name != "output":
@@ -107,27 +115,47 @@ def synthetic_argv(
     return [*command_path(graph, spec), *positional, *named]
 
 
-def seed_probe_profile(
-    runtime_profile: TestRuntimeProfile,
+@contextmanager
+def seeded_probe_runtime(
+    tmp_path: Path,
     *,
     extra_facts: tuple[UserProfileFact, ...] = (),
-) -> None:
-    """Seed a natural-person profile, plus ``extra_facts``; the seed itself may lease the authority."""
-    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
-        record = create_user_profile_record(
-            profile_id=PROBE_PROFILE_ID,
-            setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Perez"),
-                UserProfileFact(path="identity.tax_id", value=PROBE_PROFILE_TAX_ID),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
-                *extra_facts,
-            ),
-            context=profile_creation_context_for_test(),
+    certificate_path: Path | None = None,
+    client_native_store: AutomationSecretStore | None = None,
+) -> Iterator[PortableHumanCliRuntime]:
+    """Register real password custody and own admitted, observable CLI execution.
+
+    Registration's governed-fact lease ends before the joined runtime captures
+    its context. No fixture-level governed-fact scope is lent to a handler.
+    """
+    with portable_password_custody(), isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        profile_id = register_cli_profile(
+            label=PROBE_PROFILE_LABEL,
+            facts={
+                "identity.name": "Ana",
+                "identity.surnames": "Perez",
+                "identity.tax_id": PROBE_PROFILE_TAX_ID,
+                "taxpayer_type.entity_type": "natural_person",
+                "provenance.source": "manual_cli",
+                **{fact.path: str(fact.value) for fact in extra_facts},
+            },
+            log_in=False,
         )
-        seed_test_profile_record(record, root=runtime_profile.storage_root, label=PROBE_PROFILE_LABEL)
+        if certificate_path is not None:
+            with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+                configure_operator_auth(
+                    "certificate",
+                    certificate_path=certificate_path,
+                    operator_scope_ports=build_operator_scope_ports(),
+                    operation=operation,
+                )
+        with portable_human_cli_runtime(
+            storage_root=root,
+            profile_id=UUID(profile_id),
+            label=PROBE_PROFILE_LABEL,
+            client_native_store=client_native_store,
+        ) as runtime:
+            yield runtime
 
 
 @contextmanager
@@ -175,14 +203,13 @@ def handler_code(target: DeferredTarget) -> CodeType:
 
 
 __all__ = [
-    "PROBE_PROFILE_ID",
     "PROBE_PROFILE_LABEL",
     "PROBE_PROFILE_TAX_ID",
     "command_path",
     "free_monitoring_tool",
     "handler_code",
     "is_runnable",
-    "seed_probe_profile",
+    "seeded_probe_runtime",
     "synthetic_aeat_credentials",
     "synthetic_argv",
 ]

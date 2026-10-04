@@ -533,6 +533,79 @@ def test_a_modal_that_dismissed_itself_settles_from_the_workbench_notice(
     assert terminal.receipt_present is False
 
 
+@pytest.mark.parametrize(
+    ("terminal_key", "expected_outcome"),
+    [
+        ("operation.modal.terminal.succeeded", AcceptanceOutcome.PROVEN),
+        ("operation.modal.terminal.failed", AcceptanceOutcome.FAILED),
+        ("operation.modal.status.running", None),
+    ],
+)
+def test_a_result_statement_does_not_replace_the_dismissed_operations_terminal(
+    terminal_key: str, expected_outcome: AcceptanceOutcome | None
+) -> None:
+    """Removed public controls carry settlement; a result statement alone cannot prove it."""
+    from textual.css.query import NoMatches
+    from textual.screen import ModalScreen
+    from textual.widgets import Button
+
+    from cadrumo.core.i18n.render import tr
+    from cadrumo.entrypoints.tui.modelo.workbench.result import WorkbenchResultScreen
+
+    class PublicOperationModal(ModalScreen[None]):
+        @override
+        def compose(self) -> ComposeResult:
+            yield Static(tr("operation.modal.status.running"), id="operation-modal-status")
+            yield Static("", id="operation-modal-receipt")
+            yield Static("", id="operation-modal-diagnostic")
+            yield Button("Apply", id="btn-operation-apply", disabled=True)
+
+    async def scenario() -> None:
+        # The refreshed workbench and the statement are present in all three
+        # cases. Neither contains a classified success notice, so only the
+        # exact operation's rendered terminal may establish success.
+        app = _WidgetsApp(Static("Calculation summary", id="wb-notice"), Static("", id="wb-list"))
+        async with app.run_test() as pilot:
+            modal = PublicOperationModal()
+            app.push_screen(modal)
+            await pilot.pause()
+            statement = WorkbenchResultScreen(())
+
+            class SettlementPilot(Pilot[None]):
+                settled = False
+
+                @override
+                async def pause(self, delay: float | None = None) -> None:
+                    if not self.settled:
+                        self.settled = True
+                        modal.query_one("#operation-modal-status", Static).update(tr(terminal_key))
+                        modal.query_one("#operation-modal-receipt", Static).update("Result receipt: synthetic")
+                        modal.dismiss(None)
+                        await super().pause(delay)
+                        with pytest.raises(NoMatches):
+                            modal.query_one("#operation-modal-status")
+                        app.push_screen(statement)
+                    await super().pause(delay)
+
+            observer = SettlementPilot(app)
+            if expected_outcome is None:
+                with pytest.raises(TuiJourneyError, match="did not expose a terminal operation status"):
+                    await _observe_operation_terminal(
+                        observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
+                    )
+                assert app.screen is statement
+            else:
+                terminal = await _observe_operation_terminal(
+                    observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
+                )
+                assert terminal.outcome is expected_outcome
+                assert terminal.receipt_present is True
+                assert terminal.diagnostic_present is False
+                assert (app.screen is statement) is (expected_outcome is AcceptanceOutcome.FAILED)
+
+    asyncio.run(scenario())
+
+
 def test_xsd_validation_records_original_and_effective_schema_identities(tmp_path: Path) -> None:
     xsd = tmp_path / "minimal.xsd"
     xml = tmp_path / "document.xml"

@@ -69,7 +69,7 @@ from ..iva_regime_vocabulary import resolve_iva_regime_catalogue
 from ..ledger_oss_bindings import LedgerOssProvider, OssIossLedgerObservation
 from ..lorca_reduction import resolve_lorca_reduction
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
-from ..m347_threshold import resolve_m347_clave_c_declaration_threshold, resolve_m347_counterparty_annual_threshold
+from ..m347_threshold import resolve_m347_counterparty_annual_threshold, resolve_m347_threshold_buckets
 from ..modelo_obligation_scope import resolve_modelo_obligation_scope
 from ..modelo_pending_orden import pending_orden_vocabulary
 from ..modelo_rendering import modelo_rendering_declarations
@@ -232,8 +232,8 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         lambda authority: resolve_m347_counterparty_annual_threshold(effective_date=_EFFECTIVE, authority=authority),
     ),
     (
-        "m347_clave_c_threshold",
-        lambda authority: resolve_m347_clave_c_declaration_threshold(effective_date=_EFFECTIVE, authority=authority),
+        "m347_threshold_buckets",
+        lambda authority: resolve_m347_threshold_buckets(effective_date=_EFFECTIVE, authority=authority),
     ),
     ("pending_orden_vocabulary", lambda authority: pending_orden_vocabulary(authority=authority)),
     ("modelo_rendering", lambda authority: modelo_rendering_declarations(_EFFECTIVE, authority=authority)),

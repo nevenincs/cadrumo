@@ -18,10 +18,9 @@ from cadrumo.application.runtime.enrollment_access import (
     RuntimeEnrollmentPrepare,
     RuntimeEnrollmentPrepared,
     RuntimeEnrollmentRecorded,
-    RuntimeEnrollmentReplyEnvelope,
-    RuntimeEnrollmentRequestEnvelope,
     RuntimeEnrollmentSubmit,
 )
+from cadrumo.application.runtime.profile_access import RuntimeReply, RuntimeRequest
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
@@ -55,8 +54,8 @@ def test_prepare_and_submit_carry_only_server_minted_coordinates() -> None:
         request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
     )
     submitted = RuntimeEnrollmentSubmit(request_id=uuid4(), profile_id=profile_id, enrollment_request_id=uuid4())
-    assert RuntimeEnrollmentRequestEnvelope.model_validate(prepare.model_dump()).root == prepare
-    assert RuntimeEnrollmentRequestEnvelope.model_validate(submitted.model_dump()).root == submitted
+    assert RuntimeRequest.model_validate(prepare.model_dump()).root == prepare
+    assert RuntimeRequest.model_validate(submitted.model_dump()).root == submitted
     for document in (prepare.model_dump(), submitted.model_dump()):
         assert not {"client_id", "destination_id", "password", "proposal", "candidate", "credential"} & document.keys()
     with pytest.raises(ValidationError):
@@ -64,7 +63,7 @@ def test_prepare_and_submit_carry_only_server_minted_coordinates() -> None:
     with pytest.raises(ValidationError):
         RuntimeEnrollmentSubmit.model_validate({**submitted.model_dump(), "proposal": "secret"})
     with pytest.raises(ValidationError):
-        RuntimeEnrollmentRequestEnvelope.model_validate({**prepare.model_dump(), "action": "enrollment_unknown"})
+        RuntimeRequest.model_validate({**prepare.model_dump(), "action": "enrollment_unknown"})
 
 
 def test_replies_are_closed_and_keep_client_credential_binding_nonsecret() -> None:
@@ -99,7 +98,7 @@ def test_replies_are_closed_and_keep_client_credential_binding_nonsecret() -> No
     idle = RuntimeEnrollmentIdle(**_reply_fields())
     delivery = RuntimeEnrollmentDelivery(**_reply_fields(), command_id=uuid4(), action="store", credential=credential)
     for reply in (prepared, recorded, idle, delivery):
-        assert RuntimeEnrollmentReplyEnvelope.model_validate(reply.model_dump()).root == reply
+        assert RuntimeReply.model_validate(reply.model_dump()).root == reply
         encoded = reply.model_dump_json()
         assert not any(secret in encoded for secret in ("password", "candidate_secret", "wrapped_dek", "proposal"))
     with pytest.raises(ValidationError):

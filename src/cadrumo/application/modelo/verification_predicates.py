@@ -855,7 +855,7 @@ def evaluate_verification_predicates(
             Evaluates the blocking-rule predicate DSL.
         :func:`evaluate_advisory_predicate_fires`:
             Evaluates the advisory predicate DSL.
-        :func:`_classify_verification_outcome`:
+        :func:`~cadrumo.application.modelo.verification_report_facts.classify_verification_outcome`:
             Converts finding severity into report completeness and grant status.
     """
     if predicates is None:

@@ -14,6 +14,33 @@
 
 typedef int (__cdecl *bridge_main)(int, wchar_t **, const wchar_t **, int);
 
+static int worker_handle(const wchar_t *text, uintptr_t *out) {
+    uintptr_t value = 0;
+    /* The supervisor serializes two distinct positive HANDLEs in decimal. */
+    if (*text < L'1' || *text > L'9') return 0;
+    for (const wchar_t *cursor = text; *cursor; ++cursor) {
+        if (*cursor < L'0' || *cursor > L'9') return 0;
+        uintptr_t digit = (uintptr_t)(*cursor - L'0');
+        if (value > (UINTPTR_MAX - digit) / 10) return 0;
+        value = value * 10 + digit;
+    }
+    if (value == UINTPTR_MAX) return 0;
+    *out = value;
+    return 1;
+}
+
+static int supervised_kdf_invocation(int argc, wchar_t **argv) {
+    uintptr_t request = 0, result = 0;
+    return argc == 7
+        && !wcscmp(argv[1], L"-m")
+        && !wcscmp(argv[2], L"cadrumo.adapters.persistence.storage.custody._kdf_worker")
+        && !wcscmp(argv[3], L"--request-handle")
+        && worker_handle(argv[4], &request)
+        && !wcscmp(argv[5], L"--result-handle")
+        && worker_handle(argv[6], &result)
+        && request != result;
+}
+
 static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
     cadrumo_buffer value = {0};
     if (cadrumo_platform_path(ctx, key, &value)) return NULL;
@@ -57,7 +84,11 @@ int wmain(int argc, wchar_t **argv) {
     if (!bridge) goto failure;
     bridge_main run = (bridge_main)(void *)GetProcAddress(bridge, "cadrumo_python_main");
     if (!run) goto failure;
-    if (cadrumo_platform_prepare(ctx, &error)) goto failure;
+    /* The supervised KDF child attests its exact parent-owned neutral environment
+     * before receiving any request. Application storage/tool projection would
+     * replace that contract. Only its complete fixed invocation avoids projection;
+     * context paths, isolated Python and package verification remain identical. */
+    if (!supervised_kdf_invocation(argc, argv) && cadrumo_platform_prepare(ctx, &error)) goto failure;
     if (argc == 2 && !wcscmp(argv[1], L"--check-package")) {
         wchar_t *check[] = {argv[0], L"-c", L"import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')"};
         result = run(3, check, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);

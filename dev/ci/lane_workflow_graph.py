@@ -12,8 +12,8 @@ from typing import Final
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
 
-from .lane_configuration import _UTF_8
 from .lane_recipe_commands import _parameterless_recipes, _recipe_bodies, _recipe_closure
 from .workflow_job_gates import job_gate, narrowed_events
 
@@ -162,7 +162,7 @@ def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     events: dict[str, set[str]] = {}
     dispatches: dict[str, tuple[tuple[str, str | None], ...]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
-        text = workflow.read_text(encoding=_UTF_8)
+        text = workflow.read_text(encoding=UTF_8)
         events[workflow.name] = set(_workflow_events(text))
         dispatches[workflow.name] = _dispatch_edges(text)
 
@@ -206,7 +206,7 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     ever run it. The distinction outlives the example.
     """
     justfile = root / "justfile"
-    justfile_text = justfile.read_text(encoding=_UTF_8) if justfile.exists() else ""
+    justfile_text = justfile.read_text(encoding=UTF_8) if justfile.exists() else ""
     bodies = _recipe_bodies(justfile_text)
     parameterless = _parameterless_recipes(justfile_text)
 
@@ -217,7 +217,7 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     effective = workflow_triggers(root)
     accumulated: dict[str, set[str]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
-        text = workflow.read_text(encoding=_UTF_8)
+        text = workflow.read_text(encoding=UTF_8)
         events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
         for step in _workflow_run_steps(text, events):
             reached = _recipe_closure(step.command, bodies, parameterless)
@@ -243,7 +243,7 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     exactly why the union has to be computed rather than read.
     """
     justfile = root / "justfile"
-    justfile_text = justfile.read_text(encoding=_UTF_8) if justfile.exists() else ""
+    justfile_text = justfile.read_text(encoding=UTF_8) if justfile.exists() else ""
     bodies = _recipe_bodies(justfile_text)
     parameterless = _parameterless_recipes(justfile_text)
 
@@ -253,7 +253,7 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
 
     routed: dict[str, set[bool]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
-        text = workflow.read_text(encoding=_UTF_8)
+        text = workflow.read_text(encoding=UTF_8)
         for step in _workflow_run_steps(text, ()):
             reached = _recipe_closure(step.command, bodies, parameterless)
             for name in reached:

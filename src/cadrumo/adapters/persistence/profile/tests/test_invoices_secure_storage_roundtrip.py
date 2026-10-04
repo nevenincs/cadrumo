@@ -214,6 +214,53 @@ def test_encrypted_malformed_non_null_lease_family_refuses_catalogue_read(tmp_pa
             repo.load()
 
 
+@pytest.mark.parametrize("selected", [False, True])
+def test_historical_encrypted_flat_lease_facts_survive_load_and_canonical_save(tmp_path: Path, selected: bool) -> None:
+    """Read the actual old ciphertext shape without losing the recorded lease."""
+    from sqlalchemy import select
+
+    from ...storage.sql.orm import SecureObjectRow
+
+    lease = (
+        BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral="9872023VH5797S0001WX",
+        )
+        if selected
+        else None
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _populated_invoice(invoice_number="F-2025-HISTORICAL-LEASE", business_premises_lease=lease)
+        repo = InvoiceCatalogueRepository()
+        repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        )
+
+        def restore_historical_flat_shape(envelope) -> None:
+            stored = envelope["payload"]["invoices"][invoice.invoice_id]
+            stored.pop("business_premises_lease")
+            stored.update(
+                arrendamiento_local_negocio=selected,
+                situacion_inmueble="1" if selected else None,
+                referencia_catastral="9872023VH5797S0001WX" if selected else None,
+            )
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=statement,
+            mutate=restore_historical_flat_shape,
+        )
+        loaded = repo.load()
+        assert loaded.invoices[invoice.invoice_id].business_premises_lease == lease
+        assert loaded.invoices[invoice.invoice_id].invoice_id == invoice.invoice_id
+        repo.save(loaded)
+        assert repo.load() == loaded
+        assert not {"arrendamiento_local_negocio", "situacion_inmueble", "referencia_catastral"} & (
+            loaded.invoices[invoice.invoice_id].model_dump().keys()
+        )
+
+
 def test_invoice_catalogue_persists_only_to_the_secure_database_object(
     tmp_path: Path,
 ) -> None:

@@ -24,7 +24,6 @@ from ..register import (
     M720AssetIdentifier,
     M720DeclarantCondition,
     M720IdentifierScheme,
-    mint_asset_ref,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,7 +34,7 @@ _ISIN = "US0378331005"
 
 
 def _ref(digit: str) -> str:
-    return mint_asset_ref(lambda: digit * 32)
+    return "m720a_" + digit * 32
 
 
 def _entry(
@@ -129,8 +128,13 @@ def test_a_register_with_every_class_round_trips_through_json() -> None:
     assert restored.asset(_ref("2")).identifier.value == _ISIN
 
 
-def test_a_minted_ref_is_new_each_time() -> None:
-    assert mint_asset_ref() != mint_asset_ref()
+@pytest.mark.parametrize("asset_ref", ("a" * 32, "m720a_" + "A" * 32, "m720a_" + "a" * 31, "m720a_" + "g" * 32))
+def test_an_asset_reference_outside_the_persisted_identity_contract_is_refused(asset_ref: str) -> None:
+    with pytest.raises(pydantic.ValidationError) as excinfo:
+        _account(asset_ref)
+    error = excinfo.value.errors()[0]
+    assert error["loc"] == ("asset_ref",)
+    assert error["type"] == "string_pattern_mismatch"
 
 
 @pytest.mark.parametrize(

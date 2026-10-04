@@ -28,7 +28,7 @@ from ..compiler.source_evidence_fingerprint import collect_source_evidence_finge
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ._export_tree import render_complete_export_tree
-from .m232_form_bridge import m232_evidence_content_digest, m232_interpreting_input_digest
+from .generated_form_bridge import generated_form_interpreting_input_digest, registry_evidence_content_digest
 from .render_check import _revision_render_inputs, compare_export_tree_roots, revision_render_inputs
 from .source_defects import source_defects_for
 from .tree_publication_artifacts import verify_generated_export_package
@@ -69,8 +69,8 @@ def validated_historical_repair_source(
         raise RegistryValidationError("historical repair requires the exact reviewed M232/2016 target and manifest")
     source_root = bundled_path()
     registry_root = bundled_path("registry", "aeat")
-    interpreting_digest = m232_interpreting_input_digest()
-    evidence_content_digest = m232_evidence_content_digest(source_root)
+    interpreting_digest = generated_form_interpreting_input_digest("232")
+    evidence_content_digest = registry_evidence_content_digest(source_root)
     target_export = registry_root / "modelos" / modelo / "revisions" / revision / "export"
     old_manifest = target_export / "_generation.provenance.json"
     if sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256:
@@ -204,8 +204,8 @@ def validated_historical_repair_source(
         if (
             after.digest != original.registry_fingerprint
             or evidence_after != original.source_evidence_fingerprint
-            or m232_evidence_content_digest(source_root) != evidence_content_digest
-            or m232_interpreting_input_digest() != interpreting_digest
+            or registry_evidence_content_digest(source_root) != evidence_content_digest
+            or generated_form_interpreting_input_digest("232") != interpreting_digest
             or sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256
         ):
             raise RegistryValidationError("historical repair live source or old target changed during validation")

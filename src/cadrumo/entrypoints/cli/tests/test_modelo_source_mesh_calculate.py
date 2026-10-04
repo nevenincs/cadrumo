@@ -946,8 +946,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
 
         from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
         from ....application.modelo.operation_definitions import calculation_public_result
-        from .._modelo_behavior_support import resolve_work_unit_for_cli
         from .._modelo_work_wizard_cli import _emit_wizard_result
+        from ._modelo_work_ux_support import load_work_unit_by_id
 
         wizard_app = typer.Typer()
 
@@ -960,7 +960,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
         )
-        wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
+        wizard_work_unit = load_work_unit_by_id(work_unit_id=work_unit["work_unit_id"])
         _emit_wizard_result(
             wizard_context,
             calculation_public_result(

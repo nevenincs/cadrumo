@@ -28,9 +28,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
     DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-    DiagnosticsReadExecutionResult,
     DiagnosticsReadExecutor,
-    DiagnosticsTelemetryFlushExecutionResult,
     DiagnosticsTelemetryFlushExecutor,
     build_diagnostics_read_definition,
     build_diagnostics_read_registration,
@@ -43,6 +41,7 @@ from ..diagnostics_operation import (
 )
 from ..diagnostics_operation_ports import DiagnosticsReadPorts, DiagnosticsTelemetryFlushPorts
 from ..diagnostics_read_contracts import (
+    DiagnosticsReadExecutionResult,
     DiagnosticsReadKind,
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,
@@ -56,6 +55,7 @@ from ..diagnostics_run_health import (
 )
 from ..diagnostics_run_health_ports import DiagnosticAuthProbeResult, DiagnosticRunRecord
 from ..diagnostics_telemetry_contracts import (
+    DiagnosticsTelemetryFlushExecutionResult,
     DiagnosticsTelemetryFlushRequest,
     DiagnosticsTelemetryPreviewSnapshot,
 )

@@ -10,9 +10,9 @@ reads that effective date here, so none of them can judge lateness against the
 nominal date while another judges it against the moved one.
 
 The result keeps both dates and says which holidays the effective date
-accounts for. A year whose holiday calendar is not published still moves a
-weekend close date to the next weekday and reports the holidays as unchecked,
-so an unverified date is never shown as final.
+accounts for. A year whose holiday calendar is not published keeps the
+nominal date and reports the calendar as unavailable, so an unverified date is
+never shown as final.
 
 See Also:
     :func:`cadrumo.domain.deadlines.festivos.shift_deadline`:
@@ -25,9 +25,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
+from ...core.logging import get_logger
 from ...core.period import Period
+from ...domain.deadlines.errors import DeadlineValidationError
 from ...domain.deadlines.festivos import (
     CalendarCCAA,
     DeadlineHolidayCoverage,
@@ -39,6 +41,11 @@ from ...domain.deadlines.plazo import resolve_filing_window
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
+_LOG = get_logger(__name__)
+
+#: Shift reason recorded when the holiday calendar could not be resolved.
+CALENDAR_UNAVAILABLE_SHIFT_REASON: Final = "calendar_unavailable"
+
 
 @dataclass(frozen=True, slots=True)
 class EffectiveFilingDeadline:
@@ -49,8 +56,7 @@ class EffectiveFilingDeadline:
         closes_on: The effective close date after the business-day shift; on
             time means filed on or before this day.
         holiday_coverage: Which holidays ``closes_on`` accounts for.
-            ``CALENDAR_UNAVAILABLE`` means weekends were applied but holidays
-            were not checked.
+            ``CALENDAR_UNAVAILABLE`` means it is the unverified nominal date.
         shift_reason: Stable token for why the date moved, or did not.
         jurisdictions: The holiday jurisdictions that moved the date.
         holiday_refs: The holidays that moved the date.
@@ -87,14 +93,27 @@ def effective_filing_deadline(
     """Apply the business-day rule to one nominal close date.
 
     ``holiday_territory`` is the filer's autonomous community; ``None`` checks
-    national holidays only and the coverage says so. A year with no
-    published holiday calendar still moves past weekends and reports
-    ``CALENDAR_UNAVAILABLE`` coverage, because its holidays were not checked.
-
-    Raises:
-        DeadlineValidationError: A published holiday calendar is malformed.
+    national holidays only and the coverage says so. A holiday calendar the
+    pinned authority cannot resolve keeps the nominal date with
+    ``CALENDAR_UNAVAILABLE`` coverage rather than failing the read.
     """
-    shift = shift_deadline(nominal_closes_on, modelo=modelo, ccaa_code=holiday_territory, operation=operation)
+    try:
+        shift = shift_deadline(nominal_closes_on, modelo=modelo, ccaa_code=holiday_territory, operation=operation)
+    except DeadlineValidationError as exc:
+        _LOG.debug(
+            "deadline business-day shift unavailable; keeping the nominal close date",
+            extra={
+                "modelo": modelo,
+                "nominal_closes_on": nominal_closes_on.isoformat(),
+                "error_type": type(exc).__name__,
+            },
+        )
+        return EffectiveFilingDeadline(
+            nominal_closes_on=nominal_closes_on,
+            closes_on=nominal_closes_on,
+            holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            shift_reason=CALENDAR_UNAVAILABLE_SHIFT_REASON,
+        )
     return EffectiveFilingDeadline(
         nominal_closes_on=nominal_closes_on,
         closes_on=shift.adjusted_close_date,
@@ -118,8 +137,7 @@ def resolve_effective_filing_deadline(
     Raises:
         RegistryError: The registry could not be read, so the deadline is
             unknown rather than absent.
-        DeadlineValidationError: More than one window matches the declaration,
-            or a published holiday calendar is malformed.
+        DeadlineValidationError: More than one window matches the declaration.
     """
     window = resolve_filing_window(modelo, filing_year, period, authority=operation)
     if window is None:
@@ -130,6 +148,7 @@ def resolve_effective_filing_deadline(
 
 
 __all__ = [
+    "CALENDAR_UNAVAILABLE_SHIFT_REASON",
     "EffectiveFilingDeadline",
     "effective_filing_deadline",
     "resolve_effective_filing_deadline",

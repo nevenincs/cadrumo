@@ -4,7 +4,7 @@ See Also:
     :class:`~application.prorrata_register.ProrrataRegisterService`
         Application facade whose persisted-plus-transient resolver path proves
         authorised and inicio candidates outrank the carried prior definitive.
-    :func:`~application.prorrata_register._seed.cross_check_prorrata_entry_against_prior_observation`
+    :func:`~application.prorrata_register._seed.cross_check_prorrata_entry_against_observations`
         Prior-observation guard under test for blocking carried contradictions
         and advisory regulated override differences.
     :class:`~domain.prorrata_register.ProrrataRegisterEntry`
@@ -28,7 +28,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from cadrumo.application.prorrata_register.seed import cross_check_prorrata_entry_against_prior_observation
+from cadrumo.application.prorrata_register.seed import cross_check_prorrata_entry_against_observations
 from cadrumo.application.prorrata_register.service import ProrrataRegisterService
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
@@ -159,9 +159,9 @@ def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path) -> None:
         observation_repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(observation_repo, percentage=Decimal("87"))
 
-        findings = cross_check_prorrata_entry_against_prior_observation(
+        findings = cross_check_prorrata_entry_against_observations(
             _carried_entry(percentage=Decimal("80")),
-            observation_repository=observation_repo,
+            observations=tuple(observation_repo.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
 
@@ -193,9 +193,9 @@ def test_regulated_override_difference_surfaces_informational_notice(
         observation_repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(observation_repo, percentage=Decimal("87"))
 
-        findings = cross_check_prorrata_entry_against_prior_observation(
+        findings = cross_check_prorrata_entry_against_observations(
             _override_entry(provenance=provenance_text, percentage=percentage, reference=reference),
-            observation_repository=observation_repo,
+            observations=tuple(observation_repo.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
 

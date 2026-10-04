@@ -7,8 +7,8 @@ from typing import Final
 import pytest
 
 from .._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
-from .._command_parameter_contracts import OptionSpec
 from .._command_target import resolve_deferred_target
+from ..command_parameter_contracts import OptionSpec
 from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 

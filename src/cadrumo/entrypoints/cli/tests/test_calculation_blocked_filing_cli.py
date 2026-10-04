@@ -2,10 +2,12 @@
 
 Drives the real ``aeat`` CLI against isolated encrypted storage. A Modelo 130
 declaration is calculated and verified through the CLI; the calculation the
-declaration then points at carries one persisted blocking note, planted through
-the real repositories under its content-derived id. ``modelo export`` and
-``modelo work file`` both refuse it with the calculation-blocked code, name the
-note's reason and write no file. A recalculation through the CLI makes a
+declaration then points at carries one persisted blocking note, planted as a
+draft through the real repositories under its content-derived id. Verification
+of that controlled synthetic draft genuinely refuses; no granting report is
+copied from the clean calculation. ``modelo export`` and
+``modelo work file`` both refuse its unverified draft state and write no file.
+The exact note's reason is retained by the canonical verification refusal. A recalculation through the CLI makes a
 calculation without the note current again, and the export succeeds. A control
 in a fresh backend plants the identical calculation minus only the note and
 exports it, so the note alone is what refuses.
@@ -19,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -39,8 +42,7 @@ from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import operator_profile_facts
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -81,7 +83,7 @@ def _english_sentence() -> str:
 
 def _calculate_and_verify() -> tuple[str, str]:
     """Create, calculate and verify the Modelo 130 declaration through the CLI."""
-    created = invoke_cached_cli(
+    created = invoke_seeded_profile_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -97,11 +99,11 @@ def _calculate_and_verify() -> tuple[str, str]:
 
 
 def _recalculate(work_unit_id: str, prior_year_income: str) -> str:
-    calculated = invoke_cached_cli(
+    calculated = invoke_seeded_profile_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(prior_year_income)]
     )
     assert calculated.exit_code == 0, calculated.output
-    verified = invoke_cached_cli(
+    verified = invoke_seeded_profile_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
@@ -131,7 +133,13 @@ def _plant_current(work_unit_id: str, base_revision_id: str, issues: tuple[Calcu
         assert base is not None
         assert base.state is CalculationRevisionState.VERIFICADO_COMPLETO
         assert base.source_issues == ()
-        with_issues = base.model_copy(update={"source_issues": issues})
+        # A note-bearing calculation cannot genuinely obtain a complete grant.
+        # Keep the synthetic note fixture a draft, rather than copying verified
+        # lifecycle metadata whose matching decision belongs to the clean id.
+        changes: dict[str, object] = {"source_issues": issues}
+        if issues:
+            changes.update(state=CalculationRevisionState.BORRADOR, verified_at=None, verified_by=None)
+        with_issues = base.model_copy(update=changes)
         planted = with_issues.model_copy(
             update={"calculation_revision_id": derive_calculation_revision_id_from_revision(with_issues)}
         )
@@ -152,12 +160,29 @@ def _plant_current(work_unit_id: str, base_revision_id: str, issues: tuple[Calcu
         stored = calculations.load().get(planted.calculation_revision_id)
         assert stored is not None
         assert tuple(stored.source_issues) == issues
+        assert stored.casilla_values == base.casilla_values
+        if issues:
+            assert stored.state is CalculationRevisionState.BORRADOR
+            assert stored.verified_at is None and stored.verified_by is None
     return planted.calculation_revision_id
 
 
-def _export(work_unit_id: str, output: Path) -> tuple[int, str]:
-    exported = invoke_cached_cli(
-        ["--format", "json", "--language", "en", "app", "modelo", "export", work_unit_id, "--output", str(output)],
+def _export(work_unit_id: str, output: Path, *, revision_id: str | None = None) -> tuple[int, str]:
+    revision_options = ["--revision", revision_id] if revision_id is not None else []
+    exported = invoke_seeded_profile_cli(
+        [
+            "--format",
+            "json",
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(output),
+            *revision_options,
+        ],
     )
     return exported.exit_code, exported.output
 
@@ -172,6 +197,15 @@ def _assert_blocked(exit_code: int, output: str, *, revision_id: str, action: st
     assert _english_sentence() in str(error["message"]), output
 
 
+def _assert_unverified(exit_code: int, output: str, *, revision_id: str) -> None:
+    """The public state guard names the exact unverified calculation, without claiming a grant."""
+    assert exit_code != 0, output
+    error = require_error_document(output)["error"]
+    assert error["code"] == "ERROR_MODELO_CALCULATION_REVISION_STATE", output
+    assert error["context"]["calculation_revision_id"] == revision_id, output
+    assert error["context"]["state"] == "borrador", output
+
+
 def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_it(
     seed_profile: ProfileSeeder, tmp_path: Path
 ) -> None:
@@ -180,22 +214,53 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     blocked_revision_id = _plant_current(work_unit_id, clean_revision_id, (_BLOCKING_ISSUE,))
     assert blocked_revision_id != clean_revision_id
 
+    verification = invoke_seeded_profile_cli(
+        [
+            "--format",
+            "json",
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "work",
+            "verify",
+            "--modelo",
+            "130",
+            "--year",
+            _YEAR,
+            "--period",
+            _PERIOD,
+        ],
+    )
+    _assert_blocked(verification.exit_code, verification.output, revision_id=blocked_revision_id, action="verify")
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with open_test_profile_session(bucket_id):
+        reports = VerificationReportCatalogueRepository().load().for_calculation_revision(blocked_revision_id)
+        assert not any(report.granted_verificado_completo for report in reports)
+
     refused_output = tmp_path / "modelo-130-blocked.txt"
+    # Default selection keeps its independent verified-state guard. The explicit
+    # revision option names the draft without granting eligibility to export it.
     exit_code, output = _export(work_unit_id, refused_output)
-    _assert_blocked(exit_code, output, revision_id=blocked_revision_id, action="export")
+    assert exit_code == 2, output
+    assert require_error_document(output)["error"]["code"] == "REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE"
+    assert not refused_output.exists()
+    exit_code, output = _export(work_unit_id, refused_output, revision_id=blocked_revision_id)
+    _assert_unverified(exit_code, output, revision_id=blocked_revision_id)
     assert not refused_output.exists()
 
-    filed = invoke_cached_cli(
+    filed = invoke_seeded_profile_cli(
         ["--format", "json", "--language", "en", "app", "modelo", "work", "file", blocked_revision_id],
     )
-    _assert_blocked(filed.exit_code, filed.output, revision_id=blocked_revision_id, action="file")
-    status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    _assert_unverified(filed.exit_code, filed.output, revision_id=blocked_revision_id)
+    status = invoke_seeded_profile_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["filed_calculation_revision_id"] is None
 
     cleared_revision_id = _recalculate(work_unit_id, _LATER_PRIOR_YEAR_INCOME)
     assert cleared_revision_id not in {blocked_revision_id, clean_revision_id}
-    status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_seeded_profile_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["current_calculation_revision_id"] == cleared_revision_id
 

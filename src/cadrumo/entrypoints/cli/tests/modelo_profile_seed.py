@@ -1,59 +1,62 @@
-"""Seed the active profile a modelo CLI scenario runs against.
-
-The modelo suites need a complete, selected profile as a precondition; the
-credential ceremony that creates one is not their subject. Registering through
-the credential door costs two supervised Argon2id derivations plus the login
-handover per test (measured at 3.6s of real work), while publishing the same
-facts through the minimal capsule door and opening a test bucket session costs
-under a second. Each test still gets its own profile in its own storage root.
-"""
+"""Own the registered human profile and joined runtime for Modelo CLI scenarios."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import ExitStack
+from contextvars import ContextVar
 from pathlib import Path
-from uuid import uuid4
+from typing import TYPE_CHECKING, Unpack
+from uuid import UUID
 
 import pytest
+from click.testing import Result
 
-from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
 
-__all__ = ["ProfileSeeder", "seed_profile"]
+if TYPE_CHECKING:
+    from .portable_human_cli_runtime import PortableHumanCliRuntime
 
-type ProfileSeeder = Callable[..., None]
+__all__ = ["ProfileSeeder", "invoke_seeded_profile_cli", "seed_profile"]
+
+type ProfileSeeder = Callable[..., PortableHumanCliRuntime]
+
+_CURRENT_RUNTIME: ContextVar[PortableHumanCliRuntime | None] = ContextVar("modelo-seeded-human-runtime", default=None)
+
+
+def invoke_seeded_profile_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+    """Use the seeded human's credential transport, retaining public calls without a seed."""
+    runtime = _CURRENT_RUNTIME.get()
+    return invoke_cached_cli(args, **kwargs) if runtime is None else runtime.invoke(args, **kwargs)
 
 
 @pytest.fixture
 def seed_profile(tmp_path: Path) -> Iterator[ProfileSeeder]:
-    """Return a callable that publishes and selects one complete profile.
+    """Register one fresh profile and keep its runtime and local setup oracle owned.
 
-    The bucket session stays open until the test ends, so every CLI
-    invocation after the call sees the profile as active. One call per test.
-
-    The profile identity is fresh per test, as it is through the credential
-    door: content-addressed ids downstream derive from it, and a pinned
-    identity would make every run render the same ids, turning any
-    value-dependent output defect into a constant result for these suites.
-
-    The fixture owns the storage root it publishes into. Seeding selects the
-    profile in that root's active pointer, so a root shared with later tests
-    in the same worker would leave them resolving a profile whose session
-    this fixture has already closed. Entering the per-test root here keeps
-    that true whether or not the requesting module also isolates its backend;
-    when it does, both resolve to the same ``tmp_path`` root.
+    Each profile has genuine password custody material. The joined human runtime
+    owns admitted CLI requests while preserving the parent encrypted session used
+    for controlled test setup. Neither an active pointer nor that setup session is
+    treated as frontend admission. The per-test storage root and runtime binding
+    are retired together, including exceptional exits.
     """
     with ExitStack() as stack:
-        stack.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))
+        storage_root = stack.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))
         seeded: list[str] = []
 
-        def seed(*, label: str, facts: Mapping[str, str]) -> None:
+        def seed(*, label: str, facts: Mapping[str, str]) -> PortableHumanCliRuntime:
             assert not seeded, f"a profile was already seeded in this test: {seeded}"
             seeded.append(label)
-            profile_id = str(uuid4())
-            stack.enter_context(open_test_profile_session(profile_id))
-            register_minimal_profile(profile_id=profile_id, display_name=label, overrides=facts)
+            from .portable_human_cli_runtime import portable_human_cli_runtime
+
+            profile_id = register_cli_profile(label=label, facts=facts, log_in=False)
+            runtime = stack.enter_context(
+                portable_human_cli_runtime(storage_root=storage_root, profile_id=UUID(profile_id), label=label)
+            )
+            token = _CURRENT_RUNTIME.set(runtime)
+            stack.callback(_CURRENT_RUNTIME.reset, token)
+            return runtime
 
         yield seed

@@ -88,6 +88,31 @@ def _require(condition: bool, code: AutomationCustodyCode = AutomationCustodyCod
         raise AutomationCustodyError(code)
 
 
+def _owner_uid() -> int:
+    if sys.platform == "linux":
+        return os.getuid()
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _directory_flags() -> int:
+    if sys.platform == "linux":
+        return os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _unix_socket() -> socket.socket:
+    if sys.platform == "linux":
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _peer_credentials(sock: _MetadataSocketProtocol) -> tuple[int, int, int]:
+    if sys.platform == "linux":
+        pid, uid, gid = struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+        return pid, uid, gid
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
 def _one(body: tuple[Any, ...]) -> Any:
     _require(isinstance(body, tuple) and len(body) == 1)
     return body[0]
@@ -192,7 +217,7 @@ def _control_directory(control: object) -> tuple[Path, int]:
     )
     path = Path(str(control))
     _require(path.is_absolute() and str(path) == control and ".." not in path.parts, AutomationCustodyCode.UNAVAILABLE)
-    uid = os.getuid()
+    uid = _owner_uid()
     for parent in reversed(path.parents):
         info = parent.lstat()
         _require(
@@ -204,7 +229,7 @@ def _control_directory(control: object) -> tuple[Path, int]:
         stat.S_ISDIR(info.st_mode) and info.st_uid == uid and stat.S_IMODE(info.st_mode) == 0o700,
         AutomationCustodyCode.UNAVAILABLE,
     )
-    descriptor = os.open(path, os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    descriptor = os.open(path, _directory_flags())
     try:
         pinned = os.fstat(descriptor)
         _require(
@@ -228,18 +253,18 @@ class _MetadataRpc:
         if sys.platform != "linux":
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.deadline = deadline
-        self.sock: _MetadataSocketProtocol = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock: _MetadataSocketProtocol = _unix_socket()
         try:
             observed = os.stat("pkcs11", dir_fd=directory_fd, follow_symlinks=False)
             _require(
-                stat.S_ISSOCK(observed.st_mode) and observed.st_uid == os.getuid() and not observed.st_mode & 0o077,
+                stat.S_ISSOCK(observed.st_mode) and observed.st_uid == _owner_uid() and not observed.st_mode & 0o077,
                 AutomationCustodyCode.UNAVAILABLE,
             )
             self.sock.settimeout(self.remaining())
             # The pinned directory descriptor avoids re-traversing its pathname.
             self.sock.connect(f"/proc/self/fd/{directory_fd}/pkcs11")
-            pid, uid, _gid = struct.unpack("3i", self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
-            _require(pid == provider_pid and uid == os.getuid(), AutomationCustodyCode.UNAVAILABLE)
+            pid, uid, _gid = _peer_credentials(self.sock)
+            _require(pid == provider_pid and uid == _owner_uid(), AutomationCustodyCode.UNAVAILABLE)
             after = os.stat("pkcs11", dir_fd=directory_fd, follow_symlinks=False)
             _require(
                 (observed.st_dev, observed.st_ino, observed.st_uid, observed.st_mode)

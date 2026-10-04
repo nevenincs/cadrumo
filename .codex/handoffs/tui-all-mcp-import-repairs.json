@@ -1,0 +1,836 @@
+{
+  "schema_version": 1,
+  "step": "S05",
+  "status": "implemented_scoped_verified",
+  "source_report": ".logs/tui-all-mcp-import-detail.json",
+  "repairs": [
+    {
+      "path": "dev/agent_eval/tests/test_installed_borrador_stdio.py",
+      "canonical_imports": [
+        {
+          "symbol": "Borrador100ImportRequest",
+          "old_module": "cadrumo.application.live.borrador_100_operation",
+          "new_module": "cadrumo.application.live.borrador_100_contracts",
+          "new_symbol": "Borrador100ImportRequest"
+        },
+        {
+          "symbol": "Borrador100QueryProjection",
+          "old_module": "cadrumo.application.live.borrador_100_operation",
+          "new_module": "cadrumo.application.live.borrador_100_contracts",
+          "new_symbol": "Borrador100QueryProjection"
+        },
+        {
+          "symbol": "Borrador100ReadRequest",
+          "old_module": "cadrumo.application.live.borrador_100_operation",
+          "new_module": "cadrumo.application.live.borrador_100_contracts",
+          "new_symbol": "Borrador100ReadRequest"
+        }
+      ]
+    },
+    {
+      "path": "dev/agent_eval/tests/test_modelo_query_reads_mcp_runtime.py",
+      "canonical_imports": [
+        {
+          "symbol": "ModeloBindingsListProjection",
+          "old_module": "cadrumo.application.modelo.query_read_operation",
+          "new_module": "cadrumo.application.modelo.query_read_contracts",
+          "new_symbol": "ModeloBindingsListProjection"
+        },
+        {
+          "symbol": "ModeloBindingsListRequest",
+          "old_module": "cadrumo.application.modelo.query_read_operation",
+          "new_module": "cadrumo.application.modelo.query_read_contracts",
+          "new_symbol": "ModeloBindingsListRequest"
+        },
+        {
+          "symbol": "ModeloBindingsResolveRequest",
+          "old_module": "cadrumo.application.modelo.query_read_operation",
+          "new_module": "cadrumo.application.modelo.query_read_contracts",
+          "new_symbol": "ModeloBindingsResolveRequest"
+        },
+        {
+          "symbol": "ModeloReadinessOperationRequest",
+          "old_module": "cadrumo.application.modelo.query_read_operation",
+          "new_module": "cadrumo.application.modelo.query_read_contracts",
+          "new_symbol": "ModeloReadinessOperationRequest"
+        },
+        {
+          "symbol": "ModeloRequiresProjection",
+          "old_module": "cadrumo.application.modelo.query_read_operation",
+          "new_module": "cadrumo.application.modelo.query_read_contracts",
+          "new_symbol": "ModeloRequiresProjection"
+        }
+      ]
+    },
+    {
+      "path": "dev/agent_eval/tests/test_runtime_automation_management_parity.py",
+      "canonical_imports": [
+        {
+          "symbol": "PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID",
+          "old_module": "cadrumo.application.user_profile.operations",
+          "new_module": "cadrumo.application.user_profile.profile_operation_contracts",
+          "new_symbol": "PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID"
+        }
+      ]
+    },
+    {
+      "path": "dev/audit/unreachable_memo.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.audit.unreachable_policy",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/audit/unreachable_references.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.audit.unreachable_policy",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/audit/unreachable_tree.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.audit.unreachable_policy",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/lane_marker_inventory.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.lane_configuration",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/lane_reachability.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.lane_configuration",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/lane_recipe_commands.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.lane_configuration",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/lane_workflow_graph.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.lane_configuration",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/python_runtime_compatibility.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.runtime_probe_contracts",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/ci/runtime_probe_identity.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.ci.runtime_probe_contracts",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/deploy/docs_delivery_activation.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/deploy/docs_site_build.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        },
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.deploy.docs_delivery_contracts",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/deploy/docs_site_languages.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.deploy.docs_delivery_contracts",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/deploy/docs_site_preflight.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.deploy.docs_delivery_contracts",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/build.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/cli_reference.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/cli_tree.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/i18n.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/sequences/checks.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/sequences/runner.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/docs/serve.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/env/_venv.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/acquire_pypi.py",
+      "canonical_imports": [
+        {
+          "symbol": "PYTHON_COHORT_WHEEL_NAMES",
+          "old_module": "dev.packaging.acquire_common",
+          "new_module": "cadrumo.core.product_identity",
+          "new_symbol": "PRODUCT_IDENTITY"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/oracle_emit_cohort.py",
+      "canonical_imports": [
+        {
+          "symbol": "PYTHON_COHORT_WHEEL_NAMES",
+          "old_module": "dev.packaging.acquire_common",
+          "new_module": "cadrumo.core.product_identity",
+          "new_symbol": "PRODUCT_IDENTITY"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/release_cohort.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/release_cohort_support.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/runtime_wheelhouse.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/quality/import_gate.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/quality/import_load_probe.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/aeip/apply_execution.py",
+      "canonical_imports": [
+        {
+          "symbol": "AeipError",
+          "old_module": "dev.registry.aeip.errors",
+          "new_module": "cadrumo.domain.calculations.registry.errors",
+          "new_symbol": "RegistryLoadError"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/aeip/apply_support.py",
+      "canonical_imports": [
+        {
+          "symbol": "AeipError",
+          "old_module": "dev.registry.aeip.errors",
+          "new_module": "cadrumo.domain.calculations.registry.errors",
+          "new_symbol": "RegistryLoadError"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/aeip/inventory.py",
+      "canonical_imports": [
+        {
+          "symbol": "AeipError",
+          "old_module": "dev.registry.aeip.errors",
+          "new_module": "cadrumo.domain.calculations.registry.errors",
+          "new_symbol": "RegistryLoadError"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/aeip/planning.py",
+      "canonical_imports": [
+        {
+          "symbol": "AeipError",
+          "old_module": "dev.registry.aeip.errors",
+          "new_module": "cadrumo.domain.calculations.registry.errors",
+          "new_symbol": "RegistryLoadError"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/analysis/load_census.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/filing_export_conformance.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/parity/workbook_parity_libreoffice.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/pipeline/candidate_compile_process.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/pipeline/cli.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/pipeline/generated_export_inheritance.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/pipeline/render_check.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/registry/tests/test_every_bundled_record_design_is_registered.py",
+      "canonical_imports": [
+        {
+          "symbol": "UNATTESTED_CORPUS_FILES",
+          "old_module": "dev.corpus.sync_aeat_record_design_corpus",
+          "new_module": "dev.corpus.record_design_inventory",
+          "new_symbol": "UNATTESTED_CORPUS_FILES"
+        }
+      ]
+    },
+    {
+      "path": "dev/release/alerting.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "dev/release/tests/test_version_identity.py",
+      "canonical_imports": [
+        {
+          "symbol": "PYPI_PROJECTS",
+          "old_module": "dev.release.version_identity",
+          "new_module": "cadrumo.core.product_identity",
+          "new_symbol": "PRODUCT_IDENTITY"
+        }
+      ]
+    },
+    {
+      "path": "dev/release/tests/test_version_identity_probes.py",
+      "canonical_imports": [
+        {
+          "symbol": "PYPI_PROJECTS",
+          "old_module": "dev.release.version_identity",
+          "new_module": "cadrumo.core.product_identity",
+          "new_symbol": "PRODUCT_IDENTITY"
+        }
+      ]
+    },
+    {
+      "path": "dev/test_runs/command.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.test_runs.signal_values",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/test_runs/dead_weight_signal.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.test_runs.signal_values",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/test_runs/import_boundaries_signal.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.test_runs.signal_values",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/test_runs/locales_status_signal.py",
+      "canonical_imports": [
+        {
+          "symbol": "_UTF_8",
+          "old_module": "dev.test_runs.signal_values",
+          "new_module": "dev._paths",
+          "new_symbol": "UTF_8"
+        }
+      ]
+    },
+    {
+      "path": "dev/tui/harness/sequences.py",
+      "canonical_imports": [
+        {
+          "symbol": "prepare_temporary_directory",
+          "old_module": "dev._paths",
+          "new_module": "cadrumo.core.storage_environment",
+          "new_symbol": "prepare_temporary_directory"
+        }
+      ]
+    },
+    {
+      "path": "docs/conf.py",
+      "canonical_imports": [
+        {
+          "symbol": "LEGAL_REFERENCE_DIR",
+          "old_module": "dev.docs.legal_reference",
+          "new_module": "dev.docs.legal_reference_routing",
+          "new_symbol": "LEGAL_REFERENCE_DIR"
+        }
+      ]
+    },
+    {
+      "path": "dev/packaging/acquire_common.py",
+      "canonical_value": "cadrumo.core.product_identity.PRODUCT_IDENTITY.cohort_distributions",
+      "retired_local_alias": "PYTHON_COHORT_WHEEL_NAMES"
+    },
+    {
+      "path": "dev/release/version_identity.py",
+      "canonical_value": "cadrumo.core.product_identity.PRODUCT_IDENTITY.cohort_distributions",
+      "retired_local_alias": "PYPI_PROJECTS"
+    },
+    {
+      "path": "dev/agent_eval/_runner.py",
+      "public_cli_module_migration": true
+    },
+    {
+      "path": "dev/docs/cli_reference.py",
+      "public_cli_module_migration": true
+    },
+    {
+      "path": "dev/docs/cli_tree.py",
+      "public_cli_module_migration": true
+    },
+    {
+      "path": "dev/docs/sequences/tokeniser.py",
+      "public_cli_module_migration": true
+    },
+    {
+      "path": "dev/packaging/native/verify.py",
+      "public_defining_helper_renames": [
+        "verification_destination"
+      ]
+    },
+    {
+      "path": "dev/packaging/tests/test_native_storage_environment_contract.py",
+      "public_defining_helper_renames": [
+        "verification_destination"
+      ]
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_verify.py",
+      "public_defining_helper_renames": [
+        "verification_destination"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/continuation_tui_observations.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/financial_edits.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/financial_lifecycle.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/financial_navigation.py",
+      "public_defining_helper_renames": [
+        "open_work",
+        "wait_for_refreshed_home"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/financial_profile.py",
+      "public_defining_helper_renames": [
+        "wait_for_refreshed_home"
+      ]
+    },
+    {
+      "path": "dev/acceptance/income_tax/installed_tui_financial_child.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/iva/m303_evidence_form.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/iva/m303_evidence_navigation.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/iva/m303_evidence_workbench.py",
+      "public_defining_helper_renames": [
+        "open_work"
+      ]
+    },
+    {
+      "path": "dev/acceptance/retenciones/installed_tui_controls.py",
+      "public_defining_helper_renames": [
+        "open_work",
+        "wait_for_refreshed_home"
+      ]
+    },
+    {
+      "path": "dev/packaging/native/layout.py",
+      "dynamic_import_repair": "Only the currently implemented enrolled Windows backend is admitted; import is the literal dev.packaging.native.platforms.windows. Unsupported and injected labels refuse before import.",
+      "status": "incorporated"
+    },
+    {
+      "path": "dev/quality/import_load_worker.py",
+      "dynamic_import_repair": "Four separate literal owner-generated whole-root inventories form four exhaustive bounded import loops. Aggregate metadata stays canonical for complete probe census and count/digest validation; scanner finite-set cap and private-module rules are unchanged.",
+      "status": "incorporated"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_signed_text_date_components.py",
+      "canonical_api_repair": "Original signed/magnitude, text-date, calendar and malformed-wire assertions exercise public parse_export_payload over a declared complete single-record ExportLayoutDefinition instead of private _parse_record_fields.",
+      "status": "incorporated"
+    },
+    {
+      "path": "dev/registry/tests/test_revision_context_row_binding_export.py",
+      "canonical_api_repair": "Exported casillas are obtained from public build_revision_validation_context(...).exported_casillas; row selector assertions and missing-binding refusal are preserved.",
+      "status": "incorporated"
+    },
+    {
+      "path": "dev/registry/aeip/errors.py",
+      "canonical_api_repair": "Unused RegistryLoadError forwarding facade deleted after all four consumers import the public defining registry.errors.RegistryLoadError directly.",
+      "status": "superseded"
+    },
+    {
+      "path": "dev/quality/tests/test_import_load_worker.py",
+      "verification": "Independent governed-load census equals complete partition union and actual attempted imports exactly once; import failure and SystemExit both retained with original report digest/count shape; unenrolled native labels reject before import.",
+      "status": "incorporated"
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.cadrumo.json",
+      "status": "incorporated",
+      "owner": "cadrumo.tests.module_target_inventory CLI compile_inventory",
+      "target_count": 3202,
+      "rationale": "Actual scanner treats whole-document load_all_target_sets as exhaustive; named-set load_target_set is non-exhaustive and cannot grant the private-module census. Separate complete root inventories fit the unchanged finite cap; aggregate retained."
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.cadrumo_harness.json",
+      "status": "incorporated",
+      "owner": "cadrumo.tests.module_target_inventory CLI compile_inventory",
+      "target_count": 16,
+      "rationale": "Actual scanner treats whole-document load_all_target_sets as exhaustive; named-set load_target_set is non-exhaustive and cannot grant the private-module census. Separate complete root inventories fit the unchanged finite cap; aggregate retained."
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.dev.json",
+      "status": "incorporated",
+      "owner": "cadrumo.tests.module_target_inventory CLI compile_inventory",
+      "target_count": 1139,
+      "rationale": "Actual scanner treats whole-document load_all_target_sets as exhaustive; named-set load_target_set is non-exhaustive and cannot grant the private-module census. Separate complete root inventories fit the unchanged finite cap; aggregate retained."
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.docs.json",
+      "status": "incorporated",
+      "owner": "cadrumo.tests.module_target_inventory CLI compile_inventory",
+      "target_count": 2,
+      "rationale": "Actual scanner treats whole-document load_all_target_sets as exhaustive; named-set load_target_set is non-exhaustive and cannot grant the private-module census. Separate complete root inventories fit the unchanged finite cap; aggregate retained."
+    }
+  ],
+  "canonical_regeneration_commands": [
+    "uv run --no-sync python -m cadrumo.tests.module_target_inventory --output dev/quality/metadata/import_load_targets.cadrumo.json --package cadrumo --source-root src/cadrumo --target-set cadrumo",
+    "uv run --no-sync python -m cadrumo.tests.module_target_inventory --output dev/quality/metadata/import_load_targets.cadrumo_harness.json --package cadrumo_harness --source-root src/cadrumo_harness --target-set cadrumo_harness",
+    "uv run --no-sync python -m cadrumo.tests.module_target_inventory --output dev/quality/metadata/import_load_targets.dev.json --package dev --source-root dev --target-set dev",
+    "uv run --no-sync python -m cadrumo.tests.module_target_inventory --output dev/quality/metadata/import_load_targets.docs.json --package docs --source-root docs --target-set docs"
+  ],
+  "verification": {
+    "focused_tests": {
+      "passed": 11,
+      "seconds": 77.98,
+      "log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T183341.338763Z-pytest-45984-a9976061/run.log"
+    },
+    "shared_import_and_installed_wheel_gates": "parent-owned pending; no shared checker or stateful acceptance launched by this worker",
+    "scope": "All original dev/docs report findings are represented; four product missing-target findings are root-owned.",
+    "canonical_caller_regressions": {
+      "passed": 127,
+      "seconds": 63.6,
+      "log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T183822.107426Z-pytest-89440-79188ea3/run.log",
+      "modules": [
+        "dev/packaging/tests/test_acquire_tooling.py",
+        "dev/release/tests/test_version_identity.py",
+        "dev/release/tests/test_version_identity_probes.py",
+        "dev/acceptance/retenciones/tests/test_installed_tui_withholding.py"
+      ]
+    },
+    "ruff": "check and format --check passed on all74 current changed owned Python paths",
+    "diff_check": "git diff --check passed for dev/**, docs/conf.py, and this repair record",
+    "actual_subordinate_closure_correction": {
+      "finding": "Configured gate loaded4359/4359 actual imports with zero load failures but reported two unresolved dynamic dev/docs closures.",
+      "cause": "The conservative TargetEvaluationContext.latest_values unions all preceding assignments to the same target variable; repeated for-target bindings accumulated roots and exceeded unchanged4096 cap.",
+      "before_closures": [
+        3202,
+        3218,
+        null,
+        null
+      ],
+      "after_closures": [
+        3202,
+        16,
+        1139,
+        2
+      ],
+      "repair": "Distinct core_target,harness_target,dev_target,docs_target lexical loop bindings; no checker,limit,authority,scope or ignore changes.",
+      "regression": "Actual subordinate metadata_target_set_targets over public read_modules parsed source proves four separately exhaustive complete root sets; independent actual import-attempt census preserves exactonce/digest/count/all failures.",
+      "tests": "3passed16.01s",
+      "log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T185359.858312Z-pytest-15484-52c67744/run.log",
+      "ruff": "Two owning modules check+format pass",
+      "full_configured_gate": "parent-owned pending rerun"
+    }
+  }
+}

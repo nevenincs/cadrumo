@@ -89,3 +89,36 @@ AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY = ConformanceFamily(
     ),
     prepare=_prepare,
 )
+
+
+def _prepare_absent_report(context: ConformanceFamilyContext) -> ConformancePreparation:
+    persistence = build_auth_diagnostic_persistence()
+    assert persistence.list_records() == ()
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        del outcome
+        assert persistence.list_records() == ()
+
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(str(context.profile_id)),
+        request=AuthDiagnosticReportRequest(
+            profile_id=context.profile_id,
+            diagnostic_id="absent-conformance-diagnostic",
+            phone_state=AuthDiagnosticPhoneState.APP_DID_NOT_PROMPT,
+        ),
+        verify=verify,
+    )
+
+
+AUTH_DIAGNOSTIC_ABSENT_CONFORMANCE_FAMILY = ConformanceFamily(
+    cases=(
+        RegisteredExecutorConformanceCase(
+            AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,),
+            expected_refusal_ref="REFUSED_AUTH_DIAGNOSTIC_NOT_FOUND",
+        ),
+    ),
+    prepare=_prepare_absent_report,
+)

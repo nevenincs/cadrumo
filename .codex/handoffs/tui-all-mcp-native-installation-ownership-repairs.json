@@ -1,0 +1,90 @@
+{
+  "kind": "native program installation ownership repairs",
+  "observed_head": "f39a5d517590508909a873033eb1833917d12b48",
+  "incoming": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "utc": "2026-10-04T00:50:15.240304+00:00",
+  "findings": {
+    "NATIVE-EFB-01": "Resolved: never recursively erase preexisting staging; require owning exact unchanged receipt and byte-identical freshly built candidate for reuse, otherwise preserve/refuse. Changed payload needs fresh build directory.",
+    "NATIVE-EFB-02": "Resolved per-file native identity/namespace boundary: retain Windows locked ancestry and read/delete file handle; hash/delete exact open identity without write/delete sharing. POSIX anchored directory descriptors and private no-replace atomic claim; verify actual inode/content, restore changed claim without replacing new name, preserve any un-restorable claim and report refusal. Manifest anchor removed last; unowned/modified directories preserved."
+  },
+  "scope_limits": [
+    "POSIX binds filesystem identity and namespace; it does not claim atomic byte compare-and-delete against arbitrary writes through already-open external descriptors.",
+    "Multi-file uninstall is not an atomic co-commit. A refusal can follow previously settled removals; remaining anchor and changed/unowned state are preserved.",
+    "Focused tests use explicitly synthetic program payloads and real host filesystem APIs, not installed shipping artifacts, protected provider admission or Desktop/E2E."
+  ],
+  "rows": [
+    {
+      "path": "dev/packaging/native/installation.py",
+      "current_sha256": "748da5364b996d32faf8afcf9407cbefe748cf497a49e60d12c90aaab15530c6",
+      "incoming_sha256": "1a11456644a9d1ffd63b7659988f55a0525b03b120bbc51e985a76aa0db8c061",
+      "owner": "history",
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
+    },
+    {
+      "path": "dev/packaging/native/installation_filesystem.py",
+      "current_sha256": "eb29bf0d63ca04a474bb18b7e6265babf7100ce27004d0b4a113b293303d643d",
+      "incoming_sha256": null,
+      "owner": "history",
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
+    },
+    {
+      "path": "dev/packaging/native/installation_windows.py",
+      "current_sha256": "ad72651376f0403d0887b759656680166c0c7213d80c0047040a3b25c736c4c3",
+      "incoming_sha256": null,
+      "owner": "baseline_merge",
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
+    },
+    {
+      "path": "dev/packaging/tests/test_native_installation.py",
+      "current_sha256": "1e4ed68d4749c2ab9c1ddbf415e62474449f6636017cc76d0d4dc8027360f08c",
+      "incoming_sha256": "295dd78a7bb91cd24754de537ae42ca1637e2ce94d18f7be284be9ac6b780b13",
+      "owner": "history",
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
+    },
+    {
+      "path": "dev/packaging/tests/test_native_installation_windows.py",
+      "current_sha256": "fce49335764e6b8031631b9f1bc61248cf3d6337f736888efc08f5c0f8534314",
+      "incoming_sha256": null,
+      "owner": "baseline_merge",
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
+    }
+  ],
+  "checks": {
+    "windows": {
+      "command": "uv run --no-sync pytest -o addopts='' -n0 dev/packaging/tests/test_native_installation.py dev/packaging/tests/test_distribution_identity.py dev/packaging/tests/test_native_installation_windows.py -q",
+      "passed": 39,
+      "skipped": 2,
+      "skip_reason": "POSIX-specific atomic claim/retained descriptor interleavings",
+      "seconds": 2.89,
+      "run": "20261004T004746.106608Z-pytest-38496-962a9618"
+    },
+    "linux_wsl": {
+      "interpreter": "/tmp/cadrumo-s11-py313-venv-20261001/bin/python",
+      "version": "3.13.11",
+      "environment": "read-only existing venv; current /mnt/y source; dedicated private /home scratch",
+      "command": "python -m pytest -o addopts='' -n0 dev/packaging/tests/test_native_installation.py dev/packaging/tests/test_distribution_identity.py -q",
+      "passed": 33,
+      "skipped": 0,
+      "seconds": 17.91,
+      "run": "20261004T004817.455156Z-pytest-106726-a586dcb8",
+      "log": "/tmp/cdnativeinstallationproof.JK07RF/.logs/test-runs/2026-10-04/20261004T004817.455156Z-pytest-106726-a586dcb8/run.log"
+    },
+    "static": "5 edited files scoped Ruff/format/ty all passed; tracked diff check passed"
+  },
+  "prior_nonproof_attempts": [
+    "Windows first configured run blocked at global autouse setup by active66 domain/iva/components.py marker:31 setup errors,2 POSIX skips; no native test-body failure.",
+    "Two WSL pipe launches refused argv before collection because PowerShell added CR; final LF bash-c launch passed."
+  ],
+  "source_frozen": true,
+  "pending": [
+    "root integration checkpoint and owning metadata regeneration",
+    "captured66 registry closure / final shipping source freeze",
+    "actual installed native packaging/uninstall/Desktop/protected provider proof"
+  ],
+  "git_index_or_vault_mutations": false
+}

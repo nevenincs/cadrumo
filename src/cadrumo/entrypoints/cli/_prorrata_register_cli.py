@@ -78,7 +78,6 @@ from .runtime_ledger_prorrata_register import (
 
 _SEED_LOCAL_AUTHORITY_NOTICE_CODE = "ledger.prorrata.seed.local_authority"
 _SEED_ADVISORY_NOTICE_CODE = "ledger.prorrata.seed.advisory"
-_SEED_AUTHORITY = "local_prior_observation"
 
 
 def _raise_provenance_refusal_if_present(

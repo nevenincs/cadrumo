@@ -108,11 +108,11 @@ def read_gnome_lock_state(bus: GnomeObservationBus, owner: bytes) -> GnomeLockSt
         version = bus.read_integer(reply, b"u")
         epoch_text = bus.read_string(reply, b"s", maximum=36).decode("ascii")
         sequence = bus.read_integer(reply, b"u")
-    lock_generation = bus.read_integer(reply, b"u")
-    locked = bus.read_integer(reply, b"b")
-    active = bus.read_integer(reply, b"b")
-    mode = bus.read_string(reply, b"s", maximum=32).decode("ascii")
-    bus.require_end(reply)
+        lock_generation = bus.read_integer(reply, b"u")
+        locked = bus.read_integer(reply, b"b")
+        active = bus.read_integer(reply, b"b")
+        mode = bus.read_string(reply, b"s", maximum=32).decode("ascii")
+        bus.require_end(reply)
     epoch = UUID(epoch_text)
     if not _valid_lock_version(version, epoch, epoch_text):
         raise _unavailable()
@@ -302,6 +302,8 @@ def require_gnome_login_producer(uid: int) -> None:
 
 
 def _open_producer_directory(components: tuple[str, ...], uid: int) -> int:
+    if sys.platform != "linux":
+        raise _unavailable()
     directory = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
     try:
         for index, component in enumerate(components):
@@ -329,6 +331,8 @@ def _require_producer_files(directory: int, uid: int) -> None:
 
 
 def _require_producer_file(directory: int, name: str, uid: int) -> None:
+    if sys.platform != "linux":
+        raise _unavailable()
     descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
     try:
         observed = os.fstat(descriptor)

@@ -7,7 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from .signal_values import _UTF_8, _is_json_object
+from dev._paths import UTF_8
+
+from .signal_values import _is_json_object
 
 _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 
@@ -87,7 +89,7 @@ class _DeadWeightSignalProcessor:
         }
         (run_dir / "artifacts" / "dead-weight-signal.json").write_text(
             json.dumps(signal_artifact, indent=2, sort_keys=True) + "\n",
-            encoding=_UTF_8,
+            encoding=UTF_8,
             newline="\n",
         )
         result = {

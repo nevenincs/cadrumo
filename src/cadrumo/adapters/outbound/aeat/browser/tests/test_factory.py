@@ -273,7 +273,7 @@ async def test_launch_failure_is_a_factual_typed_safety_outcome(
         directory = cache / build.directory_name
         directory.mkdir(parents=True)
         (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(cache))
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
     session = await create_browser_session(Settings(), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:

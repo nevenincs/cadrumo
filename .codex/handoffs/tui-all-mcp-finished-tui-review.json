@@ -1,0 +1,98 @@
+{
+  "source_snapshot": "800b2668832f61da780f607283af4e48a75d605f",
+  "source_original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "integration_parent": "25146c134a9a57f7b519784f6e4e0e37d1a435db",
+  "status": "coherent source reconciliation checkpoint; final integrated E2E review PENDING",
+  "authorization": "User explicitly authorized all-MCP integration and parallel Sol6.1-high coding, confirmed live TUI writer finished, then explicitly requested commit. Verification may follow baseline; live landing remains conditioned on final green and destination safety.",
+  "source_delta_count": 392,
+  "disposition_counts": {
+    "incorporated": 126,
+    "already present": 250,
+    "superseded": 16
+  },
+  "original_mcp_source_delta_count": 3069,
+  "original_mcp_unresolved_source_count": 0,
+  "source_counts_are_per_generation": true,
+  "later_after78_generation": {
+    "paths": 52,
+    "new_paths": 41,
+    "changed_existing_paths": 11
+  },
+  "scoped_verification": {
+    "lease_core_historical_ciphertext_m347_tui": {
+      "passed": 72
+    },
+    "lease_current_schema_forms_add_evidence": {
+      "passed": 50
+    },
+    "lease_portable_cli": {
+      "passed": 16,
+      "native_deselected": 13,
+      "loaded_generation": "Whole run began before max25 schema-bound repair; fresh current-byte issued-lease case separately passed."
+    },
+    "lease_fresh_frozen_cli": {
+      "passed": 1
+    },
+    "runtime_iva_m360_pure": {
+      "passed": 79,
+      "native_linux_skips": 7
+    },
+    "registry_m303_m347": {
+      "passed": 9
+    },
+    "m303_form_reproduction": "pass,0stale fragments/0missing layouts",
+    "source_owner_lint_format_types": "all assigned scopes pass; final temp helper shadow correction scoped Ruff/format/ty pass",
+    "all19_generated_export_targets_current": "Actual canonical reproduction PASS19; zero source drift and no registry/authority mutation."
+  },
+  "independent_source_review": "No new high/critical code defect on unchanged owner hash bookends; PENDING final verification. Historical private-task route violation is closed by exact own task absence, not test success.",
+  "full_quality_receipt": ".codex/handoffs/tui-all-mcp-quality-finished-tui-800b-corrected.json",
+  "native_provenance": {
+    "native-final-manifest-reaction-proof.json": {
+      "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\native-final-manifest-reaction-proof.json",
+      "sha256": "3dc1be2ffcf3f7f24a050aeff592af5a14572a420e0813904bfad45f13749b95",
+      "source_checkpoint": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "applicability": "Pinned prior source proof; unchanged containment/native inputs may reuse exact proofs, later800b installed product/authority payload needs current verification. No later-cut private positive green inferred."
+    },
+    "native-windows-manifest-repair-report.json": {
+      "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\native-windows-manifest-repair-report.json",
+      "sha256": "a8e67f38f099b294f0156d0b68d37af4a4963d8d886b6b9a925a09c3c23e79fb",
+      "source_checkpoint": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "applicability": "Pinned prior source proof; unchanged containment/native inputs may reuse exact proofs, later800b installed product/authority payload needs current verification. No later-cut private positive green inferred."
+    },
+    "mac-current-native-proof-final.json": {
+      "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\mac-current-native-proof-final.json",
+      "sha256": "ff486797405d45d60ce746c814aff03b8d3da764940b85873707f46ac94a3432",
+      "source_checkpoint": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "applicability": "Pinned prior source proof; unchanged containment/native inputs may reuse exact proofs, later800b installed product/authority payload needs current verification. No later-cut private positive green inferred."
+    },
+    "mac-current-native-login-lineage.json": {
+      "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\mac-current-native-login-lineage.json",
+      "sha256": "dc08c246cc12b49fcf42a4e8216410785666b5d0d61fb5e99624bbb6f9b71fc2",
+      "source_checkpoint": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "applicability": "Pinned prior source proof; unchanged containment/native inputs may reuse exact proofs, later800b installed product/authority payload needs current verification. No later-cut private positive green inferred."
+    }
+  },
+  "pending_verification": [
+    "corrected configured12aggregate completion",
+    "fresh authority publication/currency after authored-source303 edits",
+    "later-cut installed artifact and affected native proofs",
+    "financial offered-step diagnostic and actual export/fresh-process reopen",
+    "normal Windows hello desktop private protected-storage/MCP grant-reconnect proof; tasks/services prohibited",
+    "safe live feature/tui landing followed by destination E2E"
+  ],
+  "m360_limit": "Original scaffold now explicitly proposed, not accepted; encrypted solicitud adapter declaration writer has no registered production caller in captured source, no complete operator-entry E2E claimed.",
+  "mac_private_contract": "Prior native default protected refusal demonstrated; deliberate unchanged original MacLogin locked=True/UNKNOWN admission policy, not a newly introduced regression or host outage.",
+  "landed_on_feature_tui": false,
+  "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba",
+  "authority_publication": "Recorded1a8dc024 versus current source candidate96870a52991c3915f59fb9a0bb833002df1a0f068127710448aa2db89869167d; actual currency STALE/legal sources changed. Publication remains separate.",
+  "later_destination_observation": {
+    "observed_utc": "2026-10-04T05:45:44.195353+00:00",
+    "head": "cbf0497d372128c09848f292d4497342033af0a6",
+    "later_commits": [
+      "89eb5a2f61",
+      "cbf0497d37"
+    ],
+    "dirty_tracked_paths": 18,
+    "claim": "Live destination advanced and has later working edits; no landing or source overwrite performed. These later source generations require preservation/reconciliation before landing."
+  }
+}

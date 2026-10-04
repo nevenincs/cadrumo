@@ -26,8 +26,8 @@ from typing import Final
 import pytest
 
 from ....core.errors.hierarchy import InternalInvariantError
-from .._command_shared_contracts import DeferredTarget
 from .._command_target import resolve_deferred_target
+from ..command_shared_contracts import DeferredTarget
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

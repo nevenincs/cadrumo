@@ -14,7 +14,7 @@ from .iva_schema_vocabulary_source import (
     UNIQUE_TOKENS_REQUIREMENT,
     resolve_scoped_schema_entries,
 )
-from .iva_schema_vocabulary_tokens import _require_token
+from .iva_schema_vocabulary_tokens import require_token
 
 _EXEMPTION_ORDER_KEY = "exemption_article.order"
 
@@ -47,7 +47,7 @@ class IvaExemptionArticleCatalogue:
 
     def require(self, value: object) -> IvaExemptionArticle:
         """Validate and return one registry-declared IVA exemption article."""
-        return _require_token(value, IvaExemptionArticle, self.all_articles, "exemption article")
+        return require_token(value, IvaExemptionArticle, self.all_articles, "exemption article")
 
     def definition(self, value: object) -> IvaExemptionArticleDefinition:
         """Return the registry definition for one IVA exemption article."""
@@ -77,7 +77,7 @@ class IvaArt69DosServiceCatalogue:
 
     def require(self, value: object) -> IvaArt69DosService:
         """Validate and return one registry-declared Art. 69.Dos service."""
-        return _require_token(value, IvaArt69DosService, self.all_services, "Art. 69.Dos service")
+        return require_token(value, IvaArt69DosService, self.all_services, "Art. 69.Dos service")
 
     def definition(self, value: object) -> IvaArt69DosServiceDefinition:
         """Return the registry definition for one Art. 69.Dos service."""

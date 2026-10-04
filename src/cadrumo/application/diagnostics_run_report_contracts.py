@@ -17,11 +17,11 @@ from .diagnostics_run_health import (
     RunHealthReport,
     RunRecordView,
 )
-from .diagnostics_timing_contracts import _native_timing_values, _public_timing_values, _TimingSnapshot
+from .diagnostics_timing_contracts import TimingSnapshot, native_timing_values, public_timing_values
 from .operations.public_scalar import PublicDecimal
 
 
-class DiagnosticsRunProviderSnapshot(_TimingSnapshot):
+class DiagnosticsRunProviderSnapshot(TimingSnapshot):
     """Closed copy of the canonical provider timing facts."""
 
     provider: Annotated[str, Field(min_length=1)]
@@ -29,11 +29,11 @@ class DiagnosticsRunProviderSnapshot(_TimingSnapshot):
     @classmethod
     def from_metrics(cls, value: LlmRunProviderMetrics) -> DiagnosticsRunProviderSnapshot:
         """Copy canonical facts without changing decimal precision."""
-        return cls.model_validate(_public_timing_values(value))
+        return cls.model_validate(public_timing_values(value))
 
     def to_metrics(self) -> LlmRunProviderMetrics:
         """Restore the canonical timing row without calculating aggregates."""
-        return LlmRunProviderMetrics.model_validate(_native_timing_values(self))
+        return LlmRunProviderMetrics.model_validate(native_timing_values(self))
 
 
 class DiagnosticsRunHealthSnapshot(BaseModel):
@@ -90,11 +90,11 @@ class DiagnosticsLatencyPercentilesSnapshot(BaseModel):
     @classmethod
     def from_metrics(cls, value: LatencyPercentiles) -> DiagnosticsLatencyPercentilesSnapshot:
         """Copy percentiles produced by the canonical nearest-rank service."""
-        return cls.model_validate(_public_timing_values(value))
+        return cls.model_validate(public_timing_values(value))
 
     def to_metrics(self) -> LatencyPercentiles:
         """Restore existing percentile facts without computing any percentile."""
-        return LatencyPercentiles.model_validate(_native_timing_values(self))
+        return LatencyPercentiles.model_validate(native_timing_values(self))
 
 
 class DiagnosticsLatencySnapshot(BaseModel):

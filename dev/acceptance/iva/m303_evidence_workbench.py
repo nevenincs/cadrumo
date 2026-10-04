@@ -17,7 +17,7 @@ from dev.acceptance.income_tax.tui_navigation import (
 from dev.acceptance.income_tax.tui_operation_controls import activate_tui_operation, confirm_assumed_values
 
 from .m303_evidence_contracts import _RESULTADO_CASILLA, TuiOutcome
-from .m303_evidence_navigation import _await_workbench_refresh, _open_work
+from .m303_evidence_navigation import _await_workbench_refresh, open_work
 from .m303_evidence_projection import resultado_matches_oracle
 from .m303_evidence_refusals import _visible_refusal
 
@@ -29,7 +29,7 @@ async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
     """Verify from the workbench, first confirming, reviewing and applying any assumed values it offers to confirm."""
     contract = installed_lifecycle_contract()
     verify = contract.verify
-    await _open_work(pilot, work_unit_id=work_unit_id)
+    await open_work(pilot, work_unit_id=work_unit_id)
     try:
         confirmed = await confirm_assumed_values(pilot, binding=contract.apply, maximum_polls=6000)
     except TuiJourneyError as error:
@@ -40,7 +40,7 @@ async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
                 f"installed TUI M303 confirmation of assumed values ended {confirmed.terminal_condition}: "
                 f"{_visible_refusal(pilot)}"
             )
-        await _open_work(pilot, work_unit_id=work_unit_id)
+        await open_work(pilot, work_unit_id=work_unit_id)
     terminal = await activate_tui_operation(pilot, binding=verify)
     if terminal.terminal_condition != "succeeded":
         raise InstalledTuiChildError(
@@ -54,7 +54,7 @@ async def _workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | 
     """Read ``iva.resultado`` off the workbench's form: its origin, and whether its value equals the oracle."""
     from cadrumo.application.modelo.work_form_models import address_key
 
-    form = (await _open_work(pilot, work_unit_id=work_unit_id)).form
+    form = (await open_work(pilot, work_unit_id=work_unit_id)).form
     if form is None:
         raise InstalledTuiChildError("installed workbench lost its form", diagnostic=public_surface_diagnostic(pilot))
     field = next((item for item in form.fields() if address_key(item.address) == ("casilla", _RESULTADO_CASILLA)), None)
@@ -66,7 +66,7 @@ async def _workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | 
 async def _attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
     """Run the official export through the workbench's export dialog and classify its public terminal result."""
     binding = installed_lifecycle_contract().export
-    await _open_work(pilot, work_unit_id=work_unit_id)
+    await open_work(pilot, work_unit_id=work_unit_id)
     try:
         await open_workbench_export(pilot, output_path=output_path)
     except TuiJourneyError as error:

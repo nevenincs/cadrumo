@@ -6,8 +6,9 @@ import re
 from collections import defaultdict
 from itertools import pairwise
 
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+
 from .adjudications import AdjudicationSet
-from .errors import AeipError
 from .identity import CHAIN_ID_MAX_LENGTH, _normalise, chain_id_for, chain_id_is_wellformed
 from .types import AeipAmbiguity, AeipEvent, AeipInventory, AeipOccurrence, ChainPlan, ChainPlanEntry, EvolutionPair
 
@@ -39,7 +40,7 @@ def _segments_for(
 
     boundary = order.get(split.from_revision)
     if boundary is None:
-        raise AeipError(
+        raise RegistryLoadError(
             f"split for {event.slug!r} names revision {split.from_revision!r}, which is not among {tuple(order)}",
         )
     segments: list[tuple[str, list[AeipOccurrence]]] = []

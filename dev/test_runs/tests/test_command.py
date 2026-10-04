@@ -37,6 +37,23 @@ def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
     assert status == 7
 
 
+def test_command_run_keeps_log_location_separate_from_child_working_directory(tmp_path: Path) -> None:
+    repository = tmp_path / "checkout"
+    repository.mkdir()
+    log_root = tmp_path / "controlled-logs"
+    command = (sys.executable, "-c", "from pathlib import Path; Path('cwd-marker').write_text('child ran here')")
+
+    status = run(command, repository=repository, run_log_root=log_root, family="audit-runs", label="location-probe")
+
+    assert status == 0
+    assert (repository / "cwd-marker").read_text() == "child ran here"
+    assert not (repository / ".logs").exists()
+    run_dir = next((log_root / ".logs" / "audit-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["command"] == list(command)
+    assert metadata["exit_status"] == 0
+
+
 def test_command_run_removes_its_scratch_after_a_failing_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     base = tmp_path / "scratch-base"
     base.mkdir()

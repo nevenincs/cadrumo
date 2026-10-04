@@ -1,0 +1,282 @@
+{
+  "source_ours": "dd69ed8c349",
+  "source_incoming": "53f01bc87bb080a043dc871f7972da925efe5814",
+  "paths": [
+    {
+      "path": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "status": "written",
+      "after_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/posix_endpoint.py",
+      "status": "written",
+      "after_sha256": "9a713e39c8f6fa868a5bbbb49ebd4a3e3062101c8702b22d8a06bbdc63ce7775"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "status": "written",
+      "after_sha256": "fc8bc64e94efcc9c38e15b3acd3061c831690bdfaf32058cc5284ff54dd4634a"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
+      "status": "written",
+      "after_sha256": "b2a342103bc6856b0d2cbab2303b3c8f499f9e30e285a418073dfcaea8a59858"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_posix.py",
+      "status": "written",
+      "after_sha256": "2769d79614366af97db0bdccd50868b31ec034e649cada1c9df1f3f07a21408d"
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "written",
+      "after_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/session.py",
+      "status": "written",
+      "after_sha256": "32e77b25c4f7e7b84a9d8f507929ee0bfa36a1e761a75599a3326f2783b55c36"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py",
+      "status": "written",
+      "after_sha256": "aa6ac7384cef90423dcf0bfdd9eff46a8540a3d9d27f5962875a001bf6cb5946"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py",
+      "status": "written",
+      "after_sha256": "ebb543df213256c0f8ca711e0aa62429daeecc165cfcff68c2d141135443abe0"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
+      "status": "written",
+      "after_sha256": "ca93010d9125c562ae3994bcc8e64c919b491fff5cc70fada355e1ef4799d321"
+    },
+    {
+      "path": "src/cadrumo/application/aeat_sync/workspace_reader.py",
+      "status": "written",
+      "after_sha256": "c85a4ee98e89dcf94d5a290ee0da3aca85bcc2da960fb6105125f5c5ab57ef8e"
+    },
+    {
+      "path": "src/cadrumo/application/ledger/evidence_followup_contracts.py",
+      "status": "written",
+      "after_sha256": "2c074ef5570c9524a8468d2f711a497b55ab04bd757044ce97b3ea12d94c46f0"
+    },
+    {
+      "path": "src/cadrumo/application/ledger/read_access.py",
+      "status": "written",
+      "after_sha256": "1a9a587644ab647960674c91ca1016eaf1dff0d7f868d99380ce13abce4da8e5"
+    },
+    {
+      "path": "src/cadrumo/application/provisioning_browser.py",
+      "status": "written",
+      "after_sha256": "de9809742a17ac588fb21e651923b144bb8ae6f3186ab8485248b46aafb23cb1"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "status": "written",
+      "after_sha256": "329a615aad460a5e9721f8fc134f483839725eb3409431692963841cd6f3adf3"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_host.py",
+      "status": "written",
+      "after_sha256": "78c795838a542d0992d095587b87a5ea0f20c5901d4b9b8303aa6f9681fb0c76"
+    },
+    {
+      "path": "src/cadrumo/core/config_state_root.py",
+      "status": "written",
+      "after_sha256": "fc0e2bf3277e1555aa86b99b42a08da5b94a270b2e2760d0f9c2b04629567ee7"
+    },
+    {
+      "path": "src/cadrumo/core/storage_taxonomy_locations.py",
+      "status": "written",
+      "after_sha256": "b346fc1b13ec8f50bb789a2316b1fc613f591d365f98e939b2d78b560fa07a67"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+      "status": "written",
+      "after_sha256": "b1fb4c6a33546cb494ec785aa983de05273cc3e51a3f534335e9847a199581ee"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_parser.py",
+      "status": "written",
+      "after_sha256": "84f6c125ac5bb2e2d5eef6ef67bc24cc7f0e331a8bed2079d8a8c3825f806a08"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py",
+      "status": "written",
+      "after_sha256": "536402e34e27c5ec271fa3ec819ee5c0a4f4531a07f3e7312ba270c81e68d3bf"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_row_bindings_are_consumed.py",
+      "status": "written",
+      "after_sha256": "35d142a3c107da1095b404e06ba3d25b136fd790bf21fc74bff2100162326745"
+    },
+    {
+      "path": "src/cadrumo/domain/invoices/_payload_normalisation.py",
+      "status": "written",
+      "after_sha256": "2b225917198d0a1081d92b77be41bdbc98c5e637c073f1587dcb54aee4eb996a"
+    },
+    {
+      "path": "src/cadrumo/domain/invoices/models.py",
+      "status": "written",
+      "after_sha256": "5d338cadd2762d09558d96f82b05ec59659e1e59acca8e5feb7ff4f04eed8d71"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/classification.py",
+      "status": "written",
+      "after_sha256": "a753714d273a4448f69a72dc8a84a1fb122b491eda0c7be09af6d78b6dd07444"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/main.py",
+      "status": "written",
+      "after_sha256": "d2a8fc6bb9e0552ef39faa6d869b997a4c18b5709dc8de0d4ef6b2c74bf078f7"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
+      "status": "written",
+      "after_sha256": "06e47b34f74c9a24d295c6fcfed3fd2bbf6a46ca77b2104f3549b78b7c93c09a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/gnome_login_observer.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "status": "written",
+      "after_sha256": "aa73638fda3894179e6ea6a89d397cb6a8904ef605e5d7ad8db30a267766defd"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py",
+      "status": "written",
+      "after_sha256": "7babccac81e38923378b97f014fb665a15f97215563b0e7cbbcb00b8ce11ec11"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_archive_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_auth_apoderado_support.py",
+      "status": "written",
+      "after_sha256": "22be925163aeb1baaa37806b9503fc6b0833276a4e0faaffd3400ded1c604250"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_auth_diagnostic_report_support.py",
+      "status": "written",
+      "after_sha256": "aa8b55f1587d98cff4dc3c9ffe16cf58fcfdecbe13c0967ccd327b7d6d00b790"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_borrador_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_censo_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_families.py",
+      "status": "written",
+      "after_sha256": "82e96e14b5ea0327c87f215fee3def36135f77af101155bfa6fa33f21ad2d98c"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_google_support.py",
+      "status": "written",
+      "after_sha256": "df7f5c64c1723417e61a34d3c83cf078308ab65ac00efb18a848ca03e8d43ed2"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_ledger_extended_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py",
+      "status": "written",
+      "after_sha256": "e1cb14a711db317982edcf61fd2a0c72d7e8d20186f1a3e99d381019cd322e8d"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py",
+      "status": "written",
+      "after_sha256": "92b58d408a2a7da02d493d92d45e78b8152c03ba94ebfa616dd79d1bdd045cfd"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m036_support.py",
+      "status": "written",
+      "after_sha256": "4cd94556449e9137b5253aa702ac69d583cc883b1138bf07dddc789c94b024e9"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "status": "written",
+      "after_sha256": "d015a1f5b75fa8dd4c08219233f790b6d9a241e63e1277936c013bfefb82dd1a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_maritime_preview_support.py",
+      "status": "written",
+      "after_sha256": "866e520bdcf59d7ab0788618b84def037a0dd8fc6c70e0e97c29d9e7f13df853"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_maritime_quickfile_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py",
+      "status": "written",
+      "after_sha256": "ec96f30b5dff736b9c570cf98d240205dee50769f21559d932b0fe49b66b6a4b"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_profile_archive_support.py",
+      "status": "written",
+      "after_sha256": "cf0046d4af8302b5ff78fb5267b91bf5ff296ebe34567f63d1dcc5c77c1910c1"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_review_exchange_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_review_package_exchange_support.py",
+      "status": "written",
+      "after_sha256": "d5ad355889b0faa71fccaec19dc73e84884d710dc5d7f00514997f375c7be399"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_variants.py",
+      "status": "written",
+      "after_sha256": "a70d08872f97325e52a24245e0d4427a08c16f64edd18ac2c2b699eeb17e28f9"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py",
+      "status": "written",
+      "after_sha256": "f353e8d639648a6ae207ed6aa8ff20c3cfd7219bb46fb25020a98d88c57de95a"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_workstation_support.py",
+      "status": "deleted",
+      "after_sha256": null
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py",
+      "status": "written",
+      "after_sha256": "053c1e643796666fa7a45479e18a24d61426465ba9cedcb6fbee059c308f0eb5"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py",
+      "status": "written",
+      "after_sha256": "7e4ecee290d18daf1c8ccad1514696dbff46ebdd150b1bee8e888d8ae3cbd53b"
+    }
+  ],
+  "provenance": ".codex/handoffs/tui-all-mcp-53f-product-reconciliation.json",
+  "pending": "Fresh behavioral verification after source freeze; root owns staging/index/commit.",
+  "additional_verified_intent": ".codex/handoffs/tui-all-mcp-53f-cli-human-refusal-reconciliation.json",
+  "verified_companion_hashes": {
+    "src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py": "4529e4aea13f10e8df0fc7144bbef6017b5c766e43e782a520697efe28d07b24"
+  }
+}

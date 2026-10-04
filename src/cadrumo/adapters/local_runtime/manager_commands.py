@@ -19,6 +19,7 @@ from ...application.runtime.deadline_budget import remaining_budget
 class NativeManagerCommand(StrEnum):
     """Fixed native tools; callers cannot choose an executable or shell."""
 
+    LAUNCHCTL = "/bin/launchctl"
     SYSTEMCTL = "/usr/bin/systemctl"
     SYSTEMD_RUN = "/usr/bin/systemd-run"
 
@@ -33,8 +34,13 @@ class ManagerCommandResult:
 
 def run_manager_command_sync(tool: NativeManagerCommand, arguments: tuple[str, ...]) -> ManagerCommandResult:
     """Bound a fixed native manager command from the synchronous worker owner."""
-    if sys.platform == "linux":
-        if tool not in {NativeManagerCommand.SYSTEMCTL, NativeManagerCommand.SYSTEMD_RUN}:
+    if sys.platform == "linux" or sys.platform == "darwin":
+        supported = (
+            {NativeManagerCommand.SYSTEMCTL, NativeManagerCommand.SYSTEMD_RUN}
+            if sys.platform == "linux"
+            else {NativeManagerCommand.LAUNCHCTL}
+        )
+        if tool not in supported:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         environment = {
             "PATH": "/usr/bin:/bin",
@@ -42,8 +48,9 @@ def run_manager_command_sync(tool: NativeManagerCommand, arguments: tuple[str, .
             "LC_ALL": "C",
             "SYSTEMD_PAGER": "",
             "SYSTEMD_COLORS": "0",
-            "XDG_RUNTIME_DIR": f"/run/user/{os.getuid()}",
         }
+        if sys.platform == "linux":
+            environment["XDG_RUNTIME_DIR"] = f"/run/user/{os.getuid()}"
         try:
             process = subprocess.Popen(  # noqa: S603 - fixed manager executable and bounded argument tuple
                 (tool.value, *arguments),

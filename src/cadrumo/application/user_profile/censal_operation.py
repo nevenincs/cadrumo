@@ -382,13 +382,13 @@ def _censal_operation_disclosures(context: OperationAccessContext) -> frozenset[
         if projection is None or context.contract.interaction_response_schema is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         return frozenset(
-            {
+            (
                 DisclosurePermission(
                     destination_id=context.destination_id,
                     projection_id=projection.schema_id,
                     category=DisclosureCategory.PROFILE_VALUES,
-                )
-            }
+                ),
+            )
         )
     return operation_disclosures(
         context,

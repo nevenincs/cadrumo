@@ -1772,8 +1772,8 @@ application:
   overview:
     calendar:
       holiday_coverage:
-        calendar_unavailable: holiday calendar unavailable; weekends applied, holidays
-          not checked
+        calendar_unavailable: holiday calendar unavailable; the original deadline
+          has not been checked
         national_and_territory: national and %{territory} holidays checked; local
           holidays not checked
         national_and_territory_without_name: national and applicable regional holidays
@@ -1786,7 +1786,7 @@ application:
           regional calendar is unverified; local holidays are not checked
       shift:
         business_day: Business day
-        calendar_unavailable: Holidays not checked
+        calendar_unavailable: Calendar unavailable
         domingo: Sunday
         modelo_exception: Modelo exception
         sabado: Saturday

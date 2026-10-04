@@ -1,0 +1,74 @@
+{
+  "exit_code": 0,
+  "observations": [
+    {
+      "stage": "profile_worker_close_entered",
+      "exception_type": null,
+      "traceback_locations": [
+        "threading.py:1015:_bootstrap",
+        "threading.py:1044:_bootstrap_inner",
+        "threading.py:995:run",
+        "thread.py:93:_worker",
+        "thread.py:59:run",
+        "server.py:103:serve",
+        "server.py:194:_accept_connections",
+        "profile_connections.py:168:poll",
+        "profile_host.py:562:retire_replaced_binding",
+        "profile_worker_transport.py:159:drain",
+        "runtime_profile_cli_fixture.py:278:observe_worker_close",
+        "runtime_profile_cli_fixture.py:116:_failure_observation"
+      ],
+      "nested_leaves": [],
+      "request_type": "ProfileWorkerProcess",
+      "response_type": null,
+      "definition_id": null,
+      "operation_exchange": null,
+      "action": null,
+      "phase": null,
+      "reason": null
+    },
+    {
+      "stage": "profile_worker_close_entered",
+      "exception_type": null,
+      "traceback_locations": [
+        "threading.py:1015:_bootstrap",
+        "threading.py:1044:_bootstrap_inner",
+        "threading.py:995:run",
+        "thread.py:93:_worker",
+        "thread.py:59:run",
+        "server.py:103:serve",
+        "server.py:194:_accept_connections",
+        "profile_connections.py:168:poll",
+        "profile_host.py:565:retire_replaced_binding",
+        "session_owner.py:354:settle",
+        "runtime_profile_cli_fixture.py:278:observe_worker_close",
+        "runtime_profile_cli_fixture.py:116:_failure_observation"
+      ],
+      "nested_leaves": [],
+      "request_type": "ProfileWorkerProcess",
+      "response_type": null,
+      "definition_id": null,
+      "operation_exchange": null,
+      "action": null,
+      "phase": null,
+      "reason": null
+    },
+    {
+      "stage": "profile_worker_exchange",
+      "exception_type": "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
+      "traceback_locations": [
+        "runtime_profile_cli_fixture.py:179:observe_worker_exchange",
+        "profile_worker_transport.py:70:_exchange",
+        "profile_worker_transport.py:193:_read_exchange_reply"
+      ],
+      "nested_leaves": [],
+      "request_type": "ProfileWorkerControlRequest",
+      "response_type": "ProfileWorkerHumanOutcome",
+      "definition_id": null,
+      "operation_exchange": false,
+      "action": "password",
+      "phase": null,
+      "reason": "credential_rejected"
+    }
+  ]
+}

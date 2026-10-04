@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.hashing import sha256_hex
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.evidence import artifact_map_digest
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
@@ -26,7 +26,6 @@ from .runtime_probe_artifacts import _cohort_digests, _load_binary_artifacts, _s
 from .runtime_probe_checks import _focused_runtime_tests, _installed_probe
 from .runtime_probe_contracts import (
     _SCHEMA,
-    _UTF_8,
     CommandEvidence,
     CompatibilityProbeError,
     FocusedTestEvidence,
@@ -220,7 +219,7 @@ def write_probe_evidence(path: Path, evidence: ProbeEvidence) -> Path:
     temporary = destination.with_suffix(destination.suffix + ".tmp")
     temporary.write_text(
         json.dumps(evidence.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding=_UTF_8,
+        encoding=UTF_8,
         newline="\n",
     )
     temporary.replace(destination)

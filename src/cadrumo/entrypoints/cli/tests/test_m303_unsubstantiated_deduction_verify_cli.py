@@ -31,8 +31,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 from ._m303_ordinary_cli_support import joint_return_options
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 from .test_m303_zero_cuota_and_investment_inputs_cli import (
     _add_sale,
     _added_transaction_id,
@@ -55,7 +54,7 @@ _GENERAL_FINDING = "operator_decision"
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(["--format", "json", *args])
+    return invoke_seeded_profile_cli(["--format", "json", *args])
 
 
 def _seed_quarter(request: pytest.FixtureRequest) -> None:
@@ -203,7 +202,7 @@ def test_the_intra_eu_refusal_renders_in_every_supported_locale(request: pytest.
 
     rendered: dict[str, str] = {}
     for language in ("en", "es", "ca", "hu"):
-        verified = invoke_cached_cli(
+        verified = invoke_seeded_profile_cli(
             ["--language", language, "app", "modelo", "work", "verify", calculation_revision_id],
         )
         assert verified.exit_code == 1, verified.output
@@ -212,11 +211,11 @@ def test_the_intra_eu_refusal_renders_in_every_supported_locale(request: pytest.
     assert "self-assessment document for an intra-EU purchase" in rendered["en"]
     assert "File this declaration another way." in rendered["en"]
     assert "adquisición intracomunitaria" in rendered["es"]
-    assert "Presente esta declaración por otra vía." in rendered["es"]
+    assert "Presenta esta declaración por otra vía." in rendered["es"]
     assert "adquisició intracomunitària" in rendered["ca"]
     assert "per una altra via." in rendered["ca"]
     assert "közösségen belüli beszerzés önadózási bizonylata" in rendered["hu"]
-    assert "Nyújtsa be ezt a bevallást más módon." in rendered["hu"]
+    assert "Nyújtsd be ezt a bevallást más módon." in rendered["hu"]
 
 
 def test_verify_refuses_a_deduction_without_its_invoice_with_the_general_finding(

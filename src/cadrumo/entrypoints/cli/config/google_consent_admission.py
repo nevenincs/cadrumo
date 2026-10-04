@@ -14,11 +14,9 @@ from ....application.operations.registry import (
 )
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
-from ....application.user_profile.google_configuration_operation import (
+from ....application.user_profile.google_configuration_operation_contracts import (
     GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING,
     GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING,
-)
-from ....application.user_profile.google_configuration_operation_contracts import (
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleLoginRequest,

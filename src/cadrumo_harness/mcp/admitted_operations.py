@@ -20,6 +20,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
@@ -34,6 +35,7 @@ from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.core.time.clock import now
 
+from .operation_search import rank_operations
 from .protocol_contract import parse_model, public_value, refusal_code
 from .runtime_admission import require_exact_admitted_status
 
@@ -76,19 +78,17 @@ def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, A
 
 def _search(client: RuntimeFrontendClient, profile_id: UUID, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     status: ProfileAccessStatus = require_exact_admitted_status(client, profile_id=profile_id)
-    query = str(args.get("query", "")).casefold()
-    matches: list[Any] = []
+    permitted: list[OperationPublicDefinitionDescriptionV1] = []
     for definition_id in sorted(status.effective_scope.operations):
-        if query not in definition_id.casefold():
-            continue
         try:
             description = client.describe(definition_id, deadline=deadline)
         except RuntimeFrontendRefusedError as error:
             if error.reason in {"frontend_denied", "operation_denied"}:
                 continue
             raise
-        matches.append(public_value(description.contract))
-    return {"outcome": "found", "operations": matches}
+        permitted.append(description)
+    ranked = rank_operations(args.get("query", ""), permitted)
+    return {"outcome": "found", "operations": [public_value(description.contract) for description in ranked]}
 
 
 def _describe(

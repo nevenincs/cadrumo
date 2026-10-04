@@ -145,11 +145,9 @@ def compute_shipped_verdict_key(
 def default_verdict_cache_dir() -> Path:
     """Resolve the runner-local writable verdict store.
 
-    Follows the development cache convention: an explicit
-    ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise the checkout's own
-    ``.cache/registry-verdict`` holds it. The store lives outside the
-    application's storage root, so writing a verdict never changes the
-    application state that root fingerprints.
+    An explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins. Otherwise the
+    shared development cache root holds ``registry-verdict``, defaulting to
+    ``<Cadrumo storage root>/development/cache/registry-verdict``.
 
     Returns:
         The directory holding writable verdict files.

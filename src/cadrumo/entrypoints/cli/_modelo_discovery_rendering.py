@@ -2,36 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import date
 from typing import TYPE_CHECKING
 
-from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
 from ...application.modelo.query_read_contracts import ModeloBindingRowV1
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.operator_actions.models import ActionReference
-from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...core.type_guards import is_object_collection
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.query_reports import (
-    ModeloBindingQueryRow,
-    ModeloBindingsReport,
     ModeloCasillasReport,
     ModeloFormulasReport,
     ModeloListRow,
 )
 from ...domain.calculations.registry.support_matrix import ModeloEntry
-from ...domain.user_profile.errors import ProfileNotFoundError
-from ._modelo_bindings_payloads import BindingListRowPayload
 from ._modelo_payloads import (
     CasillaRowPayload,
     DataInventoryCasillaPayload,
 )
-from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 from ._modelo_support_matrix_payloads import (
     ModeloPortalCompatibilityRefPayload,
     ModeloRenamePayload,
@@ -153,39 +142,6 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist, *, opera
     )
 
 
-def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> tuple[str, ...]:
-    """Registry-derived ``--relation`` guidance for relation-fed bindings.
-
-    Every binding whose value is materialised by one or more registry
-    relations (``relation_inputs`` is non-empty) is supplied through
-    ``--relation RELATION_ID=VALUE`` rather than ``--binding``. The feeding
-    relation ids come from the resolved revision (each
-    the relation-prefill provider declares
-    its ``target_binding``), so this guidance generalises to any modelo
-    instead of enumerating a per-form channel table.
-    """
-    relation_fed = tuple(row for row in rows if row.relation_inputs)
-    if not relation_fed:
-        return ()
-    lines = [
-        "relation_guidance\t"
-        + tr(
-            "cli.app.modelo.bindings.relation_input_guidance",
-        )
-    ]
-    for row in relation_fed:
-        for relation_id in row.relation_inputs:
-            lines.append(
-                "relation_input\t"
-                + tr(
-                    "cli.app.modelo.bindings.relation_input_channel",
-                    binding_id=str(row.binding_id),
-                    relation_id=str(relation_id),
-                )
-            )
-    return tuple(lines)
-
-
 def binding_relation_guidance_lines(rows: tuple[ModeloBindingRowV1, ...]) -> tuple[str, ...]:
     """Render the same relation guidance from an authenticated binding result."""
     relation_fed = tuple(row for row in rows if row.relation_inputs)
@@ -203,91 +159,6 @@ def binding_relation_guidance_lines(rows: tuple[ModeloBindingRowV1, ...]) -> tup
                 )
             )
     return tuple(lines)
-
-
-def _profile_resolved_binding_ids(
-    report: ModeloBindingsReport,
-    *,
-    as_of: date | None,
-    operation: PinnedAuthorityOperation,
-) -> frozenset[str]:
-    filing_year = report.filing_year
-    if filing_year is None:
-        return frozenset[str]()
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return frozenset[str]()
-    try:
-        return _text_frozenset(
-            profile_resolvable_binding_ids(
-                modelo=str(report.code),
-                bucket_id=bucket_id,
-                filing_year=int(filing_year),
-                period=report.filing_period,
-                as_of=as_of,
-                revision_id=str(report.revision),
-                operation=operation,
-            )
-        )
-    except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-        return frozenset[str]()
-
-
-def _text_frozenset(value: object) -> frozenset[str]:
-    """Validate the application binding-id collection at the CLI boundary."""
-    if not is_object_collection(value):
-        raise TypeError("binding-id projection must be a collection")
-    values: set[str] = set()
-    for item in value:
-        if not isinstance(item, str):
-            raise TypeError("binding-id projection must contain text")
-        values.add(item)
-    return frozenset(values)
-
-
-def _binding_list_rows_for_report(
-    report: ModeloBindingsReport,
-    *,
-    missing: bool,
-    as_of: date | None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[list[BindingListRowPayload], list[str]]:
-    rows = report.rows
-    if missing:
-        profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of, operation=operation)
-        rows = tuple(row for row in rows if row.binding_id not in profile_resolved and row.operator_input_required)
-    merged_rows: list[BindingListRowPayload] = []
-    text_rows: list[str] = []
-    for row in rows:
-        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind])
-        encoded_options = binding_encoded_option_payloads(row.encoded_options)
-        merged_rows.append(
-            BindingListRowPayload(
-                modelo=report.code,
-                revision=report.revision,
-                filing_year=report.filing_year,
-                period=report.period,
-                binding_id=row.binding_id,
-                source=row.provider.kind,
-                readiness=readiness,
-                typed_enum=row.typed_enum,
-                input_channel=row.input_channel,
-                borrador_capable=row.borrador_capable,
-                legal_refs=row.legal_refs,
-                source_refs=row.source_refs,
-                relation_inputs=row.relation_inputs,
-                encoded_options=encoded_options,
-            )
-        )
-        text_rows.append(
-            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t"
-            f"{row.provider.kind}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
-            f"{row.borrador_capable}"
-        )
-        text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
-    if missing:
-        text_rows.extend(_relation_input_guidance_lines(rows))
-    return (merged_rows, text_rows)
 
 
 def _binding_scope_missing_filters(*, year: int | None, period: str | None) -> tuple[str, ...]:
@@ -475,24 +346,3 @@ def casillas_lines(report: ModeloCasillasReport, *, explain: bool) -> list[str]:
             for row in report.rows
         ],
     ]
-
-
-def binding_rows_for_reports(
-    reports: list[ModeloBindingsReport],
-    *,
-    missing: bool,
-    as_of: date | None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[list[BindingListRowPayload], list[str]]:
-    merged_rows: list[BindingListRowPayload] = []
-    text_rows: list[str] = []
-    for report in reports:
-        report_rows, report_text_rows = _binding_list_rows_for_report(
-            report,
-            missing=missing,
-            as_of=as_of,
-            operation=operation,
-        )
-        merged_rows.extend(report_rows)
-        text_rows.extend(report_text_rows)
-    return merged_rows, text_rows

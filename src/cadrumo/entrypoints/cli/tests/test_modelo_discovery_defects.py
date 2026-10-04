@@ -34,8 +34,7 @@ from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
 )
 from ._modelo_work_ux_support import _create_m303_work_unit
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -92,7 +91,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_m303_work_unit()
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
@@ -116,7 +115,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_m303_work_unit()
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "9999=10.00",
@@ -144,11 +143,11 @@ def test_bindings_list_missing_drops_profile_resolved_bindings(seed_profile: Pro
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    full = invoke_cached_cli(
+    full = invoke_seeded_profile_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert full.exit_code == 0, full.output
-    missing = invoke_cached_cli(
+    missing = invoke_seeded_profile_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024", "--missing"],
     )
     assert missing.exit_code == 0, missing.output
@@ -168,7 +167,7 @@ def test_bindings_list_missing_forwards_as_of_to_profile_readiness(seed_profile:
     """The missing filter resolves profile readiness at the as-of date."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -189,7 +188,7 @@ def test_bindings_list_missing_forwards_as_of_to_profile_readiness(seed_profile:
     assert all("tax-residence-ccaa" not in binding_id for binding_id in binding_ids)
 
 
-def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
+def test_bindings_list_labels_profile_sourced_rows_as_profile_facts(seed_profile: ProfileSeeder) -> None:
     """``bindings list`` must not send operators to ledger work for
     profile-sourced Modelo 100 bindings.
 
@@ -197,7 +196,8 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
     readiness column should render those rows as ``profile fact``.
     """
 
-    result = invoke_cached_cli(
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    result = invoke_seeded_profile_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
@@ -222,7 +222,7 @@ def test_bindings_list_year_resolves_the_year_covering_revision(seed_profile: Pr
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
@@ -244,7 +244,7 @@ def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str, seed
     units carry typed filing periods, while Modelo 036 declares event tokens."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -265,9 +265,9 @@ def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str, seed
 def test_describe_and_casillas_accept_censo_period_tokens(token: str) -> None:
     """``describe`` and ``casillas`` accept the censo period tokens."""
 
-    described = invoke_cached_cli(["app", "modelo", "describe", "036", "--period", token])
+    described = invoke_seeded_profile_cli(["app", "modelo", "describe", "036", "--period", token])
     assert described.exit_code == 0, described.output
-    casillas = invoke_cached_cli(["app", "modelo", "casillas", "036", "--period", token])
+    casillas = invoke_seeded_profile_cli(["app", "modelo", "casillas", "036", "--period", token])
     assert casillas.exit_code == 0, casillas.output
 
 
@@ -275,7 +275,7 @@ def test_work_create_still_rejects_an_undeclared_censo_token(seed_profile: Profi
     """An undeclared censo token is still refused with a clear error."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app", "modelo", "work", "create",
             "--modelo", "036", "--year", "2025", "--period", "bogus",
@@ -292,7 +292,7 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
     """The censo-token path does not regress quarterly period tokens."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -317,7 +317,7 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: P
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
@@ -336,7 +336,7 @@ def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> 
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -360,7 +360,7 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
     """Readiness resolves the requested revision, not only the modelo/year."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -387,7 +387,7 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
     """M210 readiness must fail closed when the requested period is not covered."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -413,7 +413,7 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
     """M210 describe accepts concrete EVENT-N period instances."""
 
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -437,7 +437,7 @@ def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
 def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:
     """M210 describe refuses the retired ``evento`` token."""
 
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",
@@ -457,10 +457,11 @@ def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:
     assert "Valid tokens: evento" not in flat
 
 
-def test_bindings_list_m210_legacy_event_token_reports_current_guidance() -> None:
+def test_bindings_list_m210_legacy_event_token_reports_current_guidance(seed_profile: ProfileSeeder) -> None:
     """The retired M210 ``evento`` token must not be advertised as valid."""
 
-    result = invoke_cached_cli(
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",
@@ -485,10 +486,11 @@ def test_bindings_list_m210_legacy_event_token_reports_current_guidance() -> Non
     assert "Traceback" not in flat
 
 
-def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance() -> None:
+def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance(seed_profile: ProfileSeeder) -> None:
     """Readiness must not route retired ``evento`` through the M210 work boundary."""
 
-    result = invoke_cached_cli(
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",
@@ -518,7 +520,7 @@ def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: Pro
     """Blank company facts must keep M200 readiness false before calculate."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",
@@ -558,7 +560,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
     """A legal-entity M200 profile must not ask for the retired IRPF objective flag."""
 
     seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",
@@ -599,7 +601,7 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_111_work_unit()
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
@@ -624,7 +626,7 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_111_work_unit()
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
@@ -642,7 +644,7 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
 def _create_202_work_unit(period: str) -> str:
     """Create a Modelo 202 work unit for one pago-fraccionado clave."""
 
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -674,7 +676,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str,
 
     seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
     work_unit_id = _create_202_work_unit(period)
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",
@@ -710,7 +712,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profil
     """
 
     seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
-    described = invoke_cached_cli(["app", "modelo", "describe", "202"])
+    described = invoke_seeded_profile_cli(["app", "modelo", "describe", "202"])
     assert described.exit_code == 0, described.output
     periods_line = next(line for line in described.output.splitlines() if line.startswith("Periods\t"))
     advertised = {token.strip() for token in periods_line.split("\t", 1)[1].split(",")}
@@ -718,7 +720,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profil
 
     for period in sorted(advertised):
         work_unit_id = _create_202_work_unit(period)
-        calculated = invoke_cached_cli(
+        calculated = invoke_seeded_profile_cli(
             [
                 "--format",
                 "json",

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ._command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
 from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
+from .command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
 from .command_spec import CommandSpec, InvocationSpec
 from .modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 

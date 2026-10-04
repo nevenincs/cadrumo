@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from ...application.ledger.operator_input_contracts import OperatorInputContract
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     DeferredTarget,

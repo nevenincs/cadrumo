@@ -1,0 +1,2605 @@
+{
+  "feature": "tui-all-mcp-integration",
+  "step": "S02",
+  "scope": "Platform runtime, worker containment and custody",
+  "sources_with_no_owned_deltas": [
+    "mcp",
+    "mcp-chromium-port",
+    "mcp-tui-collision"
+  ],
+  "native_validation_gap": "Darwin 25.5 arm64 containment and peer cohort: 11 passed in 103.73s after a verified source overlay and explicit short configured socket/storage roots. The earlier 184-case Mac cohort had 172 passed and one skipped; native atomic rename and KDF checks passed. Protected Keychain positive round trip: three failed and one skipped because the native login Keychain is locked and returns NEEDS_USER before any item query. No unlock or facility weakening was attempted. Locked-context acceptance is pending root selection.",
+  "discovery": "Governing decisions provided/read; semantic code command was attempted but accidental uv environment build was interrupted, so exact source files/current canonical owners were used for bounded fallback discovery.",
+  "verification": {
+    "python_compile": "51 modified/new owned Python files compiled successfully",
+    "git_diff_check": "pass",
+    "ruff": "Canonical Ruff check and format passed on 51 owned changed Python files.",
+    "portable_unit_tests": "Six macOS coalition/incarnation/scope/guardian, POSIX peer liveness and worker argument unit files: 120 passed in 24.20s (-n 0). Windows portable evidence only.",
+    "platform_types": "ty check against owned roots passed for linux,win32,darwin",
+    "portable_custody_tests": "Linux guardian/GNOME,Mac scope,atomic primitive,KDF unit cohort: 130 passed,31 host skips,47.06s. KDF uses isolated child/storage tests; no os_keychain selected.",
+    "authority_environment_regression": "Macscope/Macguardian/Linuxguardian unit cohort79passed6.24s after explicit authority path routing; owned-root ty all3platforms pass.",
+    "native_macos_containment": "Root-owned Darwin 25.5 arm64 run: .logs/tui-all-mcp-native-authority-correct.txt; 11 passed in 103.73s. Covers parent/guardian/worker loss, real Playwright Chromium descendants, setsid/regroup/orphans, registration loss, fork churn, stale-job recovery and native peer exec version.",
+    "native_macos_custody_and_primitives": "Initial root-owned 184-case cohort: .logs/tui-all-mcp-native.txt; 172 passed and one skipped aside from 11 startup/path failures subsequently fixed. Native atomic rename and KDF checks passed and were reused unchanged. Separate protected Keychain round trip: three failed and one skipped due to the locked OS context; .logs/tui-all-mcp-native-authority-correct.txt."
+  },
+  "paths": [
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "dbf2a844b2ed9a03423295c6eafeed8f59b8ad34b70223030f97f3d9f1bd78be",
+        "source_hunks": [
+          "@@ -15,6 +15,7 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE",
+          "@@ -30,35 +31,6 @@ _PROPERTIES = {",
+          "@@ -195,7 +167,7 @@ class LinuxProcessScope:",
+          "@@ -211,7 +183,7 @@ class LinuxProcessScope:"
+        ],
+        "current_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_coalition.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4f44831f7a3d15c0cd6af70853eebc10dcc15221667a580f729e6f90a99bbb44",
+        "source_hunks": [
+          "@@ -0,0 +1,244 @@"
+        ],
+        "current_sha256": "f45f7f477285eb2c18ca0cf0ce1318cc487af0adb1645f3817451ff7e76d65e6"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_coalition.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "26d3f137730368b049662daa2906b79233f182ed36944d8c0d9fc607f0987eab",
+        "source_hunks": [
+          "@@ -6,12 +6,20 @@ import ctypes",
+          "@@ -40,6 +48,18 @@ class _BsdProcessInfo(ctypes.Structure):",
+          "@@ -134,6 +154,131 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat",
+          "@@ -272,4 +417,16 @@ class MacosProcessWatch:"
+        ],
+        "current_sha256": "926e15d48605c6c8d597bac7150c0e86df4a52652be20a65f99a4cc552bc3500"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "f96ab94e38e93f19882364d2205055876165e3ffafde97d10ec0c54b842c4650",
+        "source_hunks": [
+          "@@ -0,0 +1,1060 @@"
+        ],
+        "current_sha256": "660cb3b895af99d7519ad44dec94894f1bebc453180b2eca0b5b7707a1cc209f"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Restart recovery additionally retains and retires marker.coalition when launchd no longer knows the job; failed empty proof retains the marker and blocks new registration. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/manager_commands.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "22c5c9ae37d8da4006d16c6e67a4300cea8cdf79c06fd98faa1b0a44bc7e21b9",
+        "source_hunks": [
+          "@@ -148,18 +148,23 @@ async def run_manager_command("
+        ],
+        "current_sha256": "69ee70e0bcf3982289021fffe4c5209a4e30f012cb72b9b438ed95d3023b9578"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/manager_commands.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/posix.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "18a614b362e306bdf7868ae133483a111993dd77f02a76a84db7adc2351dcc2b",
+        "source_hunks": [
+          "@@ -18,10 +18,14 @@ from collections.abc import Generator",
+          "@@ -138,7 +142,16 @@ def posix_storage_identity(root: Path) -> str:",
+          "@@ -265,6 +278,32 @@ class PosixRuntimeChannel:",
+          "@@ -334,7 +373,7 @@ class PosixRuntimeEndpoint:",
+          "@@ -350,7 +389,7 @@ class PosixRuntimeEndpoint:"
+        ],
+        "current_sha256": "37d047c435548cb32db604673e07050e973b89c3a2133e0fb9186fa90360ece4"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/posix.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "3fe891a616fca0d614dc4fadc771156f8bd76499d8a6e381d4cbc42a1f7ff488",
+        "source_hunks": [
+          "@@ -74,6 +74,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError",
+          "@@ -139,9 +140,9 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:",
+          "@@ -162,8 +163,8 @@ class ProfileWorkerProcess:",
+          "@@ -176,7 +177,7 @@ class ProfileWorkerProcess:",
+          "@@ -203,6 +204,10 @@ class ProfileWorkerProcess:",
+          "@@ -284,7 +289,7 @@ class ProfileWorkerProcess:",
+          "@@ -406,7 +411,7 @@ class ProfileWorkerProcess:"
+        ],
+        "current_sha256": "3d291132fc9246202683be8c6d60e3ee1bdbe78b95d9a9f81618b156fb8a48f4"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4473b4aa13078172cf6b9ea778c00b5edd589c2b532cf71187ad78cb799a4278",
+        "source_hunks": [
+          "@@ -283,7 +283,7 @@ def changed[T: BaseModel](model: T, **values: object) -> T:"
+        ],
+        "current_sha256": "07abc6c7caec3ce13749749c604b96d0ee88ba7fed577ebd7e021c7272738f09"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "360a41194a20de006fcac8bb4f3331f42966be68b1f15fb64b093a6553e8f4f6",
+        "source_hunks": [
+          "@@ -0,0 +1,309 @@"
+        ],
+        "current_sha256": "52d90bc61e4097c6292d76a16bbf199447466a518e26d70ecfc9b85a56a7cf7c"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_process_incarnation.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "8c2ddee204ebfae2f30a853fe13bde0ed9d568952ac050a37f04536b64905196",
+        "source_hunks": [
+          "@@ -0,0 +1,188 @@"
+        ],
+        "current_sha256": "6c6da1b56b2b9f119174f6e8eb45c70d57f2a84eb4b23d76dd42bbbea78a9e87"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_process_incarnation.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "10215e54bc1adff7b683e4a4a78e52552f0e095f7c28d7a677adb6a148b3afcd",
+        "source_hunks": [
+          "@@ -0,0 +1,588 @@"
+        ],
+        "current_sha256": "f60ba1f20743ddd5cc115a96dc424e45cff6e9c49af6c6c916a1ec5ad639234e"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native parent carries explicit canonical storage controls; short configured socket namespaces remain physical-storage-bound without a product fallback.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "cf68a6333eb341a4f7e4b1ae2a7c9ab3820785909d3bc252dcff439d1f2c2c00",
+        "source_hunks": [
+          "@@ -0,0 +1,689 @@"
+        ],
+        "current_sha256": "023e7d4a232982866c1f083f3bb7a52fa7024459220d96d547bd4b0b8e2e6ec5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Restart recovery additionally retains and retires marker.coalition when launchd no longer knows the job; failed empty proof retains the marker and blocks new registration. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "dd3cf7f633475a7c83fa8f179543894672af9d066d8b7e7d57e31fa3e452c97e",
+        "source_hunks": [
+          "@@ -0,0 +1,106 @@"
+        ],
+        "current_sha256": "664b0f831c4afb8858421fc21323c42acbd0dfa26f18d039bc62fe04fbd9ef72"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "044d401998fd71154462dced7c7226b3bf4ea693078792e563d5a76bdb6dfff2",
+        "source_hunks": [
+          "@@ -0,0 +1,49 @@"
+        ],
+        "current_sha256": "8266e9acfc4c9f986bdb06fb7c6864d681b605e69521dd23e868f16eb050ed03"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_arguments.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "385a71d7392730261af874b220a1ec94a92d691584348301599d4eb90d469ae2",
+        "source_hunks": [
+          "@@ -0,0 +1,41 @@"
+        ],
+        "current_sha256": "50b99c1423b52a9a133384996b6e4396e4c13a9e810deb18519a4a1196cc0d95"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_arguments.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_authorization_client.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7293c510210fcccc9656eb1a3666725f279f6970000e6a9703cd849f1c69ac07",
+        "source_hunks": [
+          "@@ -88,8 +88,7 @@ class WorkerAuthorizationLease:",
+          "@@ -299,8 +298,7 @@ class WorkerAuthorizationClient:"
+        ],
+        "current_sha256": "a093ee6d644aa68b98b233e8f720bf9f1b1d9b9548a6530321efc519762afbf5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_authorization_client.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4a2f54fe07abeae5fbe8cb0ca867ecb1dfb03a000d17656f5cc33e2e759d9e73",
+        "source_hunks": [
+          "@@ -18,7 +18,7 @@ def worker_endpoint(*, storage_root: Path, worker_namespace: UUID) -> WorkerEndp"
+        ],
+        "current_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "rationale": "Native Mac run exposed missed Darwin transport dispatch in current defining module; worker endpoint now permits POSIX Linux and Darwin and retains configured namespace authority.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4b0b8c9c199ed0337bce8bd94360421cf85038a11c25d9370a7ecc67d03c6014",
+        "source_hunks": [
+          "@@ -14,6 +14,7 @@ from .filesystem_primitives import (",
+          "@@ -80,37 +81,15 @@ def rename_directory_noreplace("
+        ],
+        "current_sha256": "c8f36ffa792cd351f08869e5f8094a0ed4d1deed28d7209a7df311f4e9a4128c"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7c15f3e5f85c324bbf488a8f05527a7be912d13c5545c55588f53b93329b95f7",
+        "source_hunks": [
+          "@@ -15,11 +15,14 @@ from pathlib import Path",
+          "@@ -105,7 +108,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -139,7 +142,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -155,7 +158,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -333,8 +336,8 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -348,7 +351,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -358,7 +361,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -374,7 +377,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -382,7 +385,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu",
+          "@@ -396,7 +399,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu"
+        ],
+        "current_sha256": "5d7a35e55238dfc1b9a4ba9614d9cc99dc62e3ed69c9a63d2343a9c8891df24f"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "855695627d49c6726efc0fb8f9c0c52ef6e2a73a65e4097045b4026256ad8559",
+        "source_hunks": [
+          "@@ -16,30 +16,36 @@ from ._kdf_worker_limits import (",
+          "@@ -48,7 +54,7 @@ def kdf_worker_ready_attestation(*, request_fd: int, result_fd: int) -> bytes:",
+          "@@ -71,10 +77,11 @@ def _is_open_file_descriptor(descriptor: int) -> bool:",
+          "@@ -88,7 +95,7 @@ def parse_ready_attestation(value: bytes) -> dict[str, object]:",
+          "@@ -103,6 +110,7 @@ def validate_ready_attestation_shape(payload: dict[str, object], expected_platfo"
+        ],
+        "current_sha256": "bc09947a7e522045d9a15eb8e456c5115b184321db6d6d3fd621d082b94ecaf9"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "89e0027bbb037fef1ffc45a08bc56024fcc143e03431e13e95e18f2773e2557a",
+        "source_hunks": [
+          "@@ -146,7 +146,11 @@ def apply_posix_worker_limits() -> None:"
+        ],
+        "current_sha256": "15e4b01d0e1d33232941515ec922c303e610dcac9b460fe2d416a1aab3e0ea64"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "0bb648becf4d89c67ad45b48fe233b3f105d508c926b68e665a2d8197ec25a9c",
+        "source_hunks": [
+          "@@ -7,12 +7,17 @@ import subprocess",
+          "@@ -22,10 +27,10 @@ def verify_ready_worker(",
+          "@@ -40,7 +45,13 @@ def _validate_environment("
+        ],
+        "current_sha256": "6d6f91790b54ef0aad728492fd2a5adcbd1a28a8609a7de6e120d53d1af0270c"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/capsule.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "17d1277133a1ad7e8895197a704f78f2ff91b3a766e508385fd49492783f16d5",
+        "source_hunks": [
+          "@@ -63,9 +63,6 @@ from ._capsule_filesystem import (",
+          "@@ -132,6 +129,7 @@ from .filesystem_primitives import ensure_real_directory as _ensure_real_directo",
+          "@@ -358,7 +356,7 @@ def rename_profile_custody_capsule_for_deletion(",
+          "@@ -602,7 +600,7 @@ def _publish_profile_custody_capsule_posix(",
+          "@@ -658,7 +656,7 @@ def publish_staged_profile_custody_capsule("
+        ],
+        "current_sha256": "ee31eae54ed3340b66fd730b357d8012130c22579f1280634e70213517169227"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/capsule.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "1a97919b51dd51c78dec345c8a8edb068fec7600c0cbf20358c27c02b9ee7eab",
+        "source_hunks": [
+          "@@ -725,24 +725,6 @@ def _record_read_operation(",
+          "@@ -754,7 +736,6 @@ write_descriptor_fsynced = _write_descriptor_fsynced"
+        ],
+        "current_sha256": "e1656baacabfe66721a5fb450dc8de8b02fb18acef91611d0a4ba2738b96e939"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "8572235a2ce2a9d68121644f006658db99543ee1c646a8bd44a004b44d1afb7f",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -11,7 +12,7 @@ from contextvars import ContextVar",
+          "@@ -379,6 +380,96 @@ def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:",
+          "@@ -434,6 +525,7 @@ def _write_exclusive_descriptor_fsynced(descriptor: int, payload: bytes) -> None",
+          "@@ -441,9 +533,13 @@ __all__ = ["
+        ],
+        "current_sha256": "e21b0517cf4b5920924c1e8c34f421ae7846efd7f622d1546e7111ac032a7d1d"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7d36585e9b4e31bd31e07916df1a8b466fdfcbfa99f6a5952e5070440aa6add3",
+        "source_hunks": [
+          "@@ -0,0 +1,172 @@"
+        ],
+        "current_sha256": "dbe28731341ab08916009f7515099d295bb2422dcc08d12cb4142469bd40d73b"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "2460878358ec784ca6c6effe87ad3fe7d5ac226714cbee37c2f97eaba316fd92",
+        "source_hunks": [
+          "@@ -17,7 +17,12 @@ from uuid import UUID",
+          "@@ -228,6 +233,11 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle",
+          "@@ -251,6 +261,32 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle"
+        ],
+        "current_sha256": "48c66a9b23a3bb097d5365478b4501d066fcf21b5539199261c1ff3923383be0"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "58bebf1417b200a0c5b502ebf6fc52c7bc1516a44dc2688d0cc3d09b06959c1b",
+        "source_hunks": [
+          "@@ -10,10 +10,8 @@ import sys",
+          "@@ -32,7 +30,7 @@ def run(arguments: list[str] | None = None) -> int:"
+        ],
+        "current_sha256": "d92f7d43b6e955dc9948011fbab33ab61a4f7758db028bd373418df14e6f856c"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/macos_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "ceb08bc748d1e89f50ad22ce4dc6acdd6ebabd7506249259f09a8c3839220b55",
+        "source_hunks": [
+          "@@ -0,0 +1,124 @@"
+        ],
+        "current_sha256": "206bf35962d1e2907b0eeb9b6dc1a12e8e1a9c41aabb060195b42949757fb54f"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/macos_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Child is launched/reaped by its owning asyncio loop while native parent watching runs in an awaited thread; no lint suppression added. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "99761429684ab8a98429d4bd7b1b1c0e8aad983cda2598c5da532be599c10c34",
+        "source_hunks": [
+          "@@ -0,0 +1,492 @@"
+        ],
+        "current_sha256": "99efaf4d0889cb57c014dd835afd30f3ec7371d232bc78065d5f2ec38469a1a4"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "018c2a5e44c2001c9338b295bb564c5a142e5ef25655711c3ec7c8616a2a44b8",
+        "source_hunks": [
+          "@@ -0,0 +1,216 @@"
+        ],
+        "current_sha256": "b5f8519d1fe69f41945ca5bd9b01b0d916fcbc3e337f50f9c849cfaff0d69a1d"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Child is launched/reaped by its owning asyncio loop while native parent watching runs in an awaited thread; no lint suppression added. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-macos",
+      "commit": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/worker.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "511d689ee6769fb3779bdb28347f5dd247a7e9a29fd26bafb8a3be10dd6721cb",
+        "source_hunks": [
+          "@@ -141,9 +141,7 @@ def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:",
+          "@@ -602,7 +600,7 @@ def run("
+        ],
+        "current_sha256": "578135767429fcd59a72bc606860707d487ea166a5e4d052b51c9a9898db75c5"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/worker.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/linux_manager.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "14f5f9b28605199d1c9cc5c80a273a29f7809cff689142c0297dac0884320365",
+        "source_hunks": [
+          "@@ -52,16 +52,16 @@ def _configuration_directory(*, create: bool) -> Generator[tuple[int, Path]]:",
+          "@@ -129,9 +129,7 @@ def _configuration_layout(directory: int, target: Path, name: str) -> None:",
+          "@@ -265,9 +263,7 @@ def _configuration_lock(directory: int, name: str) -> Generator[None]:",
+          "@@ -289,6 +285,18 @@ def _fragment_flags() -> int:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "dbf2a844b2ed9a03423295c6eafeed8f59b8ad34b70223030f97f3d9f1bd78be",
+        "source_hunks": [
+          "@@ -15,6 +15,7 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE",
+          "@@ -30,35 +31,6 @@ _PROPERTIES = {",
+          "@@ -195,7 +167,7 @@ class LinuxProcessScope:",
+          "@@ -211,7 +183,7 @@ class LinuxProcessScope:"
+        ],
+        "current_sha256": "20587b6eab2f9fd4ff7da1012279f1da9a4c49c8ca34382aa95325a02b3b3a4e"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/linux_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_coalition.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4f44831f7a3d15c0cd6af70853eebc10dcc15221667a580f729e6f90a99bbb44",
+        "source_hunks": [
+          "@@ -0,0 +1,244 @@"
+        ],
+        "current_sha256": "f45f7f477285eb2c18ca0cf0ce1318cc487af0adb1645f3817451ff7e76d65e6"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_coalition.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_manager.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "85871a2f3867c87d4de54af08393742ef2abd68458f4cc262ac913c64265a392",
+        "source_hunks": [
+          "@@ -430,26 +430,28 @@ def _native_definition_directory(*, create: bool) -> tuple[int, Path]:",
+          "@@ -472,6 +474,8 @@ class _MacosJobProcessWatch:",
+          "@@ -626,56 +630,63 @@ class _NativeMacosLaunchd:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "26d3f137730368b049662daa2906b79233f182ed36944d8c0d9fc607f0987eab",
+        "source_hunks": [
+          "@@ -6,12 +6,20 @@ import ctypes",
+          "@@ -40,6 +48,18 @@ class _BsdProcessInfo(ctypes.Structure):",
+          "@@ -134,6 +154,131 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat",
+          "@@ -272,4 +417,16 @@ class MacosProcessWatch:"
+        ],
+        "current_sha256": "926e15d48605c6c8d597bac7150c0e86df4a52652be20a65f99a4cc552bc3500"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/macos_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "f96ab94e38e93f19882364d2205055876165e3ffafde97d10ec0c54b842c4650",
+        "source_hunks": [
+          "@@ -0,0 +1,1060 @@"
+        ],
+        "current_sha256": "660cb3b895af99d7519ad44dec94894f1bebc453180b2eca0b5b7707a1cc209f"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/macos_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Restart recovery additionally retains and retires marker.coalition when launchd no longer knows the job; failed empty proof retains the marker and blocks new registration. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/management_status.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "54ed0b86c62d5297081b2b9a3bcd9277ef9aaddd6cae2ec01334561f4474611b",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -9,7 +10,8 @@ from uuid import uuid4",
+          "@@ -22,14 +24,22 @@ def probe_runtime_listener(",
+          "@@ -41,13 +51,22 @@ def probe_runtime_listener("
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/manager_commands.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "22c5c9ae37d8da4006d16c6e67a4300cea8cdf79c06fd98faa1b0a44bc7e21b9",
+        "source_hunks": [
+          "@@ -148,18 +148,23 @@ async def run_manager_command("
+        ],
+        "current_sha256": "69ee70e0bcf3982289021fffe4c5209a4e30f012cb72b9b438ed95d3023b9578"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/manager_commands.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/posix.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "18a614b362e306bdf7868ae133483a111993dd77f02a76a84db7adc2351dcc2b",
+        "source_hunks": [
+          "@@ -18,10 +18,14 @@ from collections.abc import Generator",
+          "@@ -138,7 +142,16 @@ def posix_storage_identity(root: Path) -> str:",
+          "@@ -265,6 +278,32 @@ class PosixRuntimeChannel:",
+          "@@ -334,7 +373,7 @@ class PosixRuntimeEndpoint:",
+          "@@ -350,7 +389,7 @@ class PosixRuntimeEndpoint:"
+        ],
+        "current_sha256": "37d047c435548cb32db604673e07050e973b89c3a2133e0fb9186fa90360ece4"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/posix.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "de3e3e54bdd8e683a54f57c554383ca5d91e8093df1734f253824702e07688b4",
+        "source_hunks": [
+          "@@ -74,6 +74,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError",
+          "@@ -139,9 +140,9 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:",
+          "@@ -162,8 +163,11 @@ class ProfileWorkerProcess:",
+          "@@ -203,6 +207,10 @@ class ProfileWorkerProcess:",
+          "@@ -284,7 +292,7 @@ class ProfileWorkerProcess:",
+          "@@ -406,7 +414,7 @@ class ProfileWorkerProcess:"
+        ],
+        "current_sha256": "3d291132fc9246202683be8c6d60e3ee1bdbe78b95d9a9f81618b156fb8a48f4"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/profile_worker.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/server.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "a060eaca8832a88a983a3e2163aaedf0839e9a6747ec2886ba3ac15aef10d11d",
+        "source_hunks": [
+          "@@ -6,7 +6,7 @@ import time",
+          "@@ -52,6 +52,7 @@ from ...application.runtime.profile_access import (",
+          "@@ -63,6 +64,31 @@ from .framing import (",
+          "@@ -366,7 +392,17 @@ class RuntimeTransportServer:"
+        ],
+        "current_sha256": "57501ba113c05062dae768bf30373d976b66fcb107b604434132ebfc8d22da94"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/startup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "79d9ee1e4c282d38a71e6e2b15239b46b6eb3e597a627edd9a49ec1429c43a83",
+        "source_hunks": [
+          "@@ -5,8 +5,9 @@ from __future__ import annotations",
+          "@@ -16,8 +17,54 @@ from ...application.runtime.contracts import (",
+          "@@ -112,17 +159,21 @@ class RuntimeLaunchDoor:",
+          "@@ -130,17 +181,27 @@ class RuntimeLaunchDoor:"
+        ],
+        "current_sha256": "5ab5d04cedbefa28face9332d44c72f9dbf9c1611f1daf3b4829fd65e919fc89"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/startup.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/job_fixture.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "7254c2188c099fbb65ffc8399fdde7c5d7d714597edf714f2105579f92ef6b6b",
+        "source_hunks": [
+          "@@ -7,6 +7,7 @@ import json",
+          "@@ -56,6 +57,102 @@ async def _browser(record: Path) -> None:",
+          "@@ -63,7 +160,9 @@ def main() -> None:"
+        ],
+        "current_sha256": "4b127a69a2a0492bcf7bc31ad83b11f0fa3917d761c732b7ad12e47867d45de3"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/job_fixture.py",
+      "rationale": "Current _UnpublishedHandles/native-created-unpublished fixture and test_owner_loss_after_native_creation_before_process_publication cover kill-on-close ownership during unreturned native launch, including exact native process incarnations and cleanup.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/macos_peer_exec_fixture.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "a399e1efd92e29fff8ec7f0ae919cec55f5c5552514f94562d5776b045344f9b",
+        "source_hunks": [
+          "@@ -10,21 +10,23 @@ import sys"
+        ],
+        "current_sha256": "f55cf4a01069b1bbcd5de6480b4f44ac4c4229abc1c71442466ff0b4461f3da4"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/macos_peer_exec_fixture.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4473b4aa13078172cf6b9ea778c00b5edd589c2b532cf71187ad78cb799a4278",
+        "source_hunks": [
+          "@@ -283,7 +283,7 @@ def changed[T: BaseModel](model: T, **values: object) -> T:"
+        ],
+        "current_sha256": "07abc6c7caec3ce13749749c604b96d0ee88ba7fed577ebd7e021c7272738f09"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "87eee7be1deec681349bf3d8293660142f18539c32f3621993a326974acfd4b0",
+        "source_hunks": [
+          "@@ -5,20 +5,27 @@ from __future__ import annotations",
+          "@@ -187,3 +194,178 @@ async def test_deadline_mapping_preserves_cause_and_retryable_late_connection_ow"
+        ],
+        "current_sha256": "190ad47ba40abbb83fbf50c54e3c869522fa82b1b32270c84b9590d728509a9d"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_installation.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "657ff31ab2dc02d860b03f19232e7809587bfa6e7649b614bbc4dfa141bc8611",
+        "source_hunks": [
+          "@@ -17,6 +17,7 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef",
+          "@@ -64,7 +65,7 @@ def test_inspection_absence_is_read_only_and_installation_is_exact_and_idempoten"
+        ],
+        "current_sha256": "c4009d1cdd8608caca8a607fe68fc4a0f693a2a92072d5d593108e12bc59bafa"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_installation.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "636dc7b546b683673fecc177bbc91b32dcefca0849bda96894d44e3d794aad84",
+        "source_hunks": [
+          "@@ -33,6 +33,7 @@ from ..linux_gnome_lock import (",
+          "@@ -149,7 +150,7 @@ def test_native_pidfd_session_and_same_owner_bracket_the_response(",
+          "@@ -274,5 +275,5 @@ def test_insecure_home_ancestor_refuses_before_any_bus_call(tmp_path: Path, monk"
+        ],
+        "current_sha256": "bba9a3ee7ec775b6050b020c67f01b6c331deb0785ee8542ab54ada1e07986e9"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_login.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "1f689a36272688e88f518915e21a2623e07a370c35dd520d86e5bc696ef9f440",
+        "source_hunks": [
+          "@@ -23,7 +23,13 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef",
+          "@@ -516,7 +522,10 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -",
+          "@@ -528,7 +537,22 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -",
+          "@@ -536,6 +560,39 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -"
+        ],
+        "current_sha256": "e3ba6acef6dbbfcd9229469cf935b6cf016ef63d03373e1d36805bd748570762"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_linux_login.py",
+      "rationale": "Current _native_gnome_prerequisite independently verifies producer/session/lock state, preserving strict unavailable refusal and eligible producer oracle without installing a session bridge.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "360a41194a20de006fcac8bb4f3331f42966be68b1f15fb64b093a6553e8f4f6",
+        "source_hunks": [
+          "@@ -0,0 +1,309 @@"
+        ],
+        "current_sha256": "52d90bc61e4097c6292d76a16bbf199447466a518e26d70ecfc9b85a56a7cf7c"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_manager_native.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "8ad7171cfb7656239b74377b081cfc58b5d7d8ce4914d77740e7aa7fb088bacb",
+        "source_hunks": [
+          "@@ -35,15 +35,29 @@ from ..macos_process import MacosProcessWatch, read_macos_process",
+          "@@ -74,7 +88,7 @@ async def _wait_running(",
+          "@@ -154,7 +168,7 @@ async def _owned_agent("
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "76ba01232ea05f227d603af3ad4d5a6004e3ef6f1c0719f6fda8b6c786980f80",
+        "source_hunks": [
+          "@@ -17,12 +17,14 @@ from ..macos_login import macos_peer_audit_token",
+          "@@ -63,47 +65,50 @@ def test_native_exec_during_peer_capture_refuses_stale_version_and_accepts_fresh"
+        ],
+        "current_sha256": "c6602f2322379e716e979b39cc4e3d65b9c4a4a3a34c4245c71b071a362785d6"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "271b1ba022ef0a6770112776f6d05c2da733000c0e8672b932d7e94df9938995",
+        "source_hunks": [
+          "@@ -213,7 +213,7 @@ def test_failed_constructor_preserves_primary_and_native_close_diagnostic(",
+          "@@ -227,7 +227,7 @@ def test_failed_constructor_successful_close_keeps_primary(monkeypatch: pytest.M",
+          "@@ -262,7 +262,7 @@ def test_constructor_close_failure_preserves_existing_canonical_cleanup_owners("
+        ],
+        "current_sha256": "80ee076adea70829d9e9ef5b47c6316f6cb4697542e700f6e32f25c23ae0e85f"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_process_incarnation.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "8c2ddee204ebfae2f30a853fe13bde0ed9d568952ac050a37f04536b64905196",
+        "source_hunks": [
+          "@@ -0,0 +1,188 @@"
+        ],
+        "current_sha256": "6c6da1b56b2b9f119174f6e8eb45c70d57f2a84eb4b23d76dd42bbbea78a9e87"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_process_incarnation.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "10215e54bc1adff7b683e4a4a78e52552f0e095f7c28d7a677adb6a148b3afcd",
+        "source_hunks": [
+          "@@ -0,0 +1,588 @@"
+        ],
+        "current_sha256": "f60ba1f20743ddd5cc115a96dc424e45cff6e9c49af6c6c916a1ec5ad639234e"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native parent carries explicit canonical storage controls; short configured socket namespaces remain physical-storage-bound without a product fallback.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "cf68a6333eb341a4f7e4b1ae2a7c9ab3820785909d3bc252dcff439d1f2c2c00",
+        "source_hunks": [
+          "@@ -0,0 +1,689 @@"
+        ],
+        "current_sha256": "023e7d4a232982866c1f083f3bb7a52fa7024459220d96d547bd4b0b8e2e6ec5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Restart recovery additionally retains and retires marker.coalition when launchd no longer knows the job; failed empty proof retains the marker and blocks new registration. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_management_status.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "4150dd072e0cb773fb2b5efa1a0de4ed9886dff2fb8fa3fe31ceafdc491913c1",
+        "source_hunks": [
+          "@@ -2,8 +2,10 @@",
+          "@@ -18,7 +20,9 @@ from cadrumo.application.runtime.contracts import (",
+          "@@ -128,3 +132,119 @@ def test_missing_endpoint_is_unavailable_and_root_mismatch_never_connects() -> N"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "dd3cf7f633475a7c83fa8f179543894672af9d066d8b7e7d57e31fa3e452c97e",
+        "source_hunks": [
+          "@@ -0,0 +1,106 @@"
+        ],
+        "current_sha256": "664b0f831c4afb8858421fc21323c42acbd0dfa26f18d039bc62fe04fbd9ef72"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d919e731e22307018b6d53449b1dfa87d1546010c4ac2ba38dc7768b05c10eaa",
+        "source_hunks": [
+          "@@ -198,9 +198,12 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N"
+        ],
+        "current_sha256": "7d79d213de29de5d1172c725c7d9730515e9333216efe497fe4575489124b6bc"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py:test_refresh_and_idle_expiry_release_only_the_affected_leases",
+      "rationale": "Current test calls prepare_api_admission(deadline=time.monotonic()+30) before issuing the short lease, preserving the intended warm-graph expiry oracle. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker_startup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "adab9c269b6d6be5ca90c2c9e36adfb8df3f5d92a5cc80eb3ec90d1d1848e301",
+        "source_hunks": [
+          "@@ -3,6 +3,7 @@",
+          "@@ -77,6 +78,8 @@ def _worker(child: _Child) -> ProfileWorkerProcess:"
+        ],
+        "current_sha256": "601a2114d9b21d8dcfc2ae1292744ed42e6f57733d667107d879bfa0d6a173c5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker_startup.py",
+      "rationale": "Current _worker constructor fixture initializes _native_guard RLock and _stopping Event, retaining source native lifetime readiness prerequisites.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_service_definitions.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ff0fff1ff67b5a958cbdb89df784abe60f23ed4832214192ea011a288bdde6df",
+        "source_hunks": [
+          "@@ -3,6 +3,7 @@",
+          "@@ -11,6 +12,7 @@ from defusedxml.ElementTree import fromstring",
+          "@@ -278,3 +280,132 @@ def test_upgrades_keep_one_owner_name_and_change_the_expected_version() -> None:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_job_inheritance_native.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d5398b5475a8c5845049df80f7262654c379087620ae98936ef3a85d5118c80d",
+        "source_hunks": [
+          "@@ -10,21 +10,38 @@ from pathlib import Path",
+          "@@ -37,8 +54,7 @@ def test_inheritable_sentinel_is_detected_in_control_and_absent_in_job_child(tmp",
+          "@@ -52,7 +68,7 @@ def test_inheritable_sentinel_is_detected_in_control_and_absent_in_job_child(tmp"
+        ],
+        "current_sha256": "8b4fc9fbf99caacf7883605dc05523eae3d418eb39a877f418fc94c1c5b000da"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_windows_job_inheritance_native.py",
+      "rationale": "Current test body explicitly refuses non-win32 before STARTUPINFO/CREATE_NO_WINDOW native accesses; exact inheritance control and contained-child sentinel oracle retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_managed_stop.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "2684b55c99265cdfdb51a68d9725ceba90033a40bce740d3497b7c407f90a129",
+        "source_hunks": [
+          "@@ -19,6 +19,8 @@ from uuid import uuid4",
+          "@@ -27,7 +29,7 @@ from .. import windows_managed_stop, windows_manager",
+          "@@ -221,7 +223,9 @@ def test_retained_proof_never_authorizes_a_different_current_process(stop_fixtur",
+          "@@ -302,7 +306,7 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:",
+          "@@ -313,30 +317,30 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:",
+          "@@ -357,20 +361,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -378,7 +382,7 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -420,20 +424,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -443,7 +447,7 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished(",
+          "@@ -473,3 +477,180 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished("
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_manager_restart_native.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ffa1e59015f9eb76013422d886bc67e8ac4e354bf20c1b8565e49427b5afc88d",
+        "source_hunks": [
+          "@@ -15,7 +15,7 @@ from uuid import uuid4",
+          "@@ -31,17 +31,17 @@ class _TaskResult(Protocol):",
+          "@@ -74,16 +74,16 @@ def _retained_process(first: fixture._Event) -> Generator[tuple[ctypes.CDLL, int",
+          "@@ -106,7 +106,9 @@ def test_task_restarts_after_unrequested_native_hresult_failure(tmp_path: Path,"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "20b4b58fb5db0c0d465b904a0d07065125a5c92da83a8cb1f7ac819dd9809b59",
+        "source_hunks": [
+          "@@ -3,39 +3,15 @@",
+          "@@ -43,776 +19,27 @@ from cadrumo.application.runtime.owner_control import (",
+          "@@ -829,45 +56,45 @@ pytestmark = [",
+          "@@ -879,34 +106,14 @@ def test_task_restart_on_unrequested_failure_remains_active(tmp_path: Path) -> N",
+          "@@ -925,9 +132,12 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_",
+          "@@ -938,8 +148,32 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_",
+          "@@ -949,23 +183,9 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_process.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "e7e2ab53170fc70ae75797cbd07f7dec65240d7b212149c9777dc0344379bb3d",
+        "source_hunks": [
+          "@@ -4,15 +4,17 @@ from __future__ import annotations",
+          "@@ -191,3 +193,190 @@ async def test_actual_chromium_descendants_end_on_abrupt_owner_death(tmp_path: P"
+        ],
+        "current_sha256": "c79a91ea308dbff98276cdb657649fe1d450c91b5ee21f67104fe00a2d7c19e3"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_windows_process.py",
+      "rationale": "Current _UnpublishedHandles/native-created-unpublished fixture and test_owner_loss_after_native_creation_before_process_publication cover kill-on-close ownership during unreturned native launch, including exact native process incarnations and cleanup.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_process_cleanup.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "2beca73111753fce60545be78de0353a0580816404d33e4e0f4c2d4f8312e451",
+        "source_hunks": [
+          "@@ -185,7 +185,7 @@ async def test_unproven_termination_retains_job_and_exact_primary_until_proven_r",
+          "@@ -227,7 +227,7 @@ async def test_constructor_failure_preserves_primary_and_acquired_job_retry(nati",
+          "@@ -257,7 +257,7 @@ def test_constructor_failure_with_successful_release_exposes_no_unreturned_scope"
+        ],
+        "current_sha256": "bec7968abd04c73d24790b3ae057d63ed1d53547685fb99f4a2c8efcaad74559"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_windows_process_cleanup.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "044d401998fd71154462dced7c7226b3bf4ea693078792e563d5a76bdb6dfff2",
+        "source_hunks": [
+          "@@ -0,0 +1,49 @@"
+        ],
+        "current_sha256": "8266e9acfc4c9f986bdb06fb7c6864d681b605e69521dd23e868f16eb050ed03"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/windows_inheritance_fixture.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "09e1bc5fecb6de702fa207ebc0bd0e0d2352c7a0cb6b9a3706524da1cb94485f",
+        "source_hunks": [
+          "@@ -105,6 +105,12 @@ def _probe(path: Path, sentinel: int) -> None:",
+          "@@ -138,7 +144,7 @@ async def _tree(directory: Path, role: str, *, exit_root: bool) -> None:"
+        ],
+        "current_sha256": "7b73231675722a51e144d3c0f4b1ffb1bdb98ef1c1bb58a4dea6451cc5bc81b7"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/windows_inheritance_fixture.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ee5ae382015f8528180753cc7d35f62ea8a462fbf691c35bcda01ee77bc7edb9",
+        "source_hunks": [
+          "@@ -0,0 +1,1131 @@"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/windows_manager.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ffc0123706e12d3fdfede48e4283f42e382dc054d5846adeaa8b804821ba6ba8",
+        "source_hunks": [
+          "@@ -33,6 +33,7 @@ _MISSING = {0x80070002, 0x8004130F}",
+          "@@ -163,7 +164,7 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:",
+          "@@ -173,6 +174,59 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:",
+          "@@ -201,8 +255,13 @@ def _task_xml_definition_matches(actual_xml: str, expected_xml: str) -> bool:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_arguments.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "385a71d7392730261af874b220a1ec94a92d691584348301599d4eb90d469ae2",
+        "source_hunks": [
+          "@@ -0,0 +1,41 @@"
+        ],
+        "current_sha256": "50b99c1423b52a9a133384996b6e4396e4c13a9e810deb18519a4a1196cc0d95"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_arguments.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_authorization_client.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7293c510210fcccc9656eb1a3666725f279f6970000e6a9703cd849f1c69ac07",
+        "source_hunks": [
+          "@@ -88,8 +88,7 @@ class WorkerAuthorizationLease:",
+          "@@ -299,8 +298,7 @@ class WorkerAuthorizationClient:"
+        ],
+        "current_sha256": "a093ee6d644aa68b98b233e8f720bf9f1b1d9b9548a6530321efc519762afbf5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_authorization_client.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4a2f54fe07abeae5fbe8cb0ca867ecb1dfb03a000d17656f5cc33e2e759d9e73",
+        "source_hunks": [
+          "@@ -18,7 +18,7 @@ def worker_endpoint(*, storage_root: Path, worker_namespace: UUID) -> WorkerEndp"
+        ],
+        "current_sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "rationale": "Native Mac run exposed missed Darwin transport dispatch in current defining module; worker endpoint now permits POSIX Linux and Darwin and retains configured namespace authority.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "4b0b8c9c199ed0337bce8bd94360421cf85038a11c25d9370a7ecc67d03c6014",
+        "source_hunks": [
+          "@@ -14,6 +14,7 @@ from .filesystem_primitives import (",
+          "@@ -80,37 +81,15 @@ def rename_directory_noreplace("
+        ],
+        "current_sha256": "c8f36ffa792cd351f08869e5f8094a0ed4d1deed28d7209a7df311f4e9a4128c"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7c15f3e5f85c324bbf488a8f05527a7be912d13c5545c55588f53b93329b95f7",
+        "source_hunks": [
+          "@@ -15,11 +15,14 @@ from pathlib import Path",
+          "@@ -105,7 +108,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -139,7 +142,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -155,7 +158,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(",
+          "@@ -333,8 +336,8 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -348,7 +351,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -358,7 +361,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -374,7 +377,7 @@ def _posix_compare_and_replace_local_record(",
+          "@@ -382,7 +385,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu",
+          "@@ -396,7 +399,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu"
+        ],
+        "current_sha256": "5d7a35e55238dfc1b9a4ba9614d9cc99dc62e3ed69c9a63d2343a9c8891df24f"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "855695627d49c6726efc0fb8f9c0c52ef6e2a73a65e4097045b4026256ad8559",
+        "source_hunks": [
+          "@@ -16,30 +16,36 @@ from ._kdf_worker_limits import (",
+          "@@ -48,7 +54,7 @@ def kdf_worker_ready_attestation(*, request_fd: int, result_fd: int) -> bytes:",
+          "@@ -71,10 +77,11 @@ def _is_open_file_descriptor(descriptor: int) -> bool:",
+          "@@ -88,7 +95,7 @@ def parse_ready_attestation(value: bytes) -> dict[str, object]:",
+          "@@ -103,6 +110,7 @@ def validate_ready_attestation_shape(payload: dict[str, object], expected_platfo"
+        ],
+        "current_sha256": "bc09947a7e522045d9a15eb8e456c5115b184321db6d6d3fd621d082b94ecaf9"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "89e0027bbb037fef1ffc45a08bc56024fcc143e03431e13e95e18f2773e2557a",
+        "source_hunks": [
+          "@@ -146,7 +146,11 @@ def apply_posix_worker_limits() -> None:"
+        ],
+        "current_sha256": "15e4b01d0e1d33232941515ec922c303e610dcac9b460fe2d416a1aab3e0ea64"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "0bb648becf4d89c67ad45b48fe233b3f105d508c926b68e665a2d8197ec25a9c",
+        "source_hunks": [
+          "@@ -7,12 +7,17 @@ import subprocess",
+          "@@ -22,10 +27,10 @@ def verify_ready_worker(",
+          "@@ -40,7 +45,13 @@ def _validate_environment("
+        ],
+        "current_sha256": "6d6f91790b54ef0aad728492fd2a5adcbd1a28a8609a7de6e120d53d1af0270c"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/automation_delivery.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "c5bc049062399f3c6fe6e0c5a6565ea0151f10ae625de017731ceabdc4ab4a22",
+        "source_hunks": [
+          "@@ -1,87 +0,0 @@"
+        ],
+        "current_sha256": null
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/automation_delivery.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/capsule.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "17d1277133a1ad7e8895197a704f78f2ff91b3a766e508385fd49492783f16d5",
+        "source_hunks": [
+          "@@ -63,9 +63,6 @@ from ._capsule_filesystem import (",
+          "@@ -132,6 +129,7 @@ from .filesystem_primitives import ensure_real_directory as _ensure_real_directo",
+          "@@ -358,7 +356,7 @@ def rename_profile_custody_capsule_for_deletion(",
+          "@@ -602,7 +600,7 @@ def _publish_profile_custody_capsule_posix(",
+          "@@ -658,7 +656,7 @@ def publish_staged_profile_custody_capsule("
+        ],
+        "current_sha256": "ee31eae54ed3340b66fd730b357d8012130c22579f1280634e70213517169227"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/capsule.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "1a97919b51dd51c78dec345c8a8edb068fec7600c0cbf20358c27c02b9ee7eab",
+        "source_hunks": [
+          "@@ -725,24 +725,6 @@ def _record_read_operation(",
+          "@@ -754,7 +736,6 @@ write_descriptor_fsynced = _write_descriptor_fsynced"
+        ],
+        "current_sha256": "e1656baacabfe66721a5fb450dc8de8b02fb18acef91611d0a4ba2738b96e939"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "8572235a2ce2a9d68121644f006658db99543ee1c646a8bd44a004b44d1afb7f",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -11,7 +12,7 @@ from contextvars import ContextVar",
+          "@@ -379,6 +380,96 @@ def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:",
+          "@@ -434,6 +525,7 @@ def _write_exclusive_descriptor_fsynced(descriptor: int, payload: bytes) -> None",
+          "@@ -441,9 +533,13 @@ __all__ = ["
+        ],
+        "current_sha256": "e21b0517cf4b5920924c1e8c34f421ae7846efd7f622d1546e7111ac032a7d1d"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/gnome_collection_protection.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "5dd8bbd83b1e7a07903d78fbfcd7caf7b458723f0541ff470e5ff3a0b696afac",
+        "source_hunks": [
+          "@@ -88,6 +88,31 @@ def _require(condition: bool, code: AutomationCustodyCode = AutomationCustodyCod",
+          "@@ -194,7 +219,7 @@ def _control_directory(control: object) -> tuple[Path, int]:",
+          "@@ -206,7 +231,7 @@ def _control_directory(control: object) -> tuple[Path, int]:",
+          "@@ -225,18 +250,18 @@ class _MetadataRpc:"
+        ],
+        "current_sha256": "dd1ff9d5b2fb44568b4a5e47aa2638256e67d31674626e9f47562231628955f3"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/gnome_collection_protection.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_service_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "5e3c98e6c71407ed478666955e3b1d4ec75e435cad5f7e33344a4a2a113954b9",
+        "source_hunks": [
+          "@@ -16,7 +16,7 @@ import struct",
+          "@@ -29,6 +29,7 @@ from .....application.user_profile.automation_custody_port import (",
+          "@@ -130,10 +131,10 @@ class _DeadlineBus:",
+          "@@ -155,8 +156,8 @@ class _DeadlineBus:",
+          "@@ -245,6 +246,33 @@ class _DeadlineBus:",
+          "@@ -253,14 +281,27 @@ def _native_bus() -> Generator[_DeadlineBus]:",
+          "@@ -330,9 +371,13 @@ def _session(bus: _DeadlineBus) -> Generator[Any]:"
+        ],
+        "current_sha256": "2a147d47a1d0aec0fb57c6183a41c0c27487f97d33251c5e263c055b7b3d5045"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_bus.py; linux_secret_cleanup.py; linux_secret_service_store.py; tests/test_linux_secret_service_store.py",
+      "rationale": "DeadlineSecretBus constructor preserves the primary while close_secret_bus_after_failure retains consumed-close diagnostics and earlier retry owners; native_bus/_session retain source cleanup semantics and corresponding current fault tests.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/macos_keychain_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "5fe2260932adc3a77ffd9c8f586c6e2a03823f799f67c4b4bd1a81fa12fc4651",
+        "source_hunks": [
+          "@@ -352,11 +352,36 @@ class _CoreFoundation:"
+        ],
+        "current_sha256": "d536156c1d59e48bc4f27d741d3f8a48649030d2ded4487104ff2f2e54fb769e"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/macos_login_keychain.py",
+      "rationale": "LoginKeychain explicitly declares path/keychain/cf/security/native functions/constants in its split canonical defining module; native keychain policy remains nonprompting.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/automation_support.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "23dda6f667de30bf5c552b7f26a6551a6393d93cba06f5de725fde60f9fb1824",
+        "source_hunks": [
+          "@@ -1,10 +1,14 @@",
+          "@@ -39,3 +43,24 @@ class MemoryNativePort:"
+        ],
+        "current_sha256": "200dcb17ee11e01baf5a9e365013f7e8b871809de647b17e9ee8d1a15d3ec460"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/automation_support.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/enrollment_support.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "98c9ded20326eddd0bc8f87e9d646f2752bd2576bb0ee08474ed5f2b223601d3",
+        "source_hunks": [
+          "@@ -14,7 +14,6 @@ from uuid import UUID, uuid4",
+          "@@ -45,6 +44,7 @@ from cadrumo.application.user_profile.automation_enrollment import ("
+        ],
+        "current_sha256": "481114f6a36598874ea5f53c9c911c9ff334b5c98957825cb052f40a085ad42c"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/adapters/persistence/storage/custody/tests/enrollment_support.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "7d36585e9b4e31bd31e07916df1a8b466fdfcbfa99f6a5952e5070440aa6add3",
+        "source_hunks": [
+          "@@ -0,0 +1,172 @@"
+        ],
+        "current_sha256": "dbe28731341ab08916009f7515099d295bb2422dcc08d12cb4142469bd40d73b"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "7e062055289717cb8670bd97f7118e801ecc8680a94bb0d5498b8bdeaa553458",
+        "source_hunks": [
+          "@@ -15,7 +15,6 @@ import pytest",
+          "@@ -31,6 +30,7 @@ from cadrumo.application.user_profile.automation_administration import ("
+        ],
+        "current_sha256": "0961d8644468a5a8ff594c3bf89dace9093e98cb4bf1ba9346170173b4e5bfb3"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "44733e73b0e7454a46b58a480b2c18e204a582456b92d3d119aa7b1f1e415824",
+        "source_hunks": [
+          "@@ -45,7 +45,10 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (",
+          "@@ -64,7 +67,6 @@ from cadrumo.application.user_profile.automation_custody_port import (",
+          "@@ -485,27 +487,6 @@ class TrackedWindowsStore(WindowsAutomationSecretStore):"
+        ],
+        "current_sha256": "30fac1224b28ab7a3abed0b9c43e1392300372e76e82d63d8750132cc9ae9466"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_gnome_collection_protection.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "1cd46cc792cb3b41687bffed87b5b074fcae12e464acddcc0321af55ae5659b7",
+        "source_hunks": [
+          "@@ -17,16 +17,24 @@ import pytest",
+          "@@ -41,7 +49,7 @@ class _SocketDouble:",
+          "@@ -54,8 +62,10 @@ class _SocketDouble:",
+          "@@ -354,12 +364,12 @@ def test_control_directory_refuses_symlinks_foreign_owners_and_unsafe_modes(",
+          "@@ -379,7 +389,7 @@ def test_control_directory_refuses_symlinks_foreign_owners_and_unsafe_modes("
+        ],
+        "current_sha256": "500ec86df2619994c1a15d878ffd539dfa49b9e3ece8239685298c0ec4c18b5c"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_gnome_collection_protection.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "2460878358ec784ca6c6effe87ad3fe7d5ac226714cbee37c2f97eaba316fd92",
+        "source_hunks": [
+          "@@ -17,7 +17,12 @@ from uuid import UUID",
+          "@@ -228,6 +233,11 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle",
+          "@@ -251,6 +261,32 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle"
+        ],
+        "current_sha256": "48c66a9b23a3bb097d5365478b4501d066fcf21b5539199261c1ff3923383be0"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_linux_secret_service_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "6479a2be82ad91a02d6513de3ec33dca9d40f07e14729863b4ad55e9c2971122",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.automation_custody_port import (",
+          "@@ -495,3 +497,328 @@ def test_native_socket_deadline_covers_authentication_and_hello(tmp_path: Path,"
+        ],
+        "current_sha256": "6554a66ea39f20a6ba25f4a96d11bf18895eb083200cf811dc3345c0edc7081a"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_bus.py; linux_secret_cleanup.py; linux_secret_service_store.py; tests/test_linux_secret_service_store.py",
+      "rationale": "DeadlineSecretBus constructor preserves the primary while close_secret_bus_after_failure retains consumed-close diagnostics and earlier retry owners; native_bus/_session retain source cleanup semantics and corresponding current fault tests.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_secret_store_native.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "3ec666bfb56bf2325df9666fb016969310e60256e6de26d13b1bd2f95b80b2ef",
+        "source_hunks": [
+          "@@ -8,6 +8,7 @@ any item except the random accounts it creates.",
+          "@@ -25,7 +26,9 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (",
+          "@@ -144,6 +147,8 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item(",
+          "@@ -159,6 +164,11 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item("
+        ],
+        "current_sha256": "599b0f0b11913f3bc62148870ce675269509e41644701971cf3271c0c1316df5"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_secret_store_native.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/bootstrap.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d1cffc93cca8edb40f9eac772a310a02e03a6fd69b2db10c8fb44be885ff6409",
+        "source_hunks": [
+          "@@ -5,6 +5,39 @@ from __future__ import annotations",
+          "@@ -27,6 +60,37 @@ def main() -> None:"
+        ],
+        "current_sha256": "41fb8ad60ee4fb725bbc2efb2a4aa5bb456a1f3ce892c3c37944d8ba95829614"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "58bebf1417b200a0c5b502ebf6fc52c7bc1516a44dc2688d0cc3d09b06959c1b",
+        "source_hunks": [
+          "@@ -10,10 +10,8 @@ import sys",
+          "@@ -32,7 +30,7 @@ def run(arguments: list[str] | None = None) -> int:"
+        ],
+        "current_sha256": "d92f7d43b6e955dc9948011fbab33ab61a4f7758db028bd373418df14e6f856c"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/linux_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/macos_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "ceb08bc748d1e89f50ad22ce4dc6acdd6ebabd7506249259f09a8c3839220b55",
+        "source_hunks": [
+          "@@ -0,0 +1,124 @@"
+        ],
+        "current_sha256": "206bf35962d1e2907b0eeb9b6dc1a12e8e1a9c41aabb060195b42949757fb54f"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/macos_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Child is launched/reaped by its owning asyncio loop while native parent watching runs in an awaited thread; no lint suppression added. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/main.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "850c7b9051285e72d43265e426bf47f0983f36e65864cffc86a170310838bc0c",
+        "source_hunks": [
+          "@@ -5,12 +5,14 @@ from __future__ import annotations",
+          "@@ -24,9 +26,54 @@ from ...adapters.local_runtime.windows_login import windows_login_inventory",
+          "@@ -53,6 +100,15 @@ def run(arguments: list[str] | None = None) -> int:",
+          "@@ -66,13 +122,16 @@ def run(arguments: list[str] | None = None) -> int:",
+          "@@ -80,7 +139,8 @@ def run(arguments: list[str] | None = None) -> int:"
+        ],
+        "current_sha256": "294112e06650fb79a3e108606666d297f01fc1dee7dbd9767e6289d068a5b2f6"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "99761429684ab8a98429d4bd7b1b1c0e8aad983cda2598c5da532be599c10c34",
+        "source_hunks": [
+          "@@ -0,0 +1,492 @@"
+        ],
+        "current_sha256": "99efaf4d0889cb57c014dd835afd30f3ec7371d232bc78065d5f2ec38469a1a4"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "60e43f88abd73a4425105c6afb09d1cc07c906438158130a6b917cd745cbdea3",
+        "source_hunks": [
+          "@@ -19,7 +19,6 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation",
+          "@@ -76,6 +75,7 @@ from cadrumo.application.user_profile.automation_operations import ("
+        ],
+        "current_sha256": "26cbd75be484f34563f76ef3a422401ee610bbe98bcd47152cbdd8c2d9ef40b5"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d5dd5ee96a6543e6171cb8ee9ff17b7d95136863a8566e554f2e1efc1450dfd8",
+        "source_hunks": [
+          "@@ -18,7 +18,6 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation",
+          "@@ -67,6 +66,7 @@ from cadrumo.application.user_profile.automation_operations import ("
+        ],
+        "current_sha256": "2ea8d1c1d71a02fc9d90d8382d426d61dac501abf058f5564978e8e792d597a4"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "308805d229bd4295d93c9f68968bde4d971dcf69bf975ef95069615568fcd6fd",
+        "source_hunks": [
+          "@@ -38,6 +38,8 @@ pytestmark = [",
+          "@@ -202,7 +204,13 @@ def test_installed_mismatch_exits_without_claiming_endpoint(tmp_path: Path, mism",
+          "@@ -210,7 +218,7 @@ def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replaceme"
+        ],
+        "current_sha256": "a2aa40426ddda5f9ae19fdecd714151a2cfb1110d107a575ebcda95bf5b423ef"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "018c2a5e44c2001c9338b295bb564c5a142e5ef25655711c3ec7c8616a2a44b8",
+        "source_hunks": [
+          "@@ -0,0 +1,216 @@"
+        ],
+        "current_sha256": "b5f8519d1fe69f41945ca5bd9b01b0d916fcbc3e337f50f9c849cfaff0d69a1d"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained. Child is launched/reaped by its owning asyncio loop while native parent watching runs in an awaited thread; no lint suppression added. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "731ec505223ff561f054c86bbf851cd68faddb43252696e7fbbc2ff8ffab7044",
+        "source_hunks": [
+          "@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.server import RuntimeTransportServer",
+          "@@ -81,6 +80,7 @@ from cadrumo.core.period import Period"
+        ],
+        "current_sha256": "c877e0b468bc9ba0237978ad48dbdd7ce549baf5d5e323e4ee50c98b73bb5e57"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "3beb8f654e2f42f4211a9d27d70b799b825c9360183be411545915e141aadd42",
+        "source_hunks": [
+          "@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.server import RuntimeTransportServer",
+          "@@ -80,6 +79,7 @@ from cadrumo.core.period import Period"
+        ],
+        "current_sha256": "04b2fa741c0499f5f95971c6113a22bd70c845e61efd460f15a120e145ee63d2"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "a23cb95bc956ff4fec88501c6b55fea706143b0cf77b0795d259fc40980708e7",
+        "source_hunks": [
+          "@@ -19,7 +19,6 @@ from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id",
+          "@@ -65,6 +64,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import ("
+        ],
+        "current_sha256": "7971f8b2dc9aa9095a739dd6e6ee136adab7cbf69811ae46423ac1be4f81b83c"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "6a47c264093a0be41da474c58470395f90683ee0f0887c810537f241f95ef036",
+        "source_hunks": [
+          "@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.server import RuntimeTransportServer",
+          "@@ -90,6 +89,7 @@ from cadrumo.application.user_profile.projections import record_to_path_values"
+        ],
+        "current_sha256": "5d2bbba2f4f97e3cc5c52801c2550436b024285943cda4201fc4a8b5bf34b49a"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "b88396ccc9018c520966ef4a27ff8081c11075f6c702c6e2eed4fbce402e6ff1",
+        "source_hunks": [
+          "@@ -18,7 +18,6 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation",
+          "@@ -80,6 +79,7 @@ from cadrumo.core.period import Period"
+        ],
+        "current_sha256": "49dfb3e2eee7b9991fb98496e494b8bc5f5dbbd044a8fdc8858b29027475688d"
+      },
+      "replacement": "src/cadrumo/tests/native_enrollment_recipient.py; src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py",
+      "rationale": "Test recipient import uses the canonical test-only NativeEnrollmentRecipient fixture; withdrawn duplicate production automation_delivery module remains absent.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_worker_exit_cleanup.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "acd6f1580fa4f5c2e59fde8bd62f1f66cc01e10d5d7f2adee221478f8fa35ba0",
+        "source_hunks": [
+          "@@ -208,7 +208,7 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own",
+          "@@ -360,7 +360,7 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl"
+        ],
+        "current_sha256": "8c34b587e7f444dc76dc6df9afa2dae63b2c1c592ececd529bffcf580c1286df"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/tests/test_worker_exit_cleanup.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-baseline",
+      "commit": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/worker.py",
+      "status": "incorporated",
+      "evidence": {
+        "source_delta_sha256": "511d689ee6769fb3779bdb28347f5dd247a7e9a29fd26bafb8a3be10dd6721cb",
+        "source_hunks": [
+          "@@ -141,9 +141,7 @@ def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:",
+          "@@ -602,7 +600,7 @@ def run("
+        ],
+        "current_sha256": "578135767429fcd59a72bc606860707d487ea166a5e4d052b51c9a9898db75c5"
+      },
+      "replacement": "src/cadrumo/entrypoints/runtime/worker.py",
+      "rationale": "Applied the original-base delta in place and adapted current defining modules; existing TUI behavior and cleanup retained.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/management_status.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "54ed0b86c62d5297081b2b9a3bcd9277ef9aaddd6cae2ec01334561f4474611b",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -9,7 +10,8 @@ from uuid import uuid4",
+          "@@ -22,14 +24,22 @@ def probe_runtime_listener(",
+          "@@ -41,13 +51,22 @@ def probe_runtime_listener("
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/server.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "a060eaca8832a88a983a3e2163aaedf0839e9a6747ec2886ba3ac15aef10d11d",
+        "source_hunks": [
+          "@@ -6,7 +6,7 @@ import time",
+          "@@ -52,6 +52,7 @@ from ...application.runtime.profile_access import (",
+          "@@ -63,6 +64,31 @@ from .framing import (",
+          "@@ -366,7 +392,17 @@ class RuntimeTransportServer:"
+        ],
+        "current_sha256": "57501ba113c05062dae768bf30373d976b66fcb107b604434132ebfc8d22da94"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/startup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "79d9ee1e4c282d38a71e6e2b15239b46b6eb3e597a627edd9a49ec1429c43a83",
+        "source_hunks": [
+          "@@ -5,8 +5,9 @@ from __future__ import annotations",
+          "@@ -16,8 +17,54 @@ from ...application.runtime.contracts import (",
+          "@@ -112,17 +159,21 @@ class RuntimeLaunchDoor:",
+          "@@ -130,17 +181,27 @@ class RuntimeLaunchDoor:"
+        ],
+        "current_sha256": "5ab5d04cedbefa28face9332d44c72f9dbf9c1611f1daf3b4829fd65e919fc89"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/startup.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/job_fixture.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "7254c2188c099fbb65ffc8399fdde7c5d7d714597edf714f2105579f92ef6b6b",
+        "source_hunks": [
+          "@@ -7,6 +7,7 @@ import json",
+          "@@ -56,6 +57,102 @@ async def _browser(record: Path) -> None:",
+          "@@ -63,7 +160,9 @@ def main() -> None:"
+        ],
+        "current_sha256": "4b127a69a2a0492bcf7bc31ad83b11f0fa3917d761c732b7ad12e47867d45de3"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/job_fixture.py",
+      "rationale": "Current _UnpublishedHandles/native-created-unpublished fixture and test_owner_loss_after_native_creation_before_process_publication cover kill-on-close ownership during unreturned native launch, including exact native process incarnations and cleanup.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "87eee7be1deec681349bf3d8293660142f18539c32f3621993a326974acfd4b0",
+        "source_hunks": [
+          "@@ -5,20 +5,27 @@ from __future__ import annotations",
+          "@@ -187,3 +194,178 @@ async def test_deadline_mapping_preserves_cause_and_retryable_late_connection_ow"
+        ],
+        "current_sha256": "190ad47ba40abbb83fbf50c54e3c869522fa82b1b32270c84b9590d728509a9d"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_login.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "1f689a36272688e88f518915e21a2623e07a370c35dd520d86e5bc696ef9f440",
+        "source_hunks": [
+          "@@ -23,7 +23,13 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef",
+          "@@ -516,7 +522,10 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -",
+          "@@ -528,7 +537,22 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -",
+          "@@ -536,6 +560,39 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -"
+        ],
+        "current_sha256": "e3ba6acef6dbbfcd9229469cf935b6cf016ef63d03373e1d36805bd748570762"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_linux_login.py",
+      "rationale": "Current _native_gnome_prerequisite independently verifies producer/session/lock state, preserving strict unavailable refusal and eligible producer oracle without installing a session bridge.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_management_status.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "4150dd072e0cb773fb2b5efa1a0de4ed9886dff2fb8fa3fe31ceafdc491913c1",
+        "source_hunks": [
+          "@@ -2,8 +2,10 @@",
+          "@@ -18,7 +20,9 @@ from cadrumo.application.runtime.contracts import (",
+          "@@ -128,3 +132,119 @@ def test_missing_endpoint_is_unavailable_and_root_mismatch_never_connects() -> N"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d919e731e22307018b6d53449b1dfa87d1546010c4ac2ba38dc7768b05c10eaa",
+        "source_hunks": [
+          "@@ -198,9 +198,12 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N"
+        ],
+        "current_sha256": "7d79d213de29de5d1172c725c7d9730515e9333216efe497fe4575489124b6bc"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py:test_refresh_and_idle_expiry_release_only_the_affected_leases",
+      "rationale": "Current test calls prepare_api_admission(deadline=time.monotonic()+30) before issuing the short lease, preserving the intended warm-graph expiry oracle. Native proof exposed loss of the separate published authority location; canonical worker path controls now carry only explicit authority/storage/scratch roots and preserve the clean interpreter baseline.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker_startup.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "adab9c269b6d6be5ca90c2c9e36adfb8df3f5d92a5cc80eb3ec90d1d1848e301",
+        "source_hunks": [
+          "@@ -3,6 +3,7 @@",
+          "@@ -77,6 +78,8 @@ def _worker(child: _Child) -> ProfileWorkerProcess:"
+        ],
+        "current_sha256": "601a2114d9b21d8dcfc2ae1292744ed42e6f57733d667107d879bfa0d6a173c5"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_profile_worker_startup.py",
+      "rationale": "Current _worker constructor fixture initializes _native_guard RLock and _stopping Event, retaining source native lifetime readiness prerequisites.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_service_definitions.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ff0fff1ff67b5a958cbdb89df784abe60f23ed4832214192ea011a288bdde6df",
+        "source_hunks": [
+          "@@ -3,6 +3,7 @@",
+          "@@ -11,6 +12,7 @@ from defusedxml.ElementTree import fromstring",
+          "@@ -278,3 +280,132 @@ def test_upgrades_keep_one_owner_name_and_change_the_expected_version() -> None:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_managed_stop.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "2684b55c99265cdfdb51a68d9725ceba90033a40bce740d3497b7c407f90a129",
+        "source_hunks": [
+          "@@ -19,6 +19,8 @@ from uuid import uuid4",
+          "@@ -27,7 +29,7 @@ from .. import windows_managed_stop, windows_manager",
+          "@@ -221,7 +223,9 @@ def test_retained_proof_never_authorizes_a_different_current_process(stop_fixtur",
+          "@@ -302,7 +306,7 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:",
+          "@@ -313,30 +317,30 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:",
+          "@@ -357,20 +361,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -378,7 +382,7 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -420,20 +424,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(",
+          "@@ -443,7 +447,7 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished(",
+          "@@ -473,3 +477,180 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished("
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_manager_restart_native.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ffa1e59015f9eb76013422d886bc67e8ac4e354bf20c1b8565e49427b5afc88d",
+        "source_hunks": [
+          "@@ -15,7 +15,7 @@ from uuid import uuid4",
+          "@@ -31,17 +31,17 @@ class _TaskResult(Protocol):",
+          "@@ -74,16 +74,16 @@ def _retained_process(first: fixture._Event) -> Generator[tuple[ctypes.CDLL, int",
+          "@@ -106,7 +106,9 @@ def test_task_restarts_after_unrequested_native_hresult_failure(tmp_path: Path,"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "20b4b58fb5db0c0d465b904a0d07065125a5c92da83a8cb1f7ac819dd9809b59",
+        "source_hunks": [
+          "@@ -3,39 +3,15 @@",
+          "@@ -43,776 +19,27 @@ from cadrumo.application.runtime.owner_control import (",
+          "@@ -829,45 +56,45 @@ pytestmark = [",
+          "@@ -879,34 +106,14 @@ def test_task_restart_on_unrequested_failure_remains_active(tmp_path: Path) -> N",
+          "@@ -925,9 +132,12 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_",
+          "@@ -938,8 +148,32 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_",
+          "@@ -949,23 +183,9 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/test_windows_process.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "e7e2ab53170fc70ae75797cbd07f7dec65240d7b212149c9777dc0344379bb3d",
+        "source_hunks": [
+          "@@ -4,15 +4,17 @@ from __future__ import annotations",
+          "@@ -191,3 +193,190 @@ async def test_actual_chromium_descendants_end_on_abrupt_owner_death(tmp_path: P"
+        ],
+        "current_sha256": "c79a91ea308dbff98276cdb657649fe1d450c91b5ee21f67104fe00a2d7c19e3"
+      },
+      "replacement": "src/cadrumo/adapters/local_runtime/tests/test_windows_process.py",
+      "rationale": "Current _UnpublishedHandles/native-created-unpublished fixture and test_owner_loss_after_native_creation_before_process_publication cover kill-on-close ownership during unreturned native launch, including exact native process incarnations and cleanup.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ee5ae382015f8528180753cc7d35f62ea8a462fbf691c35bcda01ee77bc7edb9",
+        "source_hunks": [
+          "@@ -0,0 +1,1131 @@"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/local_runtime/windows_manager.py",
+      "status": "superseded",
+      "evidence": {
+        "source_delta_sha256": "ffc0123706e12d3fdfede48e4283f42e382dc054d5846adeaa8b804821ba6ba8",
+        "source_hunks": [
+          "@@ -33,6 +33,7 @@ _MISSING = {0x80070002, 0x8004130F}",
+          "@@ -163,7 +164,7 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:",
+          "@@ -173,6 +174,59 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:",
+          "@@ -201,8 +255,13 @@ def _task_xml_definition_matches(actual_xml: str, expected_xml: str) -> bool:"
+        ],
+        "current_sha256": null
+      },
+      "replacement": null,
+      "rationale": "The accepted runtime-without-service-manager decision removed runtime installation, managed startup/stop/status and service-definition tests; their source improvements do not authorize restoring the removed surface.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_service_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "5e3c98e6c71407ed478666955e3b1d4ec75e435cad5f7e33344a4a2a113954b9",
+        "source_hunks": [
+          "@@ -16,7 +16,7 @@ import struct",
+          "@@ -29,6 +29,7 @@ from .....application.user_profile.automation_custody_port import (",
+          "@@ -130,10 +131,10 @@ class _DeadlineBus:",
+          "@@ -155,8 +156,8 @@ class _DeadlineBus:",
+          "@@ -245,6 +246,33 @@ class _DeadlineBus:",
+          "@@ -253,14 +281,27 @@ def _native_bus() -> Generator[_DeadlineBus]:",
+          "@@ -330,9 +371,13 @@ def _session(bus: _DeadlineBus) -> Generator[Any]:"
+        ],
+        "current_sha256": "2a147d47a1d0aec0fb57c6183a41c0c27487f97d33251c5e263c055b7b3d5045"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_bus.py; linux_secret_cleanup.py; linux_secret_service_store.py; tests/test_linux_secret_service_store.py",
+      "rationale": "DeadlineSecretBus constructor preserves the primary while close_secret_bus_after_failure retains consumed-close diagnostics and earlier retry owners; native_bus/_session retain source cleanup semantics and corresponding current fault tests.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/automation_support.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "23dda6f667de30bf5c552b7f26a6551a6393d93cba06f5de725fde60f9fb1824",
+        "source_hunks": [
+          "@@ -1,10 +1,14 @@",
+          "@@ -39,3 +43,24 @@ class MemoryNativePort:"
+        ],
+        "current_sha256": "200dcb17ee11e01baf5a9e365013f7e8b871809de647b17e9ee8d1a15d3ec460"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/automation_support.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "44733e73b0e7454a46b58a480b2c18e204a582456b92d3d119aa7b1f1e415824",
+        "source_hunks": [
+          "@@ -45,7 +45,10 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (",
+          "@@ -64,7 +67,6 @@ from cadrumo.application.user_profile.automation_custody_port import (",
+          "@@ -485,27 +487,6 @@ class TrackedWindowsStore(WindowsAutomationSecretStore):"
+        ],
+        "current_sha256": "30fac1224b28ab7a3abed0b9c43e1392300372e76e82d63d8750132cc9ae9466"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_linux_secret_service_store.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d9cc89175fa17856c0ac351d0af33c63539b9f255aa6440e49828f5800afb569",
+        "source_hunks": [
+          "@@ -2,6 +2,7 @@",
+          "@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.automation_custody_port import (",
+          "@@ -495,3 +497,328 @@ def test_native_socket_deadline_covers_authentication_and_hello(tmp_path: Path,"
+        ],
+        "current_sha256": "6554a66ea39f20a6ba25f4a96d11bf18895eb083200cf811dc3345c0edc7081a"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/linux_secret_bus.py; linux_secret_cleanup.py; linux_secret_service_store.py; tests/test_linux_secret_service_store.py",
+      "rationale": "DeadlineSecretBus constructor preserves the primary while close_secret_bus_after_failure retains consumed-close diagnostics and earlier retry owners; native_bus/_session retain source cleanup semantics and corresponding current fault tests.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_secret_store_native.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "3ec666bfb56bf2325df9666fb016969310e60256e6de26d13b1bd2f95b80b2ef",
+        "source_hunks": [
+          "@@ -8,6 +8,7 @@ any item except the random accounts it creates.",
+          "@@ -25,7 +26,9 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (",
+          "@@ -144,6 +147,8 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item(",
+          "@@ -159,6 +164,11 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item("
+        ],
+        "current_sha256": "599b0f0b11913f3bc62148870ce675269509e41644701971cf3271c0c1316df5"
+      },
+      "replacement": "src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_secret_store_native.py",
+      "rationale": "Current TUI retains the source behavior in its refactored owner; original source-base delta and current implementation inspected.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/bootstrap.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "d1cffc93cca8edb40f9eac772a310a02e03a6fd69b2db10c8fb44be885ff6409",
+        "source_hunks": [
+          "@@ -5,6 +5,39 @@ from __future__ import annotations",
+          "@@ -27,6 +60,37 @@ def main() -> None:"
+        ],
+        "current_sha256": "41fb8ad60ee4fb725bbc2efb2a4aa5bb456a1f3ce892c3c37944d8ba95829614"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    },
+    {
+      "source": "mcp-testrun",
+      "commit": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "path": "src/cadrumo/entrypoints/runtime/main.py",
+      "status": "already present",
+      "evidence": {
+        "source_delta_sha256": "850c7b9051285e72d43265e426bf47f0983f36e65864cffc86a170310838bc0c",
+        "source_hunks": [
+          "@@ -5,12 +5,14 @@ from __future__ import annotations",
+          "@@ -24,9 +26,54 @@ from ...adapters.local_runtime.windows_login import windows_login_inventory",
+          "@@ -53,6 +100,15 @@ def run(arguments: list[str] | None = None) -> int:",
+          "@@ -66,13 +122,16 @@ def run(arguments: list[str] | None = None) -> int:",
+          "@@ -80,7 +139,8 @@ def run(arguments: list[str] | None = None) -> int:"
+        ],
+        "current_sha256": "294112e06650fb79a3e108606666d297f01fc1dee7dbd9767e6289d068a5b2f6"
+      },
+      "replacement": "src/cadrumo/core/startup_phase_log.py",
+      "rationale": "Current bootstrap/main/server use canonical startup_phase/log_startup_phase diagnostics and configured runtime logging; managed-stop setup and manager arguments were removed by the accepted lifecycle decision.",
+      "verification": "Canonical Ruff/format, compile, diff-check and ty for Linux/Windows/macOS passed. Focused portable cohorts: 120 passed; 130 passed with 31 host skips; 79 passed. Native Darwin containment and peer tests: 11 passed in 103.73s. Native primitive/KDF cohort passed. Protected Keychain positive proof remains unavailable in the locked OS context."
+    }
+  ],
+  "current_adaptations": [
+    {
+      "path": "src/cadrumo/adapters/local_runtime/worker_transport.py",
+      "status": "incorporated",
+      "evidence": "NativeMac first run failed before containment because current defining worker_endpoint permitted win32/linux only. Original snapshots introduced Mac scope but did not extend this current refactored transport dispatcher.",
+      "replacement": "worker_endpoint now permits darwin through the same PosixRuntimeEndpoint and canonical configured private namespace; physical-storage identity binding retained.",
+      "sha256": "39b13a7d6f4794e498b7e2bdf7a2e14f75d9986756a74ea4a52a0a5ea44e93da",
+      "verification": "Root-owned native Darwin containment and peer tests: 11 passed in 103.73s after a verified overlay. Portable regression: 79 passed. ty passed for all three platforms."
+    },
+    {
+      "path": "src/cadrumo/adapters/local_runtime/worker_environment.py",
+      "status": "incorporated",
+      "evidence": "Exception-only native Mac probe: AuthorityDescriptorUnavailableError in authority.py:bundled_authority_descriptor_path at first worker graph preparation. Parent had CADRUMO_AUTHORITY_ROOT; POSIX sanitized launch and guardian stripped this separate product-data location.",
+      "replacement": "worker_path_environment_names canonical shared path whitelist used by profile launch,Macjobvalidator,Macguardian,Linuxguardian. Keeps explicit configured publication root without ambient credentials or loader variables.",
+      "sha256": "0b16cf7bbc50621a983adca781c729f0532d13f600b8d0416034f8af52f52602",
+      "verification": "Root-owned native Darwin containment and peer tests: 11 passed in 103.73s after a verified overlay. Portable regression: 79 passed. ty passed for all three platforms."
+    }
+  ]
+}

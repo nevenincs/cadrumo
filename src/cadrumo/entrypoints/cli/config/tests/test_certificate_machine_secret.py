@@ -6,7 +6,7 @@ import pytest
 from pydantic import SecretStr
 from pydantic_core import ValidationError
 
-from ..._command_parameter_contracts import OptionSpec
+from ...command_parameter_contracts import OptionSpec
 from .._auth_command_specs import AUTH_COMMAND_SPECS
 from ..certificate import CertificateSecretSetSecrets
 

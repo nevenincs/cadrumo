@@ -76,7 +76,7 @@ from ._models import (
 
 if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
-    from cadrumo.entrypoints.cli._command_parameter_contracts import ParameterSpec
+    from cadrumo.entrypoints.cli.command_parameter_contracts import ParameterSpec
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -1086,7 +1086,7 @@ def _append_recovery_parameter(
     parameter: ParameterSpec, values: dict[str, object], consumed: set[str], arguments: list[str]
 ) -> None:
     """Append recovery parameter."""
-    from cadrumo.entrypoints.cli._command_parameter_contracts import OptionSpec
+    from cadrumo.entrypoints.cli.command_parameter_contracts import OptionSpec
 
     name = parameter.name
     if name not in values:

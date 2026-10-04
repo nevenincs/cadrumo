@@ -10,7 +10,6 @@ import pytest
 from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_import import (
-    import_ledger_source,
     import_ledger_transactions,
     persist_prepared_ledger_source_import,
     prepare_ledger_source_import,
@@ -22,6 +21,7 @@ from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )
 from .ledger_action_persistence_support import (
+    import_ledger_source,
     parsed_import_transaction,
 )
 from .ledger_action_persistence_support import (

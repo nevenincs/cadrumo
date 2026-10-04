@@ -184,6 +184,7 @@ def test_normalizer_converts_gbp_to_eur_via_provider() -> None:
     result = service.normalize(MonetaryAmount(amount=Decimal("1000.00"), currency="GBP"), date(2025, 3, 14))
     assert result.status is CurrencyNormalizationStatus.NORMALIZED
     assert result.eur_amount == (Decimal("1000.00") * (Decimal("1") / Decimal("0.84183"))).quantize(Decimal("0.01"))
+    assert result.eur_amount is not None
     assert result.eur_amount > Decimal("1000.00")
     assert result.rate_observation_date == date(2025, 3, 14)
 

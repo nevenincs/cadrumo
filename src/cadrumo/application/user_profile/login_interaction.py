@@ -7,13 +7,11 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...core.profile_discovery import ProfileSummaryOutcome
-from .login_session import ProfileLoginOutcome, login_profile, resolve_login_target
+from .login_session import resolve_login_target
 from .profile_summary import ProfileSummaryInventory, summary_inventory
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,14 +20,6 @@ class ProfileLoginChoice:
 
     profile_id: str
     label: str
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileLoginAttempt:
-    """A completed login operation represented without frontend exceptions."""
-
-    outcome: ProfileLoginOutcome | None = None
-    refusal: str | None = None
 
 
 class ProfileLoginInventoryState(StrEnum):
@@ -189,41 +179,10 @@ def observe_profile_login_inventory(
     )
 
 
-def attempt_profile_login(
-    profile_id: str,
-    passphrase: str,
-    *,
-    profile_decode_context: ProfileDecodeContext,
-) -> ProfileLoginAttempt:
-    """Unlock a chosen profile under the caller's pinned schema context.
-
-    The credential screen is deliberately frontend-neutral, so it receives the
-    decode context that the workflow owner already pinned.  Opening an
-    authority here would allow the screen to authenticate against a different
-    generation from the surrounding bootstrap/session composition.
-    """
-    from ...core.errors.error_codes import resolve_error_message
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from .authentication import ProfileAuthenticationRefusedError
-    from .login_session import ProfileLoginThrottledError
-
-    try:
-        outcome = login_profile(
-            name=profile_id,
-            passphrase_callback=lambda: passphrase,
-            profile_decode_context=profile_decode_context,
-        )
-    except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
-        return ProfileLoginAttempt(refusal=resolve_error_message(refusal))
-    return ProfileLoginAttempt(outcome=outcome)
-
-
 __all__ = [
-    "ProfileLoginAttempt",
     "ProfileLoginChoice",
     "ProfileLoginInventoryState",
     "ProfileLoginInventoryV1",
-    "attempt_profile_login",
     "observe_profile_login_inventory",
     "preselected_profile_login_id",
     "profile_login_choices",

@@ -27,6 +27,7 @@ from .automation_records import (
 
 
 def changed_control_model[T: BaseModel](value: T, **changes: object) -> T:
+    """Validate changed custody facts through the original typed model."""
     model_type = value.__class__
     return model_type.model_validate({**{name: getattr(value, name) for name in model_type.model_fields}, **changes})
 

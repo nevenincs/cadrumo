@@ -23,6 +23,12 @@ flag probe cannot recognise the JSON request (e.g. ``--format`` with no
 value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
+The text-mode domain-refusal companion lives in
+:mod:`cadrumo.entrypoints.cli.tests.test_runtime_ledger_prefix_refusals_native`.
+It enrolls and admits a real private profile before requesting the malformed
+ledger prefix, so its human-rendering assertions reach the registered boundary.
+The session-only fixture here cannot establish that runtime admission.
+
 Real-behavior only: the real ``cadrumo`` app object through
 the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback
@@ -139,28 +145,6 @@ def test_json_boundary_refusal_emits_shared_spine_document() -> None:
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     context = _object_member(error, "context")
     assert context["option"] == "--reason"
-
-
-def test_text_mode_domain_refusal_renders_for_a_human_not_as_json() -> None:
-    """Anti-regression: without ``--format json`` the human rendering survives.
-
-    This case was asserting ``Usage:`` on a DOMAIN refusal. A malformed
-    transaction id is rejected by the ledger boundary, not by argument parsing,
-    so no click ``UsageError`` is ever raised and there is no usage block for
-    anything to print -- the assertion described a rendering this input has no
-    reason to produce.
-
-    What the case is actually guarding is that text mode stays text: the
-    operator gets the localised refusal and its structured facts rather than a
-    JSON document. That is asserted here on its own terms, and the usage block
-    is asserted below on an input that genuinely provokes one.
-    """
-    result = invoke_cached_cli(["app", "ledger", "view", "not-hex!"])
-    assert result.exit_code == 2, result.output
-    assert not result.output.lstrip().startswith("{"), result.output
-    assert "not-hex!" in result.output, "the refusal must echo the value the operator typed"
-    assert "Prefix:" in result.output, "the refusal's structured facts render for a human too"
-    assert 'action.failed_condition_id: "cli.ledger.transaction_id.resolves"' in result.output
 
 
 def test_text_mode_usage_error_keeps_its_usage_block() -> None:

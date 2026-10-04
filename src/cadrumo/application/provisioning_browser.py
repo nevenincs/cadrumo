@@ -100,8 +100,8 @@ def playwright_browsers_root(
 
     Uses an explicit ``cache_root`` when supplied. Otherwise the Cadrumo
     ``CADRUMO_PLAYWRIGHT_BROWSERS_DIR`` setting controls the managed cache,
-    rooted under the configured storage root by default. ``env`` and ``settings`` are injectable so precedence can be checked
-    without changing ambient process state.
+    rooted under the configured storage root by default. Injectable ``env`` and
+    ``settings`` allow precedence checks without changing ambient process state.
     """
     if cache_root is not None:
         return cache_root

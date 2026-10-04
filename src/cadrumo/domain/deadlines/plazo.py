@@ -1,12 +1,9 @@
 """Registry lookup for filing window close dates (plazo voluntario).
 
-Provides a profile-free function to ask "when does the plazo voluntario
-close for this modelo + filing year + period?" directly from the registry
-deadline windows.  The result feeds the pre-calculation extemporaneidad
-surface in :mod:`cadrumo.application.modelo.work_plazo`.  Post-calculation
-consumers that know resultado or Modelo 210 tipo-renta context call the sibling
-``resolve_filing_window`` entry point; both paths therefore share the same
-canonical matcher.
+Provides one profile-free matcher for the modelo, filing year, period and
+optional resultado or Modelo 210 tipo-renta context. The typed window retains
+both opening and closing dates and feeds calendar and extemporaneidad
+projections through ``resolve_filing_window``.
 
 Core types:
 :class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`.
@@ -29,63 +26,6 @@ if TYPE_CHECKING:
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from .engine import DeadlineWindowProjection
-
-
-def resolve_filing_closes_on(
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    *,
-    authority: PinnedAuthorityOperation | None = None,
-) -> date | None:
-    """Return the close date of the plazo voluntario for a modelo+year+period.
-
-    Queries the validated registry authority for ``filing_year`` through
-    :func:`resolve_filing_window` and returns the ``closes_on`` of its unique
-    unqualified match. This function deliberately accepts no resultado or
-    Modelo 210 tipo-renta context: it is the pre-calculation convenience, while
-    post-calculation callers use ``resolve_filing_window`` directly rather than
-    owning another matcher.
-
-    The resolved value belongs to the matching
-    :class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`.
-
-    Matching rule: the registry window period must carry the same
-    filing year and bare registry period token as the supplied ``WorkUnit``
-    period (e.g. ``"1T"``, ``"0A"``, ``"01"``).
-
-    Annual Modelo 100 uses its tax year as the registry key even though
-    its normal campaign runs in the following calendar year. A close date
-    for tax year 2024 can therefore fall in 2025. This function never
-    borrows a following-year or future-year window when an exact match is
-    absent.
-
-    Returns ``None`` when no registry window exactly matches the
-    combination. The modelo might have no deadline window for that year,
-    or its period token might not match any window. ``None`` means the
-    deadline data is unavailable; callers continue without a close date.
-
-    A modelo absent from the registry is NOT one of those causes and REFUSES
-    with :exc:`RegistrySnapshotError` rather than returning ``None``. Production
-    reaches this through the ``Modelo`` enum, so an unregistered id is a caller
-    bug or unvalidated external input; returning ``None`` would hand that caller
-    "no deadline", and an extemporaneidad computed from it would silently drop
-    the recargo.
-
-    Args:
-        modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
-            (e.g. ``"130"``, ``"303"``).
-        filing_year: Tax year for which the work unit was created.
-        period: ``WorkUnit`` bare registry period token (e.g. ``"1T"``,
-            ``"0A"``, ``"01"``).
-        authority: Optional generation-pinned authority operation.
-
-    Returns:
-        The :class:`~datetime.date` on which the filing window closes,
-        or ``None`` if not found.
-    """
-    window = resolve_filing_window(modelo, filing_year, period, authority=authority)
-    return None if window is None else window.closes_on
 
 
 def resolve_filing_window(
@@ -377,4 +317,4 @@ def _select_unique_projected_window(
     return next(iter(matches))
 
 
-__all__ = ["resolve_filing_closes_on", "resolve_filing_window"]
+__all__ = ["resolve_filing_window"]

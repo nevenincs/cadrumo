@@ -209,7 +209,7 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](
     declares (``extra="forbid"``). A payload larger than
     :data:`_MAX_SECRETS_BYTES`, invalid UTF-8, non-object JSON, malformed
     JSON, a repeated object key at any nesting depth (see
-    :func:`_reject_duplicate_object_keys`), or a missing/unexpected field
+    :func:`~cadrumo.core.hashing.reject_duplicate_json_members`), or a missing/unexpected field
     refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
     are never echoed or logged.
     """

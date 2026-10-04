@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from .financial_contracts import _SCHEMA_VERSION, FinancialChildReceipt
 from .financial_drive import _drive_financial_journey
-from .financial_navigation import _open_destination, _open_work, _work_ids_by_period
+from .financial_navigation import _open_destination, _work_ids_by_period, open_work
 from .financial_transactions import _transaction_csv, _transaction_row_ids
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -108,7 +108,7 @@ def run_financial_child(
             row_key=work_unit_ids["4T"],
         )
         await wait_for_workbench(pilot)
-        await _open_work(pilot, work_unit_id=work_unit_ids["0A"])
+        await open_work(pilot, work_unit_id=work_unit_ids["0A"])
         observed.append("financial-work-and-links-reopened")
         pilot.app.exit()
 

@@ -203,6 +203,10 @@ if TYPE_CHECKING:
 # which is what keeps this repository's zero-artifact posture intact.
 pytest_plugins = ("dev.ci_reports",)
 
+# Runtime composition fixtures belong to the repository host. Harness tests
+# consume pytest injection without importing entrypoint composition outward.
+compose_runtime_ports = import_module("cadrumo.conftest").compose_runtime_ports
+
 register_collection_storage_root_cleanup(collection_storage_root())
 
 # A publish into the checkout's live authority during the run would swap the

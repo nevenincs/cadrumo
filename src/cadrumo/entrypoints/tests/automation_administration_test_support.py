@@ -1,0 +1,98 @@
+"""In-process automation administration for registered-executor tests.
+
+The product hands registered automation executors a worker-owned phase proxy.
+These tests exercise the executors against one real encrypted administration
+service instead, dispatching its blocking phases off the event loop.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from uuid import UUID
+
+from pydantic import SecretBytes
+
+from ...application.user_profile.automation_administration_service import AutomationAdministrationService
+from ...application.user_profile.automation_approval_session import ApprovalSession
+from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from ...application.user_profile.automation_enrollment import (
+    AutomationInventory,
+    EnrollmentProposal,
+    EnrollmentTransition,
+)
+from ...application.user_profile.automation_execution import AutomationApprovalExecution
+from ...core.identity.digest import ContentDigest
+
+
+class _ThreadedAutomationApproval:
+    """Dispatch the one existing ApprovalSession's blocking phases."""
+
+    __slots__ = ("_session",)
+
+    def __init__(self, session: ApprovalSession) -> None:
+        """Keep the caller-created session until an explicit close."""
+        self._session = session
+
+    async def prepare(self, password: SecretBytes) -> None:
+        """Prove the supplied password through the existing session."""
+        await asyncio.to_thread(self._session.prepare, password)
+
+    async def commit_review(self) -> EnrollmentTransition | None:
+        """Run the session's reviewed publication phase."""
+        return await asyncio.to_thread(self._session.commit_review)
+
+    async def inspect_recipient(self) -> bool:
+        """Ask the original recipient whether a candidate is needed."""
+        return await asyncio.to_thread(self._session.inspect_recipient)
+
+    async def publish_candidate(self) -> EnrollmentTransition:
+        """Publish the inactive candidate through the canonical service."""
+        return await asyncio.to_thread(self._session.publish_candidate)
+
+    async def deliver_and_verify(self) -> None:
+        """Complete protected recipient delivery and possession proof."""
+        await asyncio.to_thread(self._session.deliver_and_verify)
+
+    async def activate(self) -> EnrollmentTransition:
+        """Activate only the recipient-proven candidate."""
+        return await asyncio.to_thread(self._session.activate)
+
+    async def close(self) -> None:
+        """Drop every proof and delivery reference after phase settlement."""
+        await asyncio.to_thread(self._session.close)
+
+
+class ThreadedAutomationAdministration:
+    """Run the canonical synchronous service off the operation event loop."""
+
+    __slots__ = ("_service",)
+
+    def __init__(self, service: AutomationAdministrationService) -> None:
+        """Bind one real application service; no approval starts here."""
+        self._service = service
+
+    async def require_profile(self, profile_id: UUID) -> None:
+        """Check the service's current exact-profile binding off loop."""
+
+        def check() -> None:
+            with self._service.owner.administration_guard():
+                if self._service.owner.facts().profile.binding.profile_id != profile_id:
+                    raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+
+        await asyncio.to_thread(check)
+
+    async def request(self, request_id: UUID, proposal: EnrollmentProposal) -> EnrollmentTransition:
+        """Run the canonical request publication without duplicating policy."""
+        return await asyncio.to_thread(self._service.request, request_id, proposal)
+
+    async def decline(self, request_id: UUID, *, review_digest: ContentDigest) -> EnrollmentTransition:
+        """Run the canonical decline publication off loop."""
+        return await asyncio.to_thread(self._service.decline, request_id, review_digest=review_digest)
+
+    async def inventory(self) -> AutomationInventory:
+        """Read protected inventory through the existing service."""
+        return await asyncio.to_thread(self._service.inventory)
+
+    def approval(self, request_id: UUID, *, review_digest: ContentDigest) -> AutomationApprovalExecution:
+        """Construct the caller-owned session before any cancellable phase."""
+        return _ThreadedAutomationApproval(self._service.approval(request_id, review_digest=review_digest))

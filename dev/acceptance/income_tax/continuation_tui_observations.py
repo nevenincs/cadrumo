@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .financial_lifecycle import _m130_expected, _parse_m130_artifact
-from .financial_navigation import _open_destination, _open_work, _work_ids_by_period
+from .financial_navigation import _open_destination, _work_ids_by_period, open_work
 from .financial_transactions import _transaction_row_ids
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -63,7 +63,7 @@ async def _export_visible_m130(
     *, pilot: Any, export_path: Path, work_unit_id: str, year: int, period: str
 ) -> dict[str, str]:
     """Export an already-filed quarterly work through its workbench's export dialog."""
-    await _open_work(pilot, work_unit_id=work_unit_id)
+    await open_work(pilot, work_unit_id=work_unit_id)
     await open_workbench_export(pilot, output_path=str(export_path))
     contract = installed_lifecycle_contract(
         profile_selection_id="#manager-status",

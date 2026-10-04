@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from .._command_parameter_contracts import ArgumentSpec, OptionSpec
-from .._command_shared_contracts import (
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
     TEXT_VALUE,
     DeferredTarget,
     LazyBinding,

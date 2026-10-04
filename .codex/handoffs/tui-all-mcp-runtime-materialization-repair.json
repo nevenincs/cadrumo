@@ -1,0 +1,43 @@
+{
+  "authorization": "Root approved narrow production thaw and precise ownership; S05 verification corrective work.",
+  "behavior": "Fresh application-owned derived RuntimeSockets namespace is created0700 before other derived targets; preexisting and explicit override namespaces preserved for native ownership/permission refusal. Explicit missing override still refuses before default creation. No endpoint/auth/adversarial guard change.",
+  "source_hashes": {
+    "src/cadrumo/core/storage_materialization.py": {
+      "head_sha256": "1deb63a8feab15c53c3de6b373f997ae8358af7223b382d9a38c5d87dc01b551",
+      "current_sha256": "5fba91f2283d5bb01ec6e32a2f0d37dee263e8b4895ba476690e22e69acd5447"
+    },
+    "src/cadrumo/core/tests/test_ensure_storage_tree.py": {
+      "head_sha256": "f27f499b0c1c27c3c8f1d77abdf431ae28c6e27a17e1b6670df50fed0503bdb0",
+      "current_sha256": "06be040eda3e540108459ad53b4cc6aa34aff464efa1dddfe7ce57f464270a93"
+    },
+    "src/cadrumo/adapters/local_runtime/tests/test_posix.py": {
+      "head_sha256": "497fa5121c28fe5740a7645a3bc7939b31c89ffc0ab7859f857e05c58d51df0c",
+      "current_sha256": "2769d79614366af97db0bdccd50868b31ec034e649cada1c9df1f3f07a21408d"
+    }
+  },
+  "verification": {
+    "static": "Ruff --fix/check, format and ty passed three files.",
+    "portable_command": [
+      "uv",
+      "run",
+      "--no-sync",
+      "pytest",
+      "-v",
+      "-n0",
+      "src/cadrumo/core/tests/test_ensure_storage_tree.py",
+      "src/cadrumo/core/tests/test_storage_materialisation_parity.py"
+    ],
+    "portable_result": "22 passed,1POSIX permission-contract skip onWindows; exit0",
+    "portable_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T194706.817282Z-pytest-89264-bf2505ab/run.log",
+    "native_tests": [
+      "test_materialized_storage_admits_a_real_private_endpoint",
+      "test_materialization_preserves_an_insecure_namespace_for_native_refusal[False]",
+      "test_materialization_preserves_an_insecure_namespace_for_native_refusal[True]"
+    ],
+    "native_result": "3 passed in 1.06s on Darwin arm64 with fresh installed wheel; no skips",
+    "native_log": ".logs/tui-all-mcp-native-installed-final-retry.txt",
+    "native_run": "20261003T200550.490012Z-pytest-69876-59f5fed3",
+    "wheel_sha256": "229e8a5e54639415c38fac8c1a4a4253b670efa10960eeb45addeceb021673ae"
+  },
+  "existing_serial_run_scope": "Initial 568-node cohort began185921UTC before this production correction; its evidence applies to then-loaded source. Fresh portable core result above covers new creation/order behavior onWindows; POSIX permission and endpoint claims require native execution, never inferred from Windows passes."
+}

@@ -14,7 +14,6 @@ from ..profile_preconditions import (
     ProfileSelectionFailure,
     former_product_state_verdict,
     inspect_active_profile_precondition,
-    inspect_filing_taxpayer_identity_precondition,
     profile_selection_failure_verdict,
     profile_session_failure_verdict,
 )
@@ -39,10 +38,6 @@ _EXPECTED_SCENARIOS: dict[str, _ExpectedOutcome] = {
     "active.registered_unselected": _ExpectedOutcome(
         "profile.active.available",
         "operator.profile.login",
-    ),
-    "filing.tax_id_undeclared": _ExpectedOutcome(
-        "taxpayer.identity.tax_id.declared",
-        "operator.profile.edit",
     ),
     "selection.explicit_blank": _ExpectedOutcome(
         "profile.selection.nonblank",
@@ -122,17 +117,11 @@ def _observed_scenarios() -> dict[str, PreconditionVerdict]:
         active_profile_present=False,
         registered_profile_count=2,
     )
-    filing = inspect_filing_taxpayer_identity_precondition(
-        declared_tax_id="",
-        profile_name="profile-uuid",
-    )
     assert none_registered is not None
     assert registered_unselected is not None
-    assert filing is not None
     return {
         "active.none_registered": none_registered,
         "active.registered_unselected": registered_unselected,
-        "filing.tax_id_undeclared": filing,
         "selection.explicit_blank": profile_selection_failure_verdict(
             ProfileSelectionFailure.BLANK,
             requested_profile="",
@@ -213,18 +202,11 @@ def test_repair_recovery_requires_confirmation_but_resolves_the_torn_pointer() -
     assert verdict.missing_argument_names == ("yes",)
 
 
-def test_satisfied_profile_and_tax_identity_preconditions_do_not_refuse() -> None:
+def test_satisfied_profile_precondition_does_not_refuse() -> None:
     assert (
         inspect_active_profile_precondition(
             active_profile_present=True,
             registered_profile_count=1,
-        )
-        is None
-    )
-    assert (
-        inspect_filing_taxpayer_identity_precondition(
-            declared_tax_id="12345678Z",
-            profile_name="profile-uuid",
         )
         is None
     )

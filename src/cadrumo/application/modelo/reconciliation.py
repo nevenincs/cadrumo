@@ -1,6 +1,6 @@
 """Modelo reconciliation: compare work-unit state and computed result against evidence.
 
-``modelo_reconcile`` accepts a modelo work unit and either an AEAT justificante
+``prepare_modelo_reconcile`` accepts a modelo work unit and either an AEAT justificante
 PDF or a filed declaración PDF, then produces a :class:`ModeloReconciliationReport`.
 
 For a justificante, the report records whether the work unit's modelo, period,
@@ -28,7 +28,7 @@ degrading to header-only comparison.
 The path-based service is local-only: it never contacts AEAT and never invokes
 ``require_live_read`` — the computed result is read from the already-persisted
 :class:`~CalculationRevision`, never a fresh calculation.
-Authenticated live pulls use ``modelo_reconcile_bytes`` after storing captured
+Authenticated live pulls use ``prepare_modelo_reconcile_bytes`` after storing captured
 justificante bytes in secure storage.
 
 Both paths persist their outcome twice over, in ONE unit of work: a
@@ -193,7 +193,7 @@ def _resolve_work_unit_for_reconciliation(
 
 
 class ModeloReconciliationCommand(BaseModel):
-    """Strict input contract for ``modelo_reconcile``.
+    """Strict input contract for ``prepare_modelo_reconcile``.
 
     ``source_path`` points to the operator-supplied evidence file and
     ``source_kind`` records how that file must be parsed. Justificante PDFs are
@@ -235,7 +235,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
 
 
 class ModeloReconciliationReport(BaseModel):
-    """Outcome of ``modelo_reconcile``.
+    """Outcome of ``prepare_modelo_reconcile``.
 
     The verdict summarises the comparison at the work-unit level. The diff list
     enumerates the disagreements — header-field (modelo, period, ``ejercicio``,
@@ -350,12 +350,12 @@ def _require_declaration_enrolled_modelo(
     return work_unit
 
 
-def modelo_reconcile(
+def prepare_modelo_reconcile(
     command: ModeloReconciliationCommand,
     *,
     operation: PinnedAuthorityOperation,
-) -> ModeloReconciliationReport:
-    """Reconcile a modelo work unit against a justificante or declaración PDF file.
+) -> PreparedModeloReconciliation:
+    """Parse and compare a local PDF without writing the reconciliation.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
 
@@ -364,30 +364,18 @@ def modelo_reconcile(
     against the persisted revision's computed result where the revision declares
     ``reconciliation_total_casilla_ids``.
 
-    For a declaración, consumes the parser port's structural observation and —
-    for modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` —
+    For a declaración, consumes the parser port's structural observation and,
+    for modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`,
     compares every registry-reconciled casilla against the persisted revision's
     ``casilla_values``, surfacing each divergence as a typed ``casilla`` diff. A
     modelo outside that set raises
     :class:`ReconciliationDeclaracionSourceUnsupportedError`.
 
-    Emits ``MODELO_RECONCILED`` into the bucket-event-history catalogue.
-    The verdict is included in the event payload so downstream
-    auditors can replay the reconciliation timeline without
-    re-parsing the evidence.
-
-    Returns:
-        A :class:`ModeloReconciliationReport`.
+    Persisting the returned :class:`PreparedModeloReconciliation` emits
+    ``MODELO_RECONCILED`` into the bucket-event-history catalogue, with the
+    verdict in the event payload so downstream auditors can replay the
+    reconciliation timeline without re-parsing the evidence.
     """
-    return prepare_modelo_reconcile(command, operation=operation).persist()
-
-
-def prepare_modelo_reconcile(
-    command: ModeloReconciliationCommand,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> PreparedModeloReconciliation:
-    """Parse and compare a local PDF without writing the reconciliation."""
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         catalogue, bucket_id = _active_reconciliation_catalogue()
         work_unit = _require_declaration_enrolled_modelo(
@@ -441,34 +429,6 @@ def prepare_modelo_reconcile(
     )
 
 
-def modelo_reconcile_bytes(
-    command: ModeloReconciliationBytesCommand,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> ModeloReconciliationReport:
-    """Reconcile secure-storage evidence bytes without materialising a plaintext file.
-
-    Declaración reconciliation is not offered on this bytes path, but not
-    because a filed declaración's bytes cannot exist here: the filed-history
-    sweep (:mod:`application.live`) already captures filed declaración
-    observations, complete with per-casilla values and their own artefact
-    bytes, into secure storage. What this command still lacks is a way to
-    reconcile THOSE bytes: it accepts only justificante-shaped evidence a
-    caller uploads. A pulled declaración never needs uploading in the first
-    place — its per-casilla values are already reconciled against the
-    taxpayer's own local calculation by
-    :func:`application.modelo.pulled_filing_reconcile.pulled_filing_divergence_findings`, which reads
-    both sides out of the same bucket the sweep already populated. Use
-    :func:`modelo_reconcile` with a local declaración PDF file for
-    casilla-level reconcile of a declaración held only on disk.
-
-    Returns:
-        The :class:`ModeloReconciliationReport` comparing the parsed
-        justificante metadata to the work unit and active profile.
-    """
-    return prepare_modelo_reconcile_bytes(command, operation=operation).persist()
-
-
 def prepare_modelo_reconcile_bytes(
     command: ModeloReconciliationBytesCommand,
     *,
@@ -497,26 +457,6 @@ def prepare_modelo_reconcile_bytes(
         justificante=justificante,
         operation=operation,
     )
-
-
-def reconcile_parsed_justificante(
-    *,
-    work_unit: WorkUnit,
-    source_kind: ModeloReconciliationEvidenceKind,
-    source_ref: str,
-    actor: str,
-    justificante: Justificante,
-    operation: PinnedAuthorityOperation,
-) -> ModeloReconciliationReport:
-    """Reconcile parsed justificante evidence with the selected work unit."""
-    return prepare_parsed_justificante(
-        work_unit=work_unit,
-        source_kind=source_kind,
-        source_ref=source_ref,
-        actor=actor,
-        justificante=justificante,
-        operation=operation,
-    ).persist()
 
 
 def prepare_parsed_justificante(
@@ -567,26 +507,6 @@ def prepare_parsed_justificante(
         advisories=advisories,
         narrative_subject=f"modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'}",
     )
-
-
-def reconcile_parsed_declaracion(
-    *,
-    work_unit: WorkUnit,
-    source_kind: ModeloReconciliationEvidenceKind,
-    source_ref: str,
-    actor: str,
-    declaracion: ReconciliationDeclaracionObservation,
-    operation: PinnedAuthorityOperation,
-) -> ModeloReconciliationReport:
-    """Reconcile parsed declaration evidence with the selected work unit."""
-    return prepare_parsed_declaracion(
-        work_unit=work_unit,
-        source_kind=source_kind,
-        source_ref=source_ref,
-        actor=actor,
-        declaracion=declaracion,
-        operation=operation,
-    ).persist()
 
 
 def prepare_parsed_declaracion(
@@ -1362,9 +1282,5 @@ __all__ = [
     "ModeloReconciliationVerdict",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
-    "modelo_reconcile",
-    "modelo_reconcile_bytes",
-    "reconcile_parsed_declaracion",
-    "reconcile_parsed_justificante",
     "reconcile_receipt_totals",
 ]

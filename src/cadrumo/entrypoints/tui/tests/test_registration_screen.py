@@ -38,8 +38,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 
 from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.login_interaction import attempt_profile_login
-from ....application.user_profile.login_session import logout_active_profile
+from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
+from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.recovery_custody import profile_recovery_status
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n.render import tr
@@ -242,10 +242,12 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         profile_id = str(app.outcome.profile_id)
         _, profile_decode_context = _profile_contexts_for_test()
         logout_active_profile()
-        authenticated = attempt_profile_login(profile_id, candidate, profile_decode_context=profile_decode_context)
-        assert authenticated.refusal is None
-        assert authenticated.outcome is not None
-        assert authenticated.outcome.bucket_id == profile_id
+        authenticated = login_profile(
+            name=profile_id,
+            passphrase_callback=lambda: candidate,
+            profile_decode_context=profile_decode_context,
+        )
+        assert authenticated.bucket_id == profile_id
         logout_active_profile()
 
         counterpart = unicodedata.normalize(
@@ -253,9 +255,12 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
             candidate,
         )
         wrong_password = counterpart if counterpart != candidate else "a-different-secret"
-        refused = attempt_profile_login(profile_id, wrong_password, profile_decode_context=profile_decode_context)
-        assert refused.outcome is None
-        assert refused.refusal
+        with pytest.raises(ProfileAuthenticationRefusedError):
+            login_profile(
+                name=profile_id,
+                passphrase_callback=lambda: wrong_password,
+                profile_decode_context=profile_decode_context,
+            )
 
 
 @pytest.mark.asyncio

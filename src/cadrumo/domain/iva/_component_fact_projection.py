@@ -22,7 +22,7 @@ if TYPE_CHECKING:
         IvaCuotaSettlementDefinition,
     )
 
-_CATEGORY_PROJECTION_NAMES = frozenset(
+CATEGORY_PROJECTION_NAMES = frozenset(
     {
         "cuota_less_m303",
         "m303_base_out_of_scope",
@@ -41,7 +41,7 @@ _RETENCION_ROLE_ORDER_KEY = "retencion_role.order"
 _KIND_APPLICABILITY_ORDER_KEY = "kind_applicability.order"
 
 
-def _resolve_component_catalogue_entries(
+def resolve_component_catalogue_entries(
     *,
     effective_date: date,
     authority: GovernedFactSource,
@@ -60,7 +60,7 @@ def _resolve_component_catalogue_entries(
     return dict(iva_mapping_entries(resolved, subject="IVA component mapping"))
 
 
-def _cuota_settlement_catalogue_from_entries(
+def cuota_settlement_catalogue_from_entries(
     entries: Mapping[str, str],
 ) -> IvaCuotaSettlementCatalogue:
     """Project the explicit cuota-settlement membership in fact 0084."""
@@ -137,7 +137,7 @@ def _require_no_settlement_membership(
         )
 
 
-def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
+def ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
     """Return the validated row-key order declared by fact 0084."""
     order_text = entries.get("catalogue_order")
     if order_text is None or not order_text.strip():
@@ -148,7 +148,7 @@ def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
     return ordered_keys
 
 
-def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaComponentVocabulary:
+def component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaComponentVocabulary:
     """Project the four explicit component-axis memberships from fact 0084."""
     from .components import (
         IvaComponentPresence,
@@ -156,7 +156,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
         IvaKindApplicability,
         IvaRetencionExpectation,
         IvaRetencionRole,
-        _component_axis_membership,
+        component_axis_membership,
     )
 
     observed: dict[str, set[str]] = {
@@ -167,7 +167,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
         "recargo": set(),
         "retencion": set(),
     }
-    for row_key in _ordered_component_rows(entries):
+    for row_key in ordered_component_rows(entries):
         raw_row = entries.get(f"row.{row_key}")
         if raw_row is None:
             raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
@@ -184,7 +184,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
             observed[field].add(value.strip())
     return IvaComponentVocabulary(
         component_presence=frozenset(
-            _component_axis_membership(
+            component_axis_membership(
                 entries,
                 key=_COMPONENT_PRESENCE_ORDER_KEY,
                 token_type=IvaComponentPresence,
@@ -193,7 +193,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
             ),
         ),
         retencion_expectation=frozenset(
-            _component_axis_membership(
+            component_axis_membership(
                 entries,
                 key=_RETENCION_EXPECTATION_ORDER_KEY,
                 token_type=IvaRetencionExpectation,
@@ -202,7 +202,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
             ),
         ),
         retencion_role=frozenset(
-            _component_axis_membership(
+            component_axis_membership(
                 entries,
                 key=_RETENCION_ROLE_ORDER_KEY,
                 token_type=IvaRetencionRole,
@@ -211,7 +211,7 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
             ),
         ),
         kind_applicability=frozenset(
-            _component_axis_membership(
+            component_axis_membership(
                 entries,
                 key=_KIND_APPLICABILITY_ORDER_KEY,
                 token_type=IvaKindApplicability,

@@ -12,7 +12,7 @@ from cadrumo.core.storage_environment import storage_directory
 
 from ...command_execution import CommandResult, run_command
 from ..hashing import digest
-from ..verify import _verification_destination
+from ..verify import verification_destination
 
 PROBE = r"""
 import importlib, json, os, pathlib, subprocess, sys, tempfile
@@ -22,6 +22,13 @@ assert sys.flags.safe_path and sys.dont_write_bytecode
 assert all(pathlib.Path(p).resolve().is_relative_to(root) for p in sys.path)
 assert 'PYTHONHOME' not in os.environ and 'PYTHONPATH' not in os.environ
 assert 'VIRTUAL_ENV' not in os.environ
+windows_version = sys.getwindowsversion()
+assert windows_version.major >= 10, 'packaged host does not expose the supported Windows version'
+windows_version_observation = {
+    'reported': [windows_version.major, windows_version.minor, windows_version.build],
+    'platform_version': list(windows_version.platform_version),
+    'minimum_supported_major': 10,
+}
 modules = ['pydantic_core._pydantic_core', 'cryptography.hazmat.bindings._rust',
            'lxml.etree', 'PIL._imaging', 'pikepdf._core', 'pypdfium2',
            'win32api', 'pythoncom', 'win32com.shell.shell', 'rtoml', 'yaml', 'httpx', 'textual']
@@ -57,8 +64,63 @@ with tempfile.NamedTemporaryFile() as temporary:
     temporary.write(b'native interpreter verification')
 assert writes and all(pathlib.Path(p).resolve().is_relative_to(temporary_root) for p in writes)
 print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': sys.version, 'origins': origins,
-                  'child': json.loads(child), 'python_audit_writes': writes, 'user_root': str(user),
+                  'child': json.loads(child), 'windows_version': windows_version_observation,
+                  'python_audit_writes': writes, 'user_root': str(user),
                   'temporary_root': str(temporary_root), 'cache_root': str(cache_root)}))
+"""
+
+KDF_READY_PROBE = r"""
+import json, time
+from pathlib import Path
+from cadrumo.adapters.persistence.storage.custody import _kdf_process
+from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
+
+# No request (and therefore no password) is sent: enter proves the genuine ready
+# frame, neutral cwd, exact environment and assigned Windows Job before cleanup.
+with _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker:
+    payload = worker._ready_payload
+    neutral = worker._neutral_directory
+    assert payload is not None and neutral is not None
+    expected = sorted(_kdf_process.worker_environment(neutral_root=Path(neutral.name)))
+    assert payload['environment_keys'] == expected
+    process = worker._process
+    assert process is not None
+assert process.poll() is not None
+assert not Path(neutral.name).exists()
+
+# This extra option is valid to the real worker parser on Windows, but is not
+# part of its parent's fixed invocation. It must keep ordinary host projection
+# and fail the unchanged attestation instead of acquiring the exception.
+original = _kdf_process.worker_command
+original_launch = _kdf_process._launch_worker_process
+launched = []
+neutral_directories = []
+def record_launch(command, options):
+    process = original_launch(command, options)
+    launched.append(process)
+    return process
+def extended_command(**kwargs):
+    command, options = original(**kwargs)
+    neutral_directories.append(Path(options['cwd']))
+    return [*command, '--descriptor-bound', '16'], options
+_kdf_process.worker_command = extended_command
+_kdf_process._launch_worker_process = record_launch
+try:
+    with _SupervisedKdfWorker(deadline=time.monotonic() + 30):
+        raise AssertionError('noncanonical invocation passed KDF readiness')
+except ValueError as error:
+    assert str(error) == 'profile KDF worker environment is not allowlisted'
+else:
+    raise AssertionError('noncanonical invocation was not refused')
+finally:
+    _kdf_process.worker_command = original
+    _kdf_process._launch_worker_process = original_launch
+assert len(launched) == 1 and launched[0].poll() is not None
+assert len(neutral_directories) == 1 and not neutral_directories[0].exists()
+print(json.dumps({'ready_environment_keys': expected, 'worker_joined': True,
+                  'neutral_directory_removed': True, 'noncanonical_invocation_refused': True,
+                  'refused_worker_joined': True,
+                  'password_or_request_sent': False}))
 """
 
 
@@ -71,7 +133,7 @@ def verify(
     build_root = build_root or storage_directory("CADRUMO_NATIVE_BUILD_ROOT", "development/build/native")
     build_root = build_root.resolve()
     build_root.mkdir(parents=True, exist_ok=True)
-    destination = _verification_destination(destination, build_root)
+    destination = verification_destination(destination, build_root)
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(package, destination)
     cwd = destination.parent / (destination.name + " unrelated cwd")
@@ -138,6 +200,8 @@ def verify(
             ]
         )
         evidence["cli_version"] = cli.stdout.strip()
+        kdf_ready = run(["-c", KDF_READY_PROBE])
+        evidence["kdf_pre_secret_readiness"] = json.loads(kdf_ready.stdout)
     run(["-m", "json.tool", "--help"])
     script = cwd / "explicit script.py"
     script.write_text("import pikepdf; print('script passed')", encoding="utf-8")

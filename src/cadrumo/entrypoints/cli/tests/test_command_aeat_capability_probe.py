@@ -44,6 +44,7 @@ import dis
 import importlib
 import importlib.util
 import inspect
+import json
 import os
 import socket
 import sys
@@ -61,9 +62,9 @@ import pytest
 import cadrumo
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 from ....application.live.notification_ports import NotificationsSnapshot, NotificationType, RemoteNotification
 from ....application.live.notifications import NotificationsService
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings
 from ....core.external_constants import load_external_constants
 from ....core.period import Period, PeriodKind, accepted_filing_period_codes
@@ -74,7 +75,8 @@ from ....domain.user_profile.values import UserProfileFact
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from ...live_state_composition import compose_notifications_ports
 from .._command_runtime import build_command_app
-from .._command_shared_contracts import (
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import (
     BindingState,
     DeferredTarget,
     LazyBinding,
@@ -82,22 +84,20 @@ from .._command_shared_contracts import (
     SchemaState,
     TranslationKey,
 )
-from ..command_graph import CommandSpecGraph
 from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 from ._command_drive_support import (
-    PROBE_PROFILE_ID,
-    PROBE_PROFILE_LABEL,
     PROBE_PROFILE_TAX_ID,
     command_path,
     free_monitoring_tool,
     handler_code,
     is_runnable,
-    seed_probe_profile,
+    seeded_probe_runtime,
     synthetic_aeat_credentials,
     synthetic_argv,
 )
-from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
+from .cli_runner import invoke_uncached_typer_app
+from .portable_human_cli_runtime import PortableHumanCliRuntime
 
 __all__ = ["offline_guard_fixture"]
 
@@ -164,6 +164,7 @@ def _supplied_values(key: str) -> dict[str, str]:
     year = str(_filing_year())
     period = _quarterly_period_code()
     return {
+        "app_live_expedientes_pull": {"year": year},
         "app_live_filed_pull": {"modelos": _LIVE_MODELO, "year": year},
         "app_live_filed_pull_sources": {"modelo": _LIVE_MODELO, "year": year, "period": period},
         "app_live_iva_wallet_pull": {"year": year, "period": period},
@@ -183,8 +184,9 @@ def _supplied_values(key: str) -> dict[str, str]:
 _READ_NOTIFICATION_ID: Final = "1000000000000001"
 
 
-def _seed_read_notification() -> None:
+def _seed_read_notification(runtime: PortableHumanCliRuntime) -> None:
     """Record, through the real notifications service, a snapshot holding one row AEAT reports read."""
+    assert require_active_bucket_id() == str(runtime.profile_id)
     sede = str(load_external_constants().aeat.domains.sede)
     year = _filing_year()
     row = RemoteNotification(
@@ -204,15 +206,15 @@ def _seed_read_notification() -> None:
     snapshot = NotificationsSnapshot(rows=(row,), captured_at=datetime.now(UTC), source_url=sede)
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
-            bucket_id=PROBE_PROFILE_ID,
+            bucket_id=str(runtime.profile_id),
             snapshot=snapshot,
             authenticated_identity=PROBE_PROFILE_TAX_ID,
         )
 
 
-def _seed_live_work_unit() -> None:
+def _seed_live_work_unit(runtime: PortableHumanCliRuntime) -> None:
     """Open the modelo work unit a reconcile pull resolves, through the real ``work create`` verb."""
-    result = invoke_cached_cli(
+    result = runtime.invoke(
         [
             "--format",
             "json",
@@ -241,7 +243,7 @@ _PROFILE_FACTS: Final[dict[str, tuple[UserProfileFact, ...]]] = {
 }
 
 #: Local state a command reads before it reaches the Sede, seeded through real repositories.
-_SEEDERS: Final[dict[str, Callable[[], None]]] = {
+_SEEDERS: Final[dict[str, Callable[[PortableHumanCliRuntime], None]]] = {
     "app_live_notifications_document_pull": _seed_read_notification,
     "app_modelo_reconcile_pull": _seed_live_work_unit,
 }
@@ -252,6 +254,7 @@ _SEEDERS: Final[dict[str, Callable[[], None]]] = {
 _POSITIVE_CONTROLS: Final = (
     "app_live_expedientes_pull",
     "app_live_filed_discover",
+    "app_live_filed_list",
     "app_live_filed_pull",
     "app_live_filed_pull_all",
     "app_live_filed_pull_sources",
@@ -261,7 +264,6 @@ _POSITIVE_CONTROLS: Final = (
     "app_live_justificante_pull",
     "app_live_notifications_document_pull",
     "app_live_notifications_pull",
-    "app_live_verify_nif_iva",
     "app_live_verify_tgvi",
     "config_auth_login",
     "config_profile_censo_pull",
@@ -269,9 +271,16 @@ _POSITIVE_CONTROLS: Final = (
     "app_modelo_reconcile_pull",
 )
 
-#: AEAT-declaring commands the probe cannot drive offline, each with the
-#: precondition it lacks and why its declaration is still correct.
-_AEAT_EXEMPTIONS: Final[dict[str, str]] = {}
+#: Deliberate registered guards replace unreachable contact premises. Each
+#: entry has an exact CLI refusal control and a supervisor test of no effects.
+_AEAT_EXEMPTIONS: Final[dict[str, str]] = {
+    "app_live_verify_nif_iva": (
+        "The registered NIF-IVA capture deliberately refuses before provider/browser work; "
+        "test_the_nif_iva_guard_refuses_without_contact observes its exact CLI code/effect, "
+        "and test_verify_capture_operation::test_nif_iva_check_refuses_before_any_browser_or_provider_work "
+        "proves the owning supervisor refuses with no effect."
+    ),
+}
 
 #: The command group whose members read the configured AEAT credentials and
 #: session, and so are driven whatever network capability they declare.
@@ -456,7 +465,7 @@ def aeat_suspects_without_aeat(graph: CommandSpecGraph) -> tuple[CommandSpec, ..
 _POPULATION: Final = aeat_suspects_without_aeat(COMMAND_GRAPH)
 
 
-def _drive(key: str, tmp_path: Path) -> tuple[AeatContactObservation, int, str]:
+def _drive(key: str, tmp_path: Path, *, json_output: bool = False) -> tuple[AeatContactObservation, int, str]:
     spec = COMMAND_GRAPH.spec(key)
     handler = spec.handler
     assert handler is not None and handler.state is BindingState.TARGET and handler.target is not None
@@ -469,19 +478,18 @@ def _drive(key: str, tmp_path: Path) -> tuple[AeatContactObservation, int, str]:
         also=_HANDLER_REQUIRED_OPTIONS.get(key, ()),
         values=_supplied_values(key),
     )
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path, bucket_id=PROBE_PROFILE_ID, label=PROBE_PROFILE_LABEL
-    ) as profile:
-        seed_probe_profile(profile, extra_facts=_PROFILE_FACTS.get(key, ()))
+    with (
+        synthetic_aeat_credentials(workdir) as certificate,
+        seeded_probe_runtime(
+            tmp_path, extra_facts=_PROFILE_FACTS.get(key, ()), certificate_path=certificate
+        ) as runtime,
+    ):
         seeder = _SEEDERS.get(key)
         if seeder is not None:
-            seeder()
-        with (
-            synthetic_aeat_credentials(workdir),
-            observe_aeat_contact(handler_code(handler.target)) as observed,
-        ):
-            result = invoke_cached_cli(argv)
-    return observed, result.exit_code, result.output[-400:]
+            seeder(runtime)
+        with observe_aeat_contact(handler_code(handler.target)) as observed:
+            result = runtime.invoke(["--format", "json", *argv] if json_output else argv)
+    return observed, result.exit_code, result.output
 
 
 def test_the_declared_sede_client_is_the_one_in_the_source_tree() -> None:
@@ -541,6 +549,19 @@ def test_the_instrument_fires_on_a_command_that_declares_aeat(
     assert observed.contacts(offline_guard), (
         f"{key} declares aeat but its run showed no AEAT contact; exit {exit_code}; output={output}"
     )
+
+
+def test_the_nif_iva_guard_refuses_without_contact(tmp_path: Path, offline_guard: OfflineGuard) -> None:
+    """A deliberate registered refusal reaches the handler but has no provider effect."""
+    observed, exit_code, output = _drive("app_live_verify_nif_iva", tmp_path, json_output=True)
+    assert observed.handler_started
+    assert observed.contacts(offline_guard) == []
+    assert exit_code != 0
+    envelope = json.loads(output)
+    context = envelope["error"]["context"]
+    assert context["refusal_code"] == "REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED"
+    assert context["terminal_condition"] == "refused"
+    assert context["effect"] == "none"
 
 
 # --- detector teeth -------------------------------------------------------

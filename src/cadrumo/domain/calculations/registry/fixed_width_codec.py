@@ -101,7 +101,7 @@ ExportSignPositionValue = (
 )
 
 
-class _ExportField(Protocol):
+class ExportField(Protocol):
     @property
     def id(self) -> str: ...
 
@@ -161,7 +161,7 @@ class _ExportRecord(Protocol):
     def encoding(self) -> str: ...
 
     @property
-    def fields(self) -> tuple[_ExportField, ...]: ...
+    def fields(self) -> tuple[ExportField, ...]: ...
 
 
 class FixedWidthRecordRenderError(CadrumoError):
@@ -197,7 +197,7 @@ class FixedWidthRecordRenderError(CadrumoError):
         self.export_record_id = export_record_id
 
 
-def validate_fixed_width_shape(field: _ExportField) -> None:
+def validate_fixed_width_shape(field: ExportField) -> None:
     """Refuse contradictory padding, justification, and sign declarations."""
     if field.length is None:
         return
@@ -224,7 +224,7 @@ def validate_fixed_width_shape(field: _ExportField) -> None:
         _validate_sign_position(field)
 
 
-def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
+def render_fixed_width_export_field(field: ExportField, value: object) -> str:
     """Render one semantic field value to its complete exact-width wire text."""
     if field.length is None:
         raise RegistryValidationError(f"export field {field.id!r} must declare length")
@@ -249,14 +249,14 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         # policy, and an optional casilla the taxpayer legitimately lacks could
         # not be exported at all. The post-projection test below is kept for a
         # policy that projects an empty slot through to an empty value.
-        rendered = _render_absent_slot(field)
+        rendered = render_absent_slot(field)
     else:
         value = project_export_value(field.value_policy, value)
         if _is_absent_slot(field, value):
-            rendered = _render_absent_slot(field)
+            rendered = render_absent_slot(field)
         else:
-            _require_allowed_value(field, value)
-            _require_minimum_year(field, value)
+            require_allowed_value(field, value)
+            require_minimum_year(field, value)
             rendered = _render_typed_value(field, value)
     if not _is_absent_slot(field, value):
         validate_export_wire_value(field.value_policy, rendered)
@@ -265,7 +265,7 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
 
 def _render_record_field_bytes(
     record: _ExportRecord,
-    field: _ExportField,
+    field: ExportField,
     *,
     field_values: Mapping[CasillaId, str | None],
 ) -> bytes:
@@ -292,7 +292,7 @@ def _render_record_field_bytes(
 def _place_record_field_bytes(
     buffer: bytearray,
     occupied: bytearray,
-    field: _ExportField,
+    field: ExportField,
     *,
     offset: int,
     length: int,
@@ -357,7 +357,7 @@ def render_fixed_width_export_record_body(
     return bytes(buffer)
 
 
-def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple[int, int]:
+def _require_record_coordinates(field: ExportField, *, record_id: str) -> tuple[int, int]:
     if field.offset is None or field.length is None:
         raise FixedWidthRecordRenderError(
             field_id=field.id,
@@ -396,9 +396,9 @@ def pad_fixed_width_text(
     return value.ljust(length, " ")
 
 
-def _validate_signed_shape(field: _ExportField) -> None:
+def _validate_signed_shape(field: ExportField) -> None:
     """Refuse a signed declaration the fixed-width sign marker cannot carry."""
-    length = _require_length(field)
+    length = require_length(field)
     if field.data_type != "money":
         raise RegistryValidationError(
             f"export field {field.id!r} can declare signed only for money data",
@@ -411,7 +411,7 @@ def _validate_signed_shape(field: _ExportField) -> None:
         )
 
 
-def _validate_sign_position(field: _ExportField) -> None:
+def _validate_sign_position(field: ExportField) -> None:
     """Refuse a reserved sign byte on a slot that cannot carry one.
 
     ``BLANK_OR_N`` writes a negative amount, so it needs ``signed``;
@@ -419,7 +419,7 @@ def _validate_sign_position(field: _ExportField) -> None:
     negative value there would say the opposite of the constant 'N' and the
     field must stay unsigned to refuse it.
     """
-    length = _require_length(field)
+    length = require_length(field)
     if field.data_type != "money":
         raise RegistryValidationError(f"export field {field.id!r} can declare sign_position only for money data")
     if length < 2:
@@ -440,20 +440,20 @@ def _validate_sign_position(field: _ExportField) -> None:
         )
 
 
-def _require_decimals(field: _ExportField) -> int:
+def require_decimals(field: ExportField) -> int:
     if field.decimals is None:
         raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
     return field.decimals
 
 
-def _require_length(field: _ExportField) -> int:
+def require_length(field: ExportField) -> int:
     """Return the field's declared byte length, refusing a slot that declares none."""
     if field.length is None:
         raise RegistryValidationError(f"export field {field.id!r} must declare length")
     return field.length
 
 
-def _render_typed_value(field: _ExportField, value: object) -> str:
+def _render_typed_value(field: ExportField, value: object) -> str:
     """Render one already-projected value under the field's declared data type."""
     if field.value_policy in {ExportValuePolicy.INTEGER_PART, ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART}:
         return _render_integer_part(field, value)
@@ -465,7 +465,7 @@ def _render_typed_value(field: _ExportField, value: object) -> str:
     if field.data_type == "money":
         return _render_money(field, value)
     if field.data_type == "decimal":
-        return _render_scaled_numeric(field, value, scale=_require_decimals(field))
+        return _render_scaled_numeric(field, value, scale=require_decimals(field))
     if field.data_type == "integer":
         return _render_integer(field, value)
     if field.data_type == "boolean":
@@ -473,7 +473,7 @@ def _render_typed_value(field: _ExportField, value: object) -> str:
     return _pad(field, _render_text(field, value))
 
 
-def _render_text(field: _ExportField, value: object) -> str:
+def _render_text(field: ExportField, value: object) -> str:
     if value is None:
         return ""
     if isinstance(value, str):
@@ -483,14 +483,14 @@ def _render_text(field: _ExportField, value: object) -> str:
     )
 
 
-def _coerce_numeric(field: _ExportField, value: object) -> Decimal:
+def _coerce_numeric(field: ExportField, value: object) -> Decimal:
     try:
         return coerce_fixed_width_decimal(value)
     except ValueError as exc:
         raise RegistryValidationError(f"export field {field.id!r} has an invalid numeric value") from exc
 
 
-def _require_minimum_year(field: _ExportField, value: object) -> None:
+def require_minimum_year(field: ExportField, value: object) -> None:
     if field.minimum_year is None:
         return
     year = _coerce_numeric(field, value)
@@ -500,7 +500,7 @@ def _require_minimum_year(field: _ExportField, value: object) -> None:
         )
 
 
-def _require_allowed_value(field: _ExportField, value: object) -> None:
+def require_allowed_value(field: ExportField, value: object) -> None:
     if field.allowed_values is None:
         return
     number = _coerce_numeric(field, value)
@@ -513,7 +513,7 @@ def _require_allowed_value(field: _ExportField, value: object) -> None:
         )
 
 
-def _is_absent_slot(field: _ExportField, value: object) -> bool:
+def _is_absent_slot(field: ExportField, value: object) -> bool:
     """Report a field slot carrying no value once its policy has projected.
 
     Absence is tested after projection so a value policy that assigns its own
@@ -523,20 +523,20 @@ def _is_absent_slot(field: _ExportField, value: object) -> bool:
     return value is None or value == ""
 
 
-def _zero_fill_is_only_absence(field: _ExportField) -> bool:
+def zero_fill_is_only_absence(field: ExportField) -> bool:
     """Whether a zero fill cannot carry a value under the field's declared domain or policy."""
     if field.allowed_values is not None and "0" not in field.allowed_values:
         return True
     if field.value_policy is None:
         return False
     try:
-        validate_export_wire_value(field.value_policy, "0" * _require_length(field))
+        validate_export_wire_value(field.value_policy, "0" * require_length(field))
     except RegistryValidationError:
         return True
     return False
 
 
-def _render_absent_slot(field: _ExportField) -> str:
+def render_absent_slot(field: ExportField) -> str:
     """Render an empty optional slot as its declared width-correct blank fill.
 
     A fixed-width record gives every field its byte slot unconditionally, so an
@@ -568,14 +568,14 @@ def _render_absent_slot(field: _ExportField) -> str:
     return _pad(field, "")
 
 
-def _render_integer(field: _ExportField, value: object) -> str:
+def _render_integer(field: ExportField, value: object) -> str:
     number = _coerce_numeric(field, value)
     if number != number.to_integral_value():
         raise RegistryValidationError(f"integer export field {field.id!r} cannot render a fractional value")
     return _render_numeric_digits(field, str(abs(int(number))), negative=number < 0)
 
 
-def _render_integer_part(field: _ExportField, value: object) -> str:
+def _render_integer_part(field: ExportField, value: object) -> str:
     """Render the integer component of a quantity AEAT prints as a split pair.
 
     Dispatched ahead of the data-type table because the part's representation is
@@ -591,7 +591,7 @@ def _render_integer_part(field: _ExportField, value: object) -> str:
     )
 
 
-def _render_fractional_digits(field: _ExportField, value: object) -> str:
+def _render_fractional_digits(field: ExportField, value: object) -> str:
     """Render exactly the fractional digits this part's slot holds.
 
     Refuses rather than truncates when the quantity carries more precision than
@@ -599,7 +599,7 @@ def _render_fractional_digits(field: _ExportField, value: object) -> str:
     figure while leaving a structurally valid record behind, which is precisely
     the failure a fixed-width export must never produce silently.
     """
-    length = _require_length(field)
+    length = require_length(field)
     number = _coerce_numeric(field, value)
     fraction = number - number.to_integral_value(rounding=ROUND_DOWN)
     scaled = fraction * (Decimal(10) ** length)
@@ -610,20 +610,20 @@ def _render_fractional_digits(field: _ExportField, value: object) -> str:
     return str(int(scaled)).rjust(length, "0")
 
 
-def _render_scaled_numeric(field: _ExportField, value: object, *, scale: int) -> str:
+def _render_scaled_numeric(field: ExportField, value: object, *, scale: int) -> str:
     number = _coerce_numeric(field, value)
     scaled = (abs(number) * (Decimal(10) ** scale)).to_integral_value(rounding=ROUND_HALF_UP)
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 
-def _render_money(field: _ExportField, value: object) -> str:
+def _render_money(field: ExportField, value: object) -> str:
     number = _coerce_numeric(field, value)
     scaled = round_to_cents(abs(number)) * 100
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 
-def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) -> str:
-    length = _require_length(field)
+def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -> str:
+    length = require_length(field)
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
     if field.sign_position is not None:
@@ -633,7 +633,7 @@ def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) 
     return _pad(field, digits)
 
 
-def _render_with_reserved_sign(field: _ExportField, digits: str, *, negative: bool, length: int) -> str:
+def _render_with_reserved_sign(field: ExportField, digits: str, *, negative: bool, length: int) -> str:
     magnitude_width = length - 1
     if len(digits) > magnitude_width:
         raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
@@ -643,7 +643,7 @@ def _render_with_reserved_sign(field: _ExportField, digits: str, *, negative: bo
     return ("N" if negative else " ") + magnitude
 
 
-def _render_signed_digits(field: _ExportField, digits: str, *, negative: bool, length: int) -> str:
+def _render_signed_digits(field: ExportField, digits: str, *, negative: bool, length: int) -> str:
     # AEAT states one convention for every diseno de registro, in "Disenos de
     # registro - breve manual de uso" v.2 (12/12/2022), CAT - Informatica
     # Tributaria:
@@ -680,8 +680,8 @@ def _render_boolean(value: object) -> str:
     )
 
 
-def _pad(field: _ExportField, value: str) -> str:
-    length = _require_length(field)
+def _pad(field: ExportField, value: str) -> str:
+    length = require_length(field)
     try:
         return pad_fixed_width_text(
             value,

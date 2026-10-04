@@ -23,7 +23,7 @@ Core types:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING
 
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from .ledger.workspace import (
@@ -51,12 +51,6 @@ from .workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
 )
-
-WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
-
-_AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
-_AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
-
 
 if TYPE_CHECKING:
     pass

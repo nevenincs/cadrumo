@@ -50,8 +50,8 @@ from ...invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from ...modelo.work_profile import ModeloWorkProfile
 from ..draft_construction import build_draft
 from ..export import export_draft
-from ..runtime import ModeloOperatorProfile
-from .export_support import _schema_provider, m151_producer_snapshot
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .export_support import m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -147,7 +147,12 @@ def _resolved_inputs(
     invoices: tuple[Invoice, ...] | None = None,
 ) -> dict[str, ModeloInputValue]:
     invoices = _ordinary_invoices() if invoices is None else invoices
-    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
+    provider = build_runtime_schema_provider(
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        modelos=("347",),
+        operation=operation,
+    )
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="347",
@@ -175,7 +180,12 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
     operation: PinnedAuthorityOperation,
     tmp_path: Path,
 ) -> None:
-    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
+    provider = build_runtime_schema_provider(
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        modelos=("347",),
+        operation=operation,
+    )
     draft = build_draft(
         modelo="347",
         period=Period.from_year_and_code(_YEAR, "0A"),
@@ -216,7 +226,12 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
 
 
 def _exported_lines(operation: PinnedAuthorityOperation, tmp_path: Path, invoices: tuple[Invoice, ...]) -> list[str]:
-    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
+    provider = build_runtime_schema_provider(
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        modelos=("347",),
+        operation=operation,
+    )
     draft = build_draft(
         modelo="347",
         period=Period.from_year_and_code(_YEAR, "0A"),

@@ -1,0 +1,26 @@
+{
+  "incoming": "53f01bc87bb080a043dc871f7972da925efe5814",
+  "incoming_path": "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py",
+  "replacement": "src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py",
+  "replacement_test": "test_text_mode_domain_refusal_renders_for_a_human_not_as_json",
+  "disposition": "already preserved at real native registered CLI owner; JSON module documentation now identifies that owner",
+  "independent_assertion_equivalence": "All five incoming outer assertions AST-identical: exit2, nonJSON, typed prefix echoed, human Prefix label, exact cli.ledger.transaction_id.resolves action condition. Additional credential secrecy assertion survives inside real admission fixture.",
+  "admission_adaptation": "Real native profile scope, enrolled taxpayer facts, --profile and password stdin, sealed session, explicit English locale. Avoid session-only test fixture that cannot admit the private registered operation.",
+  "source_sha256": {
+    "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py": "7e4ecee290d18daf1c8ccad1514696dbff46ebdd150b1bee8e888d8ae3cbd53b",
+    "src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py": "4529e4aea13f10e8df0fc7144bbef6017b5c766e43e782a520697efe28d07b24"
+  },
+  "verification": {
+    "passed": 7,
+    "failed": 0,
+    "seconds": 37.36,
+    "warnings": 31,
+    "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T003014.691321Z-pytest-28920-d7f2081d/run.log",
+    "session": 51601,
+    "exit_code": 0,
+    "source_hashes_unchanged": true,
+    "source_checks": "Ruff check/format and ty PASS JSON module",
+    "scope": "Entire six-case JSON error module plus actual native registered human-text refusal case; no provider bypass or fake handler."
+  },
+  "status": "source frozen; focused behavioral replay PASS"
+}

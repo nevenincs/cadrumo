@@ -24,7 +24,6 @@ FILED_HISTORY_DECLARATION_REFUSAL_CODE = "filed-history.refusal.declaration"
 FILED_HISTORY_DISCOVERY_REFUSAL_CODE = "filed-history.refusal.discovery"
 FILED_HISTORY_IVA_WALLET_REFUSAL_CODE = "filed-history.refusal.iva-wallet"
 FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE = "filed-history.refusal.notifications"
-FILED_HISTORY_STAGE_REFUSAL_CODE = "filed-history.refusal.stage"
 
 
 class FiledHistoryEventSink(Protocol):
@@ -105,7 +104,6 @@ __all__ = [
     "FILED_HISTORY_PHASE_PERSISTENCE",
     "FILED_HISTORY_PHASE_PROVENANCE",
     "FILED_HISTORY_PHASE_REGISTER_ACCESS",
-    "FILED_HISTORY_STAGE_REFUSAL_CODE",
     "FiledHistoryEventSink",
     "emit_filed_history_phase",
     "emit_filed_history_progress",

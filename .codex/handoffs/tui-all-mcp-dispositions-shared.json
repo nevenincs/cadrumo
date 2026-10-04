@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "feature": "tui-all-mcp-integration",
+  "scope": "Ten previously uncovered original baseline/macOS shared path deltas",
+  "records": [
+    {
+      "source": "mcp-macos",
+      "path": "dev/quality/metadata/application_entrypoint_modules.json",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "a8fde77b9c7546dc0e9ecdf4fb3f917321972d6c"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "dc1ed24d01cc7f462348229fd20e1c64875e614b"
+      },
+      "rationale": "Owner-regenerated current canonical module census preserves all live source enrollments and removes retired definitions. Historical target lists are evidence of intended enrollment, not authority over current module topology.",
+      "replacement": "dev/quality/metadata/application_entrypoint_modules.json",
+      "evidence": [
+        "application_entrypoint_modules includes current macos_worker_guardian",
+        "import_load_targets includes current macos_coalition,macos_worker_process,worker_arguments,macos_worker_guardian"
+      ],
+      "current_sha256": "02871d0110f14906cfa94f25a359d9d530d3f993af1ee150653a0657eee8d686",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "6408615f7da73b76b62bfb957686b6613e11fe0e089b7b2b60000d1866da70ef"
+    },
+    {
+      "source": "mcp-macos",
+      "path": "dev/quality/metadata/import_load_targets.json",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "395ba3355dfa4c58823f4a125c99531468db2eaf",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "f9280194547fcf53fd5ae46437b6a3048d537ff8"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "f2b7c74983643f1db9498543e970da8972b52d6f"
+      },
+      "rationale": "Owner-regenerated current canonical module census preserves all live source enrollments and removes retired definitions. Historical target lists are evidence of intended enrollment, not authority over current module topology.",
+      "replacement": "dev/quality/metadata/import_load_targets.json",
+      "evidence": [
+        "application_entrypoint_modules includes current macos_worker_guardian",
+        "import_load_targets includes current macos_coalition,macos_worker_process,worker_arguments,macos_worker_guardian"
+      ],
+      "current_sha256": "5e2b8a61a2556230132a32cc10c156543b32ddf5a3c52ff5effdca2663f3dde7",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "3fcb9712f62dbe1969ddac912ad0056f2946b68a2c184410249c0fde2df78605"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": ".codex/handoffs/mcp-sol-high.md",
+      "status": "superseded",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "72ff9356f45cee9d98d4bcc2bd05a39a6161ed76"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "3657554c29bc324517392334452799a973f6e617"
+      },
+      "rationale": "Current chronological handoff advances to later 13:26/14:17 recovery checkpoint. Five obsolete pending-live/next-assignment instructions no longer apply; original 12:06 handoff remains preserved verbatim in baseline snapshot, with actual historic pass/fail qualifications retained in purpose-authentication records. Management proposals are superseded by the accepted no-management decision.",
+      "replacement": ".codex/handoffs/mcp-sol-high.md",
+      "evidence": [
+        "Source snapshot90d55a9a7e77 preserved handoff blob3657554c29",
+        "Current handoff superseding checkpoint14:17 UTC",
+        "No production management recovery imported from historical handoff instructions"
+      ],
+      "current_sha256": "2dfdd476da970a9be6b1de72ec2a08cc4b4354a3c23e2133be90f045ca824ae1",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "483da18dbdaeb476625dc14935b37e268676cc788e09cf8093ba2030f9a1f4ab"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": ".vault/audit/2026-09-26-mcp-purpose-authentication-audit.md",
+      "status": "already present",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "922dfdcca4fa593b1635d259a4998c0600f521df"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "dc2479e5823149a5f9f241b895965699cbe1c2cb"
+      },
+      "rationale": "Source-added historical actual successes,failures and partial/open qualifications remain in the current owning purpose-authentication record. Current no-management ADR explicitly retains these observations as history without implementation authority.",
+      "replacement": ".vault/audit/2026-09-26-mcp-purpose-authentication-audit.md",
+      "evidence": [
+        {
+          "source_added_nonempty_lines": 24,
+          "absent_exact_lines": []
+        }
+      ],
+      "current_sha256": "6dcb6e603b0fd7691832af35e32b3570ba1f4aff42abf636eabe3885d47fbd76",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "4a2fdf2c1b0ed8b9b5da7a4d03b9c1f839f6480add05a6ded8411ea619830324"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": ".vault/exec/2026-09-26-mcp-purpose-authentication/2026-09-26-mcp-purpose-authentication-ledger.md",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "a4ff2b1404f16b217a7468ee786b9d4c57508521"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "6aa32ad7c735426a6940c06572d3547b40d84574"
+      },
+      "rationale": "Parent owning ledger CLI restored all nine original S10 and one S17 historical change rows. Source-added actual pass/fail/partial qualifications and all143added nonempty historical lines are preserved; explicit no-management intent notes retain observation history without restoring retired production administration.",
+      "replacement": ".vault/exec/2026-09-26-mcp-purpose-authentication/2026-09-26-mcp-purpose-authentication-ledger.md",
+      "evidence": [
+        {
+          "source_added_nonempty_lines": 143,
+          "absent_exact_lines": [],
+          "restored_exact_historical_lines": [
+            "- `S17` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`",
+            "- `S10` `M` `src/cadrumo/entrypoints/runtime_management.py`",
+            "- `S10` `M` `src/cadrumo/entrypoints/tests/test_runtime_management.py`",
+            "- `S10` `M` `src/cadrumo/entrypoints/tui/runtime_management.py`",
+            "- `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_management.py`",
+            "- `S10` `M` `src/cadrumo/adapters/local_runtime/management_status.py`",
+            "- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_management_status.py`",
+            "- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_restart_native.py`",
+            "- `S10` `M` `dev/agent_eval/tests/test_installed_mcp_runtime_recovery.py`",
+            "- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py`"
+          ]
+        },
+        "Read-back verified all ten exact original rows after parent owning CLI restoration; no worker vault mutation."
+      ],
+      "current_sha256": "18ed056949e3d454cb0f89278935a1bad140918e5ac7c32fe4a8206155cef7ef",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "20e61db47d534bc47ceb415554ceeeff6910c01703c3ff5bdef6bb5f068d38a1"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": ".vault/reference/2026-09-26-mcp-purpose-authentication-reference.md",
+      "status": "already present",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "3d7dff891f8f35fa643b505b9a02273bae36bb72"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "5e9f91b31859d18d305ef44e56a972d0a854d808"
+      },
+      "rationale": "Source-added historical actual successes,failures and partial/open qualifications remain in the current owning purpose-authentication record. Current no-management ADR explicitly retains these observations as history without implementation authority.",
+      "replacement": ".vault/reference/2026-09-26-mcp-purpose-authentication-reference.md",
+      "evidence": [
+        {
+          "source_added_nonempty_lines": 19,
+          "absent_exact_lines": []
+        }
+      ],
+      "current_sha256": "9b8e980e27c1299ecc65074844e947c590cd14801dbb0b212d1921e032729200",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "62e480223194832e3cf075b2e43faf7186e74b1196ec87d5df20bef5ea2e327c"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": "dev/quality/metadata/application_entrypoint_modules.json",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "a8fde77b9c7546dc0e9ecdf4fb3f917321972d6c"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "646e82f3ff39d5e4f6ec09fcaf6989500333243c"
+      },
+      "rationale": "Owner-regenerated current canonical module census preserves all live source enrollments and removes retired definitions. Historical target lists are evidence of intended enrollment, not authority over current module topology.",
+      "replacement": "dev/quality/metadata/application_entrypoint_modules.json",
+      "evidence": [
+        "Current census omits retired operator_actions.ports, _ledger_evidence_confirm_notices, components.filing_year_route; current direct defining replacements govern."
+      ],
+      "current_sha256": "02871d0110f14906cfa94f25a359d9d530d3f993af1ee150653a0657eee8d686",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "e089e2782d6c1d5d921222fb50750d9e463e587f8f109b54ce592b4eaf09a9dd"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": "env/.env.example",
+      "status": "already present",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "3416c4bffa5d347cbb30e5925d1550eb5d372a17"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "5d0efc465c7a8704ca817fae14ace7fcf99e5ca6"
+      },
+      "rationale": "Current example omits the retired browser-channel and top-level IVA watchdog settings; BrowserSession owns only bundled Chromium and runtime owns bounded operation observation.",
+      "replacement": "env/.env.example",
+      "evidence": [
+        "CADRUMO_BROWSER_CHANNEL absent",
+        "CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS absent"
+      ],
+      "current_sha256": "e29cc21891df744840758a424666e5867c2e9019cbd80d664c717f9bad340805",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "b5996b2bf8dba92d313d1b83ebe45e52c24155218cdc78db9fde1ba48aa43cf6"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": "justfile",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "f20edeb7e8dd14df3f289140644e3ba1766b496d"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "ca0028fa3e144bf21911c5348ecd719ee0c8977c"
+      },
+      "rationale": "Current setup and doctor use bundled Chromium only; test-windows retains full explicit Windows cohort with OS-keychain and installed-oracle exclusions. Current test-native-host replaces removed LaunchAgent administration with actual peer/worker containment, atomic rename,KDF and GNOME tests under the no-management decision.",
+      "replacement": "justfile",
+      "evidence": [
+        "setup-browser runs playwright install chromium only",
+        "test-native-host explicit current five-file native Unix cohort",
+        "2026-10-03-runtime-without-service-manager-adr governs removed manager test"
+      ],
+      "current_sha256": "dc8d67aa347b9b877398f42dcf3c282d52c498412c28e8ee0afb3b0ed56a4982",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "4025d9887265d4b635a48cc7124e283746e79ca716ed689c2925aa381347b492"
+    },
+    {
+      "source": "mcp-baseline",
+      "path": "pyproject.toml",
+      "status": "incorporated",
+      "owner": "root shared config/metadata/vault",
+      "original_base": "5c0eeca84b011bef3a828df7d26a1c67a4c9906f",
+      "source_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
+      "base_blob": {
+        "mode": "100644",
+        "oid": "95d053ee8f9d0966b6236c0a48c00b38150ccdc3"
+      },
+      "source_blob": {
+        "mode": "100644",
+        "oid": "2404d59c7b7fcfbc14de1683650df48b47be2e22"
+      },
+      "rationale": "Expanded explicit pywin32 import-to-distribution mapping is present, keeping direct native Job,process,pipe,event,ACL,COM and session dependencies visible to deptry; no dependency declaration or gate weakening.",
+      "replacement": "pyproject.toml",
+      "evidence": [
+        "Current mapping retains ntsecuritycon,pythoncom,pywintypes,win32api,win32com,win32con,win32event,win32file,win32job,win32pipe,win32process,win32security,win32ts"
+      ],
+      "current_sha256": "6b6d00dbb9ba4bb77857d988a97fca5b096fe67daefa5f5272e9e5f76f257020",
+      "integration_commit": "pending parent coherent commit mapping",
+      "source_delta_sha256": "f37934c1bd1bbac5f727039871c968a475a72eddbecca0bf9df7d02d1792861f"
+    }
+  ],
+  "counts": {
+    "incorporated": 6,
+    "superseded": 1,
+    "already present": 3
+  },
+  "verification": "Read-only UTF8 original-base diffs, source-added historical prose preservation, current owning config/recipe/mapping review. Parent owns canonical metadata regeneration and ledger CLI repair."
+}

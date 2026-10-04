@@ -15,7 +15,7 @@ from cadrumo.application.filing.runtime import (
     RegistrySchemaAccessor,
 )
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from dev._paths import prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
 
 from .filing_export_proof_contracts import (
     FilingExportConformanceReceipt,

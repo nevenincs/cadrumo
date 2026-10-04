@@ -268,7 +268,7 @@ class BrowserSession:
 
             temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=self.settings)
             temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-            child_environment = os.environ.copy()
+            child_environment: dict[str, str | float] = dict(os.environ)
             child_environment.update({name: str(path) for name, path in child_directories.items()})
             child_environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
             # Keep the default persistent context empty. Authenticated contexts

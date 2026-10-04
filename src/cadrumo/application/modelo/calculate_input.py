@@ -1315,21 +1315,6 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_
     )
 
 
-def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
-    """Return a :class:`Modelo202ModalitySummary` for ``work_unit`` when applicable.
-
-    Non-Modelo-202 work units return ``None``. For Modelo 202, the active
-    profile projection is passed to the registry applicability helper so the
-    calculate payload can disclose whether Art. 40.2 or Art. 40.3 was selected.
-    """
-    if str(work_unit.modelo) != Modelo("202"):
-        return None
-
-    from ..workflow.persistence import workflow_state_repository
-
-    return modelo_202_modality_for_record(work_unit, workflow_state_repository().load().active_profile_record())
-
-
 def modelo_202_modality_for_record(
     work_unit: WorkUnit,
     record: UserProfileRecord | None,
@@ -1795,6 +1780,5 @@ __all__ = [
     "apply_calculation_shortcut_inputs",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
-    "modelo_202_modality_for_work_unit",
     "resolve_binding_overrides",
 ]

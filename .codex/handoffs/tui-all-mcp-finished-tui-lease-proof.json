@@ -1,0 +1,85 @@
+{
+  "observed_utc": "2026-10-04T05:30:16.967963+00:00",
+  "source_frozen": true,
+  "source_drift": [],
+  "source_manifest": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\lease-800b-owner-current-manifest.json",
+  "source_manifest_sha256": "c196093ba23b5a310166b830be1f3a02506fe2188621cb85b54faebbb1775054",
+  "source_hashes": {
+    "src/cadrumo/domain/invoices/business_premises.py": "544ed26206d4642ed570957a0f49b90d2b6cd594ac7e175f0bf8c072335f2eda",
+    "src/cadrumo/domain/invoices/models.py": "93b74b5feb6050d1965bcd91e8ec768c6e4c9ad928e46a209dd53121362f289e",
+    "src/cadrumo/domain/invoices/tests/test_business_premises_lease.py": "4571898656989e835c2b06c1d8f28a1868b78fdd476d6df442bca11a61f34ee1",
+    "src/cadrumo/application/invoices/catalogue_add_contracts.py": "3d2f9aa0e4ce7ed81f01e520a97618528ab5255cbed23db51a42c0bdd3b22d7f",
+    "src/cadrumo/application/invoices/catalogue_add_operation.py": "27addfbc98f1d4a54864819ccadba1058f0576c7097e8c96775014a371a6a89d",
+    "src/cadrumo/application/invoices/catalogue_creation.py": "4c898ed278c68741f41df44757e6fad725d852ee378fbf8e2d5821b733813c04",
+    "src/cadrumo/application/invoices/source_resolver.py": "d7918278ecbc9976a327610bc4492f5503b2abb4e7658f419183813ad8fcbf74",
+    "src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py": "440b494ca3c283807a3e22754a1c404af7dea0421c919be860e70f1b980f4bcb",
+    "src/cadrumo/application/invoices/tests/test_lifecycle.py": "1cad909dfeac4117dfbdb9c7aa779315216118af013066f7bf8a7532192c9b21",
+    "src/cadrumo/application/invoices/tests/test_source_resolver.py": "1ddbddf2904c8fa3aad607f49d38cfefd4c26d530a261fc166f245f621b4e6cc",
+    "src/cadrumo/application/ledger/evidence_followup_contracts.py": "2c074ef5570c9524a8468d2f711a497b55ab04bd757044ce97b3ea12d94c46f0",
+    "src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py": "053fe6f597209e91363f0d107e3ae29a3305a04192939fe7a6ef026582483eaa",
+    "src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py": "e70ab08b791a0bca33737cfe4d6bea436f1f667f45b1b3a285ef9d64a2bf99d6",
+    "src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py": "46b6745b5b0734bb8e51ec36a0e7dddfd4a3be534ec9649e87cf21b9d6046c73",
+    "src/cadrumo/entrypoints/tui/ledger/invoice_entry.py": "8f3514338c9f802479217ca24b82fbf2af4033cf499d312217b35233b4201a27",
+    "src/cadrumo/entrypoints/tui/ledger/models.py": "b67b1be8b43609f9e2c169e72e03354f372b499fb227ea8e79f8852d754510cb",
+    "src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py": "34fc7ca1e11afaebfabf1d01cfbd7dd95a6401315b5f6b09adbd90c6f38b35cc",
+    "src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py": "736b4edc63c2919e579176042a72347aac06bdf7b51461d5f6a39530dbed751a",
+    "src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py": "d2c89a288063a1095c6db455e50bae4753b67c8d5b02a7d5b9647b4db517c2fa"
+  },
+  "resolutions": {
+    "src/cadrumo/application/invoices/catalogue_add_contracts.py": "Incoming nested private lease request; preserve current public reference bound25 and defining enum import only.",
+    "src/cadrumo/domain/invoices/models.py": "Retain incoming nested field and issued-kind guard, remove auto-merged duplicate flat canonical fields/type helpers; hydrate historical flat ciphertext into canonical nested family before normal validation.",
+    "src/cadrumo/domain/invoices/business_premises.py": "Incoming defining enum and lease factory retained; validated historical hydration added, contradiction/malformed facts refused.",
+    "src/cadrumo/domain/invoices/tests/test_business_premises_lease.py": "Preserve original fact/kind/code/reference assertions in nested incoming forms; add historical hydration/no-duplicate-schema/contradiction/validation tests.",
+    "src/cadrumo/application/ledger/evidence_followup_contracts.py": "Current explicit UTC validators retained over duplicate incoming callable aliases; plain datetime JSON schema incoming intent already present.",
+    "src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py": "Incoming defining lease conversion import retained; obsolete unused object-list guard omitted; current real invoice line/public schema handling retained.",
+    "src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py": "Incoming nested encrypted roundtrip/missing-family/malformed-family tests plus actual historical flat ciphertext load and canonical re-save.",
+    "src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py": "Canonical joined HUMAN seed fixture replaces original active-pointer-only premise; original actual public CLI assertions retained."
+  },
+  "unchanged_auto_merged": "Remaining owned files retain incoming nested creator/executor/resolver/TUI/form/request relay/lifecycle guards and current profile/session/public schema intent.",
+  "checks": {
+    "ruff": "PASS19",
+    "format": "PASS19",
+    "ty": "PASS19",
+    "actual_core_tui_encrypted_historical_and_m347_export": "72PASS13.87s session55316 reaped0 canonical20261004T052301.015159Z-pytest-90032-3f35514a",
+    "current_add_operation_evidence_UTC_JSON_schema_and_TUI_form": "50PASS13.47s session61117 reaped0 canonical20261004T052507.939514Z-pytest-86068-2db89957",
+    "CLI_owning_portable": "16PASS13native_deselected session92031 reaped0 canonical20261004T052402.778354Z-pytest-59796-a853fc73",
+    "frozen_current_byte_issued_lease_CLI": "1PASS25.96s session93408 reaped0 canonical20261004T052828.426166Z-pytest-90816-ebe4625f",
+    "public_request_schema": "actual schema maxLength25 + sole nested request family asserted"
+  },
+  "loaded_generation_qualification": "CLI92031 launched before the explicit nested DTO maxLength25 repair; complete loaded-byte generation is not established. Current-byte affected add-operation/schema/form50 and fresh issued-lease CLI1 were run after the frozen source change. All ordinary original CLI assertions retained. No whole-run raw zero-drift assertion for92031.",
+  "original_failures_retained": {
+    "core_initial": "SyntaxError from another unresolved merge path;0cases",
+    "CLI_initial": "1FAIL runtime_unavailable before handler due active-pointer-only fixture, then canonical admitted HUMAN fixture adopted"
+  },
+  "verification_limits": [
+    "No native financial positive or installed-wheel E2E claim.",
+    "13 native-only CLI cases explicitly deselected; existing-native receipts remain generation qualified.",
+    "Focused scoped verification only; root owns combined gates and shipping action."
+  ],
+  "logs": {
+    "lease-merge-focused-core.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-focused-core.txt",
+      "sha256": "d88a6e4d9f8c07c013ffbce5205acfe5e2e16f596a6abd57eda5c08a296892f5"
+    },
+    "lease-merge-cli-premise.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-cli-premise.txt",
+      "sha256": "8da3fe0b3ea7ff2e452b0be011e9793f4e2b8fa4ab687e987f35569e2ece58d6"
+    },
+    "lease-merge-focused-core-replay.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-focused-core-replay.txt",
+      "sha256": "e03ddad46f9081549a39fcc2cb723c2b06489b6d8ae47e622e267545cd840ae6"
+    },
+    "lease-merge-schema-form-replay.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-schema-form-replay.txt",
+      "sha256": "c8965d11a75cb36681c10145cc955d0be95a80dc3bb66231c8e5f13b3d870a23"
+    },
+    "lease-merge-cli-replay.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-cli-replay.txt",
+      "sha256": "9edb11eb307d235e115b3c7e7de6f0444af67a27de35335700ed826b2e7b54d4"
+    },
+    "lease-merge-cli-current-byte.txt": {
+      "path": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\lease-merge-cli-current-byte.txt",
+      "sha256": "eb1045602a2f7f85f60c49618f4f3f914ebdfe433772a20236f66a15a3e5fe4f"
+    }
+  }
+}

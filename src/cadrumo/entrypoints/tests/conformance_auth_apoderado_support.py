@@ -232,3 +232,50 @@ AUTH_APODERADO_CONFORMANCE_FAMILY = ConformanceFamily(
     ),
     prepare=_prepare,
 )
+
+
+def _prepare_all_scopes(context: ConformanceFamilyContext) -> ConformancePreparation:
+    repository = _repository(context)
+    assert repository.load() is None
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        stored = repository.load()
+        assert stored is not None
+        assert stored.represented_nif == "12345678Z"
+        assert stored.catalogue_version == "2026.05.bootstrap"
+        assert stored.granted_scopes == (
+            "CENSO",
+            "EXPED",
+            "GENERALNT",
+            "INFORM",
+            "IVA",
+            "NOTIFIC",
+            "PAGOSF",
+            "RENT",
+            "RETEN",
+        )
+        result = outcome.resolve_result(ApoderadoOperationProjection)
+        assert result.profile_id == context.profile_id
+        assert result.effect is OperationEffect.UPDATED
+        assert result.configuration is not None
+        assert result.configuration.model_dump(mode="json") == stored.model_dump(mode="json")
+
+    return ConformancePreparation(
+        subject_ref=_subject(context),
+        request=ApoderadoConfigureRequest(profile_id=context.profile_id, scope_tokens=("ALL",)),
+        secret=b"12345678Z",
+        verify=verify,
+    )
+
+
+AUTH_APODERADO_ALL_CONFORMANCE_FAMILY = ConformanceFamily(
+    cases=(
+        RegisteredExecutorConformanceCase(
+            APODERADO_CONFIGURE_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            (APODERADO_CONFIGURE_OPERATION_DEFINITION_ID,),
+        ),
+    ),
+    prepare=_prepare_all_scopes,
+)

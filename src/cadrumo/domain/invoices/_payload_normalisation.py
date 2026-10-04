@@ -132,6 +132,7 @@ _STRING_FIELD_RULES: Final[tuple[_StringFieldRule, ...]] = (
     _StringFieldRule("recipient_address", absent_when_blank=True),
     _StringFieldRule("exemption_reference", absent_when_blank=True),
     _StringFieldRule("rectifies_invoice_number", uppercase=True, absent_when_blank=True),
+    _StringFieldRule("referencia_catastral", uppercase=True, absent_when_blank=True),
 )
 
 

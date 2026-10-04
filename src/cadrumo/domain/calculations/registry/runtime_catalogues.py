@@ -13,13 +13,13 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from .errors import RegistryValidationError
 from .runtime_catalogue_validation import (
-    _require_catalogue_record_keys,
-    _require_complete_recargo_bands,
-    _require_place_of_supply_grounding,
-    _require_postal_territory_keys,
-    _require_tax_catalogue_keys,
-    _require_unique_country_alpha3,
-    _require_unique_country_names,
+    require_catalogue_record_keys,
+    require_complete_recargo_bands,
+    require_place_of_supply_grounding,
+    require_postal_territory_keys,
+    require_tax_catalogue_keys,
+    require_unique_country_alpha3,
+    require_unique_country_names,
 )
 from .schema_base import RegistryModel
 
@@ -85,7 +85,7 @@ class PublishedIvaPlaceOfSupplyRule(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _grounding_matches_disposition(self) -> Self:
-        _require_place_of_supply_grounding(self)
+        require_place_of_supply_grounding(self)
         return self
 
 
@@ -197,10 +197,10 @@ class RuntimeRegistryCatalogues(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _keys_match_records(self) -> Self:
-        _require_catalogue_record_keys(self)
-        _require_postal_territory_keys(self)
-        _require_tax_catalogue_keys(self)
-        _require_unique_country_alpha3(self)
-        _require_unique_country_names(self)
-        _require_complete_recargo_bands(self)
+        require_catalogue_record_keys(self)
+        require_postal_territory_keys(self)
+        require_tax_catalogue_keys(self)
+        require_unique_country_alpha3(self)
+        require_unique_country_names(self)
+        require_complete_recargo_bands(self)
         return self

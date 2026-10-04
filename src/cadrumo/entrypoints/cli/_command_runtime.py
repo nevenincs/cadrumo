@@ -25,10 +25,10 @@ from typer._click.types import ParamType as TyParamType
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import BindingState, Capability, DefaultKind, DeferredTarget, ParameterDefault
 from ._command_target import resolve_deferred_target
 from .command_graph import CommandSpecGraph
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import BindingState, Capability, DefaultKind, DeferredTarget, ParameterDefault
 from .command_spec import CommandSpec, ExecutionPolicySpec
 from .command_suggestions import CadrumoTyperGroup, LazyFactoryTarget, LazySubcommand
 

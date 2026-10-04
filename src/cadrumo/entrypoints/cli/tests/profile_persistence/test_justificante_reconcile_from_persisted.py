@@ -18,7 +18,7 @@ from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationBytesCommand,
     ModeloReconciliationReport,
     ReconciliationEvidenceInvalidError,
-    modelo_reconcile_bytes,
+    prepare_modelo_reconcile_bytes,
 )
 from cadrumo.application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
@@ -46,7 +46,7 @@ def _reconcile_snapshot(
     *, work_unit_id: str, snapshot: JustificanteCaptureSnapshot, operation: PinnedAuthorityOperation
 ) -> ModeloReconciliationReport:
     """Exercise the canonical secure-bytes reconciler with an encrypted capture."""
-    return modelo_reconcile_bytes(
+    return prepare_modelo_reconcile_bytes(
         ModeloReconciliationBytesCommand(
             work_unit_id=work_unit_id,
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
@@ -54,7 +54,7 @@ def _reconcile_snapshot(
             source_ref=f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}",
         ),
         operation=operation,
-    )
+    ).persist()
 
 
 def test_reconcile_from_persisted_capture_matches(operation: PinnedAuthorityOperation) -> None:

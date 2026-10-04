@@ -66,6 +66,23 @@ def test_reattaching_the_retained_failure_does_not_duplicate_it() -> None:
     assert len(retained._failures) == 1
 
 
+def test_attachment_retains_both_earlier_retry_owners_and_the_new_failure() -> None:
+    primary = ValueError("primary")
+    owners = (_Owner(), _Owner(), _Owner())
+    first, legacy, newest = tuple(
+        _cleanup(owner, label) for owner, label in zip(owners, ("first", "legacy", "newest"), strict=True)
+    )
+    primary.__dict__["async_cleanup_error"] = first
+    primary.__dict__["cleanup_error"] = legacy
+
+    retained = attach_async_cleanup_error(primary, newest)
+
+    assert retained.resources == owners
+    assert [str(failure) for failure in retained._failures] == ["first", "legacy", "newest"]
+    assert primary.__dict__["async_cleanup_error"] is retained
+    assert primary.__dict__["cleanup_error"] is retained
+
+
 def test_direct_owners_are_distinct_and_ordered_without_following_causes() -> None:
     cleanup = _cleanup(_Owner(), "shared")
     other = _cleanup(_Owner(), "other")

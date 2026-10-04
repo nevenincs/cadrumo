@@ -11,6 +11,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerIdentity,
 )
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
+from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 from .worker_authorization import WorkerAuthorizationServer
 from .worker_native_identity import verify_worker_native_pid
@@ -28,8 +29,8 @@ class ProfileWorkerNativeLifetime:
     _operation_lock: RLock
     _human_lock: RLock
     _native_guard: RLock
-    _scope: WindowsProcessScope | LinuxProcessScope
-    _process: WindowsOwnedProcess | LinuxOwnedProcess
+    _scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope
+    _process: WindowsOwnedProcess | LinuxOwnedProcess | MacosOwnedProcess
     _authorization: WorkerAuthorizationServer | None
     _stopping: Event
     _channel: WorkerChannel | None

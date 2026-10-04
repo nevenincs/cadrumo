@@ -18,14 +18,13 @@ never sees and that the forbidden-verb source scan deliberately permits.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlsplit
 
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n.render import tr
-from .....core.identity.tax_id import tax_id_identity_token
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
 from .....core.text_fold import fold_for_matching
@@ -38,7 +37,6 @@ from pydantic import ValidationError as PydanticValidationError
 
 from .....core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from .....core.logging import get_logger
-from .....core.type_guards import is_str_keyed_dict
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -551,27 +549,6 @@ def extract_marker_verdict(
     return IdentityCheckVerdict.UNKNOWN
 
 
-def registry_failure_message(exc: BaseException) -> str:
-    """Build a registry-facing error string enriched with the failure_mode context field.
-
-    Sede driver exceptions carry a ``context`` mapping; this helper
-    extracts ``failure_mode`` (falling back to a ``site_health:<state>``
-    label when only a ``state`` key is present) and appends it to the
-    base ``str(exc)`` so callers wrapping the exception into a
-    :class:`RegistryValidationError` preserve the diagnostic context.
-    Returns ``str(exc)`` unchanged when no ``failure_mode`` is derivable.
-    """
-    context = getattr(exc, "context", None)
-    if not is_str_keyed_dict(context) or not context:
-        return str(exc)
-    failure_mode = context.get("failure_mode")
-    if failure_mode is None and "state" in context:
-        failure_mode = f"site_health:{context['state']}"
-    if failure_mode is None:
-        return str(exc)
-    return f"{exc} (failure_mode={failure_mode})"
-
-
 async def first_visible_locator(
     page: Page,
     selectors: tuple[str, ...],
@@ -633,24 +610,6 @@ async def first_visible_locator(
     )
 
 
-def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOperation, ...]:
-    """Build the shared per-NIF check + discard-session operation tail.
-
-    Both the GROI and NIF/IVA sede drivers close their planned-operation
-    sequence identically: one ``check-nif-<NIF>`` browser action per declared
-    NIF (normalised to upper-case and sorted so the operation labels the
-    remote-state guard pre-flight sees on the driverless oracle path match what
-    the live driver emits), followed by one ``discard-session`` action. Each
-    driver prepends its own URL/form prologue and appends this tail.
-    """
-    tail: list[RemoteOperation] = [
-        RemoteOperation(kind="browser_action", action=f"check-nif-{nif}")
-        for nif in sorted(tax_id_identity_token(str(key)) for key in expected)
-    ]
-    tail.append(RemoteOperation(kind="browser_action", action="discard-session"))
-    return tuple(tail)
-
-
 __all__ = [
     "SPANISH_NEGATIVE_VERDICT_MARKERS",
     "_LocateHelper",
@@ -665,11 +624,9 @@ __all__ = [
     "first_visible_locator",
     "landed_origin",
     "make_locate_helper",
-    "nif_check_operation_tail",
     "normalize_display_text",
     "normalize_response_text",
     "redacted_url",
-    "registry_failure_message",
     "require_playwright_page",
     "response_media_type",
 ]

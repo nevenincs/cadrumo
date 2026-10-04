@@ -19,8 +19,8 @@ from ._app_live_command_spec_support import (
     _REQUIRED_YEAR_TO_OPTION,
     NO_RESULT_SCHEMA,
 )
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -29,7 +29,7 @@ from ._command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from ._command_shared_contracts import translation_key as _key
+from .command_shared_contracts import translation_key as _key
 from .command_spec import CommandSpec, ExecutionPolicySpec
 
 LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (

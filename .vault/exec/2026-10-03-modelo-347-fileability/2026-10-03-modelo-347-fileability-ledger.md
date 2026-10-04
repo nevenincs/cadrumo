@@ -5,6 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
+body_hash: 'sha256:6b8bace0383841e8501e423658acc1ccd507df6db8988918809956a2ddbc02ab'
 body_hash: 'sha256:ceea0075392b7a112e746299597c1deb3fec610096cb48a5159c7550cb680b25'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"

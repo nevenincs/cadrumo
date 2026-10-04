@@ -81,7 +81,7 @@ async def _activate_button(pilot: Any, selector: str) -> None:
     await pilot.press("enter")
 
 
-async def _wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
+async def wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
     """Wait until child dismissal has rebuilt the public workbench generation."""
     from textual.css.query import NoMatches
     from textual.widgets import Static
@@ -137,10 +137,10 @@ async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: s
             outcome = "unexpected-notice"
         raise InstalledTuiChildError(f"calendar creation did not report success ({outcome})")
     await pilot.press("escape")
-    await _wait_for_refreshed_home(pilot)
+    await wait_for_refreshed_home(pilot)
 
 
-async def _open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
+async def open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
     """Open the created work's workbench using its public work-unit row key, once it has read its form."""
     await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
     await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)

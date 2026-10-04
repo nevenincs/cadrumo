@@ -20,8 +20,8 @@ from .._app_ledger_command_spec_support import (
 from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
-from .._command_parameter_contracts import ArgumentSpec, ParameterSpec
 from .._command_target import resolve_deferred_target
+from ..command_parameter_contracts import ArgumentSpec, ParameterSpec
 from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 

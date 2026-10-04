@@ -1886,8 +1886,8 @@ application:
   overview:
     calendar:
       holiday_coverage:
-        calendar_unavailable: calendari de festius no disponible; caps de setmana
-          aplicats, festius sense comprovar
+        calendar_unavailable: calendari de festius no disponible; el termini original
+          no s'ha comprovat
         national_and_territory: festius nacionals i de %{territory} comprovats; festius
           locals sense comprovar
         national_and_territory_without_name: festius nacionals i autonòmics aplicables
@@ -1901,7 +1901,7 @@ application:
           aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
-        calendar_unavailable: Festius sense comprovar
+        calendar_unavailable: Calendari no disponible
         domingo: Diumenge
         modelo_exception: Excepció del model
         sabado: Dissabte

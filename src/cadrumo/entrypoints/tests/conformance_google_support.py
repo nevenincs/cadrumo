@@ -10,6 +10,7 @@ scenario contacts the network or holds a usable credential.
 from __future__ import annotations
 
 import json
+import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime
 from uuid import UUID
@@ -38,6 +39,7 @@ from ...adapters.outbound.google.session_store import (
     save_metadata,
     save_token,
 )
+from ...application.operations.frontend_requests import OperationPublicEffectEventV1
 from ...application.operator_actions.preconditions import no_action_precondition_verdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...application.user_profile.google_configuration_operation_contracts import (
@@ -60,6 +62,7 @@ from ...application.user_profile.google_configuration_operation_contracts import
     GoogleFolderSetRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
+    GoogleLoginProjection,
     GoogleLoginRequest,
     GoogleLogoutProjection,
     GoogleLogoutRequest,
@@ -101,9 +104,6 @@ _ISSUED_AT = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
 _REFRESHED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 
 
-# Every value is synthetic. The endpoints are the canonical hosts the record
-# validators admit (records.py OAuthClient/OAuthToken); none is a usable
-# credential and no scenario hands one to a provider.
 def _synthetic_client() -> OAuthClient:
     return OAuthClient(
         client_id=_CLIENT_ID,
@@ -156,8 +156,6 @@ def _preparation(
     verify: Callable[[ConformanceOutcome], None] | None = None,
 ) -> ConformancePreparation:
     return ConformancePreparation(
-        # The result projector binds the receipt to this exact subject
-        # (google_configuration_result_projection.py:36).
         subject_ref=profile_operation_subject(str(context.profile_id)),
         request=request,
         secret=secret,
@@ -172,8 +170,6 @@ def _prepare_credential_source_set(context: ConformanceFamilyContext) -> Conform
     request = GoogleCredentialSourceSetRequest(
         profile_id=context.profile_id,
         kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
-        # The source constructor strips the principal before validating it
-        # (google_configuration_inputs.py:93).
         target_principal=f"  {_TARGET_PRINCIPAL}  ",
         scopes=(DRIVE_FILE_SCOPE,),
         lifetime_seconds=600,
@@ -223,8 +219,6 @@ def _prepare_credential_source_view(context: ConformanceFamilyContext) -> Confor
 def _prepare_folder_set(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
     before = load_drive_config(profile)
-    # The folder leaf keeps the canonical whitespace normalisation
-    # (google_configuration_operation_composition.py:321).
     request = GoogleFolderSetRequest(profile_id=context.profile_id, folder_id=f"  {_ROOT_FOLDER_ID}\t")
     expected = GoogleFolderSetProjection(profile_id=context.profile_id, root_folder_id=_ROOT_FOLDER_ID)
 
@@ -245,14 +239,10 @@ def _prepare_folder_view(context: ConformanceFamilyContext) -> ConformancePrepar
 
 
 def _prepare_login(context: ConformanceFamilyContext) -> ConformancePreparation:
-    # The consent leaf checks the registered client before publishing its
-    # review (google_configuration_operation_composition.py:174), and the
-    # isolated profile has none, so it refuses without a provider handoff.
     profile = str(context.profile_id)
     assert load_client(profile) is None
     refusal = GoogleConfigurationRefusalProjection(
         profile_id=context.profile_id,
-        # Registered for GoogleAuthClientNotRegisteredError at core/errors/registry/_adapters_part2.py:233.
         provider_code="AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
         message_key="cli.config.google.detail.client_unregistered",
         facts=GoogleConfigurationPresentationFacts(profile=context.profile_id),
@@ -281,7 +271,6 @@ def _prepare_logout(context: ConformanceFamilyContext) -> ConformancePreparation
     def verify(_outcome: ConformanceOutcome) -> None:
         assert load_token(profile) is None
         assert load_metadata(profile) is None
-        # Logout preserves the registered client (session_store.delete_session).
         assert load_client(profile) == _synthetic_client()
 
     request = GoogleLogoutRequest(profile_id=context.profile_id)
@@ -289,10 +278,6 @@ def _prepare_logout(context: ConformanceFamilyContext) -> ConformancePreparation
 
 
 def _prepare_probe(context: ConformanceFamilyContext) -> ConformancePreparation:
-    # A persisted root folder makes the root lookup independent of any host
-    # override (storage/factory.py:243). Credential hydration then refuses on
-    # the missing registered client (storage/factory.py:174-184) before any
-    # Drive request is built.
     profile = str(context.profile_id)
     save_drive_config(profile, DriveConfig(root_folder_id=_ROOT_FOLDER_ID))
     verdict = no_action_precondition_verdict(
@@ -303,7 +288,6 @@ def _prepare_probe(context: ConformanceFamilyContext) -> ConformancePreparation:
     )
     refusal = GoogleConfigurationRefusalProjection(
         profile_id=context.profile_id,
-        # Registered for OutboundStorageValidationError at core/errors/registry/_adapters_part2.py:383.
         provider_code="REFUSED_OUTBOUND_STORAGE_VALIDATION",
         message_key="adapters.outbound.storage._factory.errors.google_client_missing",
         facts=GoogleConfigurationPresentationFacts(profile=context.profile_id),
@@ -342,8 +326,6 @@ def _prepare_register(context: ConformanceFamilyContext) -> ConformancePreparati
         assert before is None
         assert load_client(profile) == _synthetic_client()
 
-    # The registered definition declares the client JSON as its ephemeral
-    # secret (google_configuration_operation.py:149-153).
     return _preparation(context, request, _succeeded(context.profile_id, expected), secret=client_json, verify=verify)
 
 
@@ -353,7 +335,6 @@ def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation
     metadata = _synthetic_metadata()
     save_client(profile, client)
     save_metadata(profile, metadata)
-    # Instants are rendered with isoformat (google_configuration_operation_composition.py:426-427).
     expected = GoogleStatusProjection(
         profile_id=context.profile_id,
         client_registered=True,
@@ -390,13 +371,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
 
 
 def _case(
-    definition_id: str,
-    terminal: OperationTerminalCondition,
-    effect: OperationEffect,
-    refusal_ref: str | None = None,
+    definition_id: str, terminal: OperationTerminalCondition, effect: OperationEffect, refusal_ref: str | None = None
 ) -> RegisteredExecutorConformanceCase:
-    # Each leaf declares its own id as its only phase (google_configuration_operation.py:129)
-    # and publishes it before any port work (google_configuration_executor.py:184).
     return RegisteredExecutorConformanceCase(
         definition_id, terminal, effect, (definition_id,), expected_refusal_ref=refusal_ref
     )
@@ -404,25 +380,14 @@ def _case(
 
 _SUCCEEDED = OperationTerminalCondition.SUCCEEDED
 _REFUSED = OperationTerminalCondition.REFUSED
-
 GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        # Local writes settle UPDATED through the tracked commit
-        # (google_configuration_executor.py:151-160); reads commit nothing.
         _case(GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
         _case(GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
         _case(GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
-        # The consent preparation refusal is stored with effect NONE
-        # (google_configuration_executor.py:202-205).
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
-        # Logout's commit reports a change when either session record existed
-        # (google_configuration_operation_composition.py:411).
         _case(GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
-        # The credential-acquisition handoff is admitted before hydration
-        # (storage/factory.py:303-305) and never acknowledged once hydration
-        # refuses, so the tracker settles the refusal UNKNOWN
-        # (google_configuration_executor.py:125-127, 305-308).
         _case(
             GOOGLE_PROBE_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.UNKNOWN, GOOGLE_CONFIGURATION_REFUSAL_CODE
         ),
@@ -430,4 +395,165 @@ GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
         _case(GOOGLE_STATUS_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
     ),
     prepare=_prepare,
+)
+_RETAINED_GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
+_RETAINED_GOOGLE_CLIENT = OAuthClient(
+    client_id="synthetic-conformance-client",
+    client_secret=secrets.token_hex(16),
+    project_id="synthetic-project",
+    auth_uri="https://accounts.google.com/o/oauth2/auth",
+    token_uri=_RETAINED_GOOGLE_OAUTH_ENDPOINT,
+    auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
+    redirect_uris=("http://localhost",),
+)
+_RETAINED_GOOGLE_TIME = datetime(2026, 4, 1, tzinfo=UTC)
+_RETAINED_GOOGLE_METADATA = OAuthMetadata(
+    account_email="conformance@example.invalid",
+    granted_scopes=REQUIRED_SCOPES,
+    issued_at=_RETAINED_GOOGLE_TIME,
+    last_refresh_at=_RETAINED_GOOGLE_TIME,
+)
+
+
+def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
+    profile = str(context.profile_id)
+    operation_id = context.definition.definition_id
+    request: BaseModel
+    result: BaseModel | None = None
+    secret: bytes | None = None
+    match operation_id:
+        case "config.google.credential-source.set":
+            request = GoogleCredentialSourceSetRequest(
+                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP
+            )
+            result = GoogleCredentialSourceSetProjection(
+                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP
+            )
+        case "config.google.credential-source.view":
+            request = GoogleCredentialSourceViewRequest(profile_id=context.profile_id)
+            result = GoogleCredentialSourceViewProjection(
+                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP, configured=False
+            )
+        case "config.google.folder.set":
+            request = GoogleFolderSetRequest(
+                profile_id=context.profile_id, folder_id="  synthetic-conformance-folder  "
+            )
+            result = GoogleFolderSetProjection(
+                profile_id=context.profile_id, root_folder_id="synthetic-conformance-folder"
+            )
+        case "config.google.folder.view":
+            save_drive_config(profile, DriveConfig(root_folder_id="synthetic-existing-folder"))
+            request = GoogleFolderViewRequest(profile_id=context.profile_id)
+            result = GoogleFolderViewProjection(
+                profile_id=context.profile_id, configured=True, root_folder_id="synthetic-existing-folder"
+            )
+        case "config.google.login" | "config.google.logout" | "config.google.status":
+            save_client(profile, _RETAINED_GOOGLE_CLIENT)
+            save_metadata(profile, _RETAINED_GOOGLE_METADATA)
+            save_token(
+                profile, OAuthToken(refresh_token=secrets.token_hex(16), token_uri=_RETAINED_GOOGLE_CLIENT.token_uri)
+            )
+            if operation_id.endswith("login"):
+                request = GoogleLoginRequest(profile_id=context.profile_id, refresh_only=True)
+                result = GoogleLoginProjection(
+                    profile_id=context.profile_id,
+                    mode="refresh-only",
+                    account_email=_RETAINED_GOOGLE_METADATA.account_email,
+                )
+            elif operation_id.endswith("logout"):
+                request = GoogleLogoutRequest(profile_id=context.profile_id)
+                result = GoogleLogoutProjection(
+                    profile_id=context.profile_id, token_removed=True, metadata_removed=True
+                )
+            else:
+                request = GoogleStatusRequest(profile_id=context.profile_id)
+                result = GoogleStatusProjection(
+                    profile_id=context.profile_id,
+                    client_registered=True,
+                    client_id=_RETAINED_GOOGLE_CLIENT.client_id,
+                    session_present=True,
+                    account_email=_RETAINED_GOOGLE_METADATA.account_email,
+                    granted_scopes=REQUIRED_SCOPES,
+                    issued_at=_RETAINED_GOOGLE_TIME.isoformat(),
+                    last_refresh_at=_RETAINED_GOOGLE_TIME.isoformat(),
+                    reauth_required=False,
+                )
+        case "config.google.register":
+            secret = json.dumps({"installed": _RETAINED_GOOGLE_CLIENT.model_dump(mode="json")}).encode("utf-8")
+            path = context.input_root / "synthetic-client.json"
+            path.write_bytes(secret)
+            request = GoogleRegisterRequest(
+                profile_id=context.profile_id, client_json_path=str(path), client_json_sha256=sha256_hex(secret)
+            )
+            result = GoogleRegisterProjection(
+                profile_id=context.profile_id,
+                client_id=_RETAINED_GOOGLE_CLIENT.client_id,
+                project_id=_RETAINED_GOOGLE_CLIENT.project_id,
+            )
+        case "config.google.probe":
+            save_drive_config(profile, DriveConfig(root_folder_id="synthetic-conformance-folder"))
+            request = GoogleProbeRequest(profile_id=context.profile_id, read_only=True)
+        case _:
+            raise AssertionError(operation_id)
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        if operation_id.endswith("credential-source.set"):
+            selection = load_credential_source_selection(profile)
+            assert selection is not None and selection.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP
+        elif operation_id.endswith("folder.set"):
+            assert load_drive_config(profile) == DriveConfig(root_folder_id="synthetic-conformance-folder")
+        elif operation_id.endswith("register"):
+            assert load_client(profile) == _RETAINED_GOOGLE_CLIENT
+        elif operation_id.endswith("logout"):
+            assert load_metadata(profile) is None and load_token(profile) is None
+            assert load_client(profile) == _RETAINED_GOOGLE_CLIENT
+        elif operation_id.endswith("probe"):
+            actual = outcome.resolve_result(GoogleConfigurationOutcome)
+            assert actual.outcome == "refused" and actual.refusal is not None
+            assert actual.refusal.provider_code == "REFUSED_OUTBOUND_STORAGE_VALIDATION"
+            assert actual.refusal.message_key == "adapters.outbound.storage._factory.errors.google_client_missing"
+            assert load_drive_config(profile) == DriveConfig(root_folder_id="synthetic-conformance-folder")
+            assert load_client(profile) is None and load_token(profile) is None
+            assert tuple(
+                event.effect
+                for event in outcome.observed.event_page.events
+                if isinstance(event, OperationPublicEffectEventV1)
+            ) == (OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UNKNOWN)
+
+    expected = (
+        GoogleConfigurationOutcome(profile_id=context.profile_id, outcome="succeeded", result=result)
+        if result is not None
+        else None
+    )
+    return ConformancePreparation(
+        profile_operation_subject(profile), request, secret=secret, expected_result=expected, verify=verify
+    )
+
+
+GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
+    cases=tuple(
+        RegisteredExecutorConformanceCase(
+            "config.google." + suffix,
+            OperationTerminalCondition.REFUSED if suffix == "probe" else OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED
+            if suffix in {"credential-source.set", "folder.set", "register", "logout"}
+            else OperationEffect.UNKNOWN
+            if suffix == "probe"
+            else OperationEffect.NONE,
+            ("config.google." + suffix,),
+            "REFUSED_GOOGLE_CONFIGURATION" if suffix == "probe" else None,
+        )
+        for suffix in (
+            "credential-source.set",
+            "credential-source.view",
+            "folder.set",
+            "folder.view",
+            "login",
+            "logout",
+            "probe",
+            "register",
+            "status",
+        )
+    ),
+    prepare=_retained_google_prepare,
 )

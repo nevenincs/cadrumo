@@ -394,45 +394,6 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
     assert "m347-record:criterio-caja-devengo" in _source_refs(resolution)
 
 
-def test_the_marks_render_at_their_own_positions_of_each_record() -> None:
-    """Position 281 carries the criterio de caja "X" and 282 the inversión del sujeto pasivo "X", row by row."""
-    with bundled_indexed_authority().operation() as operation:
-        invoices = (
-            _operation(
-                "V-3",
-                date(2025, 3, 1),
-                "4132.23",
-                iva="867.77",
-                tax_id="C3333333G",
-                name="CLIENTE CAJA SL",
-                legal_mentions=("CASH_ACCOUNTING_REGIME",),
-            ),
-            _operation(
-                "C-3",
-                date(2025, 4, 1),
-                "6000.00",
-                kind=InvoiceKind.RECEIVED,
-                tax_id="B87654323",
-                name="SUBCONTRATA OBRA SL",
-                iva_category="domestic_reverse_charge",
-            ),
-        )
-        resolution = _resolve_2025(invoices, _filer_profile(operation))
-
-    declarado = _record(_revision("2025-y-siguientes"), "m347-declarado")
-    rows = _by_name(_declarado_rows(resolution))
-    cash, reverse_charge = rows[("CLIENTE CAJA SL", "X", "")], rows[("SUBCONTRATA OBRA SL", "", "X")]
-    assert (_render(declarado, 281, cash), _render(declarado, 282, cash)) == ("X", " ")
-    assert (_render(declarado, 281, reverse_charge), _render(declarado, 282, reverse_charge)) == (" ", "X")
-    # The criterio de caja record's quarter has no content, which the design's
-    # numeric fill writes as a space and zeros; the other record carries 0 for Q1.
-    assert (cash[_QUARTERS[0]], _render(declarado, 136, cash)) == ("", " 000000000000000")
-    assert (reverse_charge[_QUARTERS[0]], _render(declarado, 136, reverse_charge)) == (
-        Decimal("0"),
-        " 000000000000000",
-    )
-
-
 @pytest.mark.parametrize(
     "filer_fact",
     [

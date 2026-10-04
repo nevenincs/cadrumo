@@ -1,0 +1,1287 @@
+{
+  "schema_version": 1,
+  "status": "complete source reconciliation, canonical registry gates and scoped verification; shipping/native/E2E acceptance remains root-owned",
+  "original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "source_snapshot": "66b785a1418ef48cb2f56711c83933c0828c46f8",
+  "ours": "f39a5d517590508909a873033eb1833917d12b48",
+  "captured_path_count": 45,
+  "rows": [
+    {
+      "path": "dev/registry/compiler/tests/test_below_floor_export_refs.py",
+      "base_sha256": "7bb55f49a2bbc8a0bc271305e22a2c355ca2dc50c967d473f6fc10b9efe8fc16",
+      "source_sha256": "9730b1f175aa3df3ddc1bce303cedf6b9f3b1702ead9fa415b6c50cda1a17fac",
+      "current_before_generation_sha256": "9730b1f175aa3df3ddc1bce303cedf6b9f3b1702ead9fa415b6c50cda1a17fac",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/compiler/tests/test_below_floor_export_refs.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "The real source-pinned historical static export may load for inspection while ordinary supported-year selection still refuses below2022; source evidence identity remains mandatory.",
+      "current_sha256": "9730b1f175aa3df3ddc1bce303cedf6b9f3b1702ead9fa415b6c50cda1a17fac",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/compiler/tests/test_export_layout_source_coverage.py",
+      "base_sha256": "a35f61cc687e04d7ffa19181e37f8d88cb44e153208d88e60747b3caae87f34e",
+      "source_sha256": "38731e1b7849d0fbb6fdf03137ff06d01987ad8343c374517514fe7c486dae82",
+      "current_before_generation_sha256": "38731e1b7849d0fbb6fdf03137ff06d01987ad8343c374517514fe7c486dae82",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/compiler/tests/test_export_layout_source_coverage.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Source coverage tests retain exact official anchors and generated export enrollment, including admitted static historical evidence rather than silently omitting below-floor targets.",
+      "current_sha256": "38731e1b7849d0fbb6fdf03137ff06d01987ad8343c374517514fe7c486dae82",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/generated_tree_dispositions.toml",
+      "base_sha256": "3593b39afd00f583428a62a326b940b55c8a4301ee4cc063b373da19d7e55b8c",
+      "source_sha256": "5be58759b2688283f13a823c385b5a5ab79c7d4e610556aef6decc4f7f846923",
+      "current_before_generation_sha256": "45aecec0ed738e400b543a58d27672e9403df160565d26b5b4b1cf3f1b7cef49",
+      "current_equals_source": false,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/generated_tree_dispositions.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "M2322016 is reproduced as a source-pinned historical static tree, not admitted for filing. ThreeM390 rows retire only after individual fresh target+canonical form checks. TemporaryM1902-record/M2322018one-layout rows admitted exact-source/digest-bound owner repair and retired only after successful final-live validation. Strict empty schema4 dispositions declaration remains.",
+      "current_sha256": "69b805789eee1a63289d5ba930b1b438273bb470156d47cdea693704fdab4e0c",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/generated_tree_inventory.py",
+      "base_sha256": "bb40d9b5c17af015b4ad8b999fa513dd49422b0e2cff79a24f1e378e15fac5fc",
+      "source_sha256": "f7445bd5da463b1d9a2dbb3c949b18675a01ee0b4517c86a16a9863b567017db",
+      "current_before_generation_sha256": "f7445bd5da463b1d9a2dbb3c949b18675a01ee0b4517c86a16a9863b567017db",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/generated_tree_inventory.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Enroll a historical static generated tree only through its unique exact official source/epoch/SHA; retain runtime filing floor and edition-grade separation.",
+      "current_sha256": "f7445bd5da463b1d9a2dbb3c949b18675a01ee0b4517c86a16a9863b567017db",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/m232_form_bridge.py",
+      "base_sha256": "db739dcc25b5f008b2cf714a61cc461e8ffaae28fea369904e177c0cb32bea92",
+      "source_sha256": "0b7a868c2035067a76a5c6f14651d4383e0759a9bb7b951ba9e3db73279b5a91",
+      "current_before_generation_sha256": "0b7a868c2035067a76a5c6f14651d4383e0759a9bb7b951ba9e3db73279b5a91",
+      "current_equals_source": true,
+      "status": "superseded",
+      "replacement": "dev/registry/pipeline/generated_form_bridge.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "The captured detached complete-edition form support is retained in generated_form_bridge.py after an atomic defining-owner move. Added exact-reviewedM190 companion repair; allM232 source/oldmanifest/form pins and guarded failure semantics remain.",
+      "current_sha256": null,
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_below_floor_dispositions.py",
+      "base_sha256": "c1efc998f5ab72415838b918977dc6717e25520c5eac994877730e890cc26c51",
+      "source_sha256": "6d0928ea2e8f7a790a0764db76634a96bb35402bb153346d0777bfee15c953d7",
+      "current_before_generation_sha256": "6d0928ea2e8f7a790a0764db76634a96bb35402bb153346d0777bfee15c953d7",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_below_floor_dispositions.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "An isolated genuine ledger exercises dormant-row rejection; the realM2322016 static inventory and actual2022 filing refusal remain independently asserted.",
+      "current_sha256": "6d0928ea2e8f7a790a0764db76634a96bb35402bb153346d0777bfee15c953d7",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_export_tree.py",
+      "base_sha256": "f395f6e501d6357c75dc6ca856c61d79abe49e25035b9720b8e8cd42f058380b",
+      "source_sha256": "b17fd79b0186b9557d6d31e4252a6a64e6b2795f78d972a4d15394eb6267f6d1",
+      "current_before_generation_sha256": "b17fd79b0186b9557d6d31e4252a6a64e6b2795f78d972a4d15394eb6267f6d1",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_export_tree.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Preserve the source-grounded export renderer contracts and assertions for actual source geometry, canonical records and absent-page admission.",
+      "current_sha256": "b17fd79b0186b9557d6d31e4252a6a64e6b2795f78d972a4d15394eb6267f6d1",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_generated_export_trees.py",
+      "base_sha256": "6b3e1ada8788347a1aab5537b0ffc318d7db2f8db23ee4caedde1d3a7b69dbf2",
+      "source_sha256": "14043fbc421231ffeefd86ae8bd4042a411cedc7fabb007471e8fa051ebd181c",
+      "current_before_generation_sha256": "14043fbc421231ffeefd86ae8bd4042a411cedc7fabb007471e8fa051ebd181c",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_generated_export_trees.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Canonical reproduction includes source-attested historical targets and distinguishes static inspection from filing snapshots; unchanged current loader/record/evidence comparisons remain.",
+      "current_sha256": "14043fbc421231ffeefd86ae8bd4042a411cedc7fabb007471e8fa051ebd181c",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_m232_form_bridge.py",
+      "base_sha256": "f258ea837e34e221b9b021b9342f830ee5be1ad40bf607c7468aa133e18e16ea",
+      "source_sha256": "76386566beba0d16fdfde8b11b42ad7859316fe3d717de6d6361caef363588a5",
+      "current_before_generation_sha256": "76386566beba0d16fdfde8b11b42ad7859316fe3d717de6d6361caef363588a5",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_m232_form_bridge.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Detached candidate form is regenerated canonically, source-content same-size edits refuse, postcommit form failure reports incomplete, and only a journal-bound intact rollback package is excluded. Six actual tests passed after direct defining-owner migration.",
+      "current_sha256": "c3ccdd6c65f33029c712a8feeb1ca6e8d8df6e3c01f9e32676158afef7c01eda",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_declaration_invariant_gates.py",
+      "base_sha256": "0071969cde2795325893b2702776d8be04809bc6208577eedba12eb184146bca",
+      "source_sha256": "7e791927c4454cec6de61c18e3859727ae7688d2ead7765fe03265c0ad4532c9",
+      "current_before_generation_sha256": "7e791927c4454cec6de61c18e3859727ae7688d2ead7765fe03265c0ad4532c9",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_declaration_invariant_gates.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Preserve exact declaration-invariant gate cases against the current typed registry definitions and source evidence.",
+      "current_sha256": "7e791927c4454cec6de61c18e3859727ae7688d2ead7765fe03265c0ad4532c9",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_embedded_envelope_source_authority.py",
+      "base_sha256": "0ecfe98f21dac892706acb4b304613d8c51ccb156a747ee75198500fd7dfb0f7",
+      "source_sha256": "dfe26de79b0565e560216bcacad8d4d45bbc4f57b5b04ce486d5db858d908038",
+      "current_before_generation_sha256": "dfe26de79b0565e560216bcacad8d4d45bbc4f57b5b04ce486d5db858d908038",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_embedded_envelope_source_authority.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "RealM232 filing-envelope assertions bind source hash, ordered body, variable total and closer independently of the separately retained legacy auxiliary-header parser.",
+      "current_sha256": "dfe26de79b0565e560216bcacad8d4d45bbc4f57b5b04ce486d5db858d908038",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_export_layout_join_ratchet.py",
+      "base_sha256": "7aa5ae4fdbf7504df8e3c5d2919f2ae5b9ba0282e29705495df82bf1caa1377a",
+      "source_sha256": "6a7ec78f388df1a7b093a75859977b11e8470c3665daaa11af8daddbc76d7732",
+      "current_before_generation_sha256": "6a7ec78f388df1a7b093a75859977b11e8470c3665daaa11af8daddbc76d7732",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_export_layout_join_ratchet.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Preserve current source/design join coverage without widening field-source ownership or silently dropping design anchors.",
+      "current_sha256": "6a7ec78f388df1a7b093a75859977b11e8470c3665daaa11af8daddbc76d7732",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_export_parse.py",
+      "base_sha256": "9820e8bb4e25c9c72266661853b75f20d60063acc9e57942962d1f2fd830bc76",
+      "source_sha256": "936f99b792d285dee19cb631dc9df182035b49eea5b37787225dea5300795def",
+      "current_before_generation_sha256": "936f99b792d285dee19cb631dc9df182035b49eea5b37787225dea5300795def",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_export_parse.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Retain real canonical export parser cases using current public codec/helper contracts and source-grounded optional-page geometry.",
+      "current_sha256": "936f99b792d285dee19cb631dc9df182035b49eea5b37787225dea5300795def",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_modelo_145_registry_foundation.py",
+      "base_sha256": "166b9524cd23a01c199668ae21b5950e7329f0f312bf85fa3e2a5ed97c64caae",
+      "source_sha256": "f60dba4e02c4cb44151469467ff145838ddebc132e1532e0c488b4170edd9bdc",
+      "current_before_generation_sha256": "f60dba4e02c4cb44151469467ff145838ddebc132e1532e0c488b4170edd9bdc",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_modelo_145_registry_foundation.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Principal-page omission is admitted as the source blank; complementary marker has exactly authoredC domain. Physical-source requiredness is not inferred from default text.",
+      "current_sha256": "f60dba4e02c4cb44151469467ff145838ddebc132e1532e0c488b4170edd9bdc",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_modelo_232_registry.py",
+      "base_sha256": "2ab37ab551410dc52c461ab54b31fc3d3243d1f221615ee1c0270ccfc1305760",
+      "source_sha256": "28d78dee1e65ac1ed5e9b745060839fc37f4213472000c443761dca08aff56f5",
+      "current_before_generation_sha256": "28d78dee1e65ac1ed5e9b745060839fc37f4213472000c443761dca08aff56f5",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_modelo_232_registry.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Preserve complete source-pinnedM232 declared filing envelope and below-floor static versus runtime admission boundaries.",
+      "current_sha256": "28d78dee1e65ac1ed5e9b745060839fc37f4213472000c443761dca08aff56f5",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/tests/test_render_check.py",
+      "base_sha256": "20433fcb1dd43c6f9e41ea5da5e1dbe912765b82f5c7c0993e6349b2da249714",
+      "source_sha256": "2ec7c0b311298fec083d660fb61f728ffd1369ebd2c8eeea72eff26de4c7ab1d",
+      "current_before_generation_sha256": "2ec7c0b311298fec083d660fb61f728ffd1369ebd2c8eeea72eff26de4c7ab1d",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "dev/registry/tests/test_render_check.py",
+      "owner": "history: captured66 registry closure",
+      "reason": "Preserve canonical render/comparison classification under current physical source optionality and exact target identity.",
+      "current_sha256": "2ec7c0b311298fec083d660fb61f728ffd1369ebd2c8eeea72eff26de4c7ab1d",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "08c6939c175bc18f824510a70973ca3ac228df0cdfa49caf828722912c1df977",
+      "source_sha256": "3d84eb8fb9a856a31f598cd113fcd2a224899258eeb15a4c16b474c33be74559",
+      "current_before_generation_sha256": "3d84eb8fb9a856a31f598cd113fcd2a224899258eeb15a4c16b474c33be74559",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "3d84eb8fb9a856a31f598cd113fcd2a224899258eeb15a4c16b474c33be74559",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "9bae09b78b71430b96ff53189a6d920168c2db1d693df6d23e48123ae9e8c228",
+      "source_sha256": "50f46909e9fb6f51c91c935675516cd71a558d8231e4f9a4db7e244981e9e72e",
+      "current_before_generation_sha256": "50f46909e9fb6f51c91c935675516cd71a558d8231e4f9a4db7e244981e9e72e",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "50f46909e9fb6f51c91c935675516cd71a558d8231e4f9a4db7e244981e9e72e",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/0001-declarations.toml",
+      "base_sha256": "19779db5e2c0f697293f5aa5126998f976d6622a9f82e294d2734a23a9793e99",
+      "source_sha256": "99f5c48c2925830e74245386b5b5f78529a1bb98d29df9ddf8e895db63a73b8f",
+      "current_before_generation_sha256": "99f5c48c2925830e74245386b5b5f78529a1bb98d29df9ddf8e895db63a73b8f",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/0001-declarations.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "PhysicalDR145 admits blank principal page or complementaryC marker. Authored closed enum preserves source evidence; actual generated target/currentness and unchanged2022floor are checked independently.",
+      "current_sha256": "99f5c48c2925830e74245386b5b5f78529a1bb98d29df9ddf8e895db63a73b8f",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/0001-record-modelo-145-dr-v20-record.toml",
+      "base_sha256": "7bc3b7f5a3218daaa784170c9237d0a726b96675602697d05d104334e24b98cf",
+      "source_sha256": "b237873235ad911d3ff6f23572ad151d55f4df168e51008f616f964f378198f6",
+      "current_before_generation_sha256": "b237873235ad911d3ff6f23572ad151d55f4df168e51008f616f964f378198f6",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/0001-record-modelo-145-dr-v20-record.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "b237873235ad911d3ff6f23572ad151d55f4df168e51008f616f964f378198f6",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "04fa49fecffab443e9f6e378b11a318ea479d23a259668f5c5c8b537b982dacf",
+      "source_sha256": "392273f63f4ed832b51cf429a4a60972f86ad0c0562fdd8314b4a53bbc9eb84a",
+      "current_before_generation_sha256": "392273f63f4ed832b51cf429a4a60972f86ad0c0562fdd8314b4a53bbc9eb84a",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "392273f63f4ed832b51cf429a4a60972f86ad0c0562fdd8314b4a53bbc9eb84a",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json",
+      "base_sha256": "f9fcbe8a444a32434017464b532e2880b1e3f06ce643aefe55143ff90dfe25ef",
+      "source_sha256": "9b1d041747d30124d13d4c32e2abf84ae90ad56fca09e8126bf6abf5707de3cc",
+      "current_before_generation_sha256": "9b1d041747d30124d13d4c32e2abf84ae90ad56fca09e8126bf6abf5707de3cc",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "9b1d041747d30124d13d4c32e2abf84ae90ad56fca09e8126bf6abf5707de3cc",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "06d1d23b1f469a3a7514df1d7fb85335258480e3f87e8918c77aa4bb6aa214f8",
+      "source_sha256": "e3334c36897b89df80950c7526e629178d52756d3d764b4c0f57a0dede98358d",
+      "current_before_generation_sha256": "e3334c36897b89df80950c7526e629178d52756d3d764b4c0f57a0dede98358d",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "e3334c36897b89df80950c7526e629178d52756d3d764b4c0f57a0dede98358d",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/_generation.provenance.json",
+      "base_sha256": "97eb3c5d841fcafae66ac51449044d040a95093cf9cd42c5363114dd5f9a5103",
+      "source_sha256": "3e1421e6af42871c34ab330ebb92ea924b280b6c59748e005eef483d4cd851cb",
+      "current_before_generation_sha256": "3e1421e6af42871c34ab330ebb92ea924b280b6c59748e005eef483d4cd851cb",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "3e1421e6af42871c34ab330ebb92ea924b280b6c59748e005eef483d4cd851cb",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "1ca9da2f511b8d86a878dec081c525d915e5ba15ec6ac8a4b56b23f0f00298a1",
+      "source_sha256": "cc7a7dbb9590b101a92ebe63016a7c4dc850b1d61e1b5d6d03e49c19515c7b69",
+      "current_before_generation_sha256": "cc7a7dbb9590b101a92ebe63016a7c4dc850b1d61e1b5d6d03e49c19515c7b69",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "cc7a7dbb9590b101a92ebe63016a7c4dc850b1d61e1b5d6d03e49c19515c7b69",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/export/_generation.provenance.json",
+      "base_sha256": "070dfa415dbdb67882dcd0e917dd82060ac10377c1ce1805e517ab3695edd3b9",
+      "source_sha256": "145b746308647fea1e6c55a116527f27c9901cd3d51ef908914e8e18bbc8e7bc",
+      "current_before_generation_sha256": "145b746308647fea1e6c55a116527f27c9901cd3d51ef908914e8e18bbc8e7bc",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "145b746308647fea1e6c55a116527f27c9901cd3d51ef908914e8e18bbc8e7bc",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/export/_generation.provenance.json",
+      "base_sha256": "c4f56e99206a338daadcdcdb86944cf22da2c2c9cebcc309b86a7b95ad4a7151",
+      "source_sha256": "74ee403fd4a3f1ce40153454d919cc79a060b750dd4a41f5ac993c36e4b2247f",
+      "current_before_generation_sha256": "74ee403fd4a3f1ce40153454d919cc79a060b750dd4a41f5ac993c36e4b2247f",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "74ee403fd4a3f1ce40153454d919cc79a060b750dd4a41f5ac993c36e4b2247f",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "a9900e609e1333a70ed8ecff511c87913423d6fddbc26cdb7a3c7cc19ae9ee58",
+      "source_sha256": "9defa5ba51733ff074bb1d40b5cc2be380780b1cbbdad2c1870c967ad42447b5",
+      "current_before_generation_sha256": "9defa5ba51733ff074bb1d40b5cc2be380780b1cbbdad2c1870c967ad42447b5",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "9defa5ba51733ff074bb1d40b5cc2be380780b1cbbdad2c1870c967ad42447b5",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0000-export-layout.toml",
+      "base_sha256": "d14f6383f3b3f3b91f2a8b8fc1bb8c1ff3f07ba94f9a033663ffc17ad0e0fa44",
+      "source_sha256": "83388cddbb2c25b73db54b83bb5104d1238c8ab80fbe4ac567cc03ad4a40df03",
+      "current_before_generation_sha256": "83388cddbb2c25b73db54b83bb5104d1238c8ab80fbe4ac567cc03ad4a40df03",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0000-export-layout.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "83388cddbb2c25b73db54b83bb5104d1238c8ab80fbe4ac567cc03ad4a40df03",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0001-record-m232-operaciones-vinculadas.toml",
+      "base_sha256": "bce7cc3402f11046d2f1f57f4a04aafbb51be4fabf49cac94851846c071f90fd",
+      "source_sha256": "fd72cc17eff86ca0c4b1274f3bb7bc1ac3fc5f399f627c868190c7fd2b1d0fbd",
+      "current_before_generation_sha256": "fd72cc17eff86ca0c4b1274f3bb7bc1ac3fc5f399f627c868190c7fd2b1d0fbd",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0001-record-m232-operaciones-vinculadas.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "fd72cc17eff86ca0c4b1274f3bb7bc1ac3fc5f399f627c868190c7fd2b1d0fbd",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0002-record-m232-paraisos-fiscales.toml",
+      "base_sha256": "70f0d266d378ed029258c18ff3a5583fd231bc8fc6a5660e742713de59034464",
+      "source_sha256": "c727101b4b5c1c35e24e0227876cbe4da902a643a74d0309b337814dd50e20ee",
+      "current_before_generation_sha256": "c727101b4b5c1c35e24e0227876cbe4da902a643a74d0309b337814dd50e20ee",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0002-record-m232-paraisos-fiscales.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "c727101b4b5c1c35e24e0227876cbe4da902a643a74d0309b337814dd50e20ee",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0003-record-m232-paraisos-fiscales.toml",
+      "base_sha256": "8d92924468e9172db218463ce5972b36917f9a914d7f24d8db5341b89aae3e9e",
+      "source_sha256": "782c40dff5230535da1304f92a1510182e8d3cf4bdbeb4500e904f69d490e200",
+      "current_before_generation_sha256": "782c40dff5230535da1304f92a1510182e8d3cf4bdbeb4500e904f69d490e200",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0003-record-m232-paraisos-fiscales.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "782c40dff5230535da1304f92a1510182e8d3cf4bdbeb4500e904f69d490e200",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/_generation.provenance.json",
+      "base_sha256": "f4e1bb800af4c511c93e0d1df74520b70cc0ee986338b57f31c46c619582d6fa",
+      "source_sha256": "da3a9d765756565836aa2db1205ebafcd6f7023309d4b9d08db99b7be4de1152",
+      "current_before_generation_sha256": "da3a9d765756565836aa2db1205ebafcd6f7023309d4b9d08db99b7be4de1152",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "da3a9d765756565836aa2db1205ebafcd6f7023309d4b9d08db99b7be4de1152",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml",
+      "base_sha256": "87587cd44e6be0d35afaffa93e35b458e8a61f3aebde2f6d4279a083d33ce647",
+      "source_sha256": "9ce43500fde8373664437cf0a2f3a01b09b237091c4e541e7451758005d60eb5",
+      "current_before_generation_sha256": "9ce43500fde8373664437cf0a2f3a01b09b237091c4e541e7451758005d60eb5",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured detachedM2322016 canonical generated form retained; real form-owner check has zero stale/missing layouts and historical target remains below runtime support floor.",
+      "current_sha256": "9ce43500fde8373664437cf0a2f3a01b09b237091c4e541e7451758005d60eb5",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0001-record-modelo-490-490-01.toml",
+      "base_sha256": "16f9ca51ae9a977126f792cbf262eb4b409ee080c6ead43df25864ce5300880e",
+      "source_sha256": "812c0a664a2ec18b631437dc6d7dbb0f7359fed5aa2a484fb3a3dafd293dda4a",
+      "current_before_generation_sha256": "812c0a664a2ec18b631437dc6d7dbb0f7359fed5aa2a484fb3a3dafd293dda4a",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0001-record-modelo-490-490-01.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "812c0a664a2ec18b631437dc6d7dbb0f7359fed5aa2a484fb3a3dafd293dda4a",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0002-record-modelo-490-490-02.toml",
+      "base_sha256": "44c3334470c3152e89814011331e54aea3e6786ad0ff7c0754d7f3899524272a",
+      "source_sha256": "e8619e270137eb43993b902b7774b88a93c313c4328fd791d9c46b071fedd328",
+      "current_before_generation_sha256": "e8619e270137eb43993b902b7774b88a93c313c4328fd791d9c46b071fedd328",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0002-record-modelo-490-490-02.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "e8619e270137eb43993b902b7774b88a93c313c4328fd791d9c46b071fedd328",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/_generation.provenance.json",
+      "base_sha256": "3eaffdab31439aa9ed1ba0130f265a3c9f7b5ee6cbc3c4f8aaef9ad1f3665f63",
+      "source_sha256": "a3542a8e81c407bc7bbe56243f2eb351b67c178c309ef9611b90978707e81046",
+      "current_before_generation_sha256": "a3542a8e81c407bc7bbe56243f2eb351b67c178c309ef9611b90978707e81046",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "a3542a8e81c407bc7bbe56243f2eb351b67c178c309ef9611b90978707e81046",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0001-record-modelo-490-490-01.toml",
+      "base_sha256": "c22f74f86b052ef8be1d474b80f2647b113f3d50fceaf7f5108e15c0b3e3a74c",
+      "source_sha256": "f1b984e07919d17e741fec58d61057a109f77dbf7279abf5c098ed86a1bf7886",
+      "current_before_generation_sha256": "f1b984e07919d17e741fec58d61057a109f77dbf7279abf5c098ed86a1bf7886",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0001-record-modelo-490-490-01.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "f1b984e07919d17e741fec58d61057a109f77dbf7279abf5c098ed86a1bf7886",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0002-record-modelo-490-490-02.toml",
+      "base_sha256": "8fb5fddd509958479b4b4dace7d3a6d3873090c39f6a8d4748c1f114c3bdeaae",
+      "source_sha256": "a8a80d803125f6a64103b899571087ed73bfd0e7ed75eecd68bd93234f19ccfb",
+      "current_before_generation_sha256": "a8a80d803125f6a64103b899571087ed73bfd0e7ed75eecd68bd93234f19ccfb",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0002-record-modelo-490-490-02.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "a8a80d803125f6a64103b899571087ed73bfd0e7ed75eecd68bd93234f19ccfb",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0005-record-modelo-490-490-03.toml",
+      "base_sha256": "8e5e932d94d0abfb7e5e0e21ee4b25a6f37fb82535241c8cc89294856becf694",
+      "source_sha256": "772efcd426571c8c65d75c876e2286475edb9dc9ae9be7109d54f4e42932928b",
+      "current_before_generation_sha256": "772efcd426571c8c65d75c876e2286475edb9dc9ae9be7109d54f4e42932928b",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0005-record-modelo-490-490-03.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "772efcd426571c8c65d75c876e2286475edb9dc9ae9be7109d54f4e42932928b",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/_generation.provenance.json",
+      "base_sha256": "089b1669d8389edaa29acf888bc597d08a95ac8ab010ce5172863615d1910e46",
+      "source_sha256": "ad786f2af54341da941c6f32f9cbb7cf08f1a83ede5e1964925069e9d1ead4f3",
+      "current_before_generation_sha256": "ad786f2af54341da941c6f32f9cbb7cf08f1a83ede5e1964925069e9d1ead4f3",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "ad786f2af54341da941c6f32f9cbb7cf08f1a83ede5e1964925069e9d1ead4f3",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0001-record-modelo-490-490-01.toml",
+      "base_sha256": "391a0ed182312a9b87eab3dd3dec236fa2465fd544e8cb06d9114ead31732763",
+      "source_sha256": "918b05327f663d2d92b79342a43e8ef982a940a3aebbfd170bcb8fcaa6d048f9",
+      "current_before_generation_sha256": "918b05327f663d2d92b79342a43e8ef982a940a3aebbfd170bcb8fcaa6d048f9",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0001-record-modelo-490-490-01.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "918b05327f663d2d92b79342a43e8ef982a940a3aebbfd170bcb8fcaa6d048f9",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0002-record-modelo-490-490-02.toml",
+      "base_sha256": "440bc68696af1f174e4d955afbee0aff12aa2204cc0fd5cea94810bc1fdc9988",
+      "source_sha256": "0083789618c2fe11cff5a069849852a857530672663acf8b22234a84957165d8",
+      "current_before_generation_sha256": "0083789618c2fe11cff5a069849852a857530672663acf8b22234a84957165d8",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0002-record-modelo-490-490-02.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "0083789618c2fe11cff5a069849852a857530672663acf8b22234a84957165d8",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0005-record-modelo-490-490-03.toml",
+      "base_sha256": "0dabaf367f5abd92aae72767f8225a2116cb4fd78d7cee820c76ad69d2b3e7d1",
+      "source_sha256": "98d559f1ba323d668acceb8d4e9374f8240b50393028f2f488d125cc26efc89f",
+      "current_before_generation_sha256": "98d559f1ba323d668acceb8d4e9374f8240b50393028f2f488d125cc26efc89f",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0005-record-modelo-490-490-03.toml",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "98d559f1ba323d668acceb8d4e9374f8240b50393028f2f488d125cc26efc89f",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "519c673aecbf025273d99015fb8ca9e74701429c2acc1379b56d588f1b4cf9a5",
+      "source_sha256": "1ece5336350ea8c801eea3cdc1a1825d1a3b273ef782690a49c6206018ff215f",
+      "current_before_generation_sha256": "1ece5336350ea8c801eea3cdc1a1825d1a3b273ef782690a49c6206018ff215f",
+      "current_equals_source": true,
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/_generation.provenance.json",
+      "owner": "history: captured66 registry closure",
+      "reason": "Captured exact-source generated target retained; canonical final currentness sweep records its edition/source/filing coordinates and validates fresh rendered bytes, isolated authority and manifest equality. Runtime admission remains its declared authority grade.",
+      "current_sha256": "1ece5336350ea8c801eea3cdc1a1825d1a3b273ef782690a49c6206018ff215f",
+      "evidence": [
+        "66-registry-source-closure-before.json",
+        "66-registry-target-currentness-final.json",
+        "66-registry-valid.txt",
+        "66-registry-runtime-load.txt",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    }
+  ],
+  "verification": {
+    "M232_floor_and_helper_tests": "4PASS45.46s",
+    "M232_bridge_tests": "6PASS51.61s",
+    "M190_bridge_tests": "Five exact source/target/manifest refusals + genuine copied-registry joint owner case6PASS258.63s; final isolated retired-ledger fixture positive1PASS274.47s with explicit runner --timeout=600, including successful required cleanup, exit0.",
+    "M190_live_republication": "passed digest-bound canonical owner, complete final-live validation",
+    "M232_2018_live_republication": "passed",
+    "authority_publication": "passed; actual source/evidence complete owner validation",
+    "canonical_registry_valid": "passed58modelos160revisions1502legalrefs",
+    "canonical_registry_runtime_load": "passed58modelos160revisions",
+    "canonical_registry_integrity": "passed current source+artifact identity1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b",
+    "form_checks": "M190/M369+M232/M390 both0stale0missing",
+    "retirement_schema_correction": "Explicit dispositions=[] restored after strict real validator detected omitted required emptyarray; final actual source+publication+gates+affected positive replay allpassed.",
+    "final_target_currentness": "20/20CURRENT; exact fresh owner renders+isolated validation+committed bytes/provenance equality, exit0",
+    "M232_2018_final_currentness": "passed inside successful guarded publisher complete final-live validation; additional adjacent target beyond20sweep",
+    "retired_ledger_M190_fixture_replay": {
+      "command": "uv run --no-sync pytest -o addopts='' -n0 --timeout=600 dev/registry/pipeline/tests/test_generated_form_bridge.py::test_m190_republication_preserves_other_authority_and_closes_the_generated_form",
+      "result": "1passed274.47s;exit0",
+      "log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T014125.470748Z-pytest-78340-52aeadb7/run.log",
+      "qualification": "Per-run600s verification override authorized by root; source/decorators/configuration unchanged. Earlier ordinary300s replay passed test-body assertions, then exit1 solely during pytest passed-fixture deletion; not claimed ordinary-timeout green.",
+      "ordinary_300s_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T013041.946909Z-pytest-72168-02460c3c/run.log"
+    },
+    "scoped_static": "8PythonRuff/formatPASS; ownedtypesPASS; scopedtrackedgitdiffcheckPASS"
+  },
+  "nine_bootstrap_artifacts": [
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml",
+      "current_sha256": "dd5f9eea845946ceeaf507cc9489ce16ebf618930fd9b22a746bab861e8b5e59",
+      "status": "incorporated",
+      "reason": "Owner digest-bound joint export/form republication completed. Both perceptor fragments preserve official geometry/bindings and current typed repeat projections; canonical final targetCURRENT and formcheck0stale0missing.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
+      "current_sha256": "52a778163fa6415766fd198e68d5ebfd190cf37cbe62cb962f15f8ed5b0115a8",
+      "status": "incorporated",
+      "reason": "Owner digest-bound joint export/form republication completed. Both perceptor fragments preserve official geometry/bindings and current typed repeat projections; canonical final targetCURRENT and formcheck0stale0missing.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "current_sha256": "9095bd443fa7c2a78ba7d2b14d2a98839e23f321dba0fd5608707de5e324ca4b",
+      "status": "incorporated",
+      "reason": "Owner digest-bound joint export/form republication completed. Both perceptor fragments preserve official geometry/bindings and current typed repeat projections; canonical final targetCURRENT and formcheck0stale0missing.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
+      "current_sha256": "c463984148cfe660817c00182c1920795cb8ba73780d53a94681599edb2c8de9",
+      "status": "incorporated",
+      "reason": "Owner digest-bound joint export/form republication completed. Both perceptor fragments preserve official geometry/bindings and current typed repeat projections; canonical final targetCURRENT and formcheck0stale0missing.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
+      "current_sha256": "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1",
+      "status": "incorporated",
+      "reason": "Preserved stronger existing output/provenance is reproduced exactly after restoring defining required=false/binding_rows/six inmueble projections. Actual final canonical targetCURRENT; no generated record replacement.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "current_sha256": "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da",
+      "status": "incorporated",
+      "reason": "Preserved stronger existing output/provenance is reproduced exactly after restoring defining required=false/binding_rows/six inmueble projections. Actual final canonical targetCURRENT; no generated record replacement.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
+      "current_sha256": "4bf28fce9c8ddc9cc5f83c8fbf717c14b3006753f8484d04f4c85ad36b526b95",
+      "status": "incorporated",
+      "reason": "Original bootstrapform was stale after current typed binding changes. Canonical formowner generated the exact current form/digest; final formcheck0stale0missing, all actual placement fields preserved.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
+      "current_sha256": "9c8bd9f20c7359b50d947d4fdb3d37a515e1da1ca4f896ed7e985cc9df5c216f",
+      "status": "incorporated",
+      "reason": "Original bootstrapform was stale after current typed binding changes. Canonical formowner generated the exact current form/digest; final formcheck0stale0missing, all actual placement fields preserved.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
+      "current_sha256": "a4712f48a9616abbd168c266c8fa9d8aa6a401e4d518324fbb4561781faaccae",
+      "status": "incorporated",
+      "reason": "Original bootstrapform was stale after current typed binding changes. Canonical formowner generated the exact current form/digest; final formcheck0stale0missing, all actual placement fields preserved.",
+      "owner": "canonical dev.registry pipeline/form_layout",
+      "evidence": [
+        "66-registry-target-currentness-final.json",
+        "66-registry-integrity.txt"
+      ],
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    }
+  ],
+  "shipping_acceptance": "Not claimed. Root owns current installed/native/product verification and landing.",
+  "adjacent_mutations": [
+    {
+      "path": "dev/registry/mappings/modelo_347/2011/0001-records.toml",
+      "base_sha256": "dba529d0d8dc302689cdf598181884a8632ee50f1c2f2d40f07f738b68c254d0",
+      "current_sha256": "8a43efb7048756289e53ecd35b2fb1ad353402bdf1a5ad8179157985ddcc11cc",
+      "status": "incorporated",
+      "replacement": "dev/registry/mappings/modelo_347/2011/0001-records.toml",
+      "reason": "Restore required=false/binding_rows and all six existing typed inmueble projections in the defining maps; both actual canonical candidates then reproduce the preserved stronger output/provenance exactly. Existing declared province/lease/cash-accounting/reverse-charge metadata remains.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
+      "base_sha256": "196cf102159f203b99b67c774ee2dfa4a25d7c778e47ff67fda872823153caf6",
+      "current_sha256": "806127818f59509156ca19b06cbd249156bce97f94283fe0507c468e7b6af981",
+      "status": "incorporated",
+      "replacement": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
+      "reason": "Restore required=false/binding_rows and all six existing typed inmueble projections in the defining maps; both actual canonical candidates then reproduce the preserved stronger output/provenance exactly. Existing declared province/lease/cash-accounting/reverse-charge metadata remains.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/cli.py",
+      "base_sha256": "323ffaf738ea113e009523295ff573979d077e79496678613091b4024f48417d",
+      "current_sha256": "d1f067a727fc7b81c0812a29f53cc300eb5290a7617a8ea7172103a0c619cf3f",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/cli.py",
+      "reason": "Coordinate changed generated companions through the canonical bridge; provenance-only repairs with unchanged forms retain ordinary complete final-live validation without obsolete historical pins.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/generated_form_bridge.py",
+      "base_sha256": null,
+      "current_sha256": "255a99e58ac85cbf88d89827aae1eb174e21c1a5920033a65385be3234272297",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/generated_form_bridge.py",
+      "reason": "Atomic defining-owner generalization preserves exactM232 historical repair pins and lifecycle; adds exact reviewedM1902025 old source/manifest/form pins, complete overlay validation, unchanged input census and canonical selected-form completion. Postcommit incomplete interval is explicit.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/historical_static_repair.py",
+      "base_sha256": "44d3edbae5c9392d1bb42ff0af68685fa0beb8da96da3e2aa30222ed3bee7b0e",
+      "current_sha256": "5b04b044501837577f8f8e3accf10fa690cbf60d4dd8e0aed983ae76cb713459",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/historical_static_repair.py",
+      "reason": "Migrate direct calls to generic defining evidence/interpreter helpers while preserving exactM2322016 historical-source eligibility and no filing admission.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0002-record-modelo-190-perceptor.toml",
+      "base_sha256": null,
+      "current_sha256": "9d1e0a64e62677fdb29d0a5354c2c3968e3362ce49c75187aab9210c31570a9b",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0002-record-modelo-190-perceptor.toml",
+      "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0003-record-modelo-190-perceptor.toml",
+      "base_sha256": null,
+      "current_sha256": "dde410a0907679402d64a07fa1bedae8bcf090055b8edc3eb12582a966b7bf2b",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0003-record-modelo-190-perceptor.toml",
+      "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/_generation.provenance.json",
+      "base_sha256": null,
+      "current_sha256": "c686e3d09a298c32d8025ef9c98f26455548be20d6796df8df05c8509a4d222a",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/_generation.provenance.json",
+      "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/form_layouts/0001-form-layout.toml",
+      "base_sha256": null,
+      "current_sha256": "3ccbf778c6cf016254508cf12ca8eb1ecd7d2af2a5681eb48d6adf833c40cffe",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/form_layouts/0001-form-layout.toml",
+      "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_generated_export_tree_validation.py",
+      "base_sha256": "c627255847e7a8a898b9488ba52c7e2e877d0689cd2a927f4845dd1070944523",
+      "current_sha256": "9da6f962fd5c31d301e6336253cf3fdd2cd5c31d3a19d340c193f0f6b26b5dfa",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_generated_export_tree_validation.py",
+      "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_generated_form_bridge.py",
+      "base_sha256": null,
+      "current_sha256": "559b1bde622fbd25111987c515c47032ad931f0802b678ad9f07e05650182e4c",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_generated_form_bridge.py",
+      "reason": "Atomic defining-owner generalization preserves exactM232 historical repair pins and lifecycle; adds exact reviewedM1902025 old source/manifest/form pins, complete overlay validation, unchanged input census and canonical selected-form completion. Postcommit incomplete interval is explicit.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_generated_tree_check.py",
+      "base_sha256": "8599b65afa5fa2171d97f0390bf7766eac101fa1221a5fcc75733b75b0a0937e",
+      "current_sha256": "7c46b2636d69c7af5e524e90c9a74c4dd0f5d520a241d36000961c96b7602436",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_generated_tree_check.py",
+      "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_generated_tree_publication.py",
+      "base_sha256": "df86b4f18f5e8019bbb84ae82ed5608192aaa34d49866278788e207f8e49567b",
+      "current_sha256": "d37f3a492bd63ec93b7cec511005f929b1a6df36345743187921fc2946a206b1",
+      "status": "incorporated",
+      "replacement": "dev/registry/pipeline/tests/test_generated_tree_publication.py",
+      "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml",
+      "base_sha256": "9d1e0a64e62677fdb29d0a5354c2c3968e3362ce49c75187aab9210c31570a9b",
+      "current_sha256": "dd5f9eea845946ceeaf507cc9489ce16ebf618930fd9b22a746bab861e8b5e59",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
+      "base_sha256": "dde410a0907679402d64a07fa1bedae8bcf090055b8edc3eb12582a966b7bf2b",
+      "current_sha256": "52a778163fa6415766fd198e68d5ebfd190cf37cbe62cb962f15f8ed5b0115a8",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "c686e3d09a298c32d8025ef9c98f26455548be20d6796df8df05c8509a4d222a",
+      "current_sha256": "9095bd443fa7c2a78ba7d2b14d2a98839e23f321dba0fd5608707de5e324ca4b",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
+      "base_sha256": "3ccbf778c6cf016254508cf12ca8eb1ecd7d2af2a5681eb48d6adf833c40cffe",
+      "current_sha256": "c463984148cfe660817c00182c1920795cb8ba73780d53a94681599edb2c8de9",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml",
+      "base_sha256": "9753aa39820929142ed55be6dfd76df9850875661fde85f40260e1c1c70eb511",
+      "current_sha256": "b17cad2c318d7ff8ed34964200b72224670e5908728f4c2d90a2c1bc3ef108cd",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json",
+      "base_sha256": "fb76af52570a20598382d59257ff685297864aa6091b1eac0d6155709dc52243",
+      "current_sha256": "0992b9bf10b9a9e7e055aa4c1586bdd63451977becfdc37f819cdc91cc80aa41",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
+      "base_sha256": "2c5415b6b37f7d706280abaf1670d47e842d8f005daad81aa44a3629418e2f58",
+      "current_sha256": "4bf28fce9c8ddc9cc5f83c8fbf717c14b3006753f8484d04f4c85ad36b526b95",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
+      "base_sha256": "3cdfb0ca21fef994289048e573efd6c8689a2d149c782c48bbc7ff73a93e1888",
+      "current_sha256": "9c8bd9f20c7359b50d947d4fdb3d37a515e1da1ca4f896ed7e985cc9df5c216f",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
+      "base_sha256": "3225ae7bafaba4494e0ba8ef7a3f2f005e66800fd22a5f5f485c080ef4f9d378",
+      "current_sha256": "a4712f48a9616abbd168c266c8fa9d8aa6a401e4d518324fbb4561781faaccae",
+      "status": "incorporated",
+      "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
+      "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
+      "owner": "history: registry coupled closure",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
+    }
+  ],
+  "adjacent_mutation_count": 22,
+  "authority": {
+    "database": "authority-b5437a077b11ba7893db9f7272e89caa79a14c49c4ff598f712237de442b1a9c.sqlite3",
+    "database_sha256": "b5437a077b11ba7893db9f7272e89caa79a14c49c4ff598f712237de442b1a9c",
+    "database_size": 107421696,
+    "format": "cadrumo-authority-descriptor-v1",
+    "logical_generation": "1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b"
+  },
+  "unresolved": [],
+  "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19",
+  "coverage": {
+    "captured_paths": 45,
+    "incorporated": 44,
+    "superseded_by_defining_owner_move": 1,
+    "adjacent_actual_mutations": 22,
+    "bootstrap_artifacts": 9,
+    "fresh_sweep_targets": 20,
+    "additional_guarded_current_target": "232/2018-y-siguientes",
+    "scoped_unresolved": 0
+  },
+  "source_freeze": "All recorded source bytes match actual8be18a88abc1a4d9ee0ea61a1df498287a9f3d19 ancestor tree; no Git/index/vault writes by this worker."
+}

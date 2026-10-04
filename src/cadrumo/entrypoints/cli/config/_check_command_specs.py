@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from .._command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
+from ..command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
 from ..command_spec import CommandSpec, InvocationSpec
 from ._spec_policies import ENCRYPTED_READ
 

@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
 from dev.first_party_source import TEST_DIRECTORY
 from dev.source_tree import repository_files
 
-from .lane_configuration import _UTF_8
 from .lane_contracts import TestMarkers
 
 #: Directories that never contain runnable project tests.
@@ -76,7 +76,7 @@ def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
         deletion) is not the same finding as present-with-no-tests.
     """
     try:
-        tree = ast.parse(path.read_text(encoding=_UTF_8, errors="replace"))
+        tree = ast.parse(path.read_text(encoding=UTF_8, errors="replace"))
     except (SyntaxError, ValueError, OSError):
         return None
 

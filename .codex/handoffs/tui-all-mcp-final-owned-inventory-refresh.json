@@ -1,0 +1,50 @@
+{
+  "status": "owning generated inventory refresh/check complete",
+  "rows": [
+    {
+      "path": "dev/quality/metadata/import_load_targets.cadrumo.json",
+      "before_sha256": "aea10df4e56d91e207d23b3a135db56a9951f3496d3af0ece1ccb47e8e6793ab",
+      "after_sha256": "aea10df4e56d91e207d23b3a135db56a9951f3496d3af0ece1ccb47e8e6793ab",
+      "changed": false,
+      "owning_generator": "cadrumo.tests.module_target_inventory.main declared live filesystem selection +--check"
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.cadrumo_harness.json",
+      "before_sha256": "00ebefb87fe89f1d64373f79fba49e492eadb342622649d4c2b99bc0564be42e",
+      "after_sha256": "00ebefb87fe89f1d64373f79fba49e492eadb342622649d4c2b99bc0564be42e",
+      "changed": false,
+      "owning_generator": "cadrumo.tests.module_target_inventory.main declared live filesystem selection +--check"
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.dev.json",
+      "before_sha256": "b8aaf57e713366b6dd0de0c0d2cb5d3e175da956b534803b5c06707fd483e50c",
+      "after_sha256": "b8aaf57e713366b6dd0de0c0d2cb5d3e175da956b534803b5c06707fd483e50c",
+      "changed": false,
+      "owning_generator": "cadrumo.tests.module_target_inventory.main declared live filesystem selection +--check"
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.docs.json",
+      "before_sha256": "cbb88bc14df89eaf93591043cbf77c1d21731000f1b9d83cfe6936e682dbba59",
+      "after_sha256": "cbb88bc14df89eaf93591043cbf77c1d21731000f1b9d83cfe6936e682dbba59",
+      "changed": false,
+      "owning_generator": "cadrumo.tests.module_target_inventory.main declared live filesystem selection +--check"
+    },
+    {
+      "path": "dev/quality/metadata/application_entrypoint_modules.json",
+      "before_sha256": "b10b6b0177baf52a08a3c89cdb6997f6acb548ce655fef6809b3209ea834f85a",
+      "after_sha256": "b10b6b0177baf52a08a3c89cdb6997f6acb548ce655fef6809b3209ea834f85a",
+      "changed": false,
+      "owning_generator": "cadrumo.tests.module_target_inventory.main declared live filesystem selection +--check"
+    },
+    {
+      "path": "dev/quality/metadata/import_load_targets.json",
+      "before_sha256": "77010a721f0700b5b06ad351718bf5a22e164b9b6f7b4b057fe58a3a9fea07a2",
+      "after_sha256": "77010a721f0700b5b06ad351718bf5a22e164b9b6f7b4b057fe58a3a9fea07a2",
+      "changed": false,
+      "owning_generator": "dev.quality.import_load_probe --compile-targets"
+    }
+  ],
+  "new_test_modules": "Current declared policy excludes test packages; new HUMAN/API fixture and acceptance test modules remain in actual source/behavior/style/type scope, not import-load production enumeration. No ignore/exemption/configuration changes.",
+  "head": "28d1415ed90d9b495e80fcf696987e2282bbdf5f",
+  "remaining": "All-source freeze pending one history test context assertion; no production module move/add expected. Configured12 aggregate not yet launched."
+}

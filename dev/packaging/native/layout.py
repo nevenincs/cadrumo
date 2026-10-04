@@ -33,6 +33,6 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
 def backend(contract: dict[str, Any]) -> ModuleType:
     """Select only an enrolled backend from the canonical contract."""
     name = contract["backend"]
-    if not name.isidentifier():
-        raise ValueError("Invalid native backend name")
-    return importlib.import_module(f"{__package__}.platforms.{name}")
+    if name != "windows":
+        raise ValueError("Native backend has no implemented enrollment")
+    return importlib.import_module("dev.packaging.native.platforms.windows")

@@ -8,11 +8,11 @@ import shutil
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
 from dev.first_party_source import FIRST_PARTY_ROOTS
 from dev.packaging.command_execution import run_command
 from dev.test_runs.lanes import lane_command_parser
 
-from .lane_configuration import _UTF_8
 from .lane_contracts import Lane
 from .workflow_run_text import executed_lines
 
@@ -339,7 +339,7 @@ def resolved_justfile_text(root: Path) -> str:
     justfile = root / "justfile"
     if not justfile.exists():
         return ""
-    return _substitute_just_variables(justfile.read_text(encoding=_UTF_8), _just_variables(root))
+    return _substitute_just_variables(justfile.read_text(encoding=UTF_8), _just_variables(root))
 
 
 def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:

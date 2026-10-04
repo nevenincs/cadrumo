@@ -16,6 +16,7 @@ from .linux_pidfd import open_linux_pidfd
 from .manager_commands import NativeManagerCommand, run_manager_command_sync
 from .posix import posix_owner_uid
 from .posix_channel import PosixRuntimeChannel
+from .worker_arguments import validated_worker_arguments
 
 _PROPERTIES = {
     "ActiveState",
@@ -30,35 +31,6 @@ _PROPERTIES = {
     "TimeoutStopUSec",
     "Type",
 }
-
-_INSTALLED_WORKER_ARGUMENTS = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
-
-
-def validated_linux_worker_arguments(
-    arguments: Sequence[str] | None = None, *, worker_script: Path | None = None
-) -> tuple[str, ...]:
-    """Build or verify argv for the host's explicitly selected isolated worker.
-
-    Script selection belongs to the trusted Python constructor. It is never
-    inferred from worker arguments, client documents or the environment.
-    """
-    prefix: tuple[str, ...] = _INSTALLED_WORKER_ARGUMENTS
-    if worker_script is not None:
-        if not worker_script.is_absolute():
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        try:
-            selected = worker_script.resolve(strict=True)
-            if not selected.is_file():
-                raise ValueError
-        except (OSError, ValueError):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        prefix = ("-I", str(selected))
-    if arguments is None:
-        return prefix
-    command = tuple(arguments)
-    if command[: len(prefix)] != prefix or any("\0" in argument for argument in command):
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-    return command
 
 
 def linux_process_start_identity(pid: int) -> str:
@@ -196,7 +168,7 @@ class LinuxProcessScope:
         """Reserve an unguessable unit identity without launching any child."""
         if sys.platform != "linux":
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        selected = validated_linux_worker_arguments(worker_script=worker_script)
+        selected = validated_worker_arguments(worker_script=worker_script)
         self._worker_script = Path(selected[1]) if worker_script is not None else None
         self._unit = f"cadrumo-worker-{worker_id.hex}.service"
         self._lock = Lock()
@@ -272,7 +244,7 @@ def _validated_launch_inputs(
 ) -> tuple[tuple[str, ...], Path]:
     if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-    selected_arguments = validated_linux_worker_arguments(arguments, worker_script=scope._worker_script)
+    selected_arguments = validated_worker_arguments(arguments, worker_script=scope._worker_script)
     from ...core.config import Settings
 
     baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}

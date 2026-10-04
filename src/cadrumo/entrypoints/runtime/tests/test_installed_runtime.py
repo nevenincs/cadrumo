@@ -39,6 +39,8 @@ pytestmark = [
     ),
 ]
 
+_LINUX_UNIX_SOCKET_ONLY = "requires installed Linux Unix-socket ownership"
+
 type _Endpoint = WindowsRuntimeEndpoint | PosixRuntimeEndpoint
 type _Process = WindowsOwnedProcess | subprocess.Popen[bytes]
 type _Launch = tuple[WindowsProcessScope | None, _Process]
@@ -237,7 +239,13 @@ def test_installed_mismatch_exits_without_claiming_endpoint(tmp_path: Path, mism
         assert not tuple(tmp_path.iterdir()), "refused startup must not initialize private profile storage"
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="requires installed Linux Unix-socket ownership")
+def _foreign_unix_listener() -> socket.socket:
+    if sys.platform == "linux":
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    pytest.skip(_LINUX_UNIX_SOCKET_ONLY)
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason=_LINUX_UNIX_SOCKET_ONLY)
 def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replacement(tmp_path: Path) -> None:
     endpoint = PosixRuntimeEndpoint(storage_root=tmp_path)
     namespace = Path("/").joinpath("tmp", f"cdr-{posix_owner_uid()}")
@@ -245,7 +253,7 @@ def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replaceme
     foreign_path = namespace / f"foreign-{uuid4().hex}.sock"
     with ExitStack() as resources:
         resources.callback(endpoint.close)
-        foreign = resources.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
+        foreign = resources.enter_context(_foreign_unix_listener())
         foreign.bind(str(foreign_path))
         resources.callback(foreign_path.unlink)
         foreign.listen(1)

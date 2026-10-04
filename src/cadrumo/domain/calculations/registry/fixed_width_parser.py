@@ -12,26 +12,26 @@ from .export_value_policy import (
     validate_export_wire_value,
 )
 from .fixed_width_codec import (
+    ExportField,
     ExportPadding,
     ExportSignPosition,
-    _ExportField,
-    _render_absent_slot,
-    _require_allowed_value,
-    _require_decimals,
-    _require_length,
-    _require_minimum_year,
-    _zero_fill_is_only_absence,
+    render_absent_slot,
     render_fixed_width_export_field,
+    require_allowed_value,
+    require_decimals,
+    require_length,
+    require_minimum_year,
+    zero_fill_is_only_absence,
 )
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES
 
 
 def parse_fixed_width_export_field(
-    field: _ExportField,
+    field: ExportField,
     raw: str,
 ) -> ParsedExportPolicyValue:
     """Parse and validate one complete exact-width field from wire text."""
-    length = _require_length(field)
+    length = require_length(field)
     _require_raw_width(field, raw, length)
     kind = str(getattr(field.kind, "value", field.kind))
     if _is_inactive_binding_slot(field, raw, length, kind):
@@ -55,28 +55,28 @@ def parse_fixed_width_export_field(
     return _parse_present_wire_value(field, raw, kind, length)
 
 
-def _require_raw_width(field: _ExportField, raw: str, length: int) -> None:
+def _require_raw_width(field: ExportField, raw: str, length: int) -> None:
     if len(raw) != length:
         raise RegistryValidationError(f"export field {field.id!r} expected {length} wire characters, got {len(raw)}")
 
 
-def _is_inactive_binding_slot(field: _ExportField, raw: str, length: int, kind: str) -> bool:
+def _is_inactive_binding_slot(field: ExportField, raw: str, length: int, kind: str) -> bool:
     return kind == "binding" and not field.required and raw == " " * length
 
 
-def _is_policy_absent_slot(field: _ExportField, raw: str, kind: str) -> bool:
+def _is_policy_absent_slot(field: ExportField, raw: str, kind: str) -> bool:
     return (
         kind not in {"filler", "literal"}
         and not field.required
         and field.value_policy is not None
         and not policy_defines_absent_slot(field.value_policy)
-        and raw == _render_absent_slot(field)
-        and (not raw.strip() or _zero_fill_is_only_absence(field))
+        and raw == render_absent_slot(field)
+        and (not raw.strip() or zero_fill_is_only_absence(field))
     )
 
 
 def _parse_present_wire_value(
-    field: _ExportField,
+    field: ExportField,
     raw: str,
     kind: str,
     length: int,
@@ -91,20 +91,20 @@ def _parse_present_wire_value(
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         return field.literal
     parsed: ParsedExportPolicyValue = _parse_typed_value(field, raw)
-    _require_allowed_value(field, parsed)
+    require_allowed_value(field, parsed)
     parsed = normalize_parsed_export_policy_value(field.value_policy, raw, parsed)
-    _require_minimum_year(field, parsed)
+    require_minimum_year(field, parsed)
     if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
         raise RegistryValidationError(f"export field {field.id!r} contains noncanonical fixed-width data")
     return parsed
 
 
-def _parse_typed_value(field: _ExportField, raw: str) -> ParsedExportPolicyValue:
+def _parse_typed_value(field: ExportField, raw: str) -> ParsedExportPolicyValue:
     """Parse one padded wire value under the field's declared data type."""
     if field.data_type == "money":
         return _parse_scaled_numeric(field, raw, scale=2)
     if field.data_type == "decimal":
-        return _parse_scaled_numeric(field, raw, scale=_require_decimals(field))
+        return _parse_scaled_numeric(field, raw, scale=require_decimals(field))
     if field.data_type == "integer":
         return _parse_integer(field, raw)
     if field.data_type == "boolean":
@@ -113,7 +113,7 @@ def _parse_typed_value(field: _ExportField, raw: str) -> ParsedExportPolicyValue
     return text if text else None
 
 
-def _parse_boolean(field: _ExportField, raw: str) -> bool | None:
+def _parse_boolean(field: ExportField, raw: str) -> bool | None:
     text = _unpad(field, raw)
     if text == "":
         return None
@@ -122,7 +122,7 @@ def _parse_boolean(field: _ExportField, raw: str) -> bool | None:
     raise RegistryValidationError("boolean export field must contain canonical X or blank wire data")
 
 
-def _fill_reads_as_absent_text(field: _ExportField, raw: str) -> bool:
+def _fill_reads_as_absent_text(field: ExportField, raw: str) -> bool:
     """Whether an optional non-numeric slot holds exactly its declared absent fill.
 
     Zero is a numeric state only: a text or date field has no zero, so the fill
@@ -136,22 +136,22 @@ def _fill_reads_as_absent_text(field: _ExportField, raw: str) -> bool:
         return False
     if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES or field.data_type == "boolean":
         return False
-    return raw == _render_absent_slot(field)
+    return raw == render_absent_slot(field)
 
 
-def _parse_integer(field: _ExportField, raw: str) -> Decimal:
+def _parse_integer(field: ExportField, raw: str) -> Decimal:
     negative, digits = _split_numeric_wire(field, raw)
     value = Decimal(int(digits))
     return -value if negative else value
 
 
-def _parse_scaled_numeric(field: _ExportField, raw: str, *, scale: int) -> Decimal:
+def _parse_scaled_numeric(field: ExportField, raw: str, *, scale: int) -> Decimal:
     negative, digits = _split_numeric_wire(field, raw)
     value = Decimal(int(digits)).scaleb(-scale)
     return -value if negative else value
 
 
-def _split_numeric_wire(field: _ExportField, raw: str) -> tuple[bool, str]:
+def _split_numeric_wire(field: ExportField, raw: str) -> tuple[bool, str]:
     if field.sign_position is ExportSignPosition.BLANK_OR_N:
         if raw[:1] not in {"N", " "}:
             raise RegistryValidationError(f"export field {field.id!r} sign position must hold 'N' or a space")
@@ -177,7 +177,7 @@ def _split_numeric_wire(field: _ExportField, raw: str) -> tuple[bool, str]:
     return negative, digits
 
 
-def _unpad(field: _ExportField, raw: str) -> str:
+def _unpad(field: ExportField, raw: str) -> str:
     if field.padding is ExportPadding.NONE:
         return raw.rstrip(" ")
     if field.padding is ExportPadding.LEFT_ZERO:

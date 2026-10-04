@@ -18,7 +18,7 @@ TokenT = TypeVar(
 )
 
 
-def _require_token[
+def require_token[
     TokenT: (
         IVARegime,
         M303RegimeComposition,
@@ -32,6 +32,7 @@ def _require_token[
     members: frozenset[TokenT],
     label: str,
 ) -> TokenT:
+    """Validate one exact IVA vocabulary token against the published members."""
     if isinstance(value, token_type):
         token = value
     elif isinstance(value, str):

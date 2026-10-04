@@ -99,12 +99,13 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from dev._paths import REPO_ROOT, prepare_temporary_directory
+from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime

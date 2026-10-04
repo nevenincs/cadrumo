@@ -1,14 +1,16 @@
 """Install the assembler's native-module map without site or .pth execution."""
 
 import hashlib
+import importlib
 import importlib.abc
 import importlib.machinery
 import importlib.util
 import json
 import sys
 from pathlib import Path
+from typing import override
 
-import _cadrumo_native
+_cadrumo_native = importlib.import_module("_cadrumo_native")
 
 LAYOUT = {}
 
@@ -27,7 +29,7 @@ def verify(full=False):
     manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
     identity = manifest["build"]
     for key in ("version", "build_number", "build_date"):
-        if str(identity[key]) != str(sys.cadrumo_build[key]):
+        if str(identity[key]) != str(vars(sys)["cadrumo_build"][key]):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")
@@ -58,6 +60,7 @@ class NativeModules(importlib.abc.MetaPathFinder):
         self.root = root
         self.modules = modules
 
+    @override
     def find_spec(self, fullname, path=None, target=None):
         """Return a qualified extension spec or defer unrelated imports."""
         relative = self.modules.get(fullname)

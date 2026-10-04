@@ -12,7 +12,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 from pathlib import Path
+from typing import NoReturn
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, Field
@@ -22,6 +25,16 @@ from cadrumo.application.aggregation.errors import AggregationUnsupportedModeloE
 from cadrumo.application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
+)
+from cadrumo.application.modelo.query_read_contracts import ModeloReadinessOperationRequest
+from cadrumo.application.modelo.query_read_operation import (
+    build_modelo_readiness_definition,
+    build_modelo_readiness_registration,
+)
+from cadrumo.application.modelo.work_create_operation import (
+    ModeloWorkCreateRequest,
+    build_modelo_work_create_definition,
+    build_modelo_work_create_registration,
 )
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.error_detail import (
@@ -39,6 +52,7 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
+from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -47,7 +61,8 @@ from cadrumo.application.operations.registry import (
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.i18n.translatable import Translatable
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 
 from .supervision_support import run_to_settlement
 from .test_supervisor import (
@@ -269,3 +284,93 @@ def test_a_definition_that_does_not_opt_in_records_no_detail(tmp_path: Path) -> 
     assert receipt is not None and receipt.error_detail_ref is None
     assert receipt.refusal_ref == get_registered_error_code(AggregationUnsupportedModeloError).code
     assert isinstance(case.detail, OperationResultProjectionRefusalV1)
+
+
+@pytest.mark.parametrize("definition_id", ["modelo.work.create", "modelo.readiness"])
+def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
+    tmp_path: Path, definition_id: str
+) -> None:
+    """Real owner definitions record the registry fault before any result or effect.
+
+    The injected ports factory fails at its defining boundary. Both real
+    executors, their request schemas, encrypted journal and result projection
+    run unchanged; frontend admission is independently covered by CLI journeys.
+    """
+    profile_id = UUID("a0347100-3a01-4b0a-aeee-347102030405")
+    error = NoRevisionForPeriodError(
+        modelo_id="210",
+        filing_year=2025,
+        period="AD-HOC",
+        revision_id=None,
+        available_revision_ids=("2025", "2026-y-siguientes"),
+    )
+
+    attempts: list[NoRevisionForPeriodError] = []
+
+    def unavailable_ports(*_args: object, **_kwargs: object) -> NoReturn:
+        attempts.append(error)
+        raise error
+
+    period = PublicPeriod(filing_year=2025, code="AD-HOC")
+    if definition_id == "modelo.work.create":
+        definition = build_modelo_work_create_definition(unavailable_ports)
+        registration = build_modelo_work_create_registration(definition)
+        payload = ModeloWorkCreateRequest(profile_id=profile_id, modelo="210", period=period, actor="operator")
+    else:
+        definition = build_modelo_readiness_definition(unavailable_ports)
+        registration = build_modelo_readiness_registration(definition)
+        payload = ModeloReadinessOperationRequest(profile_id=profile_id, modelo="210", filing_year=2025, period=period)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(profile_id)) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "scope-state", profile_objects=profile.repository
+        )
+        supervisor = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            execution_timeout=timedelta(minutes=1),
+        )
+
+        async def settle_and_read():
+            operation_id = await supervisor.submit(
+                OperationRequest[BaseModel](
+                    definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
+                ),
+                operation_id="4" * 64,
+            )
+            await run_to_settlement(supervisor, operation_id)
+            assert attempts == [error]
+            terminal = await supervisor.inspect(operation_id)
+            service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
+            result = await service.resolve(
+                OperationResultProjectionRequestV1(
+                    operation_id=operation_id,
+                    terminal_revision=terminal.revision,
+                    definition_contract_digest=registration.contract.definition_contract_digest,
+                    result_schema=operation_error_detail_schema(),
+                ),
+                OperationErrorDetailV1,
+            )
+            return terminal, result
+
+        terminal, result = asyncio.run(settle_and_read())
+        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.result_ref is None
+        assert terminal.terminal_receipt.error_detail_ref is not None
+        assert isinstance(result, OperationResultProjectionSuccessV1)
+        detail = result.projection
+        assert isinstance(detail, OperationErrorDetailV1)
+        assert detail.error_code == "ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD"
+        assert detail.message_key == "errors.snapshot.no_revision_for_period"
+        context = {entry.key: entry.value for entry in detail.context}
+        assert context["modelo_id"] == "210"
+        assert context["filing_year"] == "2025"
+        assert context["period"] == "AD-HOC"
+        assert context["available_revision_ids"] == "2025, 2026-y-siguientes"
+        assert OperationErrorDetailV1.model_validate_json(detail.model_dump_json()) == detail

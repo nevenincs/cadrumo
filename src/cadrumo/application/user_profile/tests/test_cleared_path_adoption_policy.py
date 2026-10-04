@@ -57,11 +57,6 @@ _DECLARED_WRITERS: dict[str, str] = {
         "(namespace-replace on re-cotejo). An already-cleared row is absent, so it is "
         "not re-cleared, and no value is ever written at an absent path."
     ),
-    "application/wizard/_checkpoint_store.py": (
-        "Two reads, both safe. The descendant namespace-shrink clears only paths "
-        "PRESENT in the projection. The resume-answer seed treats an absent path as "
-        "unanswered and re-asks it, which is what clearing an answer should cause."
-    ),
     "application/user_profile/fact_write.py": (
         "Reads the projection of the record it has just published, only to mirror the "
         "output-language preference into the pre-login hint. The one fact it builds carries "

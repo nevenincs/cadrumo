@@ -1,15 +1,7 @@
 """Shared CLI transport helpers used across all ``cadrumo`` command groups.
 
-Provides output helpers, period normalisation, and repository accessors
-used by the ledger, modelo, and config command groups. The repository
-accessors return typed domain objects:
-:class:`TransactionCatalogue` and
-:class:`TransactionCatalogueRepository` for transaction
-ledger access, :class:`InvoiceCatalogue` and
-:class:`InvoiceCatalogueRepository` for invoice data,
-:class:`ModeloDraft` for in-progress modelo drafts, and
-:class:`TaxpayerProfile` for deadline and period
-calculations.
+Provides output helpers, period normalisation, and the active-profile
+bucket guard used by the ledger, modelo, and config command groups.
 
 The output boundary is :func:`emit_envelope`. It routes every JSON result
 through :class:`SchemaEnvelope`, requires a graph-declared result schema, and
@@ -208,27 +200,12 @@ EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
-    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions.catalogue import ActionArgumentBindingSpecification
     from ...application.operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
     from ...application.operator_surface.command_ports import VerbInputSchema
-    from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.deadlines.models import TaxpayerProfile
-    from ...domain.filing.schema import ModeloDraft
-    from ...domain.invoices.models import InvoiceCatalogue
-    from ...domain.user_profile.values import UserProfileRecord
-
-ResolveTransactionId = Callable[["TransactionCatalogueRepository", str], str]
-"""Resolve a caller-supplied transaction lookup id against a repository.
-
-The repository is a forward reference: this module imports its adapters lazily
-so a fast-path command such as ``aeat --version`` does not pay for them.
-"""
 
 
 __all__ = [
@@ -1076,20 +1053,6 @@ def _no_active_profile_refusal() -> Exception:
 no_active_profile_refusal = _no_active_profile_refusal
 
 
-def current_workflow_state() -> WorkflowState:
-    from ...application.workflow.persistence import workflow_state_repository
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    # Without an active profile there is no bucket database to open;
-    # workflow_state_repository().load() would raise a raw StorageError
-    # ("cadrumo_database_url is empty") that leaks internal plumbing to the
-    # operator. Refuse early with the operator-facing no-active-profile
-    # message instead.
-    if resolve_active_bucket_id() is None:
-        raise _no_active_profile_refusal()
-    return workflow_state_repository().load()
-
-
 def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
     """Resolve an optional ``--*-root`` Typer option to its declared default.
 
@@ -1122,102 +1085,6 @@ def resolve_pull_year_range(
     return year_from, year_to
 
 
-def profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...application.user_profile.projections import projection_for_taxpayer
-
-    record = state.active_profile_record()
-    if record is None:
-        return projection_for_taxpayer({})
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-    with bundled_indexed_authority().operation() as operation:
-        profile_decode_context = operation.profile_decode_context()
-        ProfileRecordRepository.for_current_session(
-            record.profile_id,
-            profile_decode_context=profile_decode_context,
-        )
-        return projection_for_taxpayer(record, schema=profile_decode_context.schema)
-
-
-def declared_tax_id(record: UserProfileRecord | None) -> str:
-    """Return the ``identity.tax_id`` fact declared on a :class:`UserProfileRecord`.
-
-    Returns ``""`` when the record is absent or carries no such fact.
-
-    Deliberately NOT routed through :func:`profile_to_taxpayer`. That projection
-    substitutes a synthetic placeholder NIF for an absent identity, which reads
-    downstream as a declared value and cannot be told apart from one. A caller
-    that compares the operator's identity against stored AEAT evidence needs the
-    absence to survive, so this returns the empty string and lets the owning
-    application service raise its own grounded refusal naming the missing fact.
-    """
-    from ...application.user_profile.projections import fact_value
-
-    return (fact_value(record, "identity.tax_id") or "").strip()
-
-
-_TAX_ID_SELECTOR = "tax.id"
-
-
-def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
-    """Return the taxpayer projection for a FILING-grade command, or refuse.
-
-    :func:`profile_to_taxpayer` substitutes a synthetic placeholder NIF when the
-    operator has declared none, and that placeholder is checksum-valid, so it is
-    indistinguishable downstream from a real declared identity. On a read-only
-    surface that substitution is deliberate and load-bearing - the calendar must
-    not drop a taxpayer's filed evidence merely because their NIF is undeclared.
-    On a filing surface it is the opposite of what is wanted: the value is written
-    into the exported bytes as the declarant, so an operator who never entered
-    their NIF would receive a file identifying them as somebody else.
-
-    This is the filing boundary the two populations were missing. Read-only
-    callers keep using :func:`profile_to_taxpayer` directly; every command that
-    writes or packages a declaration routes through here, so absence refuses
-    once rather than at each call site.
-    """
-    from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
-    from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from .errors import CliRefusedBoundaryError
-
-    record = state.active_profile_record()
-    verdict = inspect_filing_taxpayer_identity_precondition(
-        declared_tax_id=declared_tax_id(record),
-        profile_name=record.profile_id if record is not None else None,
-    )
-    if verdict is not None:
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-        with bundled_indexed_authority().operation() as operation:
-            profile_schema = operation.profile_decode_context().schema if record is not None else None
-            if profile_schema is None:
-                raise InternalInvariantError("filing refusal requires a schema pinned to the authenticated operation")
-            if record is not None:
-                ProfileRecordRepository.for_current_session(
-                    record.profile_id,
-                    profile_decode_context=operation.profile_decode_context(),
-                )
-            grounding_index = profile_grounding_index_for_operation(operation)
-        raise attach_cli_policy_verdict(
-            CliRefusedBoundaryError(
-                translated_message="cli.common.errors.filing_requires_declared_tax_id",
-                context={
-                    "requirements": ", ".join(
-                        format_profile_selector_requirements(
-                            [_TAX_ID_SELECTOR],
-                            schema=profile_schema,
-                            grounding_index=grounding_index,
-                        ),
-                    ),
-                },
-            ),
-            verdict=verdict,
-        )
-    return profile_to_taxpayer(state)
-
-
 # ---------------------------------------------------------------------
 # Repositories
 # ---------------------------------------------------------------------
@@ -1227,8 +1094,7 @@ def active_bucket_id_or_refuse() -> str:
     """Return the active profile bucket id or raise the canonical no-active-profile refusal.
 
     Stateless single source for the cold-start bucket-id guard shared across
-    bucket-bound CLI command families. :func:`active_bucket_id_or_bad`
-    delegates here.
+    bucket-bound CLI command families.
     """
     from ...core.bucket_pointer import require_active_bucket_id
     from ...core.errors.hierarchy import NoActiveProfileError
@@ -1237,47 +1103,6 @@ def active_bucket_id_or_refuse() -> str:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
-
-
-def active_bucket_id_or_bad(state: WorkflowState) -> str:
-    """Return the active profile bucket id or raise the CLI 'bad' error."""
-    return active_bucket_id_or_refuse()
-
-
-def transaction_catalogue_repo(state: WorkflowState) -> TransactionCatalogueRepository:
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...application.workflow.active_profile import active_transaction_catalogue_repository
-    from ...domain.transactions.errors import LedgerNoActiveBucketError
-
-    try:
-        return active_transaction_catalogue_repository(
-            repository_factory=lambda bucket_id: TransactionCatalogueRepository(bucket_id=bucket_id),
-        )
-    except LedgerNoActiveBucketError as exc:
-        raise _no_active_profile_refusal() from exc
-
-
-def _invoice_repo(*, bucket_id: str | None = None) -> InvoiceCatalogueRepository:
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
-    return InvoiceCatalogueRepository(bucket_id=bucket_id)
-
-
-def _draft_repo(*, bucket_id: str | None = None) -> ModeloDraftRepository:
-    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-
-    return ModeloDraftRepository(bucket_id=bucket_id)
-
-
-def load_invoices() -> InvoiceCatalogue:
-    return _invoice_repo().load()
-
-
-def load_drafts(*, operation: PinnedAuthorityOperation) -> tuple[ModeloDraft, ...]:
-    from ...application.filing.draft_revision_gate import require_modelo_draft_coordinates_current
-
-    repo = _draft_repo()
-    return tuple(require_modelo_draft_coordinates_current(draft, operation=operation) for draft in repo.iter_drafts())
 
 
 # ---------------------------------------------------------------------

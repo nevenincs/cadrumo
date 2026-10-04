@@ -20,10 +20,11 @@ import shutil
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
 
-from .acquire_common import PYTHON_COHORT_WHEEL_NAMES, AcquisitionError, run_installed_cli_oracle, venv_executable
+from .acquire_common import AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
@@ -98,7 +99,7 @@ def run_oracle_emit_cohort(
         raise AcquisitionError(f"could not create the cohort virtualenv: {create.stderr.strip()[:200]}")
     venv_python = venv_executable(venv, "python")
 
-    wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
+    wheels = {name: python_cohort.sha256[name] for name in PRODUCT_IDENTITY.cohort_distributions}
     root_wheel = python_cohort.root_wheel
     manuals_wheel, official_wheel = python_cohort.companion_wheels
     install = run_command(

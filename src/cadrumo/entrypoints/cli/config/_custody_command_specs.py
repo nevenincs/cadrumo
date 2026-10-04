@@ -7,14 +7,14 @@ from cadrumo.application.operator_surface.command_ports import (
     ProfileAuthenticationPosture,
 )
 
-from .._command_parameter_contracts import ArgumentSpec, OptionSpec
 from .._command_secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
-from .._command_shared_contracts import (
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,

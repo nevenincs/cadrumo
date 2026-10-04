@@ -1223,16 +1223,14 @@ def test_modelo_369_entry_is_not_shifted_on_a_weekend(
     assert entry.holiday_territory is None
 
 
-def test_missing_holiday_calendar_still_moves_a_weekend_close_with_holidays_unchecked(
+def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """No holiday publication exists for 2027 yet: the Saturday close still moves to Monday
-    (Ley 39/2015 art. 30.5), and the entry says its holidays were not checked."""
+    """No holiday publication exists for 2027 yet, so a Saturday close cannot be adjusted or certified."""
     entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation, "ES-MD")
 
-    assert entry.closes_on == date(2027, 10, 16)
-    assert entry.adjusted_closes_on == date(2027, 10, 18)
-    assert entry.shift_reason == "sabado + calendar_unavailable"
+    assert entry.adjusted_closes_on == entry.closes_on == date(2027, 10, 16)
+    assert entry.shift_reason == "calendar_unavailable"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert entry.holiday_territory is None
 
@@ -1298,34 +1296,17 @@ def test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory(
 def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:
     with pytest.raises(ValidationError, match="did not evaluate"):
         OverviewCalendarEntry(
-            modelo="369",
+            modelo="303",
             period=Period.from_year_and_code(2026, "3T"),
             opens_on=date(2026, 10, 1),
             closes_on=date(2026, 10, 17),
             adjusted_closes_on=date(2026, 10, 19),
-            shift_reason="modelo_exception",
-            holiday_coverage=DeadlineHolidayCoverage.NOT_SHIFTED,
+            shift_reason="calendar_unavailable",
+            holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
             evaluated_on=date(2026, 8, 1),
             status=ObligationStatus.UPCOMING,
             user_state=user_state_for(ObligationStatus.UPCOMING),
         )
-
-
-def test_entry_accepts_a_weekend_shift_without_a_holiday_calendar() -> None:
-    entry = OverviewCalendarEntry(
-        modelo="303",
-        period=Period.from_year_and_code(2026, "3T"),
-        opens_on=date(2026, 10, 1),
-        closes_on=date(2026, 10, 17),
-        adjusted_closes_on=date(2026, 10, 19),
-        shift_reason="sabado + calendar_unavailable",
-        holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-        evaluated_on=date(2026, 8, 1),
-        status=ObligationStatus.UPCOMING,
-        user_state=user_state_for(ObligationStatus.UPCOMING),
-    )
-
-    assert entry.adjusted_closes_on == date(2026, 10, 19)
 
 
 def test_build_marks_modelo_369_as_modelo_exception(

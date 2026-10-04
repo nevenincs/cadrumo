@@ -386,7 +386,7 @@ def atomic_write_hardened_bytes(
                 # are separate properties — a reader never sees a half-written
                 # file either way; what the batch trades is only how soon the
                 # bytes are guaranteed to survive a power loss.
-                staged._publish_in_batch(batch)
+                staged.publish_in_batch(batch)
         # Deliberately NO per-file ACL call here. ``mode`` covers POSIX; on
         # Windows the target's ACL comes from its parent directory, hardened
         # ONCE at creation with inheritance flags (see
@@ -498,7 +498,7 @@ class StagedPublication:
             fsync_parent_dir(self._target_path)
             self._published = True
 
-    def _publish_in_batch(self, batch: DurableWriteBatch) -> None:
+    def publish_in_batch(self, batch: DurableWriteBatch) -> None:
         """Replace the destination and defer its parent sync to ``batch``."""
         self._publish_replace(batch=batch)
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -79,10 +79,6 @@ type RuntimeEnrollmentRequest = Annotated[
 """Closed pre-unlock request union; IDs alone grant no authority."""
 
 
-class RuntimeEnrollmentRequestEnvelope(RootModel[RuntimeEnrollmentRequest]):
-    """Validate one complete enrollment request document."""
-
-
 class EnrollmentCredentialBinding(BaseModel):
     """Exact protected-client credential identity, excluding secret bytes."""
 
@@ -143,10 +139,6 @@ type RuntimeEnrollmentReply = Annotated[
     Field(discriminator="kind"),
 ]
 """Closed nonsecret reply union for the enrollment handshake."""
-
-
-class RuntimeEnrollmentReplyEnvelope(RootModel[RuntimeEnrollmentReply]):
-    """Validate one complete enrollment reply document."""
 
 
 class RuntimeEnrollmentClientReply(BaseModel):

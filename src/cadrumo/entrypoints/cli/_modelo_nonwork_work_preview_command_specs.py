@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from ._modelo_nonwork_command_spec_policies import _CALCULATION_READ
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -13,7 +14,6 @@ from ._command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ._modelo_nonwork_command_spec_policies import _CALCULATION_READ
 from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from .financial_contracts import ProfileFactEntry
-from .financial_navigation import _activate_button, _wait_for_refreshed_home
+from .financial_navigation import _activate_button, wait_for_refreshed_home
 from .installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -84,4 +84,4 @@ async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None
     await pilot.press("f8")
     await pilot.app.workers.wait_for_complete()
     await pilot.press("escape")
-    await _wait_for_refreshed_home(pilot)
+    await wait_for_refreshed_home(pilot)

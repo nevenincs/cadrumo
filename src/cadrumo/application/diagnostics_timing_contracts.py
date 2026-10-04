@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .diagnostics_run_report_contracts import DiagnosticsLatencyPercentilesSnapshot
 
 
-class _TimingSnapshot(BaseModel):
+class TimingSnapshot(BaseModel):
     """Canonical timing facts with the shared lossless public decimal scalar."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -26,7 +26,7 @@ class _TimingSnapshot(BaseModel):
     mean_duration_ms: PublicDecimal | None = None
 
 
-def _public_timing_values(value: BaseModel, *, exclude: set[str] | None = None) -> dict[str, object]:
+def public_timing_values(value: BaseModel, *, exclude: set[str] | None = None) -> dict[str, object]:
     """Copy only the decimal representation; preserve every other service fact."""
     values = cast("dict[str, object]", value.model_dump(exclude=exclude))
     mean = values["mean_duration_ms"]
@@ -35,8 +35,8 @@ def _public_timing_values(value: BaseModel, *, exclude: set[str] | None = None) 
     return values
 
 
-def _native_timing_values(
-    value: _TimingSnapshot | DiagnosticsLatencyPercentilesSnapshot, *, exclude: set[str] | None = None
+def native_timing_values(
+    value: TimingSnapshot | DiagnosticsLatencyPercentilesSnapshot, *, exclude: set[str] | None = None
 ) -> dict[str, object]:
     """Restore the shared public scalar without calculating timing metrics."""
     excluded = exclude | {"mean_duration_ms"} if exclude is not None else {"mean_duration_ms"}

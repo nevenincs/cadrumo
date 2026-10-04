@@ -17,7 +17,12 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings, override_settings
-from .._kdf_attestation import parse_ready_attestation
+from .._kdf_attestation import (
+    expected_kdf_worker_limits,
+    kdf_worker_platform,
+    parse_ready_attestation,
+    validate_ready_attestation_shape,
+)
 from .._kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
 from .._kdf_process import apply_posix_worker_limits, worker_environment
 from .._kdf_process import terminate_process_tree as _terminate_process_tree
@@ -232,6 +237,11 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
         assert "PATH" not in environment_keys
         assert worker._request_fd is not None
         assert worker._result_fd is not None
+        assert attestation["platform"] == kdf_worker_platform()
+        limits = attestation["limits"]
+        assert isinstance(limits, dict)
+        # Darwin cannot lower the address-space limit, so it never claims one.
+        assert ("memory_bytes" in limits) is (sys.platform != "darwin")
         if sys.platform == "win32":
             assert job is not None
             assert job.contains(process)
@@ -253,6 +263,32 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
             )
             assert not os.get_inheritable(worker._request_fd)
             assert not os.get_inheritable(worker._result_fd)
+
+
+def _ready_shape(platform: str) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "cwd": "/neutral",
+        "environment_keys": [],
+        "limits": expected_kdf_worker_limits(platform),
+        "platform": platform,
+        "protocol": "profile-kdf-ready/v1",
+        "transport": "framed-anonymous-pipe/v1",
+    }
+    if platform != "win32":
+        payload["open_file_descriptors"] = [0, 1, 2]
+    return payload
+
+
+@pytest.mark.parametrize("attested", ["win32", "darwin", "posix"])
+@pytest.mark.parametrize("expected", ["win32", "darwin", "posix"])
+def test_each_ready_contract_verifies_only_on_its_own_platform(attested: str, expected: str) -> None:
+    """A Darwin attestation without a memory cap never satisfies the POSIX or Windows contract."""
+    payload = _ready_shape(attested)
+    if attested == expected:
+        validate_ready_attestation_shape(payload, expected)
+        return
+    with pytest.raises(ValueError, match="profile KDF ready"):
+        validate_ready_attestation_shape(payload, expected)
 
 
 async def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_async() -> None:

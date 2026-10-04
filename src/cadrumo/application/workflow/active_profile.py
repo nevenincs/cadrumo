@@ -11,7 +11,6 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -24,7 +23,6 @@ from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ...domain.user_profile.values import UserProfileRecord
 
 _log = get_logger(__name__)
@@ -97,27 +95,9 @@ def resolve_active_profile_record(*, profile_decode_context: ProfileDecodeContex
     return ActiveProfileRecordResolution(record=record)
 
 
-def active_transaction_catalogue_repository[RepositoryT: TransactionCatalogueRepositoryProtocol](
-    *,
-    repository_factory: Callable[[str], RepositoryT],
-) -> RepositoryT:
-    """Compose the active bucket's transaction catalogue through an outward factory."""
-    from ...domain.transactions.errors import LedgerNoActiveBucketError
-
-    try:
-        bucket_id = require_active_profile_bucket_id()
-    except NoActiveProfileError as exc:
-        raise LedgerNoActiveBucketError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-            context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-        ) from exc
-    return repository_factory(bucket_id)
-
-
 __all__ = [
     "ActiveProfileRecordResolution",
     "active_profile_selection",
-    "active_transaction_catalogue_repository",
     "require_active_profile_bucket_id",
     "resolve_active_profile_record",
 ]

@@ -1,0 +1,14 @@
+{
+  "en": {
+    "tui.ledger.invoice.summary.lease": "Business premises lease · situación {situacion} · referencia catastral {referencia}"
+  },
+  "es": {
+    "tui.ledger.invoice.summary.lease": "Arrendamiento de local de negocio · situación {situacion} · referencia catastral {referencia}"
+  },
+  "ca": {
+    "tui.ledger.invoice.summary.lease": "Arrendament de local de negoci · situació {situacion} · referència cadastral {referencia}"
+  },
+  "hu": {
+    "tui.ledger.invoice.summary.lease": "Üzlethelyiség bérbeadása · ingatlanhelyzet {situacion} · kataszteri hivatkozás {referencia}"
+  }
+}

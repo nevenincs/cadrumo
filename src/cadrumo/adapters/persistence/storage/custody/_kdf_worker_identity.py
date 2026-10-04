@@ -7,11 +7,16 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import cast
 
-from ._kdf_attestation import validate_ready_attestation_shape
+from ._kdf_attestation import kdf_worker_platform, validate_ready_attestation_shape
 from ._kdf_process import worker_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
+
+# Darwin adds this non-secret text-encoding preference to every new process,
+# whatever environment its parent supplies.
+_DARWIN_INJECTED_ENVIRONMENT = frozenset({"__CF_USER_TEXT_ENCODING"})
 
 
 def verify_ready_worker(
@@ -22,10 +27,10 @@ def verify_ready_worker(
     process: subprocess.Popen[bytes],
     job: _WindowsJob | None,
 ) -> None:
-    expected_platform = "win32" if sys.platform == "win32" else "posix"
+    expected_platform = kdf_worker_platform()
     validate_ready_attestation_shape(payload, expected_platform)
     _validate_environment(payload, neutral_directory=neutral_directory)
-    if expected_platform == "posix":
+    if expected_platform != "win32":
         _validate_descriptors(payload, expected_posix_file_descriptors=expected_posix_file_descriptors)
     _verify_process(process, job=job)
 
@@ -40,7 +45,13 @@ def _validate_environment(
     neutral_root = Path(neutral_directory.name).resolve()
     if payload["cwd"] != str(neutral_root):
         raise ValueError("profile KDF worker cwd is not neutral")
-    if payload["environment_keys"] != sorted(worker_environment(neutral_root=neutral_root)):
+    reported = payload["environment_keys"]
+    if not isinstance(reported, list):
+        raise ValueError("profile KDF worker environment is not allowlisted")
+    keys = [key for key in cast("list[object]", reported) if isinstance(key, str)]
+    given = set(worker_environment(neutral_root=neutral_root))
+    injected = _DARWIN_INJECTED_ENVIRONMENT if sys.platform == "darwin" else frozenset[str]()
+    if keys != reported or keys != sorted(set(keys)) or not given <= set(keys) <= given | injected:
         raise ValueError("profile KDF worker environment is not allowlisted")
 
 

@@ -8,12 +8,12 @@ from importlib import import_module
 from types import MappingProxyType
 from typing import cast
 
-from ._command_parameter_contracts import OptionSpec, ParameterSpec
-from ._command_shared_contracts import DeferredTarget, SchemaState
 from ._command_structure_validation import graph_by_key as _graph_by_key
 from ._command_structure_validation import graph_by_schema_identity as _graph_by_schema_identity
 from ._command_structure_validation import graph_nodes as _graph_nodes
 from ._command_structure_validation import validate_graph as _validate_graph
+from .command_parameter_contracts import OptionSpec, ParameterSpec
+from .command_shared_contracts import DeferredTarget, SchemaState
 from .command_spec import CommandSpec, CommandSpecNode
 
 

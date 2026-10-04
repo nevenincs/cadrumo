@@ -9,8 +9,6 @@ import stat
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from types import SimpleNamespace
-from typing import cast
 
 import pytest
 
@@ -106,10 +104,12 @@ def test_homebrew_temp_refuses_a_different_filesystem(
     prefix.mkdir()
     original_stat = Path.stat
 
-    def stat_with_different_prefix_device(path: Path, *args: object, **kwargs: object) -> os.stat_result:
-        result = original_stat(path, *args, **kwargs)  # type: ignore[arg-type]
+    def stat_with_different_prefix_device(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+        result = original_stat(path, follow_symlinks=follow_symlinks)
         if path == prefix:
-            return cast(os.stat_result, SimpleNamespace(st_dev=result.st_dev + 1))
+            values = list(result)
+            values[2] = result.st_dev + 1
+            return os.stat_result(values)
         return result
 
     monkeypatch.setattr(Path, "stat", stat_with_different_prefix_device)

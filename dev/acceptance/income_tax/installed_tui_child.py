@@ -189,11 +189,71 @@ def public_surface_diagnostic(pilot: Any) -> dict[str, object]:
             if isinstance(widget_id := getattr(widget, "id", None), str)
         }
     )
-    return {
+    diagnostic: dict[str, object] = {
         "current_screen_class": type(screen).__name__,
         "current_screen_id": screen.id,
         "mounted_widget_ids": widget_ids,
     }
+    diagnostic.update(_public_root_diagnostic(pilot))
+    return diagnostic
+
+
+_ROOT_REFUSAL_CODES = frozenset(
+    {
+        "workbench.home.refresh_unavailable",
+        "workbench.search.unavailable",
+        "workbench.search.refresh_unavailable",
+        "workbench.destinations.refresh_unavailable",
+    }
+)
+_ACCOUNT_POSTURES = frozenset({"no_profile", "locked", "active", "expired"})
+_ROOT_DIAGNOSTIC_FLAGS = (
+    "root_updating_visible",
+    "root_account_refusal_shown",
+    "root_navigation_refusal_shown",
+    "account_session_present",
+    "account_session_has_expiry",
+    "account_session_expired",
+)
+
+
+def _public_root_diagnostic(pilot: Any) -> dict[str, object]:
+    """Distinguish a pending Home read from its public, value-free refusal."""
+    from textual.css.query import NoMatches
+    from textual.widgets import Static
+
+    from cadrumo.application.overview.home import HomeAccountSession
+    from cadrumo.core.i18n.render import tr
+    from cadrumo.core.time.clock import now
+
+    diagnostic: dict[str, object] = {}
+    if not any(hasattr(pilot.app, field) for field in ("home_refresh_refusal_code", "workbench_search_refusal_code")):
+        return diagnostic
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if hasattr(pilot.app, field):
+            code = getattr(pilot.app, field)
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                diagnostic[field] = code
+    controls = (
+        ("#root-updating", "root_updating_visible", None),
+        ("#root-account-refusal", "root_account_refusal_shown", "tui.root.account.unavailable"),
+        ("#root-navigation-refusal", "root_navigation_refusal_shown", "tui.root.navigation.unavailable"),
+    )
+    for selector, field, translation in controls:
+        try:
+            control = pilot.app.query_one(selector, Static)
+        except (AttributeError, NoMatches):
+            continue
+        diagnostic[field] = control.display if translation is None else str(control.render()).strip() == tr(translation)
+    if hasattr(pilot.app, "account_session"):
+        session = pilot.app.account_session
+        diagnostic["account_session_present"] = session is not None
+        if isinstance(session, HomeAccountSession):
+            diagnostic["account_session_posture"] = session.posture.value
+            diagnostic["account_session_has_expiry"] = session.expires_at is not None
+            if session.expires_at is not None and session.expires_at.tzinfo is not None:
+                diagnostic["account_session_expired"] = session.expires_at <= now()
+    return diagnostic
 
 
 @overload
@@ -616,6 +676,17 @@ def _sanitized_public_diagnostic(diagnostic: dict[str, object]) -> dict[str, obj
     widget_ids = diagnostic.get("mounted_widget_ids")
     if isinstance(widget_ids, list) and all(isinstance(item, str) for item in widget_ids):
         sanitized["mounted_widget_ids"] = sorted(set(widget_ids))
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if field in diagnostic:
+            code = diagnostic[field]
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                sanitized[field] = code
+    for field in _ROOT_DIAGNOSTIC_FLAGS:
+        if isinstance(value := diagnostic.get(field), bool):
+            sanitized[field] = value
+    posture = diagnostic.get("account_session_posture")
+    if isinstance(posture, str) and posture in _ACCOUNT_POSTURES:
+        sanitized["account_session_posture"] = posture
     return sanitized
 
 
@@ -629,6 +700,7 @@ def run_installed_tui_child_process(
     receipt_path: Path,
     passphrase: str,
     authority_root: Path | None = None,
+    runtime_socket_dir: Path | None = None,
     timeout_seconds: int = 240,
 ) -> InstalledTuiChildProcessEvidence:
     """Run a development child against an installed product interpreter.
@@ -656,6 +728,9 @@ def run_installed_tui_child_process(
     )
     if authority_root is not None:
         environment["CADRUMO_AUTHORITY_ROOT"] = str(authority_root.resolve(strict=True))
+    if runtime_socket_dir is not None:
+        environment["CADRUMO_STORAGE_ROOT"] = str(store)
+        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir.resolve(strict=True))
     completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
         [str(executable), "-m", child_module, *child_args],
         check=False,

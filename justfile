@@ -1131,7 +1131,12 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py src/cadrumo/entrypoints/cli/config/tests src/cadrumo/entrypoints/cli/tests/test_ledger_llm_classify.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_autosplit.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_split.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_saturate.py src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_review_native.py src/cadrumo/entrypoints/tui dev/agent_eval/tests/test_runtime_automation_management_parity.py
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
+
+[doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
+[group('test')]
+test-native-host:
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]

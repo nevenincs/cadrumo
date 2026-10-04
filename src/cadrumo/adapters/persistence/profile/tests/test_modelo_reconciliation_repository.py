@@ -34,8 +34,7 @@ from pydantic import ValidationError
 
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
-    modelo_reconcile,
-    reconcile_parsed_justificante,
+    PreparedModeloReconciliation,
 )
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
@@ -66,6 +65,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
@@ -429,11 +429,8 @@ def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() ->
     """
     import ast
     import inspect
-    from importlib import import_module
 
-    reconcile_module = import_module(".....application.modelo.reconciliation", __package__)
-
-    source = inspect.getsource(reconcile_module._finalise_reconciliation)
+    source = inspect.getsource(PreparedModeloReconciliation.persist)
     tree = ast.parse(textwrap.dedent(source))
     atomic_calls = [
         node

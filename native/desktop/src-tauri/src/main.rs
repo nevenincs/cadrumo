@@ -3,12 +3,20 @@
 mod package;
 mod terminal;
 
-use std::{io, path::PathBuf, sync::Mutex};
+use std::{
+    io,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 use tauri::{Manager, State};
 use terminal::{Output, Session, TerminalState};
 
 #[tauri::command]
-fn terminal_start(state: State<'_, TerminalState>, cols: u16, rows: u16) -> Result<(), String> {
+fn terminal_start(
+    state: State<'_, Arc<TerminalState>>,
+    cols: u16,
+    rows: u16,
+) -> Result<(), String> {
     let mut session = state.session.lock().map_err(|e| e.to_string())?;
     if session.is_some() {
         return Err("A TUI session is already running".into());
@@ -23,7 +31,7 @@ fn terminal_start(state: State<'_, TerminalState>, cols: u16, rows: u16) -> Resu
 }
 
 #[tauri::command]
-fn terminal_input(state: State<'_, TerminalState>, data: Vec<u8>) -> Result<(), String> {
+fn terminal_input(state: State<'_, Arc<TerminalState>>, data: Vec<u8>) -> Result<(), String> {
     state
         .session
         .lock()
@@ -34,7 +42,11 @@ fn terminal_input(state: State<'_, TerminalState>, data: Vec<u8>) -> Result<(), 
 }
 
 #[tauri::command]
-fn terminal_resize(state: State<'_, TerminalState>, cols: u16, rows: u16) -> Result<(), String> {
+fn terminal_resize(
+    state: State<'_, Arc<TerminalState>>,
+    cols: u16,
+    rows: u16,
+) -> Result<(), String> {
     state
         .session
         .lock()
@@ -45,7 +57,7 @@ fn terminal_resize(state: State<'_, TerminalState>, cols: u16, rows: u16) -> Res
 }
 
 #[tauri::command]
-fn terminal_read(state: State<'_, TerminalState>) -> Result<Output, String> {
+fn terminal_read(state: State<'_, Arc<TerminalState>>) -> Result<Output, String> {
     state
         .session
         .lock()
@@ -56,9 +68,8 @@ fn terminal_read(state: State<'_, TerminalState>) -> Result<Output, String> {
 }
 
 #[tauri::command]
-fn terminal_stop(state: State<'_, TerminalState>) -> Result<(), String> {
-    state.session.lock().map_err(|e| e.to_string())?.take();
-    Ok(())
+fn terminal_stop(state: State<'_, Arc<TerminalState>>) -> Result<(), String> {
+    state.stop()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -79,11 +90,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let launch =
         tauri::async_runtime::block_on(package::resolve(root)).map_err(io::Error::other)?;
     let data_directory = launch.webview.clone();
-    tauri::Builder::default()
-        .manage(TerminalState {
-            launch,
-            session: Mutex::new(None),
-        })
+    // Keep the session owner through the event loop's final cleanup as well.
+    let state = Arc::new(TerminalState {
+        launch,
+        session: Mutex::new(None),
+    });
+    let outcome = tauri::Builder::default()
+        .manage(state.clone())
         .invoke_handler(tauri::generate_handler![
             terminal_start,
             terminal_input,
@@ -106,13 +119,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if matches!(event, tauri::WindowEvent::Destroyed) {
-                let state = window.state::<TerminalState>();
-                if let Ok(mut session) = state.session.lock() {
-                    session.take();
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let state = window.state::<Arc<TerminalState>>();
+                if let Err(error) = state.stop() {
+                    api.prevent_close();
+                    eprintln!("Terminal shutdown refused window closure: {error}");
+                }
+            } else if matches!(event, tauri::WindowEvent::Destroyed) {
+                let state = window.state::<Arc<TerminalState>>();
+                if let Err(error) = state.stop() {
+                    eprintln!("Terminal shutdown after window destruction did not settle: {error}");
                 }
             }
         })
-        .run(tauri::generate_context!())?;
+        .run(tauri::generate_context!());
+    let cleanup = state.stop();
+    if let Err(error) = &cleanup {
+        eprintln!("Terminal final shutdown did not settle: {error}");
+    }
+    outcome?;
+    cleanup.map_err(io::Error::other)?;
     Ok(())
 }

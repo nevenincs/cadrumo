@@ -5,6 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
+body_hash: 'sha256:0e0b57c89852f90578eec79c100deb36339e73871b850996c3c78f79b58966ef'
 body_hash: 'sha256:378974cfdb68bb57028f4fbc8a599b708f75e921e2737cdde93ae52b7a3af498'
 related:
   - "[[2026-10-03-live-verification-session-plan]]"

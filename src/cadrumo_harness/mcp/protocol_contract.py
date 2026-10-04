@@ -9,6 +9,7 @@ from typing import Any, NotRequired, TypedDict, cast
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.application.corpus_search.errors import CorpusSearchError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage
@@ -28,6 +29,7 @@ class _FieldSchema(TypedDict):
     type: str
     enum: NotRequired[list[str]]
     minimum: NotRequired[int]
+    maximum: NotRequired[int]
 
 
 class _ToolSchema(TypedDict):
@@ -74,7 +76,17 @@ MCP_TOOL_CATALOGUE = (
             {"modelo": _TEXT, "filing_year": {"type": "integer"}, "period": _TEXT, "casilla": _TEXT, "as_of": _TEXT},
         ),
     ),
-    ("search", "Find currently permitted registered operations", _schema({}, {"query": _TEXT})),
+    (
+        "corpus_search",
+        "Search the bundled BOE/AEAT legal corpus and approved tax terminology; "
+        "an exact citation id resolves to its published verbatim text",
+        _schema({"query": _TEXT}, {"limit": {"type": "integer", "minimum": 1, "maximum": 50}}),
+    ),
+    (
+        "search",
+        "Rank currently permitted registered operations by relevance to a query; without one, list them",
+        _schema({}, {"query": _TEXT}),
+    ),
     ("describe", "Read one current registered operation contract and input schema", _schema({"definition_id": _TEXT})),
     (
         "execute",
@@ -139,7 +151,7 @@ def _field_type_matches(kind: str, value: object, declaration: _FieldSchema) -> 
 def _integer_value_matches(value: object, declaration: _FieldSchema) -> bool:
     if not isinstance(value, int) or isinstance(value, bool):
         return False
-    return value >= declaration.get("minimum", 0)
+    return value >= declaration.get("minimum", 0) and ("maximum" not in declaration or value <= declaration["maximum"])
 
 
 def _enum_value_matches(value: object, declaration: _FieldSchema) -> bool:
@@ -177,6 +189,8 @@ def refusal_code(error: Exception) -> str:
     if isinstance(error, (RuntimeFrontendRefusedError, RuntimeRefusalError, AutomationCustodyError)):
         reason = error.reason
         return str(reason.value) if isinstance(reason, Enum) else str(reason)
+    if isinstance(error, CorpusSearchError):
+        return error.reason
     if isinstance(error, AuthorityDescriptorUnavailableError):
         return "published_authority_unavailable"
     if isinstance(error, RegistryValidationError):

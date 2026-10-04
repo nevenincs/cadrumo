@@ -71,7 +71,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import PRODUCT_PACKAGE
 from dev.product_environment import ambient_product_settings_removed
 

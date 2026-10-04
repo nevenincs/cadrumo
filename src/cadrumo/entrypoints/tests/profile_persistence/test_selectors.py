@@ -26,13 +26,12 @@ from cadrumo.application.modelo.selectors import (
     select_modelo_calculation_revision,
 )
 from cadrumo.application.modelo.work_addressing import (
+    ModeloRevisionPick,
     ModeloWorkAddress,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkVisibleTargetAmbiguousError,
-    resolve_exportable_modelo_calculation_revision_address,
-    resolve_fileable_modelo_calculation_revision_address,
-    resolve_verifiable_modelo_calculation_revision_address,
+    resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_selection import (
@@ -815,54 +814,65 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         calculation_repository=cr_repo,
     ) as ports:
         assert (
-            resolve_verifiable_modelo_calculation_revision_address(
-                address=address,
+            resolve_modelo_revision_pick(
+                target=address,
+                pick=ModeloRevisionPick(selector=ModeloCalculationRevisionSelector.CURRENT, default_for="verify"),
                 catalogue=catalogue,
                 resolved_bucket_id=work_unit.bucket_id,
-                ports=ports,
-            )
-            == draft
+                calculation_repository=ports.calculation_repository,
+                operation=ports.operation,
+            ).calculation_revision_id
+            == draft.calculation_revision_id
         )
         assert (
-            resolve_fileable_modelo_calculation_revision_address(
-                address=address,
-                selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
+            resolve_modelo_revision_pick(
+                target=address,
+                pick=ModeloRevisionPick(selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED, default_for="file"),
                 catalogue=catalogue,
                 resolved_bucket_id=work_unit.bucket_id,
-                ports=ports,
-            )
-            == verified
+                calculation_repository=ports.calculation_repository,
+                operation=ports.operation,
+            ).calculation_revision_id
+            == verified.calculation_revision_id
         )
         assert (
-            resolve_exportable_modelo_calculation_revision_address(
-                address=address,
+            resolve_modelo_revision_pick(
+                target=address,
+                pick=ModeloRevisionPick(selector=ModeloCalculationRevisionSelector.CURRENT, default_for="export"),
                 catalogue=catalogue,
                 resolved_bucket_id=work_unit.bucket_id,
-                ports=ports,
-            )
-            == filed
+                calculation_repository=ports.calculation_repository,
+                operation=ports.operation,
+            ).calculation_revision_id
+            == filed.calculation_revision_id
         )
 
         # The verify resolver no longer gates state: an explicitly-addressed verified
         # revision is returned (not refused) so verify_modelo_revision_with_preconditions can collapse it
         # to its existing granting report (aeat-cli-contract).
         assert (
-            resolve_verifiable_modelo_calculation_revision_address(
-                address=ModeloWorkAddress(),
-                calculation_revision_id=verified.calculation_revision_id,
+            resolve_modelo_revision_pick(
+                target=ModeloWorkAddress(),
+                pick=ModeloRevisionPick(
+                    selector=ModeloCalculationRevisionSelector.EXPLICIT,
+                    calculation_revision_id=verified.calculation_revision_id,
+                    default_for="verify",
+                ),
                 catalogue=catalogue,
                 resolved_bucket_id=work_unit.bucket_id,
-                ports=ports,
-            )
-            == verified
+                calculation_repository=ports.calculation_repository,
+                operation=ports.operation,
+            ).calculation_revision_id
+            == verified.calculation_revision_id
         )
         with pytest.raises(CalculationRevisionStateError) as raised:
-            resolve_fileable_modelo_calculation_revision_address(
-                address=address,
-                selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
+            resolve_modelo_revision_pick(
+                target=address,
+                pick=ModeloRevisionPick(selector=ModeloCalculationRevisionSelector.LATEST_DRAFT, default_for="file"),
                 catalogue=catalogue,
                 resolved_bucket_id=work_unit.bucket_id,
-                ports=ports,
+                calculation_repository=ports.calculation_repository,
+                operation=ports.operation,
             )
         failure = raised.value.precondition_failure
         assert failure is not None

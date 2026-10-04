@@ -19,7 +19,7 @@ _ON_THE_MOVED_DAY = ModeloWorkDeadlinePosture(
     holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
     days_remaining=0,
 )
-# A weekday nominal date in a year without a published holiday calendar stays, its holidays unchecked.
+# A year without a published holiday calendar keeps the nominal date, unverified.
 _UNVERIFIED_AND_PASSED = ModeloWorkDeadlinePosture(
     closes_on=date(2027, 2, 1),
     nominal_closes_on=date(2027, 2, 1),
