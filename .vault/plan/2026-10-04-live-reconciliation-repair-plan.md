@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:65a000c7de5dc4efb82e9d8a2ed499108d77a2d2d104f745def3d0a5f5eb8dda'
+body_hash: 'sha256:c37c52881b5ee36147230f2d91aea7dbf1ab3f374df487f814aca6749318e7a7'
 ---
 
 # Live reconciliation repair
@@ -31,7 +31,7 @@ The user explicitly authorized fixing all failures observed during authenticated
 - [x] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
 - [x] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
 - [x] `S07` - Align official IVA result-disposition enrollment with canonical export headers while preserving declared legacy observations; `src/cadrumo/_data/registry/aeat/facts/2025/mapping carry disposition fact and calculation observation ingress tests`.
-- [ ] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
+- [x] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
 
 ## Parallelization
 

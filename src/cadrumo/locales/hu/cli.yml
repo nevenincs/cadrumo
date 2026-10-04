@@ -1194,9 +1194,9 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
-        app_help: 'Egyeztess egy bevallást az AEAT-igazolással: a pull letölti az
-          igazolást az AEAT-tól és egyeztet; az import egy helyi PDF-et egyeztet;
-          a list a korábbi futtatásokat listázza.'
+        app_help: 'Hasonlítsd össze a mentett helyi számítást az AEAT adataival: a pull
+          igazolást vagy benyújtott bevallást tölt le; az import helyi PDF-et hasonlít össze;
+          a list a korábbi összehasonlításokat mutatja.'
         file_kind_help: 'Bizonyítékdokumentum típusa: justificante (AEAT-igazolás,
           minden nyomtatvány) vagy declaration (benyújtott bevallás PDF-je, rovatszintű
           egyeztetés, csak engedélyezett nyomtatványok). Alapértelmezés: justificante.'

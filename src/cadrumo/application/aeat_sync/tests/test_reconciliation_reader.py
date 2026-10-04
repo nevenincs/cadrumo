@@ -7,13 +7,10 @@ from uuid import UUID
 
 import pytest
 
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...modelo.reconciliation_records import (
-    ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
+    ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
-    ModeloReconciliationRecord,
-    ModeloReconciliationVerdict,
 )
 from ..workspace import (
     AeatSyncDiscrepancyKind,
@@ -22,47 +19,12 @@ from ..workspace import (
     AeatSyncWorkspaceProjectionError,
     AeatSyncWorkspaceZone,
 )
-from ..workspace_reader import read_local_aeat_sync_workspace_projection
-from .test_workspace_reader import _unrelated_contracts
+from .reconciliation_fixtures import reconciliation_projection as _projection
+from .reconciliation_fixtures import reconciliation_record as _record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "00000000-0000-4000-8000-000000000001"
 _NOW = datetime(2026, 10, 4, tzinfo=UTC)
-
-
-def _record(*, mismatches: bool = True) -> ModeloReconciliationRecord:
-    return ModeloReconciliationRecord(
-        bucket_event_id="a" * 64,
-        bucket_id=_BUCKET,
-        work_unit_id="b" * 64,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", modelo_year=2024, period="1T", revision_id="2024-hasta-08-y-2t"
-        ),
-        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
-        source_ref="test-evidence",
-        verdict=ModeloReconciliationVerdict.MISMATCHES if mismatches else ModeloReconciliationVerdict.MATCHES,
-        diffs=(
-            ModeloReconciliationDiff(
-                field_name="total", work_unit_value="0.00", evidence_value="125.50", kind="total_mismatch"
-            ),
-        )
-        if mismatches
-        else (),
-        advisories=(ModeloReconciliationAdvisory(code="identity_anchor_unverified", message="Unverified identity"),),
-        actor="test",
-        reconciled_at=_NOW,
-    )
-
-
-def _projection(records):
-    return read_local_aeat_sync_workspace_projection(
-        bucket_id=_BUCKET,
-        subject_key="00000001R",
-        observed_at=_NOW,
-        filings=(),
-        operation_contracts=_unrelated_contracts(),
-        reconciliations=records,
-    )
 
 
 def test_saved_calculation_comparison_renders_without_local_filing_or_register_capture() -> None:
@@ -138,18 +100,61 @@ def test_advisory_only_comparison_is_incomplete_in_row_and_overview() -> None:
     assert overview.discrepancy_kind is AeatSyncDiscrepancyKind.INCOMPLETE
 
 
-def test_populated_reconciliation_survives_complete_workbench_public_roundtrip() -> None:
-    from ...tests.test_workbench_generation import _inputs
+@pytest.mark.parametrize("grounded", [False, True])
+def test_populated_reconciliation_survives_complete_workbench_public_roundtrip(grounded: bool) -> None:
+    from ...search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
     from ...workbench_generation import assemble_workbench_generation
-    from ...workbench_generation_contracts import WorkbenchGenerationSourceResultV1
+    from ...workbench_generation_contracts import WorkbenchGenerationInputsV1, WorkbenchGenerationSourceResultV1
     from ...workbench_generation_projection import (
         WorkbenchGenerationOperationProjection,
         project_workbench_generation,
         restore_workbench_generation,
     )
 
+    record = _record()
+    if grounded:
+        record = record.model_copy(
+            update={
+                "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+                "diffs": tuple(
+                    ModeloReconciliationDiff(
+                        field_name=f"casilla-{index}",
+                        work_unit_value="0.00",
+                        evidence_value="123.45",
+                        kind="casilla_value_mismatch",
+                        diff_kind=ModeloReconciliationDiffKind.CASILLA,
+                        legal_refs=("ley-37-1992:art-99",),
+                        source_refs=("aeat-dr-303-2024-early",),
+                    )
+                    for index in range(14)
+                ),
+            }
+        )
+    records = (record, _record()) if grounded else (record,)
+    missing = WorkbenchGenerationSourceResultV1.never_captured(refusal="test.not_captured")
     generation = assemble_workbench_generation(
-        _inputs(aeat_sync=WorkbenchGenerationSourceResultV1.available(_projection((_record(),)), observed_at=_NOW))
+        WorkbenchGenerationInputsV1(
+            assembled_at=_NOW,
+            home=missing,
+            ledger=missing,
+            declarations=missing,
+            declarations_calendar=missing,
+            modelo=missing,
+            aeat_sync=WorkbenchGenerationSourceResultV1.available(_projection(records), observed_at=_NOW),
+            ledger_admission=WorkbenchDestinationAdmission(
+                destination="workbench.ledger",
+                state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+                reason_code="test.not_captured",
+            ),
+            declarations_admission=WorkbenchDestinationAdmission(
+                destination="workbench.declarations",
+                state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+                reason_code="test.not_captured",
+            ),
+            aeat_sync_admission=WorkbenchDestinationAdmission(
+                destination="workbench.aeat_sync", state=WorkbenchDestinationAdmissionState.AVAILABLE
+            ),
+        )
     )
     public = project_workbench_generation(UUID(_BUCKET), generation)
     restored = restore_workbench_generation(

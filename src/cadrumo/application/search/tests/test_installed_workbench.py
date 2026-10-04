@@ -305,6 +305,34 @@ def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:
         )
 
 
+def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identities() -> None:
+    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_projection as _projection
+    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from ...modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+
+    receipt = _record()
+    declaration = receipt.model_copy(
+        update={
+            "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+            "bucket_event_id": "c" * 64,
+        }
+    )
+    other_work = declaration.model_copy(update={"work_unit_id": "d" * 64, "bucket_event_id": "e" * 64})
+    projection = _projection((receipt, declaration, other_work))
+    snapshot = assemble_installed_workbench_search_snapshot(
+        ledger=_ledger(),
+        declarations=_declarations(),
+        aeat_sync=projection,
+        modelo=(),
+        ledger_admission=_admission("workbench.ledger"),
+        declarations_admission=_admission("workbench.declarations"),
+        aeat_sync_admission=_admission("workbench.aeat_sync"),
+    )
+    response = snapshot.service().search(WorkbenchSearchRequest(query="reconciliation"))
+    assert response.total_matches == 3
+    assert len({result.stable_id for result in response.results}) == 3
+
+
 def test_snapshot_projects_modelo_availability_from_the_existing_capability_answer() -> None:
     """Modelo search preserves the workspace's declared capability disposition."""
     snapshot = assemble_installed_workbench_search_snapshot(

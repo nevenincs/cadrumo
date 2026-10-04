@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7460644ac0ea093e045895a9802f428d4cf692616a0070a79fef528553fc504'
+body_hash: 'sha256:3d6daf5e465db31dabd026508e4befdd0f7156680b18883ee5909204f946d4ce'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -136,9 +136,31 @@ related:
 - `S07` `verify:` `isolated authority publication fixed input snapshot` -> `pass`
 - `S07` `verify:` `retained real filing 71 numeric fields observation envelope preparation` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/application/search/installed_workbench.py`
+- `S05` `M` `src/cadrumo/application/search/tests/test_installed_workbench.py`
+- `S05` `M` `src/cadrumo/application/aeat_sync/tests/test_reconciliation_reader.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_pull_operation.py`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `A` `src/cadrumo/application/aeat_sync/tests/reconciliation_fixtures.py`
+- `S05` `A` `.vault/audit/2026-10-04-live-reconciliation-repair-audit.md`
+- `S05` `verify:` `live receipt pull and two declaration pulls with 14 stable grounded differences` -> `pass`
+- `S05` `verify:` `encrypted history readback evidence identity and unchanged saved calculation` -> `pass`
+- `S05` `verify:` `installed TUI pilot overview drift and all 14 local AEAT field values twice` -> `pass`
+- `S05` `verify:` `declaration supervisor success and negative cases 6 tests` -> `pass`
+- `S05` `verify:` `search and public projection 15 tests` -> `pass`
+- `S05` `verify:` `final fixture regressions 26 tests` -> `pass`
+- `S05` `verify:` `final scoped Ruff formatting ty and private import checks` -> `pass`
+- `S05` `verify:` `independent scoped code and flow review` -> `pass`
+- `S05` `verify:` `repository-wide import gate` -> `fail`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S02` Live authentication request expired; fresh pull acceptance belongs to S05. Broader adapter tests exposed unavailable browser provisioning and preexisting export fixture disagreement.
 - `S03` Shared export parser includes unrelated preexisting XML and signed-component edits; checkpoint stages only filed-input hunks. Broader legacy fixture and browser provisioning failures remain outside this Step.
 - `S06` Live declaration capture reached registry enrollment but failed finalization; lead continues diagnosing upstream enrollment during S05.
+- `S05` Repository-wide import gate unavailable: missing lint-imports launcher, stale generated load-target metadata and concurrent source changes; separate existing dev dynamic import finding. All ten new test private-import findings repaired and scoped check passes. AEAT session cleared and owned manual runtime stopped.

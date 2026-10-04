@@ -1216,9 +1216,9 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        app_help: 'Concilia una declaració amb el seu justificant de l''AEAT: pull
-          descarrega el justificant de l''AEAT i concilia; import concilia un PDF
-          local; list llista les conciliacions anteriors.'
+        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull
+          descarrega un justificant o una declaració presentada; import compara un PDF
+          local; list mostra les comparacions anteriors.'
         file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
           tots els models) o declaration (PDF de declaració presentada, conciliació
           a nivell de casella, només models habilitats). Per defecte justificante.'

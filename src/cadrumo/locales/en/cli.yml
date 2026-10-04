@@ -1131,9 +1131,9 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
-        app_help: 'Reconcile a declaration against its AEAT justificante: pull fetches
-          the receipt from AEAT and reconciles; import reconciles a local PDF; list
-          shows past runs.'
+        app_help: 'Compare a saved local calculation with AEAT evidence: pull downloads
+          a receipt or filed declaration; import compares a local PDF; list shows
+          past comparisons.'
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, box-level reconcile, enrolled
           modelos only). Defaults to justificante.'

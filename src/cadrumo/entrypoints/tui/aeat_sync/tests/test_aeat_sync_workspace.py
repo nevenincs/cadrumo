@@ -1519,9 +1519,10 @@ async def test_reader_projected_filed_history_door_renders_and_hands_off_before_
 @pytest.mark.asyncio
 @pytest.mark.parametrize("width", (80, 120))
 async def test_persisted_drift_renders_each_diff_values_and_grounding_without_overflow(width: int) -> None:
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
-    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
     from .....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
 
     diff = ModeloReconciliationDiff(
@@ -1538,7 +1539,7 @@ async def test_persisted_drift_renders_each_diff_values_and_grounding_without_ov
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
@@ -1566,15 +1567,16 @@ async def test_persisted_drift_renders_each_diff_values_and_grounding_without_ov
 
 @pytest.mark.asyncio
 async def test_stored_match_with_advisories_shows_incomplete_comparison() -> None:
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
-    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
 
     projection = persisted_projection((_record(mismatches=False),))
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
@@ -1590,9 +1592,10 @@ async def test_stored_match_with_advisories_shows_incomplete_comparison() -> Non
 
 @pytest.mark.asyncio
 async def test_distinct_comparisons_at_same_address_have_unique_rows_and_historical_identity() -> None:
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
-    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
-    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
     from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 
     first = _record().model_copy(update={"source_kind": ModeloReconciliationEvidenceKind.DECLARATION})
@@ -1601,7 +1604,7 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):

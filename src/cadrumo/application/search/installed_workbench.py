@@ -258,7 +258,18 @@ def _aeat_sync_documents(
                 ),
                 label_key=WorkbenchSearchLabelKey.RECONCILIATION,
                 admission=admission,
-                identity_basis=SecretStr("|".join((str(row.modelo), str(row.filing_year), row.period.registry_token))),
+                identity_basis=SecretStr(
+                    "|".join(
+                        (
+                            str(row.modelo),
+                            str(row.filing_year),
+                            row.period.registry_token,
+                            row.work_unit_id or "",
+                            row.evidence_kind.value if row.evidence_kind is not None else "",
+                            row.evidence_id or "",
+                        )
+                    )
+                ),
             )
         )
     for row in projection.notifications:

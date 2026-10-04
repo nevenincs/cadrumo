@@ -37,6 +37,7 @@ from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.period import Period
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -48,12 +49,23 @@ from .test_modelo_reconciliation_import_operation import _CommitWitness
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-@pytest.mark.parametrize("source", tuple(ModeloReconciliationEvidenceKind))
+@pytest.mark.parametrize(
+    ("source", "invalid_evidence"),
+    [
+        (ModeloReconciliationEvidenceKind.JUSTIFICANTE, None),
+        (ModeloReconciliationEvidenceKind.DECLARATION, None),
+        (ModeloReconciliationEvidenceKind.DECLARATION, "wrong_period"),
+        (ModeloReconciliationEvidenceKind.DECLARATION, "empty_casillas"),
+        (ModeloReconciliationEvidenceKind.DECLARATION, "non_numeric_casillas"),
+        (ModeloReconciliationEvidenceKind.DECLARATION, "stale_snapshot"),
+    ],
+)
 def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
     source: ModeloReconciliationEvidenceKind,
+    invalid_evidence: str | None,
 ) -> None:
     """A foreign profile cannot read the capture; the correct worker guards its atomic write."""
     witness = _CommitWitness(MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID)
@@ -134,6 +146,32 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
                         revision_id=unit.revision_id,
                     ),
                 )
+                if invalid_evidence == "wrong_period":
+                    manifest = manifest.model_copy(
+                        update={
+                            "period": Period.from_year_and_code(unit.filing_year, "2T"),
+                            "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(update={"period": "2T"}),
+                        }
+                    )
+                elif invalid_evidence == "empty_casillas":
+                    manifest = manifest.model_copy(update={"casillas": ()})
+                elif invalid_evidence == "non_numeric_casillas":
+                    manifest = manifest.model_copy(
+                        update={
+                            "casillas": tuple(
+                                row.model_copy(update={"value_kind": CasillaValueKind.TEXT})
+                                for row in manifest.casillas
+                            ),
+                        }
+                    )
+                elif invalid_evidence == "stale_snapshot":
+                    manifest = manifest.model_copy(
+                        update={
+                            "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(
+                                update={"revision_id": "retired-revision"}
+                            ),
+                        }
+                    )
                 observation_id = store.persist_observation(manifest, operation=operation).name
                 snapshot_id = None
             else:
@@ -196,6 +234,14 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
             after_events = BucketEventHistoryRepository().load().events
 
         assert terminal is not None
+        if invalid_evidence is not None:
+            assert terminal.condition is OperationTerminalCondition.REFUSED
+            assert terminal.effect is OperationEffect.NONE
+            assert observation.projection.terminal_condition is OperationTerminalCondition.REFUSED
+            assert after_records == before_records
+            assert after_events == before_events
+            assert witness.events == []
+            return
         assert terminal.condition is OperationTerminalCondition.SUCCEEDED
         assert terminal.effect is OperationEffect.UPDATED
         assert observation.projection.effect is OperationEffect.UPDATED
