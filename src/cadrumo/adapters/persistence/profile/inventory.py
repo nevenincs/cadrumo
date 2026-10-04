@@ -29,13 +29,9 @@ from ....application.inventory.errors import InventoryClosingAuthorityConflictEr
 from ....application.inventory.ports import InventoryClosingAuthorityWrite
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....domain.contribuyente.inventory.records import (
-    InventoryClosingAuthorityRecord,
-    InventoryLedger,
-    InventoryLedgerDocument,
-    InventoryLedgerError,
-    MovementRecord,
-)
+from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
+from ....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
 from ..storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 from ._secure_model_document import (

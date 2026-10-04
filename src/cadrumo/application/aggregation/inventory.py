@@ -20,11 +20,8 @@ from ...domain.calculations.registry.inventory_anexo_d_applicability import reso
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.row_source_identity import RowSourceIdentity
-from ...domain.contribuyente.inventory.records import (
-    InventoryLedger,
-    InventoryLedgerDocument,
-    InventoryLedgerError,
-)
+from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from .source_mesh import (
     CalculationSourceContext,

@@ -12,12 +12,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.contribuyente.inventory.records import (
-    InventoryClosingAuthorityRecord,
-    InventoryLedger,
-    InventoryLedgerDocument,
-    MovementRecord,
-)
+from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
+from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
 
 
 class InventoryLedgerServiceRepositoryProtocol(Protocol):

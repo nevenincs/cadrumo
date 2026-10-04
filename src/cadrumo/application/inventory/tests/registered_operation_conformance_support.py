@@ -12,15 +12,14 @@ from pydantic import BaseModel
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect
 from ....core.time.clock import now
-from ....domain.contribuyente.inventory.records import (
+from ....domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
-    InventoryLedger,
-    MovementKind,
     PriorClosingContinuityEvidence,
     fingerprint_prior_authoritative_closing,
 )
+from ....domain.contribuyente.inventory.records import InventoryLedger, MovementKind
 from ....domain.filing_evidence import FilingEvidenceReference
 from ..ports import InventoryServicePortsFactory
 from ..registered_requests import (

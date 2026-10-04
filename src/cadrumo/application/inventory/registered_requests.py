@@ -13,19 +13,21 @@ from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.contribuyente.inventory.closing_foundations import (
+    InventoryClosingAuthority,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingValuationBasis,
+    PhysicalClosingEvidence,
+    PhysicalClosingObservation,
+    PriorClosingContinuityEvidence,
+)
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
-    InventoryClosingAuthority,
-    InventoryClosingDecisionEvidence,
-    InventoryClosingValuationBasis,
     MovementKind,
-    PhysicalClosingEvidence,
-    PhysicalClosingObservation,
-    PriorClosingContinuityEvidence,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ..operations.public_scalar import PublicDecimal

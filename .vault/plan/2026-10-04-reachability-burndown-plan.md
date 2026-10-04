@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:3df87306f057d6afb160db750f4920a43b3f3d8e796091e17ee0522094f133b1'
+body_hash: 'sha256:0fba6ce70054d5e852a4aee0072f4c8d727427dcbfdbb28a201d18fb2aec6280'
 ---
 
 # `reachability-burndown` plan
@@ -48,8 +48,12 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S20` - Move test-only raw storage and custody probes to finite fixtures; `Secure object corruption and inventory probes, profile custody wrapper probes, retained label-head fixture helpers and owning tests`.
 - [x] `S21` - Surface restricted model licence advisories through real provisioning outcomes and remove the fictional logout result; `Model selection, local-reader target and outcome contracts, CLI notices and profile operation declarations with owning tests`.
 - [x] `S22` - Retire legacy register and observation writing wrappers and retain their finite fixture owners; `Foreign asset and prorrata fixture authoring, observation window adapters and owning tests`.
-- [ ] `S23` - Remove inventory facade loaders and bind every import to its defining module; `Inventory foundational records, closing authority, Anexo D projections and all source and fixture consumers`.
-- [ ] `S25` - Relocate build-only storage conformance declarations and retire remaining test-only predicates; `Native packaging vector ownership, core fixture root projections, legal quotation and descendant fixture predicates with owning tests`.
+- [x] `S23` - Remove inventory facade loaders and bind every import to its defining module; `Inventory foundational records, closing authority, Anexo D projections and all source and fixture consumers`.
+- [x] `S25` - Relocate build-only storage conformance declarations and retire remaining test-only predicates; `Native packaging vector ownership, core fixture root projections, legal quotation and descendant fixture predicates with owning tests`.
+- [x] `S26` - Reconstruct complete unsigned export components and repair grounded Modelo 180 parser expectations; `Fixed-width parser, schema-derived component controls and committed Modelo 180 record proofs`.
+- [x] `S27` - Complete remaining evidence previews and remove unsupported custody fixture doors; `Censal certificate preview, observed login invalidation, native exact denial recovery and label-head fixture ownership with covering proofs`.
+- [ ] `S28` - Resolve exact cascades left by retired corpus and observation entrypoints; `Development corpus text ownership, stable central refusal identity, finite observation batch kernels, prorrata fixture projections and obsolete storage constant`.
+- [ ] `S29` - Purge legacy financial edit values before journal hydration; `Canonical hardened journal read and write substrate, deterministic idempotent purge, preserved invocation identity lifecycle and outcome, typed localized refusal for unreadable or unrewritable financial journals, continued refusal of superseded schemas`.
 - [ ] `S24` - Complete transient financial custody for batched manual edits under a new request version; `Versioned edit requests, exact typed submission custody, submission and executor wiring, legacy journal purge and typed migration refusals with native and operator proofs`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.

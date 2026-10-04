@@ -14,9 +14,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.contribuyente.inventory.records import (
-    InventoryLedgerError,
-)
+from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile

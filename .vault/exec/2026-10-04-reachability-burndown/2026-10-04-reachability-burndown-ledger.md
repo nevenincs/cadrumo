@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:073bb68afebc39b7cda6e385e37509ceed70ecedb1f142b5235a7c56d9cd5783'
+body_hash: 'sha256:f3abbf7fdfd21e3c8a0c46a5daa6539aa1d3db4f496c7eff9425e2307204dc0d'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -666,6 +666,73 @@ related:
 - `S22` `verify:` `Owned register and observation corpus: 144 passed` -> `pass`
 - `S22` `verify:` `Cascade storage and prorrata proofs: 41 passed` -> `pass`
 - `S22` `verify:` `Owned Ruff format and ty` -> `pass`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/inventory.py`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory.py`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_actividad_year_uniqueness.py`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_concurrent_write.py`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`
+- `S23` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_service_integration.py`
+- `S23` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S23` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S23` `M` `src/cadrumo/application/inventory/ports.py`
+- `S23` `M` `src/cadrumo/application/inventory/registered_executor.py`
+- `S23` `M` `src/cadrumo/application/inventory/registered_requests.py`
+- `S23` `M` `src/cadrumo/application/inventory/service.py`
+- `S23` `M` `src/cadrumo/application/inventory/tests/registered_operation_conformance_support.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`
+- `S23` `A` `src/cadrumo/domain/contribuyente/inventory/closing_foundations.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_acquisition_cost.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_anexo_d_projection.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_closing_authority.py`
+- `S23` `M` `src/cadrumo/domain/contribuyente/inventory/valuation.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/tests/test_inventory_verbs.py`
+- `S23` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S23` `verify:` `Inventory persistence application and error registry: 88 passed` -> `pass`
+- `S23` `verify:` `Owned Ruff format and ty` -> `pass`
+- `S25` `M` `dev/packaging/native/generate.py`
+- `S25` `A` `dev/packaging/native/storage_vectors.py`
+- `S25` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S25` `M` `src/cadrumo/core/config_state_root.py`
+- `S25` `M` `src/cadrumo/core/storage_environment.py`
+- `S25` `A` `src/cadrumo/core/tests/checkout.py`
+- `S25` `A` `src/cadrumo/core/tests/state_root_projection.py`
+- `S25` `M` `src/cadrumo/core/tests/test_config.py`
+- `S25` `M` `src/cadrumo/core/tests/test_config_state_root.py`
+- `S25` `M` `src/cadrumo/core/tests/test_storage_environment.py`
+- `S25` `D` `src/cadrumo/core/tests/test_storage_root_vectors.py`
+- `S25` `M` `src/cadrumo/core/tests/test_storage_taxonomy_name_unification.py`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/tests/legal_quotation.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_guarderia.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_record.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/tests/family_counts.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/tests/test_descendant_info.py`
+- `S25` `A` `src/cadrumo/domain/contribuyente/tests/under_three.py`
+- `S25` `verify:` `storage and authority fixture corpus: 178 passed, 1 skipped; affected ambient corpus: 20 passed` -> `pass`
+- `S25` `verify:` `Ruff and ty owned scope` -> `pass`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/tests/test_committed_registry.py`
+- `S26` `A` `src/cadrumo/domain/calculations/registry/tests/test_unsigned_export_components.py`
+- `S26` `verify:` `unsigned export, registry policy and conformance corpus: 308 passed` -> `pass`
+- `S26` `verify:` `Modelo 180 regression corpus: 31 passed` -> `pass`
+- `S26` `verify:` `Ruff and ty owned scope` -> `pass`
+- `S27` `M` `src/cadrumo/adapters/persistence/storage/custody/label_head_repository.py`
+- `S27` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/label_head_probe.py`
+- `S27` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_lifecycle.py`
+- `S27` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py`
+- `S27` `M` `src/cadrumo/application/user_profile/automation_lifecycle.py`
+- `S27` `M` `src/cadrumo/application/user_profile/session_authority_lifecycle.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/config/_censo_payloads.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/config/_censo_transport.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/config/tests/test_censo_import_fact_payload.py`
+- `S27` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
+- `S27` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S27` `verify:` `census and label unit controls: 15 passed plus 3 restored label tests` -> `pass`
+- `S27` `verify:` `observed-login and password independence integration: 1 passed` -> `pass`
+- `S27` `verify:` `Windows IPC pending denial recovery integration: 1 passed` -> `pass`
+- `S27` `verify:` `Ruff and ty owned scope` -> `pass`
 
 ## Notes
 
@@ -690,3 +757,7 @@ related:
 - `S20` Relocated raw corruption, digest inventories, per-row failure inspection, passphrase decryption and retained custody probes into finite owning fixtures. Existing encryption, UTC, KDF, revision and authenticated-session kernels and refusal behavior remain exercised; fixture functions refuse unsupported adapter identities.
 - `S21` Retain the existing localized restricted-licence advisory on deduplicated role targets, every provisioning outcome and its public projection. The CLI publishes warning notices for pull, verify, load and setup. Remove the fictional strong-logout DTO and declare the actual request-only result capability.
 - `S22` Legacy fixture entrypoints and their exact cascades now belong to finite authoring helpers over the same guarded typed and atomic kernels.
+- `S23` Removed dynamic inventory facade loading and module rebinding; foundational records now precede closing and Anexo D models in an acyclic defining-module graph. Error identities remain unchanged.
+- `S25` Finite fixtures retain independent expectations; actual installed storage resolver and authority kernels remain production-owned. The initial ambient-variable failure was repaired and all 20 affected checks pass.
+- `S26` Reconstruct exact adjacent unsigned components while preserving raw slots and source locators. Four Modelo 180 enumeration expectations were corrected against canonical committed layouts.
+- `S27` Actual native profile admission reconciles the exact pending protected denial before creating the host. Retain production label-head recovery and move only its fixture writer. Full census preview carries every certified axis. Observed login invalidation follows native facts.
