@@ -24,7 +24,6 @@ from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_pr
 from ...application.user_profile import google_configuration_operation_contracts as contracts
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.google_configuration_operation_refusal import GoogleConfigurationRefusedError
-from ...core.google_credential_source import GoogleCredentialSourceKind
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -88,28 +87,6 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
                 terminal_admission=None,
             )
 
-        default = run(contracts.GoogleCredentialSourceViewRequest(profile_id=_PROFILE))
-        assert isinstance(default, contracts.GoogleCredentialSourceViewProjection)
-        assert default.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP and not default.configured
-        selected = run(
-            contracts.GoogleCredentialSourceSetRequest(
-                profile_id=_PROFILE,
-                kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
-                target_principal=" synthetic@project.iam.gserviceaccount.com ",
-                scopes=("https://www.googleapis.com/auth/drive.file",),
-                delegates=("delegate@project.iam.gserviceaccount.com",),
-                lifetime_seconds=600,
-            )
-        )
-        inspected = run(contracts.GoogleCredentialSourceViewRequest(profile_id=_PROFILE))
-        assert isinstance(selected, contracts.GoogleCredentialSourceSetProjection)
-        assert isinstance(inspected, contracts.GoogleCredentialSourceViewProjection)
-        assert (
-            inspected.configured
-            and inspected.target_principal == selected.target_principal == "synthetic@project.iam.gserviceaccount.com"
-        )
-        assert inspected.target_scopes == selected.target_scopes and inspected.delegates == selected.delegates
-        assert inspected.lifetime_s == 600
         root = run(contracts.GoogleFolderSetRequest(profile_id=_PROFILE, folder_id=" synthetic-root "))
         assert isinstance(root, contracts.GoogleFolderSetProjection) and root.root_folder_id == "synthetic-root"
         assert load_drive_config(str(_PROFILE)) is not None
@@ -171,7 +148,7 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
             and load_token(str(_PROFILE)) is None
             and load_metadata(str(_PROFILE)) is None
         )
-        assert commits == [True, True, True, True, False]
+        assert commits == [True, True, True, False]
         with pytest.raises(ProfileAccessRefusedError):
             composition.build_google_configuration_operation_ports(profile_id=uuid4(), operation=authority_operation)
 

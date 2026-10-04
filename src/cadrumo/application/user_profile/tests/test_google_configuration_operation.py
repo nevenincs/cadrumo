@@ -191,7 +191,7 @@ def _refusal() -> GoogleConfigurationRefusalProjection:
     )
 
 
-def test_all_nine_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_seven_public_contracts_compile_and_require_human_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
     tmp_path: Path,
 ) -> None:
@@ -199,10 +199,6 @@ def test_all_nine_public_contracts_compile_and_require_human_dual_whole_profile_
         pytest.fail("compiling Google contracts constructed credential capabilities")
 
     payloads: tuple[contracts.GoogleConfigurationRequest, ...] = (
-        contracts.GoogleCredentialSourceSetRequest(
-            profile_id=_PROFILE, kind=contracts.GoogleCredentialSourceKind.OAUTH_DESKTOP
-        ),
-        contracts.GoogleCredentialSourceViewRequest(profile_id=_PROFILE),
         contracts.GoogleFolderSetRequest(profile_id=_PROFILE, folder_id="folder"),
         contracts.GoogleFolderViewRequest(profile_id=_PROFILE),
         contracts.GoogleLoginRequest(profile_id=_PROFILE),
@@ -214,7 +210,7 @@ def test_all_nine_public_contracts_compile_and_require_human_dual_whole_profile_
         contracts.GoogleStatusRequest(profile_id=_PROFILE),
     )
     definitions = worker.build_google_configuration_definitions(unused)
-    assert len(definitions) == 9
+    assert len(definitions) == 7
     for definition, payload in zip(definitions, payloads, strict=True):
         registration = worker.build_google_configuration_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))

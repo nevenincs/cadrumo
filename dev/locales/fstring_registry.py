@@ -121,9 +121,6 @@ _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "unsecured_mode",
     "keychain_locked",
     "profile_unbound",
-    "adc_unavailable",
-    "adc_stale",
-    "impersonation_refused",
     "storage",
     "auth_failed",
 )
@@ -351,16 +348,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                 "client_json_invalid",
                 "client_json_not_desktop",
                 "client_json_schema_invalid",
-            ),
-        ),
-        FStringKeyRegistration(
-            # Pinned to the literal tuple _DYNAMIC_CODES expands in the same module.
-            description="cli.config.google.credential_source.detail.* (credential source refusals)",
-            key_factory=lambda v: f"cli.config.google.credential_source.detail.{v}",
-            values=(
-                "target_principal_required",
-                "impersonation_config_invalid",
-                "oauth_desktop_rejects_impersonation_options",
             ),
         ),
         FStringKeyRegistration(

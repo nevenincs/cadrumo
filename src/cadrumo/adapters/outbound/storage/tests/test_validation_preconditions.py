@@ -57,13 +57,13 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
+    "factory:build_google_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
         "storage.factory.google_oauth_client.present",
         {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
+    "factory:build_google_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
         "storage.factory.google_oauth_token.present",
         {"backend": "google_drive", "field": "google_oauth_token", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,

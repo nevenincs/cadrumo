@@ -1,6 +1,6 @@
 """Human Google configuration and archive push commands.
 
-Google account, folder, credential-source, and probe commands submit exact-profile
+Google account, folder, and probe commands submit exact-profile
 requests to the authenticated worker. Archive mirroring uses its registered
 profile operation as well.
 """

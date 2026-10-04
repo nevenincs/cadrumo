@@ -198,19 +198,19 @@ def test_google_auth_transport_renews_each_actual_call_and_denial_is_outside_htt
     calls: list[str] = []
 
     def canonical_request(self: Request, url: str, **_kwargs: object) -> object:
-        assert boundary.pending[-1] == ("google.iam-mint", False)
+        assert boundary.pending[-1] == ("oauth.identity-verification", False)
         calls.append(url)
         return object()
 
     monkeypatch.setattr(Request, "__call__", canonical_request)
     request = admitted_google_auth_request(
-        before_handoff=boundary.before, acknowledged=boundary.acknowledged, action="google.iam-mint"
+        before_handoff=boundary.before, acknowledged=boundary.acknowledged, action="oauth.identity-verification"
     )
     request("https://synthetic.invalid/one")
     request("https://synthetic.invalid/two")
     assert calls == ["https://synthetic.invalid/one", "https://synthetic.invalid/two"]
-    assert boundary.completed == [("google.iam-mint", False), ("google.iam-mint", False)]
-    boundary.refuse = "google.iam-mint"
+    assert boundary.completed == [("oauth.identity-verification", False), ("oauth.identity-verification", False)]
+    boundary.refuse = "oauth.identity-verification"
     with pytest.raises(ProfileAccessRefusedError):
         request("https://synthetic.invalid/denied")
     assert len(calls) == 2 and not boundary.pending

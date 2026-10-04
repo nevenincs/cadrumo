@@ -1493,8 +1493,6 @@
         "cadrumo.entrypoints.cli.config._complete_setup_payloads",
         "cadrumo.entrypoints.cli.config._custody_command_specs",
         "cadrumo.entrypoints.cli.config._google_command_specs",
-        "cadrumo.entrypoints.cli.config._google_credential_source_cli",
-        "cadrumo.entrypoints.cli.config._google_credential_source_payloads",
         "cadrumo.entrypoints.cli.config._google_folder",
         "cadrumo.entrypoints.cli.config._google_folder_payloads",
         "cadrumo.entrypoints.cli.config._google_payloads",

@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.google_credential_source import GoogleCredentialSourceKind
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.interactions import OperationResponseIntentValue
@@ -17,8 +16,6 @@ from ..operations.models import OperationIdentity, OperationRevision
 from ..operations.registry import OperationSchemaBindingV1
 from .google_configuration_operation_refusal import GoogleConfigurationRefusalProjection
 
-GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID = "config.google.credential-source.set"
-GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID = "config.google.credential-source.view"
 GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID = "config.google.folder.set"
 GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID = "config.google.folder.view"
 GOOGLE_LOGIN_OPERATION_DEFINITION_ID = "config.google.login"
@@ -41,21 +38,6 @@ class GoogleProfileRequest(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-
-
-class GoogleCredentialSourceSetRequest(GoogleProfileRequest):
-    """Original options, validated by the existing credential-source constructor."""
-
-    kind: GoogleCredentialSourceKind
-    target_principal: _Input | None = None
-    scopes: tuple[_Input, ...] = ()
-    delegates: tuple[_Input, ...] = ()
-    subject: _Input | None = None
-    lifetime_seconds: int | None = None
-
-
-class GoogleCredentialSourceViewRequest(GoogleProfileRequest):
-    """Read persisted selection with the canonical OAuth Desktop default."""
 
 
 class GoogleFolderSetRequest(GoogleProfileRequest):
@@ -102,9 +84,7 @@ class GoogleStatusRequest(GoogleProfileRequest):
 
 
 type GoogleConfigurationRequest = (
-    GoogleCredentialSourceSetRequest
-    | GoogleCredentialSourceViewRequest
-    | GoogleFolderSetRequest
+    GoogleFolderSetRequest
     | GoogleFolderViewRequest
     | GoogleLoginRequest
     | GoogleLogoutRequest
@@ -112,29 +92,6 @@ type GoogleConfigurationRequest = (
     | GoogleRegisterRequest
     | GoogleStatusRequest
 )
-
-
-class GoogleCredentialSourceProjection(BaseModel):
-    """Complete non-secret source configuration used by the existing human output."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    kind: GoogleCredentialSourceKind
-    target_principal: _Text | None = None
-    target_scopes: tuple[_Text, ...] = ()
-    delegates: tuple[_Text, ...] = ()
-    subject: _Text | None = None
-    lifetime_s: int | None = None
-
-
-class GoogleCredentialSourceSetProjection(GoogleCredentialSourceProjection):
-    """Saved selection without ADC discovery or token exchange."""
-
-
-class GoogleCredentialSourceViewProjection(GoogleCredentialSourceProjection):
-    """Persisted/default selection plus its configuration-presence fact."""
-
-    configured: bool
 
 
 class GoogleFolderSetProjection(BaseModel):
@@ -213,9 +170,7 @@ class GoogleStatusProjection(BaseModel):
 
 
 type GoogleConfigurationProjection = (
-    GoogleCredentialSourceSetProjection
-    | GoogleCredentialSourceViewProjection
-    | GoogleFolderSetProjection
+    GoogleFolderSetProjection
     | GoogleFolderViewProjection
     | GoogleLoginProjection
     | GoogleLogoutProjection
@@ -245,14 +200,6 @@ class GoogleConfigurationOutcome(BaseModel):
 
 
 GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
-    GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID: (
-        GoogleCredentialSourceSetRequest,
-        GoogleCredentialSourceSetProjection,
-    ),
-    GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID: (
-        GoogleCredentialSourceViewRequest,
-        GoogleCredentialSourceViewProjection,
-    ),
     GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID: (GoogleFolderSetRequest, GoogleFolderSetProjection),
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: (GoogleFolderViewRequest, GoogleFolderViewProjection),
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
@@ -262,8 +209,6 @@ GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]
     GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
 }
 GOOGLE_CONFIGURATION_REQUEST_TYPES = (
-    GoogleCredentialSourceSetRequest,
-    GoogleCredentialSourceViewRequest,
     GoogleFolderSetRequest,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
@@ -335,8 +280,6 @@ __all__ = [
     "GOOGLE_CONSENT_PRESENTATION_CODE",
     "GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING",
     "GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING",
-    "GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID",
-    "GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID",
     "GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID",
     "GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGIN_OPERATION_DEFINITION_ID",
@@ -353,11 +296,6 @@ __all__ = [
     "GoogleConsentProposal",
     "GoogleConsentResponse",
     "GoogleConsentReviewProjection",
-    "GoogleCredentialSourceProjection",
-    "GoogleCredentialSourceSetProjection",
-    "GoogleCredentialSourceSetRequest",
-    "GoogleCredentialSourceViewProjection",
-    "GoogleCredentialSourceViewRequest",
     "GoogleFolderSetProjection",
     "GoogleFolderSetRequest",
     "GoogleFolderViewProjection",

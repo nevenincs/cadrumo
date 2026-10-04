@@ -338,36 +338,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcUnavailableError",
-        ErrorCode(
-            code="FAIL_GOOGLE_ADC_UNAVAILABLE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_google_adc_unavailable",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcStaleError",
-        ErrorCode(
-            code="FAIL_GOOGLE_ADC_STALE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_google_adc_stale",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError",
-        ErrorCode(
-            code="REFUSED_GOOGLE_IMPERSONATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_google_impersonation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.storage.errors.OutboundStorageError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE",

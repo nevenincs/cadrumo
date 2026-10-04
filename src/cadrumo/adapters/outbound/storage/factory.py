@@ -8,15 +8,10 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``cadrumo_storage_provider_kind`` selects the backend.
 - ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
-- ``cadrumo_google_drive_root_folder_id`` plus the per-profile persisted
-  :class:`~core.google_credential_source.GoogleCredentialSourceKind` selection
-  (:class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`,
-  loaded via :mod:`adapters.outbound.google.session_store`) parameterise
-  the Drive backend's credentials — either the default per-profile
+- ``cadrumo_google_drive_root_folder_id`` plus the per-profile
   :class:`~adapters.outbound.google.records.OAuthClient` /
-  :class:`~adapters.outbound.google.records.OAuthToken` records, or a
-  service-account impersonation grant resolved via
-  :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`.
+  :class:`~adapters.outbound.google.records.OAuthToken` records parameterise
+  the Drive backend's credentials.
 
 Composition order:
 
@@ -26,14 +21,8 @@ Composition order:
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage.local.LocalFileSystemProvider`
    rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
-   :func:`build_google_credentials`, which reads the profile's persisted
-   :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` (a
-   missing selection defaults to
-   :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, preserving the
-   existing default byte-for-byte) and dispatches to either the
-   OAuth-Desktop hydration or
-   :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`, then
-   instantiates
+   :func:`build_google_credentials`, which hydrates the profile's desktop
+   sign-in, then instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
    keyed on ``cadrumo_google_drive_root_folder_id``.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
@@ -54,8 +43,6 @@ from ....application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationHandoff,
 )
 from ....core.config import Settings, load_settings
-from ....core.errors.hierarchy import InternalInvariantError
-from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageError, OutboundStorageValidationError
 from .protocol import StorageProvider
@@ -106,68 +93,15 @@ def _parse_kind(raw: str) -> ProviderKind:
         ) from exc
 
 
-def build_google_credentials(
-    *,
-    profile: str,
-    before_handoff: GoogleConfigurationHandoff | None = None,
-    acknowledged: GoogleConfigurationAcknowledgement | None = None,
-) -> Credentials:
-    """Resolve Google ``Credentials`` for the profile's chosen credential source.
-
-    Reads the profile's persisted
-    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
-    (:func:`~adapters.outbound.google.session_store.load_credential_source_selection`). A
-    missing selection defaults to
-    :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, so a profile that has
-    never opted into service-account impersonation gets byte-for-byte the same
-    behaviour as before this dispatch existed.
-
-    - ``OAUTH_DESKTOP`` (the default): hydrates ``Credentials`` from the
-      per-profile :class:`~adapters.outbound.google.records.OAuthClient` and
-      :class:`~adapters.outbound.google.records.OAuthToken` records via
-      :func:`_build_oauth_desktop_credentials`.
-    - ``SERVICE_ACCOUNT_IMPERSONATION``: delegates to
-      :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`
-      with the persisted
-      :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`
-      (per ``aeat-architecture-boundaries``: this factory
-      never re-implements ADC discovery or impersonation wrapping).
-
-    Imports the upstream Google libraries lazily so unit tests for the
-    local backend do not pay the cost.
-    """
-    from ..google.session_store import load_credential_source_selection
-
-    selection = load_credential_source_selection(profile)
-    kind = selection.kind if selection is not None else GoogleCredentialSourceKind.OAUTH_DESKTOP
-
-    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
-        # The selection validator (`GoogleCredentialSourceSelection`)
-        # guarantees `impersonation` is populated whenever `kind` is
-        # `SERVICE_ACCOUNT_IMPERSONATION`.
-        impersonation = selection.impersonation if selection is not None else None
-        if impersonation is None:
-            raise InternalInvariantError(
-                "the stored credential source selects service-account impersonation without its impersonation facts",
-            )
-        from ..google.impersonation import resolve_impersonated_credentials
-
-        if before_handoff is None and acknowledged is None:
-            return resolve_impersonated_credentials(impersonation)
-        return resolve_impersonated_credentials(impersonation, before_handoff=before_handoff, acknowledged=acknowledged)
-
-    return _build_oauth_desktop_credentials(profile=profile)
-
-
-def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
-    """Hydrate Google ``Credentials`` from the per-profile OAuth records.
+def build_google_credentials(*, profile: str) -> Credentials:
+    """Hydrate Google ``Credentials`` from the profile's desktop sign-in records.
 
     Loads :class:`~adapters.outbound.google.records.OAuthClient` and
     :class:`~adapters.outbound.google.records.OAuthToken` through
     :func:`adapters.outbound.google.session_store.load_client` and
-    :func:`adapters.outbound.google.session_store.load_token`. Imports the
-    upstream library lazily so unit tests for the local backend do not pay the
-    cost.
+    :func:`adapters.outbound.google.session_store.load_token`. The desktop
+    sign-in is the only credential source. Imports the upstream library lazily
+    so unit tests for the local backend do not pay the cost.
     """
     from ..google.session_store import load_client, load_token
 
@@ -302,9 +236,7 @@ def get_storage_provider(
             )
         if before_handoff is not None:
             before_handoff("google.credentials-acquisition")
-        credentials = build_google_credentials(
-            profile=profile, before_handoff=before_handoff, acknowledged=acknowledged
-        )
+        credentials = build_google_credentials(profile=profile)
         if acknowledged is not None:
             acknowledged("google.credentials-acquisition")
         return GoogleDriveProvider(

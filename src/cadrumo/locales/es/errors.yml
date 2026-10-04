@@ -468,11 +468,6 @@ errors:
       libro del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No se pudo leer o escribir
       el perfil de porcentajes de uso.
-    fail_google_adc_stale: No se han podido renovar las credenciales predeterminadas
-      de aplicación (ADC). Ejecuta gcloud auth application-default login.
-    fail_google_adc_unavailable: No se han encontrado credenciales predeterminadas
-      de aplicación (ADC) en este equipo. Ejecuta gcloud auth application-default
-      login.
     fail_google_browser_open: No se pudo abrir el navegador para mostrar la página
       de consentimiento de Google. Abre el enlace manualmente.
     fail_google_loopback_bind: El receptor HTTP local no pudo abrir un puerto. Cierra
@@ -1142,8 +1137,6 @@ errors:
     refused_foreign_asset_valuation: No se pudo convertir a euros una valoración del
       modelo 720 en su fecha de cambio legal. Revisa la divisa y la fecha de valoración
       del bien.
-    refused_google_impersonation: IAM ha rechazado emitir un token de suplantación
-      para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
       interactivo con navegador; ejecútalo desde una shell interactiva.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona

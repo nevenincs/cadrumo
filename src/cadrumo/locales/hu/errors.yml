@@ -433,10 +433,6 @@ errors:
       feloldani vagy használni.
     fail_financial_usage_ratios_usage_ratio_persistence: A használati arány profilt
       nem sikerült olvasni vagy írni.
-    fail_google_adc_stale: Nem sikerült megújítani az Application Default Credentials
-      (ADC) hitelesítő adatokat. Futtasd a gcloud auth application-default login parancsot.
-    fail_google_adc_unavailable: Nem található Application Default Credentials (ADC)
-      ezen a gépen. Futtasd a gcloud auth application-default login parancsot.
     fail_google_browser_open: A böngészőt nem sikerült megnyitni a Google hozzájárulási
       oldalhoz. Nyisd meg manuálisan a hivatkozást.
     fail_google_loopback_bind: A helyi HTTP-vevő nem tudott porthoz kötni. Zárd be
@@ -1074,9 +1070,6 @@ errors:
     refused_foreign_asset_valuation: Egy 720-as modell szerinti értékelést nem sikerült
       euróra átváltani a jogszabályi árfolyamnapon. Ellenőrizd a vagyonelem pénznemét
       és értékelési dátumát.
-    refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
-      a cél szolgáltatásfiók számára. Add meg neki a roles/iam.serviceAccountTokenCreator
-      szerepkört.
     refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
       és böngésző szükséges; futtasd interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy

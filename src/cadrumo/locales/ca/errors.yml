@@ -472,10 +472,6 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
-    fail_google_adc_stale: No s'han pogut renovar les credencials predeterminades
-      d'aplicació (ADC). Executa gcloud auth application-default login.
-    fail_google_adc_unavailable: No s'han trobat credencials predeterminades d'aplicació
-      (ADC) en aquest equip. Executa gcloud auth application-default login.
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
       de consentiment de Google. Obre l'enllaç manualment.
     fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
@@ -1149,8 +1145,6 @@ errors:
     refused_foreign_asset_valuation: No s'ha pogut convertir a euros una valoració
       del model 720 en la seva data de canvi legal. Revisa la divisa i la data de
       valoració del bé.
-    refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
-      per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona

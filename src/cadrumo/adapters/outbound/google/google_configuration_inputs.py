@@ -1,18 +1,16 @@
-"""Canonical human Google configuration input decoding and source selection."""
+"""Canonical human Google configuration input decoding."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.hashing import sha256_hex
 from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import GoogleAuthError, GoogleAuthValidationError
-from .impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from .errors import GoogleAuthValidationError
 from .records import OAuthClient
 
 
@@ -65,56 +63,4 @@ def decode_google_client_json(payload: memoryview, *, source: Path, expected_sha
         ) from None
 
 
-class _ImpersonationKwargs(TypedDict, total=False):
-    target_principal: str
-    target_scopes: tuple[str, ...]
-    delegates: tuple[str, ...]
-    subject: str | None
-    lifetime_s: int
-
-
-def google_credential_source_selection(
-    *,
-    kind: GoogleCredentialSourceKind,
-    target_principal: str | None,
-    scopes: tuple[str, ...],
-    delegates: tuple[str, ...],
-    subject: str | None,
-    lifetime_seconds: int | None,
-) -> GoogleCredentialSourceSelection:
-    """Retain the current CLI option validation order and canonical config defaults."""
-    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
-        if target_principal is None or not target_principal.strip():
-            raise GoogleAuthError(
-                "credential-source set --kind service-account-impersonation requires --target-principal",
-                translated_message="cli.config.google.credential_source.detail.target_principal_required",
-                context={"kind": kind.value},
-            )
-        kwargs: _ImpersonationKwargs = {"target_principal": target_principal.strip()}
-        if scopes:
-            kwargs["target_scopes"] = scopes
-        if delegates:
-            kwargs["delegates"] = delegates
-        if subject is not None:
-            kwargs["subject"] = subject
-        if lifetime_seconds is not None:
-            kwargs["lifetime_s"] = lifetime_seconds
-        try:
-            return GoogleCredentialSourceSelection(kind=kind, impersonation=GoogleImpersonationConfig(**kwargs))
-        except ValueError as exc:
-            raise GoogleAuthError(
-                translated_message="cli.config.google.credential_source.detail.impersonation_config_invalid",
-                context={"error_type": type(exc).__name__},
-            ) from None
-    if any(
-        (target_principal is not None, bool(scopes), bool(delegates), subject is not None, lifetime_seconds is not None)
-    ):
-        raise GoogleAuthError(
-            "credential-source set --kind oauth-desktop accepts no impersonation options",
-            translated_message="cli.config.google.credential_source.detail.oauth_desktop_rejects_impersonation_options",
-            context={"kind": kind.value},
-        )
-    return GoogleCredentialSourceSelection(kind=kind)
-
-
-__all__ = ["decode_google_client_json", "google_credential_source_selection"]
+__all__ = ["decode_google_client_json"]

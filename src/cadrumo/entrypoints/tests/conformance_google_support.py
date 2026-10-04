@@ -17,11 +17,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.google.impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from ...adapters.outbound.google.records import (
-    DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
-    SHEETS_SCOPE,
     DriveConfig,
     OAuthClient,
     OAuthMetadata,
@@ -29,12 +26,10 @@ from ...adapters.outbound.google.records import (
 )
 from ...adapters.outbound.google.session_store import (
     load_client,
-    load_credential_source_selection,
     load_drive_config,
     load_metadata,
     load_token,
     save_client,
-    save_credential_source_selection,
     save_drive_config,
     save_metadata,
     save_token,
@@ -43,8 +38,6 @@ from ...application.operations.frontend_requests import OperationPublicEffectEve
 from ...application.operator_actions.preconditions import no_action_precondition_verdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...application.user_profile.google_configuration_operation_contracts import (
-    GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID,
-    GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID,
     GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
@@ -54,10 +47,6 @@ from ...application.user_profile.google_configuration_operation_contracts import
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleConfigurationProjection,
-    GoogleCredentialSourceSetProjection,
-    GoogleCredentialSourceSetRequest,
-    GoogleCredentialSourceViewProjection,
-    GoogleCredentialSourceViewRequest,
     GoogleFolderSetProjection,
     GoogleFolderSetRequest,
     GoogleFolderViewProjection,
@@ -77,7 +66,6 @@ from ...application.user_profile.google_configuration_operation_refusal import (
     GoogleConfigurationPresentationFacts,
     GoogleConfigurationRefusalProjection,
 )
-from ...core.google_credential_source import GoogleCredentialSourceKind
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -89,7 +77,6 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_TARGET_PRINCIPAL = "conformance-export@synthetic-project.iam.gserviceaccount.com"
 _ROOT_FOLDER_ID = "conformance-root-folder"
 _ACCOUNT_EMAIL = "conformance-operator@example.invalid"
 _CLIENT_ID = "conformance-client.apps.googleusercontent.com"
@@ -130,19 +117,6 @@ def _synthetic_token() -> OAuthToken:
     return OAuthToken(refresh_token=_SYNTHETIC_REFRESH_CREDENTIAL, token_uri=_EXCHANGE_URI)
 
 
-def _impersonation_selection() -> GoogleCredentialSourceSelection:
-    return GoogleCredentialSourceSelection(
-        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
-        impersonation=GoogleImpersonationConfig(
-            target_principal=_TARGET_PRINCIPAL,
-            target_scopes=(DRIVE_FILE_SCOPE, SHEETS_SCOPE),
-            delegates=(),
-            subject=None,
-            lifetime_s=900,
-        ),
-    )
-
-
 def _succeeded(profile_id: UUID, result: GoogleConfigurationProjection) -> GoogleConfigurationOutcome:
     return GoogleConfigurationOutcome(profile_id=profile_id, outcome="succeeded", result=result)
 
@@ -162,58 +136,6 @@ def _preparation(
         expected_result=expected,
         verify=verify,
     )
-
-
-def _prepare_credential_source_set(context: ConformanceFamilyContext) -> ConformancePreparation:
-    profile = str(context.profile_id)
-    before = load_credential_source_selection(profile)
-    request = GoogleCredentialSourceSetRequest(
-        profile_id=context.profile_id,
-        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
-        target_principal=f"  {_TARGET_PRINCIPAL}  ",
-        scopes=(DRIVE_FILE_SCOPE,),
-        lifetime_seconds=600,
-    )
-    expected = GoogleCredentialSourceSetProjection(
-        profile_id=context.profile_id,
-        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
-        target_principal=_TARGET_PRINCIPAL,
-        target_scopes=(DRIVE_FILE_SCOPE,),
-        delegates=(),
-        subject=None,
-        lifetime_s=600,
-    )
-
-    def verify(_outcome: ConformanceOutcome) -> None:
-        assert before is None
-        stored = load_credential_source_selection(profile)
-        assert stored is not None
-        assert stored.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION
-        assert stored.impersonation is not None
-        assert stored.impersonation.target_principal == _TARGET_PRINCIPAL
-        assert stored.impersonation.target_scopes == (DRIVE_FILE_SCOPE,)
-        assert stored.impersonation.lifetime_s == 600
-
-    return _preparation(context, request, _succeeded(context.profile_id, expected), verify=verify)
-
-
-def _prepare_credential_source_view(context: ConformanceFamilyContext) -> ConformancePreparation:
-    selection = _impersonation_selection()
-    save_credential_source_selection(str(context.profile_id), selection)
-    impersonation = selection.impersonation
-    assert impersonation is not None
-    expected = GoogleCredentialSourceViewProjection(
-        profile_id=context.profile_id,
-        kind=selection.kind,
-        target_principal=impersonation.target_principal,
-        target_scopes=impersonation.target_scopes,
-        delegates=impersonation.delegates,
-        subject=impersonation.subject,
-        lifetime_s=impersonation.lifetime_s,
-        configured=True,
-    )
-    request = GoogleCredentialSourceViewRequest(profile_id=context.profile_id)
-    return _preparation(context, request, _succeeded(context.profile_id, expected))
 
 
 def _prepare_folder_set(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -351,8 +273,6 @@ def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation
 
 
 _PREPARERS: dict[str, Callable[[ConformanceFamilyContext], ConformancePreparation]] = {
-    GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID: _prepare_credential_source_set,
-    GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID: _prepare_credential_source_view,
     GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID: _prepare_folder_set,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: _prepare_folder_view,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: _prepare_login,
@@ -382,8 +302,6 @@ _SUCCEEDED = OperationTerminalCondition.SUCCEEDED
 _REFUSED = OperationTerminalCondition.REFUSED
 GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        _case(GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
-        _case(GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
         _case(GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
@@ -422,18 +340,6 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
     result: BaseModel | None = None
     secret: bytes | None = None
     match operation_id:
-        case "config.google.credential-source.set":
-            request = GoogleCredentialSourceSetRequest(
-                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP
-            )
-            result = GoogleCredentialSourceSetProjection(
-                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP
-            )
-        case "config.google.credential-source.view":
-            request = GoogleCredentialSourceViewRequest(profile_id=context.profile_id)
-            result = GoogleCredentialSourceViewProjection(
-                profile_id=context.profile_id, kind=GoogleCredentialSourceKind.OAUTH_DESKTOP, configured=False
-            )
         case "config.google.folder.set":
             request = GoogleFolderSetRequest(
                 profile_id=context.profile_id, folder_id="  synthetic-conformance-folder  "
@@ -497,10 +403,7 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
             raise AssertionError(operation_id)
 
     def verify(outcome: ConformanceOutcome) -> None:
-        if operation_id.endswith("credential-source.set"):
-            selection = load_credential_source_selection(profile)
-            assert selection is not None and selection.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP
-        elif operation_id.endswith("folder.set"):
+        if operation_id.endswith("folder.set"):
             assert load_drive_config(profile) == DriveConfig(root_folder_id="synthetic-conformance-folder")
         elif operation_id.endswith("register"):
             assert load_client(profile) == _RETAINED_GOOGLE_CLIENT
@@ -536,7 +439,7 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             "config.google." + suffix,
             OperationTerminalCondition.REFUSED if suffix == "probe" else OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED
-            if suffix in {"credential-source.set", "folder.set", "register", "logout"}
+            if suffix in {"folder.set", "register", "logout"}
             else OperationEffect.UNKNOWN
             if suffix == "probe"
             else OperationEffect.NONE,
@@ -544,8 +447,6 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             "REFUSED_GOOGLE_CONFIGURATION" if suffix == "probe" else None,
         )
         for suffix in (
-            "credential-source.set",
-            "credential-source.view",
             "folder.set",
             "folder.view",
             "login",

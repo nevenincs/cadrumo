@@ -17,14 +17,11 @@ from google.oauth2.credentials import Credentials
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .....tests.env_scope import scoped_env_var
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
-from .. import impersonation as impersonation_module
 from .. import oauth_flow as oauth_flow_module
 from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
-from ..impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
 from ..oauth_flow import (
     _decode_email_from_id_token,
     _raise_local_server_error,
@@ -54,8 +51,8 @@ def _contract(
     return _CarrierContract(condition, facts, provenance, outcome)
 
 
-# This is a complete, source-level contract for the 1 active-profile, 15 OAuth,
-# and 4 impersonation GoogleAuthError producers. Values are AST expressions, not
+# This is a complete, source-level contract for the 1 active-profile and 15
+# OAuth GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -148,36 +145,11 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:google-auth is not importable: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_CLIENT_AVAILABLE,
-        (("adc_client_available", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
-    ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:Application Default Credentials not found: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_AVAILABLE,
-        (("adc_available", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
-    ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthImpersonationRefusedError:IAM refused to mint an impersonated token for {value}: {value}": _contract(
-        GoogleAuthPreconditionCondition.IAM_CREDENTIAL_MINTED,
-        (("iam_token_minted", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
-    ),
-    "impersonation:_ensure_source_credential_is_fresh:GoogleAuthAdcStaleError:Application Default Credentials could not be refreshed: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_SOURCE_FRESH,
-        (("adc_source_fresh", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
-    ),
 }
 
 _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     active_profile_module,
     oauth_flow_module,
-    impersonation_module,
 )
 
 
@@ -424,23 +396,6 @@ def test_missing_identity_assertion_has_an_exact_runtime_safety_verdict() -> Non
         raised.value,
         condition=GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_PRESENT,
         facts={"id_token_present": False},
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.SAFETY,
-    )
-
-
-def test_unavailable_adc_has_an_exact_runtime_safety_verdict() -> None:
-    config = GoogleImpersonationConfig(target_principal="aeat-export@example-project.iam.gserviceaccount.com")
-    with (
-        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
-        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
-    ):
-        resolve_impersonated_credentials(config)
-
-    _assert_terminal_contract(
-        raised.value,
-        condition=GoogleAuthPreconditionCondition.ADC_AVAILABLE,
-        facts={"adc_available": False},
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.SAFETY,
     )

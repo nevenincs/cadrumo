@@ -39,10 +39,6 @@ class GoogleAuthPreconditionCondition(StrEnum):
     IDENTITY_ASSERTION_VERIFIER_AVAILABLE = "google.auth.identity_verifier.available"
     IDENTITY_ASSERTION_VERIFIED = "google.auth.identity_assertion.verified"
     IDENTITY_EMAIL_PRESENT = "google.auth.identity_email.present"
-    ADC_CLIENT_AVAILABLE = "google.auth.adc_client.available"
-    ADC_AVAILABLE = "google.auth.adc.available"
-    IAM_CREDENTIAL_MINTED = "google.auth.iam_credential.minted"
-    ADC_SOURCE_FRESH = "google.auth.adc_source.fresh"
 
 
 def google_auth_no_action_verdict(

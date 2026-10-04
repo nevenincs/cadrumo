@@ -894,16 +894,6 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="google_credential_source",
-    namespace="cadrumo.google.credential.source",
-    owner="cadrumo.adapters.outbound.google",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{profile}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="cadrumo.adapters.outbound.llm.cache",

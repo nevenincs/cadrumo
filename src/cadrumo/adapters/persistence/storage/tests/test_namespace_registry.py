@@ -126,7 +126,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "google_oauth_token",
     "google_oauth_metadata",
     "google_drive_config",
-    "google_credential_source",
     "llm_cache",
     "llm_usage",
     "llm_run_telemetry",

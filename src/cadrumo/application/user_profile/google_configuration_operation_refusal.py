@@ -28,9 +28,6 @@ type GoogleConfigurationProviderCode = Literal[
     "REFUSED_GOOGLE_NON_INTERACTIVE",
     "LOCKED_GOOGLE_KEYCHAIN",
     "REFUSED_GOOGLE_PROFILE_UNBOUND",
-    "FAIL_GOOGLE_ADC_UNAVAILABLE",
-    "FAIL_GOOGLE_ADC_STALE",
-    "REFUSED_GOOGLE_IMPERSONATION",
     "REFUSED_OUTBOUND_STORAGE_VALIDATION",
     "AUTH_OUTBOUND_STORAGE_PERMISSION",
     "FAIL_OUTBOUND_STORAGE_UNAVAILABLE",
@@ -58,9 +55,6 @@ type GoogleConfigurationMessageKey = Literal[
     "errors.refused.refused_google_non_interactive",
     "errors.locked.locked_google_keychain",
     "errors.refused.refused_google_profile_unbound",
-    "errors.fail.fail_google_adc_unavailable",
-    "errors.fail.fail_google_adc_stale",
-    "errors.refused.refused_google_impersonation",
     "errors.refused.refused_outbound_storage_validation",
     "errors.auth.auth_outbound_storage_permission",
     "errors.fail.fail_outbound_storage_unavailable",
@@ -78,9 +72,6 @@ type GoogleConfigurationMessageKey = Literal[
     "cli.config.google.detail.client_json_schema_invalid",
     "cli.config.google.detail.client_unregistered",
     "cli.config.google.detail.no_metadata_for_refresh",
-    "cli.config.google.credential_source.detail.target_principal_required",
-    "cli.config.google.credential_source.detail.impersonation_config_invalid",
-    "cli.config.google.credential_source.detail.oauth_desktop_rejects_impersonation_options",
     "adapters.google.oauth_flow.errors.non_interactive",
     "adapters.google.oauth_flow.errors.profile_state_unresolved",
     "adapters.google.oauth_flow.errors.scope_missing",
@@ -116,14 +107,6 @@ _DYNAMIC_CODES: dict[str, frozenset[str]] = {
     },
     "cli.config.google.detail.client_unregistered": frozenset({"AUTH_GOOGLE_CLIENT_NOT_REGISTERED"}),
     "cli.config.google.detail.no_metadata_for_refresh": frozenset({"AUTH_GOOGLE_EXPIRED"}),
-    **{
-        f"cli.config.google.credential_source.detail.{key}": frozenset({"AUTH_GOOGLE"})
-        for key in (
-            "target_principal_required",
-            "impersonation_config_invalid",
-            "oauth_desktop_rejects_impersonation_options",
-        )
-    },
     "adapters.google.oauth_flow.errors.non_interactive": frozenset({"REFUSED_GOOGLE_NON_INTERACTIVE"}),
     "adapters.google.oauth_flow.errors.profile_state_unresolved": frozenset({"REFUSED_GOOGLE_PROFILE_UNBOUND"}),
     **{
@@ -175,8 +158,6 @@ class GoogleConfigurationPresentationFacts(BaseModel):
     error_type: Literal["SourceDigestMismatch", "UnicodeDecodeError", "JSONDecodeError", "ValidationError"] | None = (
         None
     )
-    kind: Literal["oauth_desktop", "service_account_impersonation"] | None = None
-    target_principal: _Text | None = None
     vault_folder_name: _Text | None = None
     audience: _Text | None = None
     dependency: Literal["google-auth"] | None = None
@@ -193,8 +174,6 @@ class GoogleConfigurationPresentationFacts(BaseModel):
         for field in (
             "path",
             "error_type",
-            "kind",
-            "target_principal",
             "vault_folder_name",
             "audience",
             "dependency",

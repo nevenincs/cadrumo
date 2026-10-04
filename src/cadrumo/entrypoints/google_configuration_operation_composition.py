@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict
 from uuid import UUID
 
 from ..adapters.outbound.google import errors as google_errors
@@ -14,22 +13,16 @@ from ..adapters.outbound.google.errors import (
     GoogleAuthError,
     GoogleAuthExpiredError,
 )
-from ..adapters.outbound.google.google_configuration_inputs import (
-    decode_google_client_json,
-    google_credential_source_selection,
-)
+from ..adapters.outbound.google.google_configuration_inputs import decode_google_client_json
 from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFIGURATION_ERROR_TYPES
-from ..adapters.outbound.google.impersonation import GoogleCredentialSourceSelection
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
 from ..adapters.outbound.google.records import DriveConfig
 from ..adapters.outbound.google.session_store import (
     delete_session,
     load_client,
-    load_credential_source_selection,
     load_drive_config,
     load_metadata,
     save_client,
-    save_credential_source_selection,
     save_drive_config,
     save_metadata,
     save_token,
@@ -46,10 +39,6 @@ from ..application.user_profile.google_configuration_operation_contracts import 
     GoogleConfigurationExportDisabledError,
     GoogleConfigurationProjection,
     GoogleConfigurationRequest,
-    GoogleCredentialSourceSetProjection,
-    GoogleCredentialSourceSetRequest,
-    GoogleCredentialSourceViewProjection,
-    GoogleCredentialSourceViewRequest,
     GoogleFolderSetProjection,
     GoogleFolderSetRequest,
     GoogleFolderViewProjection,
@@ -80,25 +69,13 @@ from ..application.user_profile.profile_record_repository import require_profile
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
 from ..core.config import load_settings
-from ..core.google_credential_source import GoogleCredentialSourceKind
 from ..core.hashing import sha256_hex
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-
-
-class _SelectionFields(TypedDict):
-    profile_id: UUID
-    kind: GoogleCredentialSourceKind
-    target_principal: str | None
-    target_scopes: tuple[str, ...]
-    delegates: tuple[str, ...]
-    subject: str | None
-    lifetime_s: int | None
 
 
 @dataclass(slots=True)
 class _LocalFacts:
     audience: str | None = None
-    target_principal: str | None = None
     vault_folder_name: str | None = None
 
 
@@ -115,7 +92,6 @@ def _closed_refusal(
     updates: dict[str, object] = {}
     if isinstance(request, GoogleRegisterRequest) and key.startswith("cli.config.google.detail.client_json_"):
         _append_google_client_json_refusal(request, key, secret, updates)
-    _append_google_source_refusal(request, key, updates)
     _append_google_local_refusal(local, key, updates)
     verdict = (
         error.terminal_precondition_verdict if isinstance(error, (GoogleAuthError, OutboundStorageError)) else None
@@ -140,19 +116,6 @@ def _closed_refusal(
     except ValueError:
         # An unrecognized canonical producer retains its original coded failure.
         return None
-
-
-def _selection_fields(profile_id: UUID, selection: GoogleCredentialSourceSelection) -> _SelectionFields:
-    impersonation = selection.impersonation
-    return {
-        "profile_id": profile_id,
-        "kind": selection.kind,
-        "target_principal": impersonation.target_principal if impersonation is not None else None,
-        "target_scopes": impersonation.target_scopes if impersonation is not None else (),
-        "delegates": impersonation.delegates if impersonation is not None else (),
-        "subject": impersonation.subject if impersonation is not None else None,
-        "lifetime_s": impersonation.lifetime_s if impersonation is not None else None,
-    }
 
 
 def build_google_configuration_operation_ports(
@@ -237,18 +200,8 @@ def _append_google_client_json_refusal(
         )
 
 
-def _append_google_source_refusal(request: GoogleConfigurationRequest, key: str, updates: dict[str, object]) -> None:
-    """Preserve credential-source kind and its bounded schema-error classification."""
-    if isinstance(request, GoogleCredentialSourceSetRequest):
-        updates["kind"] = request.kind.value
-        if key.endswith("impersonation_config_invalid"):
-            updates["error_type"] = "ValidationError"
-
-
 def _append_google_local_refusal(local: _LocalFacts, key: str, updates: dict[str, object]) -> None:
     """Copy only the local facts applicable to the current refusal producer."""
-    if local.target_principal is not None:
-        updates["target_principal"] = local.target_principal
     if local.vault_folder_name is not None and key.endswith("former_vault_folder"):
         updates["vault_folder_name"] = local.vault_folder_name
     if local.audience is not None and (
@@ -285,33 +238,6 @@ def _append_google_provider_refusal(
         updates["missing_scopes"] = error.scope_failure.missing_scopes
         updates["account_email"] = error.scope_failure.account_email
     return True
-
-
-def _dispatch_google_credential_source_set(
-    request: GoogleCredentialSourceSetRequest, profile: str, profile_id: UUID, commit: GoogleConfigurationCommit
-) -> GoogleCredentialSourceSetProjection:
-    """Run the existing GoogleCredentialSourceSet branch in its original effect order."""
-    selected_source = google_credential_source_selection(
-        kind=request.kind,
-        target_principal=request.target_principal,
-        scopes=request.scopes,
-        delegates=request.delegates,
-        subject=request.subject,
-        lifetime_seconds=request.lifetime_seconds,
-    )
-    commit(lambda: save_credential_source_selection(profile, selected_source), changed=lambda _result: True)
-    return GoogleCredentialSourceSetProjection(**_selection_fields(profile_id, selected_source))
-
-
-def _dispatch_google_credential_source_view(
-    request: GoogleCredentialSourceViewRequest, profile: str, profile_id: UUID
-) -> GoogleCredentialSourceViewProjection:
-    """Run the existing GoogleCredentialSourceView branch in its original effect order."""
-    selection = load_credential_source_selection(profile)
-    return GoogleCredentialSourceViewProjection(
-        **_selection_fields(profile_id, selection if selection is not None else GoogleCredentialSourceSelection()),
-        configured=selection is not None,
-    )
 
 
 def _dispatch_google_folder_set(
@@ -448,9 +374,6 @@ def _dispatch_google_probe(
             raise GoogleConfigurationExportDisabledError(
                 translated_message="cli.config.google.export_capability_disabled"
             )
-    selection = load_credential_source_selection(profile)
-    if selection is not None and selection.impersonation is not None:
-        local.target_principal = selection.impersonation.target_principal
     provider = get_storage_provider(
         settings=settings, profile=profile, before_handoff=before_handoff, acknowledged=acknowledged
     )
@@ -491,10 +414,6 @@ def _dispatch_google_configuration(
 ) -> GoogleConfigurationProjection:
     """Dispatch one admitted request to its typed owner without changing branch priority."""
     _require_google_request_profile(request, profile_id, require_profile)
-    if isinstance(request, GoogleCredentialSourceSetRequest):
-        return _dispatch_google_credential_source_set(request, profile, profile_id, commit)
-    if isinstance(request, GoogleCredentialSourceViewRequest):
-        return _dispatch_google_credential_source_view(request, profile, profile_id)
     if isinstance(request, GoogleFolderSetRequest):
         return _dispatch_google_folder_set(request, profile, profile_id, commit)
     if isinstance(request, GoogleFolderViewRequest):

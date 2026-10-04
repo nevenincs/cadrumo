@@ -430,10 +430,6 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
-    fail_google_adc_stale: Application Default Credentials could not be refreshed.
-      Run gcloud auth application-default login.
-    fail_google_adc_unavailable: Application Default Credentials could not be found
-      on this host. Run gcloud auth application-default login.
     fail_google_browser_open: The browser could not be opened to show the Google consent
       page. Open the link manually.
     fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
@@ -1057,8 +1053,6 @@ errors:
       Register and declare the asset before calculating.
     refused_foreign_asset_valuation: A Modelo 720 valuation could not be converted
       to euros at its legal rate date. Check the asset's currency and valuation date.
-    refused_google_impersonation: IAM refused to mint an impersonated token for the
-      target service account. Grant it roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: Google login needs an interactive terminal with
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or

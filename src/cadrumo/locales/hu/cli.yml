@@ -2158,33 +2158,6 @@ cli:
     google:
       client_json_help: Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési
         útja.
-      credential_source:
-        delegate_help: Láncolt megszemélyesítés delegnált szolgáltatási fiók e-mail
-          címe (ismételhető)
-        detail:
-          impersonation_config_invalid: A megszemélyesítési konfiguráció érvénytelen.
-          oauth_desktop_rejects_impersonation_options: a --kind oauth_desktop nem
-            fogadja el a --target-principal, --scope, --delegate, --subject vagy --lifetime-seconds
-            paramétereket
-          target_principal_required: a --target-principal kötelező, ha a --kind értéke
-            service_account_impersonation
-        help: Válaszd ki, hogy az aktív profil melyik Google hitelesítőadat-forrást
-          használja (interaktív OAuth asztali beállítás, vagy megosztott szolgáltatási
-          fiók megszemélyesítése)
-        kind_help: 'Hitelesítőadat-forrás: oauth_desktop (alapértelmezett, interaktív
-          hozzájárulás) vagy service_account_impersonation (megosztott szolgáltatási
-          fiók ADC + IAM révén)'
-        lifetime_help: A megszemélyesített token kért élettartama másodpercben (alapértelmezetten
-          a Google 3600 másodperces felső határa)
-        scope_help: A megszemélyesített tokenhez kért OAuth hatókör (ismételhető;
-          alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)
-        set_help: Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának
-        subject_help: A domainre kiterjedő delegalással megszemélyesítendő Workspace
-          felhasználói e-mail cím (nem kötelező)
-        target_principal_help: A megszemélyesítendő szolgáltatási fiók e-mail címe
-          (kötelező --kind service_account_impersonation esetén)
-        view_help: Megjeleníti az aktív profilhoz mentett Google hitelesítésiadat-forrás
-          kiválasztását.
       detail:
         client_json_invalid: A(z) {path} helyen lévő ügyfél-JSON érvénytelen.
         client_json_not_desktop: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
@@ -2200,10 +2173,6 @@ cli:
           használhat --limit kapcsolót, mert egy korlátozott éles futás részleges
           távoli tükör manifestet hozna létre.
       errors:
-        adc_stale: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) frissítése
-          nem sikerült: {detail}'
-        adc_unavailable: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) nem
-          érhetők el ezen a gépen: {detail}'
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
           {detail}'
@@ -2211,8 +2180,6 @@ cli:
           Futtasd: `aeat config google register --client-json <elérési_út>`.'
         client_revoked: 'A regisztrált Google OAuth-ügyfél visszavonásra került. Regisztráld
           újra: `aeat config google register`.'
-        impersonation_refused: 'A szolgáltatási fiók megszemélyesítését elutasították:
-          {detail}'
         keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolt
           vagy nem elérhető.
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés

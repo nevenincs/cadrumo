@@ -23,9 +23,6 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
         "config_google_login",
         "config_google_status",
         "config_google_logout",
-        "config_google_credential_source",
-        "config_google_credential_source_set",
-        "config_google_credential_source_view",
         "config_google_folder",
         "config_google_folder_set",
         "config_google_folder_view",
@@ -36,8 +33,8 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
     assert all(spec.result_schema.state is SchemaState.TARGET for spec in leaves)
 
     # The identity is the command path, one segment per token, so a hyphenated
-    # group such as ``credential-source`` stays one ``credential_source``
-    # segment; splitting the spec key on ``_`` would break it in two.
+    # token stays one underscored segment; splitting the spec key on ``_``
+    # would break it in two.
     def command_path(key: str) -> tuple[str, ...]:
         spec = by_key.get(key)
         return ("config",) if spec is None else (*command_path(spec.parent_key or ""), spec.token)
@@ -53,7 +50,6 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
     package = Path(__file__).parents[1]
     modules = (
         "google.py",
-        "_google_credential_source_cli.py",
         "_google_folder.py",
     )
 
@@ -72,14 +68,14 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
 
 def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> None:
     by_key = {spec.key: spec for spec in GOOGLE_COMMAND_SPECS}
-    credential_set = {
+    login = {
         parameter.name: parameter
-        for parameter in by_key["config_google_credential_source_set"].parameters
+        for parameter in by_key["config_google_login"].parameters
         if isinstance(parameter, OptionSpec)
     }
-    assert credential_set["scopes"].declarations == ("--scope",)
-    assert credential_set["scopes"].multiple is True
-    assert credential_set["delegates"].multiple is True
+    assert login["refresh_only"].declarations == ("--refresh-only",)
+    assert login["refresh_only"].is_flag is True
+    assert login["refresh_only"].multiple is False
 
     probe = {
         parameter.name: parameter

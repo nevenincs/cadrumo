@@ -49,8 +49,6 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_google_login",
         "config_google_status",
         "config_google_logout",
-        "config_google_credential_source_set",
-        "config_google_credential_source_view",
         "config_google_folder_set",
         "config_google_folder_view",
         "config_google_probe",

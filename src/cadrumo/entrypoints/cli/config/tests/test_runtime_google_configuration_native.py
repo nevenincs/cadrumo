@@ -2,7 +2,7 @@
 
 The owning native CLI fixture uses MemoryNativePort and synthetic OS-login
 evidence. This journey does not establish platform secret-store acceptance or
-exercise Google OAuth, ADC, IAM, browser consent, or remote provider traffic.
+exercise Google OAuth, browser consent, or remote provider traffic.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ from .....adapters.local_runtime.frontend_client_contracts import RuntimeFronten
 from .....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 from .....adapters.outbound.google.session_store import (
     load_client,
-    load_credential_source_selection,
     load_drive_config,
     load_metadata,
     load_token,
@@ -46,7 +45,6 @@ from .....application.runtime.operation_access import (
 )
 from .....application.user_profile.access_contracts import AccessDenialCode
 from .....application.user_profile.google_configuration_operation_contracts import (
-    GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
     GOOGLE_REGISTER_INPUT_KIND,
     GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
@@ -250,65 +248,28 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         status = unwrap_cli_result(invoke("status"))
         assert status["client_registered"] is True and status["session_present"] is False
         assert foreign_refused
-        source_default = unwrap_cli_result(invoke("credential-source", "view"))
-        assert source_default["configured"] is False and source_default["kind"] == "oauth_desktop"
-
-        def assert_source_refusal(*arguments: str, message_key: str) -> None:
-            refused = _invoke(profile, "credential-source", "set", *arguments)
-            assert client_value not in refused.output and refresh_value not in refused.output
-            assert refused.exit_code == 3, (refused.output, observations)
-            error = require_error_document(refused.output)["error"]
-            assert error["code"] == "AUTH_GOOGLE" and error["category"] == "AUTH"
-            context = error["context"]
-            assert isinstance(context, dict)
-            assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
-            assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
-            assert context["effect"] == OperationEffect.NONE.value
-            definition, effect, outcome = completions[-1]
-            assert definition == GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID
-            assert effect is OperationEffect.NONE and outcome.outcome == "refused"
-            assert outcome.result is None and outcome.refusal is not None
-            assert outcome.refusal.provider_code == "AUTH_GOOGLE"
-            assert outcome.refusal.message_key == message_key
-            assert unwrap_cli_result(invoke("credential-source", "view")) == source_default
-
-        assert_source_refusal(
-            "--kind",
-            "service_account_impersonation",
-            message_key="cli.config.google.credential_source.detail.target_principal_required",
-        )
-        assert_source_refusal(
-            "--kind",
-            "oauth_desktop",
-            "--target-principal",
-            "synthetic@synthetic.iam.gserviceaccount.com",
-            message_key="cli.config.google.credential_source.detail.oauth_desktop_rejects_impersonation_options",
-        )
+        # A source that is not a Desktop client is refused by the worker after the
+        # protected channel delivered it, and leaves the registered client untouched.
+        not_desktop = tmp_path / "web-client.json"
+        not_desktop.write_text(json.dumps({"web": {"client_id": "synthetic-web-client"}}), encoding="utf-8")
+        refused = _invoke(profile, "register", "--client-json", str(not_desktop))
+        assert client_value not in refused.output and refresh_value not in refused.output
+        assert refused.exit_code == 2, (refused.output, observations)
+        error = require_error_document(refused.output)["error"]
+        assert error["code"] == "REFUSED_GOOGLE_VALIDATION" and error["category"] == "REFUSED"
+        context = error["context"]
+        assert isinstance(context, dict)
+        assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
+        assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
+        assert context["effect"] == OperationEffect.NONE.value
+        definition, effect, outcome = completions[-1]
+        assert definition == GOOGLE_REGISTER_OPERATION_DEFINITION_ID
+        assert effect is OperationEffect.NONE and outcome.outcome == "refused"
+        assert outcome.result is None and outcome.refusal is not None
+        assert outcome.refusal.provider_code == "REFUSED_GOOGLE_VALIDATION"
+        assert outcome.refusal.message_key == "cli.config.google.detail.client_json_not_desktop"
+        assert unwrap_cli_result(invoke("status")) == status
         assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
-        principal = "native-target@synthetic.iam.gserviceaccount.com"
-        delegate = "native-delegate@synthetic.iam.gserviceaccount.com"
-        source = unwrap_cli_result(
-            invoke(
-                "credential-source",
-                "set",
-                "--kind",
-                "service_account_impersonation",
-                "--target-principal",
-                principal,
-                "--scope",
-                REQUIRED_SCOPES[-1],
-                "--delegate",
-                delegate,
-                "--subject",
-                "synthetic@example.invalid",
-                "--lifetime-seconds",
-                "1800",
-            )
-        )
-        viewed = unwrap_cli_result(invoke("credential-source", "view"))
-        for key in ("kind", "target_principal", "target_scopes", "delegates", "subject", "lifetime_s"):
-            assert viewed[key] == source[key]
-        assert viewed["configured"] is True
         folder_id = "synthetic-native-root-folder"
         assert unwrap_cli_result(invoke("folder", "set", folder_id))["root_folder_id"] == folder_id
         assert unwrap_cli_result(invoke("folder", "view"))["root_folder_id"] == folder_id
@@ -323,13 +284,6 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
             profile_id = str(owner_profile)
             reopened_client = load_client(profile_id)
             assert reopened_client is not None and reopened_client.client_secret == client_value
-            reopened_source = load_credential_source_selection(profile_id)
-            assert reopened_source is not None and reopened_source.impersonation is not None
-            assert reopened_source.impersonation.target_principal == principal
-            assert reopened_source.impersonation.target_scopes == (REQUIRED_SCOPES[-1],)
-            assert reopened_source.impersonation.delegates == (delegate,)
-            assert reopened_source.impersonation.subject == "synthetic@example.invalid"
-            assert reopened_source.impersonation.lifetime_s == 1800
             reopened_folder = load_drive_config(profile_id)
             assert reopened_folder is not None and reopened_folder.root_folder_id == folder_id
             instant = datetime.now(UTC)
@@ -407,7 +361,6 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         try:
             assert load_token(profile_id) is None and load_metadata(profile_id) is None
             assert load_client(profile_id) == reopened_client
-            assert load_credential_source_selection(profile_id) == reopened_source
             assert load_drive_config(profile_id) == reopened_folder
         finally:
             close_active_bucket_session()

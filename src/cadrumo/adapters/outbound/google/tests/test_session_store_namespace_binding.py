@@ -1,7 +1,7 @@
 """Registry-definition binding proof for the Google session secure-object writes.
 
-Each Google OAuth/session record family (client, token, metadata, drive config,
-credential-source selection) persists an encrypted secure object whose
+Each Google OAuth/session record family (client, token, metadata, drive
+config) persists an encrypted secure object whose
 ``classification`` and envelope ``schema_version`` MUST be single-sourced from
 the owning
 :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
@@ -11,8 +11,8 @@ the owning
 This is a write-path proof: it drives each production save function and reads
 the raw :class:`SecureObjectRow` back from the encrypted SQL backend, asserting
 the persisted classification and schema_version equal what the registry def
-declares. The two SECRET namespaces (client, token) and the three FINANCIAL
-namespaces (metadata, drive config, credential source) are each checked against
+declares. The two SECRET namespaces (client, token) and the two FINANCIAL
+namespaces (metadata, drive config) are each checked against
 their own def, so a cross-namespace metadata swap would fail here.
 """
 
@@ -24,9 +24,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....core.google_credential_source import GoogleCredentialSourceKind
 from ....persistence.storage.secure_object_namespaces import (
-    GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -37,7 +35,6 @@ from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from ..impersonation import GoogleCredentialSourceSelection
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -70,14 +67,12 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
         last_refresh_at=_ISSUED_AT,
     )
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
-    selection = GoogleCredentialSourceSelection(kind=GoogleCredentialSourceKind.OAUTH_DESKTOP)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         session_store.save_client(_PROFILE, client)
         session_store.save_token(_PROFILE, token)
         session_store.save_metadata(_PROFILE, metadata)
         session_store.save_drive_config(_PROFILE, drive_config)
-        session_store.save_credential_source_selection(_PROFILE, selection)
 
         with session_scope(profile.repository._engine) as session:
             rows = {row.namespace: row for row in session.execute(select(SecureObjectRow)).scalars().all()}
@@ -87,7 +82,6 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
         GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace: GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE.namespace: GOOGLE_OAUTH_METADATA_NAMESPACE,
         GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace: GOOGLE_DRIVE_CONFIG_NAMESPACE,
-        GOOGLE_CREDENTIAL_SOURCE_NAMESPACE.namespace: GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
     }
     for namespace, definition in expected.items():
         assert namespace in rows, f"expected a persisted row under {namespace!r}"

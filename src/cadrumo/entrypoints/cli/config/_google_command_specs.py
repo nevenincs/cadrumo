@@ -12,7 +12,6 @@ from ..command_shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
     DeferredTarget,
     LazyBinding,
     LiteralValue,
@@ -31,11 +30,6 @@ from ._spec_policies import (
     state_free_group_spec,
 )
 
-_CREDENTIAL_KIND = ValueContract(
-    DeferredTarget("....core.google_credential_source", "GoogleCredentialSourceKind", __package__)
-)
-
-
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
 # the import-boundary checker, or a dead-code sweep -- could see the edge, so all of
@@ -43,8 +37,6 @@ _CREDENTIAL_KIND = ValueContract(
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google": ".google",
-    "_google_credential_source_cli": "._google_credential_source_cli",
-    "_google_credential_source_payloads": "._google_credential_source_payloads",
     "_google_folder": "._google_folder",
     "_google_folder_payloads": "._google_folder_payloads",
     "_google_payloads": "._google_payloads",
@@ -191,68 +183,6 @@ GOOGLE_COMMAND_SPECS = (
         "_google_payloads",
         "GoogleLogoutResult",
         GOOGLE_DESTRUCTIVE,
-    ),
-    state_free_group_spec(
-        "config_google_credential_source",
-        "config_google",
-        "credential-source",
-        "cli.config.google.credential_source.help",
-    ),
-    _leaf(
-        "config_google_credential_source_set",
-        "config_google_credential_source",
-        "set",
-        "cli.config.google.credential_source.set_help",
-        "_google_credential_source_cli",
-        "google_credential_source_set",
-        "_google_credential_source_payloads",
-        "GoogleCredentialSourceSetResult",
-        GOOGLE_WRITE,
-        (
-            _option(
-                "kind", ("--kind",), _CREDENTIAL_KIND, "cli.config.google.credential_source.kind_help", required=True
-            ),
-            _option(
-                "target_principal",
-                ("--target-principal",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.target_principal_help",
-            ),
-            _option(
-                "scopes",
-                ("--scope",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.scope_help",
-                multiple=True,
-            ),
-            _option(
-                "delegates",
-                ("--delegate",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.delegate_help",
-                multiple=True,
-            ),
-            _option("subject", ("--subject",), TEXT_VALUE, "cli.config.google.credential_source.subject_help"),
-            _option(
-                "lifetime_seconds",
-                ("--lifetime-seconds",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.google.credential_source.lifetime_help",
-            ),
-        ),
-        identity="config.google.credential_source.set",
-    ),
-    _leaf(
-        "config_google_credential_source_view",
-        "config_google_credential_source",
-        "view",
-        "cli.config.google.credential_source.view_help",
-        "_google_credential_source_cli",
-        "google_credential_source_view",
-        "_google_credential_source_payloads",
-        "GoogleCredentialSourceViewResult",
-        GOOGLE_READ,
-        identity="config.google.credential_source.view",
     ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
     _leaf(

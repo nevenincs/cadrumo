@@ -14,7 +14,6 @@ from ..storage import errors as storage_errors
 from ..storage.errors import OutboundStorageError
 from . import errors as google_errors
 from .errors import GoogleAuthError
-from .impersonation import GoogleAuthAdcStaleError, GoogleAuthAdcUnavailableError, GoogleAuthImpersonationRefusedError
 
 GOOGLE_CONFIGURATION_ERROR_TYPES: tuple[
     type[GoogleAuthError | OutboundStorageError | GoogleConfigurationExportDisabledError], ...
@@ -32,9 +31,6 @@ GOOGLE_CONFIGURATION_ERROR_TYPES: tuple[
     google_errors.GoogleAuthNonInteractiveError,
     google_errors.GoogleAuthKeychainLockedError,
     google_errors.GoogleAuthProfileUnboundError,
-    GoogleAuthAdcUnavailableError,
-    GoogleAuthAdcStaleError,
-    GoogleAuthImpersonationRefusedError,
     storage_errors.OutboundStorageError,
     storage_errors.OutboundStorageValidationError,
     storage_errors.OutboundStorageNotFoundError,
