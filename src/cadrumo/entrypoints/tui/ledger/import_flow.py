@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DirectoryTree, Input, Select, Static
 
 from ....application.ledger.actions_import import LedgerProviderID
+from ....application.ledger.own_account_operation import LedgerOwnAccountRequest, OwnAccountProjection
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
@@ -18,7 +19,11 @@ from ..components.theme import tokenised
 from ..components.widgets import ContentScroll
 from .controller import LedgerRouteRequested, LedgerWorkspaceController
 from .models import LedgerFlowState, LedgerImportOutcomeV1, LedgerImportRequestV1, LedgerImportSourceKind
+from .own_accounts import LedgerOwnAccountDoorV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
+
+#: The account choice that binds rows only through the statement's own account identifier.
+_UNBOUND_ACCOUNT: Final = "-"
 
 #: The readers an operator may pick for a bank statement, automatic first.
 IMPORT_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
@@ -45,6 +50,7 @@ _PROVIDER_LOCALE_KEYS: Final[dict[LedgerProviderID, str]] = {
 _EDITABLE_CONTROLS: Final = (
     "#ledger-import-kind",
     "#ledger-import-provider",
+    "#ledger-import-account",
     "#ledger-import-country",
     "#ledger-import-path",
     "#ledger-import-browse",
@@ -104,6 +110,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         super().__init__(controller, id="ledger-import-screen")
         self.previewed: LedgerImportRequestV1 | None = None
         self.outcome: LedgerImportOutcomeV1 | None = None
+        self.accounts: dict[str, OwnAccountProjection] = {}
 
     @override
     def compose(self) -> ComposeResult:
@@ -125,6 +132,13 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 allow_blank=False,
                 id="ledger-import-provider",
             )
+            yield Static(tr("tui.ledger.import.account_label"), id="ledger-import-account-label", markup=False)
+            yield Select[str](
+                ((tr("tui.ledger.import.account_unbound"), _UNBOUND_ACCOUNT),),
+                value=_UNBOUND_ACCOUNT,
+                allow_blank=False,
+                id="ledger-import-account",
+            )
             yield Static(tr("tui.ledger.import.country_label"), id="ledger-import-country-label", markup=False)
             yield Input(value="ES", max_length=2, id="ledger-import-country")
             yield Static(tr("tui.ledger.import.path_label"), markup=False)
@@ -143,6 +157,25 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         self.populate_navigation()
         self._show_kind_controls(LedgerImportSourceKind.BANK_STATEMENT)
         self.query_one("#ledger-import-path", Input).focus()
+        if self.controller.own_account_door is not None:
+            self.run_worker(self._load_accounts(self.controller.own_account_door), group="ledger-import-accounts")
+
+    async def _load_accounts(self, door: LedgerOwnAccountDoorV1) -> None:
+        """Offer the open own accounts, masked; the choice stays unbound-only when they cannot be read."""
+        try:
+            result = await door(LedgerOwnAccountRequest(profile_id=door.profile_id, action="list"))
+        except CadrumoError as error:
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            return
+        self.accounts = {item.own_account_id: item for item in result.accounts if item.closed_on is None}
+        options = [(tr("tui.ledger.import.account_unbound"), _UNBOUND_ACCOUNT)]
+        options.extend(
+            (f"{item.own_account_id} · {item.label} · {item.masked_iban}", item.own_account_id)
+            for item in self.accounts.values()
+        )
+        account = cast("Select[str]", self.query_one("#ledger-import-account", Select))
+        account.set_options(options)
+        account.value = _UNBOUND_ACCOUNT
 
     @property
     def source_kind(self) -> LedgerImportSourceKind:
@@ -151,7 +184,12 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     def _show_kind_controls(self, kind: LedgerImportSourceKind) -> None:
         bank = kind is LedgerImportSourceKind.BANK_STATEMENT
-        for selector in ("#ledger-import-provider", "#ledger-import-provider-label"):
+        for selector in (
+            "#ledger-import-provider",
+            "#ledger-import-provider-label",
+            "#ledger-import-account",
+            "#ledger-import-account-label",
+        ):
             self.query_one(selector).display = bank
         for selector in ("#ledger-import-country", "#ledger-import-country-label"):
             self.query_one(selector).display = not bank
@@ -214,8 +252,22 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 notice.update(tr("tui.ledger.import.country_required"))
                 return None
         provider = LedgerProviderID(str(cast("Select[str]", self.query_one("#ledger-import-provider", Select)).value))
+        account = str(cast("Select[str]", self.query_one("#ledger-import-account", Select)).value)
+        bank = kind is LedgerImportSourceKind.BANK_STATEMENT
+        own_account_id = account if bank and account != _UNBOUND_ACCOUNT else None
         notice.update("")
-        return LedgerImportRequestV1(path=path, source_kind=kind, provider=provider, country=country)
+        return LedgerImportRequestV1(
+            path=path, source_kind=kind, provider=provider, country=country, own_account_id=own_account_id
+        )
+
+    def _account_lines(self, request: LedgerImportRequestV1) -> tuple[str, ...]:
+        """Name the own account a statement binds to, masked, or say rows bind only by their statement."""
+        if request.source_kind is not LedgerImportSourceKind.BANK_STATEMENT:
+            return ()
+        account = None if request.own_account_id is None else self.accounts.get(request.own_account_id)
+        if account is None:
+            return (tr("tui.ledger.import.account_line_unbound"),)
+        return (tr("tui.ledger.import.account_line", account=f"{account.label} · {account.masked_iban}"),)
 
     def _lock_form(self) -> None:
         for selector in _EDITABLE_CONTROLS:
@@ -268,8 +320,12 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             self.query_one("#ledger-import-preview-button", Button).disabled = False
             return
-        self.previewed = request
-        self.query_one("#ledger-import-preview", Static).update("\n".join(import_outcome_lines(outcome)))
+        # Applying binds to exactly the files this preview read and the bytes it parsed.
+        bound = request.source_kind is LedgerImportSourceKind.BANK_STATEMENT
+        self.previewed = request.model_copy(update={"previewed_sources": outcome.sources}) if bound else request
+        self.query_one("#ledger-import-preview", Static).update(
+            "\n".join((*self._account_lines(request), *import_outcome_lines(outcome)))
+        )
         self._lock_form()
         self._transition(LedgerFlowState.CONFIRMING)
         status.update(tr("tui.ledger.import.confirming"))

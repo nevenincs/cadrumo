@@ -1914,6 +1914,11 @@ tui:
         a leer. Vuelve al Inicio para actualizarla.
       refreshing: Actualizando…
     import:
+      account_label: Cuenta bancaria propia del extracto
+      account_line: 'Cuenta: %{account}'
+      account_line_unbound: 'Cuenta: los movimientos solo se vinculan si el extracto
+        indica una de tus cuentas'
+      account_unbound: Vincular por el número de cuenta del extracto
       again: Importar otro fichero
       browse: Examinar
       cancel: Cancelar
@@ -1925,11 +1930,15 @@ tui:
       country_required: Indica el país de la contraparte con dos letras, por ejemplo
         ES.
       failure: No se pudo completar la importación.
+      invoice_book_unavailable: Aún no se pueden previsualizar libros de facturas
+        aquí; impórtalos con app ledger invoice import.
       kind:
         bank_statement: Extracto bancario
         invoices_issued: Facturas emitidas
         invoices_received: Facturas recibidas
       kind_label: Qué contiene el fichero
+      nothing_previewed: La previsualización no leyó ningún fichero importable, así
+        que no hay nada que confirmar.
       outcome:
         diagnostic: 'Nota: {message}'
         did_import: 'Importadas: {count}'
@@ -1961,6 +1970,12 @@ tui:
         pdf_n26: Extracto PDF de N26
         xlsx: Libro de Excel
       provider_label: Formato del extracto
+      refusal:
+        own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
+        result_limit: la importación alcanzó su límite de filas antes de este fichero
+        source_changed: el fichero cambió después de la previsualización y no se importó
+          nada de él; vuelve a previsualizarlo
+        transaction_validation: el fichero no se pudo leer como extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
       title: Importar apuntes
     invoice:

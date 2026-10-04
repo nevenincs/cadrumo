@@ -1902,6 +1902,11 @@ tui:
         a llegir. Torna a l'Inici per actualitzar-la.
       refreshing: S'està actualitzant…
     import:
+      account_label: Compte bancari propi de l'extracte
+      account_line: 'Compte: %{account}'
+      account_line_unbound: 'Compte: els moviments només es vinculen si l''extracte
+        indica un dels teus comptes'
+      account_unbound: Vincula pel número de compte de l'extracte
       again: Importa un altre fitxer
       browse: Navega
       cancel: Cancel·la
@@ -1913,11 +1918,15 @@ tui:
       country_required: Indica el país de la contrapart amb dues lletres, per exemple
         ES.
       failure: No s'ha pogut completar la importació.
+      invoice_book_unavailable: Encara no es poden previsualitzar llibres de factures
+        aquí; importa'ls amb app ledger invoice import.
       kind:
         bank_statement: Extracte bancari
         invoices_issued: Factures emeses
         invoices_received: Factures rebudes
       kind_label: Què conté el fitxer
+      nothing_previewed: La previsualització no ha llegit cap fitxer importable, així
+        que no hi ha res a confirmar.
       outcome:
         diagnostic: 'Nota: {message}'
         did_import: 'Importades: {count}'
@@ -1949,6 +1958,12 @@ tui:
         pdf_n26: Extracte PDF d'N26
         xlsx: Llibre d'Excel
       provider_label: Format de l'extracte
+      refusal:
+        own_account_mismatch: l'extracte indica un compte diferent del que has triat
+        result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
+        source_changed: el fitxer ha canviat després de la previsualització i no se
+          n'ha importat res; torna a previsualitzar-lo
+        transaction_validation: el fitxer no s'ha pogut llegir com a extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
       title: Importar apunts
     invoice:

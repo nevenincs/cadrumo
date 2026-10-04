@@ -30,6 +30,7 @@ from ....application.ledger.workspace import (
 from ....application.operator_actions.models import ActionReference
 from ....core.aggregation import IntracomOperationType
 from ....core.country_code import CountryCodeAlpha2
+from ....core.identity.digest import ContentDigest
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -204,6 +205,15 @@ class LedgerImportSourceKind(StrEnum):
     INVOICES_ISSUED = "invoices_issued"
 
 
+class LedgerImportSourceBindingV1(BaseModel):
+    """One file a preview read, bound to the SHA-256 of the bytes it parsed."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: Path
+    sha256: ContentDigest
+
+
 class LedgerImportRequestV1(BaseModel):
     """One operator-chosen file or folder and how to read it.
 
@@ -221,6 +231,8 @@ class LedgerImportRequestV1(BaseModel):
     provider: LedgerProviderID = LedgerProviderID.AUTO
     country: str | None = Field(default=None, min_length=2, max_length=2)
     own_account_id: OwnAccountId | None = None
+    previewed_sources: tuple[LedgerImportSourceBindingV1, ...] | None = None
+    """Set only to apply: exactly the files a preview read, each refused if its bytes changed since."""
 
 
 class LedgerImportFileRefusalV1(BaseModel):
@@ -263,6 +275,8 @@ class LedgerImportOutcomeV1(BaseModel):
     refused_files: tuple[LedgerImportFileRefusalV1, ...] = ()
     refused_rows: tuple[LedgerImportRowRefusalV1, ...] = ()
     unmapped_columns: tuple[str, ...] = ()
+    sources: tuple[LedgerImportSourceBindingV1, ...] = ()
+    """The files a preview read and the digest of each; applying binds to exactly these."""
 
 
 class LedgerImportDoorV1(Protocol):
@@ -586,6 +600,7 @@ __all__ = [
     "LedgerImportOutcomeV1",
     "LedgerImportRequestV1",
     "LedgerImportRowRefusalV1",
+    "LedgerImportSourceBindingV1",
     "LedgerImportSourceKind",
     "LedgerInvoiceAddDoorV1",
     "LedgerInvoiceAddResultV1",

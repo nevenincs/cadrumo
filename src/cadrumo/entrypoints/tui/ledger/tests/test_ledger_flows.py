@@ -245,7 +245,8 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
             await app.workers.wait_for_complete()
             await pilot.pause()
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
-            assert door.applied == door.previews
+            # Applying binds to exactly the files the preview read; this door reported none.
+            assert door.applied == [door.previews[0].model_copy(update={"previewed_sources": ()})]
             assert "Imported: 2" in str(screen.query_one("#ledger-import-preview", Static).render())
             screen.query_one("#ledger-import-confirm", Button).press()
             await pilot.pause()

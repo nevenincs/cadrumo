@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:63e086e44b528d102c2a609ad75106b801ec01a2f9ed2eb1b276c2c600ff0b28'
+body_hash: 'sha256:b9a63f5a2d7e16060a4c9b996c79478fac92a511abc101b24103d0a10edec821'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -334,6 +334,26 @@ related:
 - `S17` `verify:` `pytest entrypoints/tests/profile_persistence, application/modelo/tests, 303 export CLI parity, export verb, rectificativa motive lifecycle (2963 passed; 18 failures all in the pre-edit baseline)` -> `pass`
 - `S17` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
 - `S17` `by:` `lane-d`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/runtime_ledger_import.py`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_account_binding.py`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S20` `M` `src/cadrumo/application/ledger/tests/test_import_operation.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/import_flow.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_flows.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S20` `M` `dev/tui/harness/ledger_fixtures.py`
+- `S20` `M` `dev/tui/harness/surfaces.py`
+- `S20` `M` `src/cadrumo/locales/en/common.yml`
+- `S20` `M` `src/cadrumo/locales/es/common.yml`
+- `S20` `M` `src/cadrumo/locales/ca/common.yml`
+- `S20` `M` `src/cadrumo/locales/hu/common.yml`
+- `S20` `verify:` `pytest application/ledger/tests tui/ledger/tests test_own_account_binding.py (1741 passed; 1 pre-existing failure, the adapter-import sweep)` -> `pass`
+- `S20` `verify:` `pytest test_import_operation test_import_account_binding test_runtime_ledger_import test_ledger_flows (31 passed)` -> `pass`
+- `S20` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S20` `verify:` `dev.tui visual review: render ledger-import--ready, ledger-import-account-picker, ledger-import-account-previewed at default viewports in both themes (24 frames, no failures, no missing glyphs or geometry findings), diff against own-accounts-before, frames inspected for masking and layout` -> `pass`
+- `S20` `by:` `lane-e`
 
 ## Notes
 
@@ -352,3 +372,4 @@ related:
 - `S15` campo 114 is enforced as an invariant of the entry (the facts' `titular_en_calidad_de` must state the holder the account choice implies) rather than stored nowhere; the snapshot keeps reading it from the facts
 - `S07` ledger list/view display payloads do not show `own_account_id` yet; adding it to the canonical payload churns 36 CLI-sequence goldens, left for the display work
 - `S18` pre-existing failures left: `test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports` (every `runtime_*.py` door imports `adapters.local_runtime;` `runtime_own_accounts.py` follows that pattern), `test_theme` hardcoded measures in grouped.py and `overview_contracts.py,` declarations-overview heading rhythm; fixed the stale FieldEditScreen interface path in `dev/tui/harness/profile_fixtures.py` that blocked every render
+- `S20` `test_ledger_import_ux` CLI native tests fail with `REFUSED_LOCAL_RUNTIME` with and without this Step (checked against the committed `import_operation.py);` the TUI import door reads bank statements only, invoice books are refused with a pointer to app ledger invoice import because they have no registered preview; LedgerImportRequest gains `expected_source_sha256` and the result `source_digests` (application/ledger is Lane B scope, touched because the digest binding must be enforced in the worker)

@@ -108,6 +108,15 @@ class LedgerImportRequest(BaseModel):
     verify_source: Path | None = None
     period: PublicPeriod | None = None
     own_account_id: OwnAccountId | None = None
+    expected_source_sha256: tuple[ContentDigest, ...] | None = None
+    """The digest a preview reported for each file, in ``files`` order; a file whose
+    parsed bytes now differ is refused rather than imported."""
+
+    @model_validator(mode="after")
+    def _one_digest_per_file(self) -> LedgerImportRequest:
+        if self.expected_source_sha256 is not None and len(self.expected_source_sha256) != len(self.files):
+            raise ValueError("ledger import expects exactly one source digest per file")
+        return self
 
 
 class LedgerImportFileRefusal(BaseModel):
@@ -116,7 +125,7 @@ class LedgerImportFileRefusal(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     file_name: str = Field(min_length=1, max_length=255)
-    reason_code: Literal["transaction_validation", "own_account_mismatch", "result_limit"]
+    reason_code: Literal["transaction_validation", "own_account_mismatch", "result_limit", "source_changed"]
 
 
 class LedgerImportValidationProjection(BaseModel):
@@ -136,6 +145,15 @@ class LedgerImportSourceProjection(BaseModel):
 
     requested: bool
     sha256: ContentDigest | None = None
+
+
+class LedgerImportSourceDigest(BaseModel):
+    """The SHA-256 of the bytes parsed from one requested file, by its position in the request."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    file_index: NonNegativeInt
+    sha256: ContentDigest
 
 
 class LedgerImportDiagnosticProjection(BaseModel):
@@ -176,6 +194,7 @@ class LedgerImportResultProjection(BaseModel):
         default=(), max_length=MAX_LEDGER_IMPORT_DIAGNOSTICS
     )
     refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    source_digests: tuple[LedgerImportSourceDigest, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
 
     @model_validator(mode="after")
     def _exact_profile(self) -> LedgerImportResultProjection:
@@ -218,6 +237,8 @@ class _LedgerImportExecutionFile(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     file_name: str = Field(min_length=1, max_length=255)
+    file_index: NonNegativeInt
+    source_sha256: ContentDigest | None = None
     result: LedgerSourceImportResult = Field(repr=False)
 
 
@@ -378,6 +399,11 @@ def project_ledger_import_result(
         verify=result.verify,
         period=result.period,
         refused_files=result.refused_files,
+        source_digests=tuple(
+            LedgerImportSourceDigest(file_index=item.file_index, sha256=item.source_sha256)
+            for item in result.files
+            if item.source_sha256 is not None
+        ),
         bucket_id=facts.bucket_id,
         import_batch_id=facts.import_batch_id,
         bucket_event_ids=facts.bucket_event_ids,
@@ -398,6 +424,7 @@ def _prepare_import_file(
     ports: LedgerImportOperationPorts,
     own_accounts: OwnAccountRegister,
     remaining_row_capacity: int,
+    expected_sha256: str | None,
 ) -> PreparedLedgerSourceImport | LedgerImportFileRefusal:
     """Stage one source, or return its safe refusal before persistence."""
     command = LedgerSourceImportCommand(
@@ -425,7 +452,19 @@ def _prepare_import_file(
         )
     if len(prepared.source.parsed_rows) > remaining_row_capacity:
         return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="result_limit")
+    if expected_sha256 is not None and parsed_source_sha256(prepared) != expected_sha256:
+        return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="source_changed")
     return prepared
+
+
+def parsed_source_sha256(prepared: PreparedLedgerSourceImport) -> str | None:
+    """The digest of the bytes the rows were parsed from, or ``None`` when no row carries one."""
+    digests = {row.raw.provenance.source_sha256 for row in prepared.source.parsed_rows}
+    return digests.pop() if len(digests) == 1 else None
+
+
+type _StagedImport = tuple[int, Path, PreparedLedgerSourceImport]
+"""One parsed statement with its position in the request and its path."""
 
 
 def _compose_staged_imports(
@@ -436,7 +475,7 @@ def _compose_staged_imports(
     ports_factory: LedgerImportOperationPortsFactory,
 ) -> tuple[
     LedgerImportOperationPorts,
-    list[tuple[Path, PreparedLedgerSourceImport]],
+    list[_StagedImport],
     list[LedgerImportFileRefusal],
 ]:
     """Compose exact-profile ports and stage admissible source files in request order."""
@@ -446,10 +485,10 @@ def _compose_staged_imports(
     own_accounts = ports.own_accounts.load()
     if payload.own_account_id is not None:
         require_registered_own_account(own_accounts, payload.own_account_id)
-    staged: list[tuple[Path, PreparedLedgerSourceImport]] = []
+    staged: list[_StagedImport] = []
     refusals: list[LedgerImportFileRefusal] = []
     staged_rows = 0
-    for path in payload.files:
+    for index, path in enumerate(payload.files):
         outcome = _prepare_import_file(
             path,
             bucket_id=bucket_id,
@@ -457,12 +496,13 @@ def _compose_staged_imports(
             ports=ports,
             own_accounts=own_accounts,
             remaining_row_capacity=MAX_LEDGER_IMPORT_ROWS - staged_rows,
+            expected_sha256=(None if payload.expected_source_sha256 is None else payload.expected_source_sha256[index]),
         )
         if isinstance(outcome, LedgerImportFileRefusal):
             refusals.append(outcome)
             continue
         staged_rows += len(outcome.source.parsed_rows)
-        staged.append((path, outcome))
+        staged.append((index, path, outcome))
     return ports, staged, refusals
 
 
@@ -471,12 +511,12 @@ def _persist_staged_imports(
     bucket_id: str,
     payload: LedgerImportRequest,
     ports: LedgerImportOperationPorts,
-    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    staged: list[_StagedImport],
     refusals: list[LedgerImportFileRefusal],
 ) -> LedgerImportExecutionResult:
     """Persist staged imports in order and append persistence refusals afterward."""
     files: list[_LedgerImportExecutionFile] = []
-    for path, prepared in staged:
+    for index, path, prepared in staged:
         try:
             result = persist_prepared_ledger_source_import(
                 prepared,
@@ -492,7 +532,14 @@ def _persist_staged_imports(
                 ),
             )
             continue
-        files.append(_LedgerImportExecutionFile(file_name=_safe_file_name(path), result=result))
+        files.append(
+            _LedgerImportExecutionFile(
+                file_name=_safe_file_name(path),
+                file_index=index,
+                source_sha256=parsed_source_sha256(prepared),
+                result=result,
+            )
+        )
     return LedgerImportExecutionResult(
         profile_id=payload.profile_id,
         dry_run=payload.dry_run,
@@ -509,7 +556,7 @@ async def _publish_staged_imports(
     bucket_id: str,
     payload: LedgerImportRequest,
     ports: LedgerImportOperationPorts,
-    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    staged: list[_StagedImport],
     refusals: list[LedgerImportFileRefusal],
 ) -> str:
     """Publish a dry-run or all-refused result without entering COMMIT."""
@@ -532,7 +579,7 @@ async def _commit_staged_imports(
     bucket_id: str,
     payload: LedgerImportRequest,
     ports: LedgerImportOperationPorts,
-    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    staged: list[_StagedImport],
     refusals: list[LedgerImportFileRefusal],
 ) -> str:
     """Settle the irreversible import with UNKNOWN then its measured final effect."""

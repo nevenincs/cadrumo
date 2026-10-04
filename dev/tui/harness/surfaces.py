@@ -258,6 +258,21 @@ def _ledger_own_account_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _ledger_import_account_surfaces() -> tuple[Surface, ...]:
+    """The import screen's own-account binding over a synthetic register."""
+    from .ledger_fixtures import ImportAccountFixtureState, build_import_account_fixture
+
+    return tuple(
+        Surface(
+            f"ledger-import-account-{state.value}",
+            f"Statement import bound to an own account: {state.value}",
+            partial(build_import_account_fixture, state),
+            interfaces=("cadrumo.entrypoints.tui.ledger.import_flow.LedgerImportScreen",),
+        )
+        for state in ImportAccountFixtureState
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
@@ -265,6 +280,7 @@ SURFACES: dict[str, Surface] = {
         *_declarations_surfaces(),
         *_profile_surfaces(),
         *_ledger_own_account_surfaces(),
+        *_ledger_import_account_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

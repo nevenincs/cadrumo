@@ -1896,6 +1896,11 @@ tui:
         Térj vissza a Kezdőlapra a frissítéshez.
       refreshing: Frissítés…
     import:
+      account_label: A kivonathoz tartozó saját bankszámla
+      account_line: 'Számla: %{account}'
+      account_line_unbound: 'Számla: a tételek csak akkor kötődnek, ha a kivonat a
+        te egyik számládat nevezi meg'
+      account_unbound: Kötés a kivonat saját számlaszáma alapján
       again: Másik fájl importálása
       browse: Tallózás
       cancel: Mégse
@@ -1906,11 +1911,15 @@ tui:
         nincs ország oszlop)
       country_required: Add meg a partner országát két betűvel, például ES.
       failure: Az importálás nem fejezhető be.
+      invoice_book_unavailable: Számlakönyvet itt még nem lehet előnézni; importáld
+        az app ledger invoice import paranccsal.
       kind:
         bank_statement: Bankszámlakivonat
         invoices_issued: Kiállított számlák
         invoices_received: Beérkezett számlák
       kind_label: A fájl tartalma
+      nothing_previewed: Az előnézet nem olvasott importálható fájlt, így nincs mit
+        megerősíteni.
       outcome:
         diagnostic: 'Megjegyzés: {message}'
         did_import: 'Importálva: {count}'
@@ -1942,6 +1951,12 @@ tui:
         pdf_n26: N26 PDF-kivonat
         xlsx: Excel-munkafüzet
       provider_label: Kivonat formátuma
+      refusal:
+        own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
+        result_limit: az importálás e fájl előtt elérte a sorkorlátot
+        source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
+          importálásra belőle; nézd meg újra az előnézetet
+        transaction_validation: a fájl nem olvasható kivonatként
       success: 'Importálva: {imported}; kihagyva: {skipped}.'
       title: Tételek importálása
     invoice:

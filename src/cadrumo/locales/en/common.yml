@@ -1862,6 +1862,11 @@ tui:
         to Home to refresh it.
       refreshing: Updating…
     import:
+      account_label: Own bank account the statement belongs to
+      account_line: 'Account: %{account}'
+      account_line_unbound: 'Account: rows bind only where the statement names one
+        of your accounts'
+      account_unbound: Bind by the statement's own account number
       again: Import another file
       browse: Browse
       cancel: Cancel
@@ -1873,11 +1878,15 @@ tui:
       country_required: Enter the counterparty country as two letters, for example
         ES.
       failure: The import could not be completed.
+      invoice_book_unavailable: Invoice books cannot be previewed here yet; import
+        them with app ledger invoice import.
       kind:
         bank_statement: Bank statement
         invoices_issued: Issued invoices
         invoices_received: Received invoices
       kind_label: What the file holds
+      nothing_previewed: The preview read no file that can be imported, so there is
+        nothing to confirm.
       outcome:
         diagnostic: 'Note: {message}'
         did_import: 'Imported: {count}'
@@ -1909,6 +1918,13 @@ tui:
         pdf_n26: N26 PDF statement
         xlsx: Excel workbook
       provider_label: Statement format
+      refusal:
+        own_account_mismatch: the statement names a different account than the one
+          you chose
+        result_limit: the import reached its row limit before this file
+        source_changed: the file changed after its preview, so nothing from it was
+          imported; preview it again
+        transaction_validation: the file could not be read as a statement
       success: Imported {imported}; skipped {skipped}.
       title: Import entries
     invoice:

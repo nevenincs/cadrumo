@@ -1,4 +1,4 @@
-"""Own bank account setup states for reviewing the shipped Ledger screen.
+"""Own bank account setup and import-binding states for reviewing the shipped Ledger screens.
 
 The screen is driven through its own controls over an in-memory register that
 applies each request with the application's own-account logic, so every frame
@@ -19,6 +19,12 @@ from cadrumo.application.ledger.own_account_operation import LedgerOwnAccountReq
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
+from cadrumo.entrypoints.tui.ledger.import_flow import LedgerImportScreen
+from cadrumo.entrypoints.tui.ledger.models import (
+    LedgerImportOutcomeV1,
+    LedgerImportRequestV1,
+    LedgerImportSourceBindingV1,
+)
 from cadrumo.entrypoints.tui.ledger.own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
 from cadrumo.entrypoints.tui.ledger.tests.own_account_fixtures import (
     OWN_ACCOUNT_PROFILE_ID,
@@ -160,9 +166,85 @@ def own_account_fixture_interfaces(_state: OwnAccountFixtureState) -> tuple[str,
     return (_SCREEN_INTERFACE,)
 
 
+class ImportAccountFixtureState(StrEnum):
+    """The reviewable states of the import screen's own-account binding."""
+
+    PICKER = "picker"
+    PREVIEWED = "previewed"
+
+
+class _PreviewOnlyImportDoor:
+    """Answers a preview with synthetic counts and one parsed file; it never writes."""
+
+    async def preview(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        return LedgerImportOutcomeV1(
+            source_kind=request.source_kind,
+            dry_run=True,
+            files=1,
+            rows=12,
+            imported=11,
+            skipped=1,
+            sources=(LedgerImportSourceBindingV1(path=request.path, sha256="0" * 64),),
+        )
+
+    async def apply(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        raise RuntimeError(f"the import review fixture never applies {request.path.name}")
+
+
+class ImportAccountCaptureHost(ScreenHostApp[None]):
+    """Drive the production import screen to one declared, settled review state."""
+
+    def __init__(self, screen: LedgerImportScreen, state: ImportAccountFixtureState) -> None:
+        """Bind the production screen and the state the capture must reach."""
+        super().__init__(screen)
+        self.import_screen = screen
+        self.fixture_state = state
+
+    @override
+    async def on_mount(self, event: Mount | None = None) -> None:
+        if event is not None:
+            event.prevent_default()
+        await super().on_mount()
+        await self._settle()
+        screen = self.import_screen
+        cast("Select[str]", screen.query_one("#ledger-import-account", Select)).value = "acc-02"
+        # Relative paths keep machine-specific folders out of the frame; the preview door reads nothing.
+        screen.query_one("#ledger-import-path", Input).value = "extracto-abril.ofx"
+        if self.fixture_state is ImportAccountFixtureState.PREVIEWED:
+            screen.query_one("#ledger-import-path", Input).value = "."
+            screen.query_one("#ledger-import-preview-button", Button).press()
+            await self._settle()
+            screen.query_one("#ledger-import-preview", Static).scroll_visible(top=True, animate=False, immediate=True)
+
+    async def _settle(self) -> None:
+        for _ in range(5):
+            await asyncio.sleep(0.01)
+        await self.workers.wait_for_complete()
+        await asyncio.sleep(0.01)
+
+
+def build_import_account_fixture(state: ImportAccountFixtureState) -> ImportAccountCaptureHost:
+    """Open the import screen with a seeded own-account register and a preview-only door."""
+    accounts = MemoryOwnAccountDoor()
+    _seed(accounts)
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            import_door=_PreviewOnlyImportDoor(),
+            own_account_door=cast(LedgerOwnAccountDoorV1, accounts),
+        ),
+    )
+    return ImportAccountCaptureHost(LedgerImportScreen(controller), state)
+
+
 __all__ = [
+    "ImportAccountCaptureHost",
+    "ImportAccountFixtureState",
     "OwnAccountCaptureHost",
     "OwnAccountFixtureState",
+    "build_import_account_fixture",
     "build_own_account_fixture",
     "own_account_fixture_interfaces",
 ]
