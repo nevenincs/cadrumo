@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9499321dd3883e165b4829b5111e511cf31a67d6f291f79f144e7ea1dd65c97b'
+body_hash: 'sha256:2e17e91e55300f456f7abae5713ea695cc6ae7753bf61174980441e1af48b070'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -511,6 +511,19 @@ related:
 - `S29` `A` `.logs/audit-runs/2026-10-04/registry-health-repair/m720-authoring-evidence-worklist.md`
 - `S29` `verify:` `just check-registry` -> `fail`
 - `S29` `verify:` `uv run --no-sync pytest -o addopts= -n 0 --strict-markers --strict-config --capture=sys -ra --tb=short --durations=10 --max-worker-restart=0 -q dev/registry/tests/test_variable_envelope.py` -> `pass`
+- `S07` `M` `dev/registry/pipeline/export_field_schema.py`
+- `S07` `M` `dev/registry/pipeline/export_tree_field_derivation.py`
+- `S07` `M` `dev/registry/pipeline/tests/test_export_tree.py`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/0003-record-m360-operaciones.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/_generation.provenance.json`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S07` `A` `src/cadrumo/application/filing/tests/test_modelo_232_page_marker_export.py`
+- `S07` `verify:` `python -m dev.registry.pipeline target-current 360/232x2/353x2` -> `pass`
+- `S07` `verify:` `pytest test_modelo_360_solicitud_export.py test_modelo_232_page_marker_export.py` -> `pass`
 
 ## Notes
 
@@ -628,3 +641,4 @@ related:
 - `S29` Full normal `variable_envelope` file32PASS closes previous6M303 compilation failures. Actual argv including fresh basetemp and exit0 in var/storage/development/.logs/test-runs/2026-10-04/20261004T002052.796042Z-pytest-78432-de5d4599/run.json.
 - `S29` A's registered pinned-P1 completion helper is a one-shot target attempt, not final authority publication or stable whole-batch acceptance. Parsed canonical report acceptance with explicit zero redundancy remains required. M347 maps/tests ownership added to S29; current corrupt singleton regeneration is refused, isolated source-backed map repair authorized before serialized live install.
 - `S29` Read-only M720 remaining wire-authoring worklist preserves official artifact SHA/URL/anchors and exact missing map/profile/producer grammar. It is separate from accepted unused-binding SOURCE closure and does not install or publish720. No legal-review stamp, invented scale, lineage or capability change.
+- `S07` Page-marker fix only: computed blank-admitting page indicators (DR360 pag2 campo 2, DR232 campo 5, DR353 campo 5) republished required=false via temporary `record_drift` dispositions, retired after republish; S07's remaining 111/115/117/122/123 batch is untouched, so S07 stays open.

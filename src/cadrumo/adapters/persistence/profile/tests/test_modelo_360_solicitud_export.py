@@ -3,13 +3,14 @@
 The solicitud facts and refund account are declared through the real
 :class:`Modelo360SolicitudRepository` and read back by the real ``export_modelo_revision``
 through the composed export ports. Página 1's rendering from these facts is asserted at
-DR360's positions in ``application/filing/tests/test_modelo_360_header_export.py``. All
-data is synthetic.
+DR360's positions in ``application/filing/tests/test_modelo_360_header_export.py``; the
+written fichero's página 2 is asserted here against DR360 página 2 (``aeat-dr-360-2010``,
+versión 2.1), transcribed by hand rather than read from the layout under test. All data
+is synthetic.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -34,8 +35,10 @@ from cadrumo.application.filing.producer_snapshot_m360 import (
     Modelo360SolicitudEntry,
     Modelo360SolicitudFacts,
 )
+from cadrumo.application.modelo.action_errors import ModeloRefundAccountMissingError
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import RefundAccount
@@ -84,7 +87,7 @@ def _account() -> RefundAccount:
     return RefundAccount(iban=_SYNTHETIC_IBAN, swift_bic=_SYNTHETIC_BIC)
 
 
-def _seed_360_revision(bucket_id: str) -> str:
+def _seed_360_revision(bucket_id: str, operations: dict[CasillaId, str] | None = None) -> str:
     _, calculation_revision_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -98,6 +101,7 @@ def _seed_360_revision(bucket_id: str) -> str:
             _casilla("devolucion.periodo-fecha-inicio"): f"{_YEAR}-01-01",
             _casilla("devolucion.periodo-fecha-fin"): f"{_YEAR}-12-31",
             _casilla("devolucion.importe-solicitado"): "38.00",
+            **(operations or {}),
         },
     )
     return calculation_revision_id
@@ -113,38 +117,96 @@ def _export(calculation_revision_id: str, output: Path) -> None:
         )
 
 
-def _cause_chain(error: BaseException) -> Iterator[BaseException]:
-    current: BaseException | None = error
-    while current is not None:
-        yield current
-        current = current.__cause__
+#: DR360's two page lengths: página 1 closes with ``</T360010>`` at position 3391 and
+#: página 2 with ``</T360020>`` at position 6391, each ten bytes wide.
+_DR360_PAGINA_1_LENGTH = 3400
+_DR360_PAGINA_2_LENGTH = 6400
 
 
-def test_a_declared_solicitud_passes_the_producer_boundary_and_stops_only_at_page_2(
+def _dr360_slice(page: str, position: int, length: int) -> str:
+    """Read one DR360 campo by its printed 1-based position and width."""
+    return page[position - 1 : position - 1 + length]
+
+
+def _operation_inputs(ordinal: int, *, factura: str, base: str, cuota: str, importe: str) -> dict[CasillaId, str]:
+    prefix = f"decl.op{ordinal}"
+    return {
+        _casilla(f"{prefix}-numero"): str(ordinal),
+        _casilla(f"{prefix}-tipo"): "P",
+        _casilla(f"{prefix}-factura"): factura,
+        _casilla(f"{prefix}-fecha"): f"1503{_YEAR}",
+        _casilla(f"{prefix}-codigo-1"): "1",
+        _casilla(f"{prefix}-base"): base,
+        _casilla(f"{prefix}-cuota"): cuota,
+        _casilla(f"{prefix}-importe"): importe,
+        _casilla(f"{prefix}-divisa"): "EUR",
+        _casilla(f"{prefix}-simplificada"): "0",
+    }
+
+
+def test_a_declared_solicitud_writes_the_fichero_with_a_blank_page_2_marker(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """The persisted solicitud and account satisfy every página 1 producer fact.
+    """An ordinary solicitud writes both pages, página 2 campo 2 left blank.
 
-    The export now gets past the producer snapshot -- the boundary that refused every
-    modelo 360 before the register existed -- and renders until página 2 campo 2. DR360
-    prints that campo "obligatorio, blanco o C", yet the published layout declares it
-    required with no blank, so an ordinary solicitud is refused there. That is a layout
-    defect outside this register; when it is corrected this test must turn into the
-    success assertion on the written fichero.
+    DR360 página 2 campo 2, ``Indicador de página complementaria``, is printed
+    ``obligatorio`` with contenido ``blanco o "C" (compl.)``: the position is always
+    written and blank is one of its two values. An initial solicitud carries no
+    amendment evidence, so the marker is that blank. The operation campos are read back
+    at their printed positions: Num campos zero-filled to width, An campos left-aligned
+    and space-filled, N amounts in cents zero-filled to fifteen digits, the fecha as
+    DDMMAAAA.
     """
     bucket_id = seed_profile(tax_id=_TAX_ID)
-    calculation_revision_id = _seed_360_revision(bucket_id)
+    calculation_revision_id = _seed_360_revision(
+        bucket_id,
+        {
+            **_operation_inputs(1, factura="FAC-2025-0001", base="100.00", cuota="21.00", importe="20.00"),
+            **_operation_inputs(2, factura="FAC-2025-0002", base="90.00", cuota="18.90", importe="18.00"),
+        },
+    )
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(refund_account=_account()))
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
-        _export(calculation_revision_id, output)
+    _export(calculation_revision_id, output)
 
-    causes = list(_cause_chain(exc_info.value))
-    assert "FilingProducerSnapshotError" not in {type(cause).__name__ for cause in causes}
-    assert any("m360-2010.pagina02.f002" in str(cause) for cause in causes)
-    assert not output.exists()
+    fichero = output.read_bytes().decode("iso-8859-1")
+    assert len(fichero) == _DR360_PAGINA_1_LENGTH + _DR360_PAGINA_2_LENGTH
+    pagina_1 = fichero[:_DR360_PAGINA_1_LENGTH]
+    pagina_2 = fichero[_DR360_PAGINA_1_LENGTH:]
+    assert _dr360_slice(pagina_1, 1, 9) == "<T360010>"
+    assert _dr360_slice(pagina_1, 3391, 10) == "</T360010>"
+
+    expected_pagina_2 = {
+        (1, 9): "<T360020>",
+        (10, 1): " ",
+        (11, 5): "00001",
+        (16, 1): " ",
+        (17, 3): "P  ",
+        (20, 50): "FAC-2025-0001".ljust(50),
+        (70, 8): f"1503{_YEAR}",
+        (78, 10): "1".ljust(10),
+        (2698, 15): "000000000010000",
+        (2713, 15): "000000000002100",
+        (2733, 15): "000000000002000",
+        (2748, 3): "EUR",
+        (2751, 1): "0",
+        (3111, 5): "00002",
+        (3117, 3): "P  ",
+        (3120, 50): "FAC-2025-0002".ljust(50),
+        (3170, 8): f"1503{_YEAR}",
+        (5798, 15): "000000000009000",
+        (5813, 15): "000000000001890",
+        (5833, 15): "000000000001800",
+        (5848, 3): "EUR",
+        (5851, 1): "0",
+        (6391, 10): "</T360020>",
+    }
+    actual_pagina_2 = {
+        (position, length): _dr360_slice(pagina_2, position, length) for position, length in expected_pagina_2
+    }
+    assert actual_pagina_2 == expected_pagina_2
 
 
 def test_an_undeclared_solicitud_is_refused_before_any_file_is_written(
@@ -167,17 +229,20 @@ def test_a_solicitud_without_its_refund_account_is_refused(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """DR360 campos 115-116 are obligatorio: undeclared bank data is a refusal, never blanks."""
+    """DR360 campos 115-116 are obligatorio: undeclared bank data is a typed refusal, never blanks.
+
+    Modelo 360 resolves the fixed DEVOLUCION disposition, so the same refund-account
+    gate as every refund export refuses it before the producer snapshot is built.
+    """
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(bucket_id)
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(refund_account=None))
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloRefundAccountMissingError) as exc_info:
         _export(calculation_revision_id, output)
 
-    assert exc_info.value.__cause__ is not None
-    assert "modelo 360 requires a selected refund account" in str(exc_info.value.__cause__)
+    assert get_registered_error_code(exc_info.value).code == "REFUSED_MODELO_REFUND_ACCOUNT_MISSING"
     assert not output.exists()
 
 
