@@ -322,8 +322,10 @@ src/cadrumo/_data/corpus/manuals/**/source.html/
 # starts resolving an undeclared path inside `dev/`.
 
 # Scratch / ad-hoc workspace / temp
-scratch/*
-.scratch-*/
+scratch/
+.scratch/
+.scratch-*
+.scratch_*
 .campaign-runs/
 .vault-scratch/
 .dedup-scan/
@@ -333,10 +335,12 @@ scratch/*
 **/[Tt][Mm][Pp]/
 **/[Tt][Ee][Mm][Pp]/
 **/.[Tt][Mm][Pp]/
+**/.[Tt][Ee][Mm][Pp]/
 **/[Tt][Mm][Pp][-_]*/
 **/[Tt][Ee][Mm][Pp][-_]*/
 **/.[Tt][Mm][Pp][-_]*/
 **/.[Tt][Mm][Pp][-_]*
+**/.[Tt][Ee][Mm][Pp][-_]*
 **/*.[Tt][Mm][Pp]
 **/*.[Tt][Ee][Mm][Pp]
 # A directory named `cache` is a cache, at any depth and under either spelling.
