@@ -5,12 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb9279095614c4ac069f340d2f8163227dc14bbac3750362e93f0dead2e0beb4'
+body_hash: 'sha256:31ed9997f61b2358eb2cefaa9691550b8f3da945e7cc594c572f2ca2154e5eca'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
+  - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `proposed`)
@@ -47,20 +49,31 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 ## Considered options
 
 - **React shell with a cross-origin documentation iframe:** chosen. Terminal sessions and the flyout survive documentation navigation, overlays compose normally, and origin separation keeps documentation scripts away from IPC.
-- **Documentation as the top-level page, with terminals and logs in native child webviews:** rejected. It depends on Tauri's unstable multi-webview feature, nothing can overlay the documentation, and keyboard focus between webviews is fragile.
+- **Documentation as the top-level page, with terminals and logs in native child webviews:** rejected as the primary design, and kept as the contingency if the iframe isolation proof fails. It depends on Tauri's unstable multi-webview feature, nothing can overlay the documentation, and keyboard focus between webviews is fragile.
 - **Documentation embedded in `frontendDist`:** rejected. It means 63,000 files compiled into the binary, and a Rust rebuild for every documentation edit.
 - **Documentation served from the development docs server (port 8788):** rejected. It isn't a packaged artifact, and dev and package would behave differently.
 
 ## Constraints
 
-- The documentation origin gets no IPC, plugin or capability. Tauri 2.12.1 treats every registered custom scheme as a local origin, so it resolves the documentation frame to the same capabilities as the shell. The refusal therefore belongs to the application, through a per-launch shell token:
-  - the host mints the token at startup from at least 32 CSPRNG bytes, and never logs or persists it
-  - it is injected by an initialization script into the top frame only, never into all frames
-  - the shell reads it once from a namespaced, non-enumerable global and keeps it in module scope
-  - every app command takes the token as an argument, or in the `x-cadrumo-token` header for raw-body `terminal_write`, compares it in constant time, and refuses a mismatch with `invalid_arguments`
-  - the shell never posts the token to the iframe and never puts it in a URL or in storage; the bridge envelope never carries it
-  - defence in depth: the documentation CSP `connect-src 'self'` blocks the IPC fetch transport, and no plugin JavaScript command is granted to the webview
-- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused.
+- The documentation origin gets no IPC, plugin or capability. The pinned crates can't enforce this on their own:
+  - Tauri 2.12.1 treats every registered custom scheme as a local origin.
+  - On Windows, wry injects every initialization script into subframes too, ignoring a main-frame-only flag. Tauri's own internals, IPC script and invoke key therefore reach the documentation frame.
+  - The channel fetch command is exempt from the ACL and uses sequential ids.
+
+  The refusal therefore belongs to the application:
+  - **Token minting.** The host mints a per-launch token from at least 32 CSPRNG bytes and never logs or persists it.
+  - **Self-gated script.** The script carrying the token checks at runtime that it is the top frame on the shell origin. It exposes the token once, through a getter that deletes itself. The shell keeps the token in module scope.
+  - **Token checks.** Every app command checks the token in constant time and refuses a mismatch with `invalid_arguments`.
+  - **Shell rules.** The shell never posts the token to the iframe or puts it in a URL or storage, and the bridge envelope never carries it.
+  - **Channel delivery.** A channel interceptor delivers channel data into the top document only. Nothing waits in the fetch queue.
+  - **Documentation CSP.** Every documentation response carries `connect-src 'self'`, which blocks the IPC fetch transport.
+  - **No plugin JavaScript.** No plugin JavaScript command is granted to the webview. The opener, clipboard and menu are reached only through token-checked app commands, and the opener's click interception is off.
+  - **Adversarial proof.** The packaged end-to-end test proves from inside the documentation frame that invoke, the IPC fetch, postMessage IPC, and fetching or consuming channel data are all refused.
+  - **Contingency.** If any delivery is shown, the documentation moves to a separate webview (Tauri multi-webview) in its own decision.
+- The host requires a minimum WebView2 runtime that supports iframe and worker request interception and the settings it disables. It probes the runtime at startup and refuses with a typed error. WebView2 settings go through the platform crate.
+- Origins are computed at runtime: http or https per the platform's scheme setting, the custom-scheme form on Linux, and the dev server URL in development.
+- PTY bytes never enter diagnostics, host logs or the flyout. The flyout shows host events and Python log records only.
+- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused. The shell acts on a bridge `open-external` only while `navigator.userActivation.isActive`, and under a rate limit.
 - The shell never captures F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape or plain keys while a terminal has focus.
 - The log view keeps "available", "missing" and "unreadable" sources distinct from an empty list. It only reads the log and never truncates, rotates or deletes it.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
@@ -96,8 +109,9 @@ We will build the desktop window as a React shell at the app origin that hosts t
 
 - The documentation ships under `P/docs/user/` in the owner's published layout, with English at the top and es/ca/hu under `<lang>/`. The language switcher (`docs/_templates/cadrumo-language-switcher.html:19`) depends on that layout. A docs manifest lists the languages, the entry path for each, a sha256 inventory and the hashes of executing inline scripts. The shell takes entry paths from `desktop_environment` and never builds them itself. The packaging step refuses missing Pagefind output and any remote reference.
 - Documentation is served read-only through the `cadrumo-docs` scheme with path containment, a closed MIME table and its own CSP:
-  - `script-src 'self' 'wasm-unsafe-eval'` plus the manifest hashes
+  - `script-src 'self' 'wasm-unsafe-eval'` plus the manifest hashes. Pagefind needs only `'wasm-unsafe-eval'`, because it instantiates WebAssembly from bytes and runs a classic worker from 'self' with no blob URLs.
   - `connect-src 'self'`
+  - `X-Content-Type-Options: nosniff`
   - `form-action 'self'`
   - `frame-ancestors` set to the shell origin
 - The shell CSP changes `frame-src` to the documentation origin.
@@ -124,12 +138,13 @@ shell to documentation:
 
 **Host IPC** (field names may change during the technical review; the semantics are committed):
 
-- Terminals, at most one live session per kind (`python`, `tui`), over Tauri Channels:
-  - `terminal_open` returns a session and streams raw output plus `started`, `exited` and `failed` events
-  - `terminal_write` takes a raw body
-  - `terminal_ack` is credit backpressure: pause at 512 KiB unacknowledged, resume below 128 KiB
+- Terminals, at most one live session per kind (`python`, `tui`). Every command carries the token.
+  - `terminal_open {kind, cols, rows, output}` returns a session. It streams one Tauri Channel of tagged frames, data plus `started`, `exited` and `failed`, so `exited` can never overtake output.
+  - `terminal_write` takes a raw body, or a bounded JSON byte array once Tauri has fallen back to postMessage. Headers are sent as a plain object. The shell retries `queue_full`.
+  - `terminal_ack` reports a cumulative offset, as credit backpressure: pause at 512 KiB unacknowledged, resume below 128 KiB.
   - `terminal_resize`
-  - `terminal_close` settles before it returns
+  - `terminal_close` settles before it returns.
+  - A reload of the top frame settles or replaces both sessions.
   - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the user's home directory. That is only allowed once the projected storage root is pinned in the child environment (see Constraints). Before that, both kinds start in the same working directory. The interactive interpreter never starts inside the storage root. A relative write such as `open("notes.csv", "w")` would otherwise land a plaintext file inside the custody tree. Private data enters that tree only through approved encrypted custody.
 - Logs:
   - `logs_subscribe` delivers batches of at most ten per second, starting with a 5,000-record backlog from a 10,000-record ring
@@ -138,10 +153,16 @@ shell to documentation:
   - Rust receives the line format from the Python environment query and keeps no copy of its own.
 - Shell commands:
   - `desktop_environment`: output language and documentation origin and languages
-  - `open_external`
-  - `shell_clipboard_read` and `shell_clipboard_write` for text, and `shell_context_menu` for native menus, each a token-checked app command that wraps the plugin or menu Rust API. The menu either returns the chosen item, or returns at once and delivers the selection later under a popup id. That depends on whether the menu library reports a dismissal. The shell needs no dismissal signal, so either form works.
+  - `open_external`, Rust-only through the opener
+  - `shell_clipboard_read` and `shell_clipboard_write` for text
+  - `shell_context_menu {items, x?, y?}`, which returns `{chosen: id | null}`:
+    - Synchronous: the native popup blocks until it closes, and a main-thread sentinel resolves a dismissal as null.
+    - Pointer-opened menus omit x and y, so the menu opens at the cursor.
+    - The keyboard menu key passes a logical position in shell CSS pixels: the iframe rect, plus its border, plus the relayed client coordinates, with no device-pixel scaling.
+    - Item ids are namespaced by the host.
   - window state, Rust-only, with no JavaScript command
   - WebView2 browser accelerator keys and default context menus are disabled.
+- Browser-mode tests of the shell use a stand-in documentation origin.
 
 **Keymap** (shell-owned; reserved from xterm through `attachCustomKeyEventHandler`; relayed from the documentation through the bridge):
 
@@ -157,7 +178,7 @@ shell to documentation:
 | Escape | Close the flyout | Flyout |
 | Enter after exit | Start the session again | Exited terminal |
 
-**Context menus.** The shell describes each menu and its localized labels. A token-checked host command shows it natively at coordinates relayed from the iframe and returns the chosen item. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
+**Context menus.** The shell describes each menu and its localized labels. A token-checked host command shows it natively and returns the chosen item, or null when the menu is dismissed. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
 
 | Target | Items |
 |---|---|
@@ -179,7 +200,7 @@ The iframe shell is the only option that meets three needs together:
 - overlays compose with the documentation
 - documentation scripts are kept from IPC
 
-Origin separation does the third job without the unstable multi-webview feature. Serving from package files follows the size and file count in `2026-10-04-desktop-shell-reference`.
+On Windows the pinned crates reach subframes, so origin separation alone doesn't do the third job. It is done by the self-gated token, top-document channel delivery, and the documentation CSP, and the packaged test proves it adversarially. Separate webviews remain the fallback if that proof fails. Serving from package files follows the size and file count in `2026-10-04-desktop-shell-reference`.
 
 A shell-owned keymap made of Ctrl+Shift chords and the physical Backquote key avoids every key the TUI and REPL bind. Pushed channels with credit backpressure replace polling without dropping output.
 
