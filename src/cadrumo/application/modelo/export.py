@@ -64,6 +64,7 @@ from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
+from ...core.time.clock import MADRID_TZ
 from ...core.time.clock import now as _utc_now
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -81,7 +82,7 @@ from ...domain.calculations.registry.applicability_modelo202 import derive_model
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.deadlines.models import ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
@@ -102,6 +103,13 @@ from ...domain.modelos.errors import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
+from ...domain.transactions.own_accounts import (
+    OwnAccountId,
+    OwnAccountRegister,
+    OwnAccountRegisterError,
+    OwnAccountRole,
+    OwnBankAccount,
+)
 from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
     IvaLedgerAggregation,
@@ -349,6 +357,12 @@ class ModeloExportCommand(BaseModel):
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
             domiciliation. It is required for Modelo 303; non-303 exports
             resolve the neutral ``KEEP`` value internally.
+        charge_account_id: Per-filing choice of the own account AEAT debits for
+            a domiciliación. ``None`` resolves the register's CHARGE
+            designation for the modelo, else its designation for every modelo.
+        refund_account_id: Per-filing choice of the own account AEAT pays a
+            refund into, resolved like ``charge_account_id`` from the REFUND
+            designations when ``None``.
         replace_existing: Whether the operator explicitly chose to replace a
             file already at ``output_path``. An export is the artefact an
             operator carries to AEAT, so destroying an earlier one is never
@@ -366,7 +380,25 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     replace_existing: bool = False
+
+
+class ModeloExportAccountReference(BaseModel):
+    """Which account the exported fichero carries, without any account material.
+
+    Attributes:
+        role: Whether the account page carries a charge or a refund account.
+        own_account_id: The own account resolved for that role, or ``None`` when
+            the account is embedded in the filing's own facts (a modelo 360
+            solicitud's account).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    role: OwnAccountRole
+    own_account_id: OwnAccountId | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -397,6 +429,8 @@ class ModeloExportResult(BaseModel):
             or ``None`` for a modelo whose design carries no disposition.
         payment_election: The semantic positive-result election when applicable.
         refund_election: The semantic negative-result election when applicable.
+        selected_account: The role and own-account identity of the account the
+            fichero carries, or ``None`` when it carries no account.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
         software_identity_grade: Grade of the program identifier and
@@ -427,6 +461,7 @@ class ModeloExportResult(BaseModel):
             election=PriorDomiciliationElection.KEEP,
         ),
     )
+    selected_account: ModeloExportAccountReference | None = None
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
@@ -771,6 +806,156 @@ def _require_m303_regimen_simplificado_scope_matches_profile(
         )
 
 
+class _ResolvedOwnAccount(NamedTuple):
+    """One role's own account as resolved for the filing, or why it cannot serve."""
+
+    account: OwnBankAccount | None
+    unavailable_reason: str | None = None
+
+
+class _ExportAccounts(NamedTuple):
+    """The charge and refund own accounts one export may place on its account page."""
+
+    charge: _ResolvedOwnAccount
+    refund: _ResolvedOwnAccount
+
+
+def _resolve_own_account(
+    register: OwnAccountRegister,
+    *,
+    role: OwnAccountRole,
+    modelo: Modelo,
+    explicit_id: str | None,
+    on: date,
+    context: Mapping[str, object],
+) -> _ResolvedOwnAccount:
+    """Resolve ``role``: the per-filing choice, else the modelo designation, else the ALL one.
+
+    An explicit choice is the operator's deliberate instruction, so an unknown or
+    closed account refuses at once. A designated account that is closed on the
+    export date is only unavailable: the export refuses when the role is needed.
+    """
+    if explicit_id is not None:
+        try:
+            account = register.account(explicit_id)
+        except OwnAccountRegisterError as exc:
+            raise _missing_account_error(
+                role, context={**context, "reason": "own_account_unregistered", "own_account_id": explicit_id}
+            ) from exc
+        if not account.open_on(on):
+            raise _missing_account_error(
+                role, context={**context, "reason": "own_account_closed", "own_account_id": explicit_id}
+            )
+        return _ResolvedOwnAccount(account=account)
+    designated = register.designated(role, modelo)
+    if designated is None:
+        return _ResolvedOwnAccount(account=None)
+    if not designated.open_on(on):
+        return _ResolvedOwnAccount(account=designated, unavailable_reason="own_account_closed")
+    return _ResolvedOwnAccount(account=designated)
+
+
+def _missing_account_error(
+    role: OwnAccountRole, *, context: Mapping[str, object]
+) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
+    if role is OwnAccountRole.CHARGE:
+        return ModeloChargeAccountMissingError(
+            "a domiciliacion export requires a charge account on file",
+            context=dict(context),
+        )
+    return ModeloRefundAccountMissingError(
+        "the export's account page requires a refund account on file",
+        context=dict(context),
+    )
+
+
+def _unavailable_context(context: Mapping[str, object], resolved: _ResolvedOwnAccount) -> dict[str, object]:
+    """Name why a designated account cannot serve, by its opaque id only."""
+    if resolved.account is None or resolved.unavailable_reason is None:
+        return dict(context)
+    return {**context, "reason": resolved.unavailable_reason, "own_account_id": resolved.account.own_account_id}
+
+
+def _resolve_export_accounts(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    export_ports: ModeloExportPorts,
+    exported_at: datetime,
+) -> _ExportAccounts:
+    """Resolve the filing's charge and refund own accounts from the ledger register.
+
+    The one resolution point at the export boundary: every modelo's account page
+    reads the same register, and which account it carries follows the resolved
+    disposition, never the modelo's name.
+    """
+    register = export_ports.own_accounts.load()
+    modelo = Modelo(str(work_unit.modelo))
+    on = exported_at.astimezone(MADRID_TZ).date()
+    context = {"calculation_revision_id": command.calculation_revision_id}
+    return _ExportAccounts(
+        charge=_resolve_own_account(
+            register,
+            role=OwnAccountRole.CHARGE,
+            modelo=modelo,
+            explicit_id=command.charge_account_id,
+            on=on,
+            context=context,
+        ),
+        refund=_resolve_own_account(
+            register,
+            role=OwnAccountRole.REFUND,
+            modelo=modelo,
+            explicit_id=command.refund_account_id,
+            on=on,
+            context=context,
+        ),
+    )
+
+
+def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:
+    if resolved.account is None or resolved.unavailable_reason is not None:
+        return None
+    return ChargeAccount(iban=resolved.account.iban)
+
+
+def _refund_account_projection(resolved: _ResolvedOwnAccount) -> RefundAccount | None:
+    account = resolved.account
+    if account is None or resolved.unavailable_reason is not None:
+        return None
+    return RefundAccount(
+        iban=account.iban,
+        swift_bic=account.swift_bic,
+        bank_name=account.bank_name,
+        bank_address=account.bank_address,
+        bank_city=account.bank_city,
+        bank_country_code=account.bank_country_code,
+    )
+
+
+def _selected_account_reference(
+    producer_snapshot: FilingProducerSnapshot,
+    *,
+    accounts: _ExportAccounts,
+    embedded_refund_account: bool,
+) -> ModeloExportAccountReference | None:
+    """Name the carried account by role and opaque identity, never by its material."""
+    selected = producer_snapshot.selected_account
+    if selected is None:
+        return None
+    if selected.role == "charge":
+        charge = accounts.charge.account
+        return ModeloExportAccountReference(
+            role=OwnAccountRole.CHARGE,
+            own_account_id=None if charge is None else charge.own_account_id,
+        )
+    refund = None if embedded_refund_account else accounts.refund.account
+    return ModeloExportAccountReference(
+        role=OwnAccountRole.REFUND,
+        own_account_id=None if refund is None else refund.own_account_id,
+    )
+
+
 def _build_export_producer_snapshot(
     *,
     command: ModeloExportCommand,
@@ -780,6 +965,7 @@ def _build_export_producer_snapshot(
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
     amendment_evidence: AmendmentEvidence | None,
+    accounts: _ExportAccounts,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> FilingProducerSnapshot:
@@ -793,17 +979,19 @@ def _build_export_producer_snapshot(
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
         m360_solicitud = _require_m360_solicitud(modelo=modelo, work_unit=work_unit, export_ports=export_ports)
-        # The solicitud's own account, never the profile's IVA refund account:
+        # The solicitud's own account, never the register's refund designation:
         # DR360 campo 114 lets it be the representante's.
         if m360_solicitud is not None:
             refund_account = m360_solicitud.refund_account
         else:
-            refund_account = iva_profile.refund_account if iva_profile is not None else None
+            refund_account = _refund_account_projection(accounts.refund)
+        charge_account = _charge_account_projection(accounts.charge)
         nota_three_refund_account = _require_export_accounts(
             command,
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=workflow_profile,
+            accounts=accounts,
+            charge_account=charge_account,
             refund_account=refund_account,
             resolved_result_disposition=resolved_result_disposition,
             prior_domiciliation_election=prior_domiciliation_election.election,
@@ -837,7 +1025,7 @@ def _build_export_producer_snapshot(
             ),
             amendment_evidence=amendment_evidence,
             refund_account=refund_account,
-            charge_account=iva_profile.charge_account if iva_profile is not None else None,
+            charge_account=charge_account,
             account_page_refund_account=account_page_refund_account,
             m303_filing_facts=m303_filing_facts,
             # Read separately from the identity pair: AEAT's "persona con quien
@@ -885,8 +1073,8 @@ def _m303_nota_three_requires_refund_account(
 
 
 def _export_refund_account_is_missing(refund_account: RefundAccount | None) -> bool:
-    """Require a present refund account with its IBAN or SWIFT/BIC identity."""
-    return refund_account is None or not (refund_account.iban or refund_account.swift_bic)
+    """Require a present refund account with its IBAN, the identity every account page renders."""
+    return refund_account is None or refund_account.iban is None
 
 
 def _require_export_accounts(
@@ -894,7 +1082,8 @@ def _require_export_accounts(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
+    accounts: _ExportAccounts,
+    charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElection,
@@ -906,15 +1095,10 @@ def _require_export_accounts(
     account page even though the disposition itself is not a refund: a
     rectificativa stating casilla 111 under a kept prior domiciliation.
     """
-    iva_profile = workflow_profile.iva
-    context = {"calculation_revision_id": command.calculation_revision_id}
+    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id}
     if resolved_result_disposition is ResultDisposition.DOMICILIACION:
-        charge_account = iva_profile.charge_account if iva_profile is not None else None
         if charge_account is None:
-            raise ModeloChargeAccountMissingError(
-                "a domiciliacion export requires a charge account on file",
-                context=context,
-            )
+            raise _missing_account_error(OwnAccountRole.CHARGE, context=_unavailable_context(context, accounts.charge))
         require_admissible_charge_account(work_unit=work_unit, charge_account=charge_account)
         return False
     nota_three = _m303_nota_three_requires_refund_account(
@@ -922,10 +1106,7 @@ def _require_export_accounts(
     )
     refund = resolved_result_disposition is not None and result_disposition_is_refund(resolved_result_disposition)
     if (refund or nota_three) and _export_refund_account_is_missing(refund_account):
-        raise ModeloRefundAccountMissingError(
-            "the export's account page requires a refund account on file",
-            context=context,
-        )
+        raise _missing_account_error(OwnAccountRole.REFUND, context=_unavailable_context(context, accounts.refund))
     return nota_three and not refund
 
 
@@ -1122,6 +1303,12 @@ def _persist_exported_draft(
     operation: PinnedAuthorityOperation,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportResult:
+    accounts = _resolve_export_accounts(
+        command,
+        work_unit=work_unit,
+        export_ports=export_ports,
+        exported_at=exported_at,
+    )
     resolved_result_disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
@@ -1138,8 +1325,14 @@ def _persist_exported_draft(
         resolved_result_disposition=resolved_result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,
         amendment_evidence=amendment_evidence,
+        accounts=accounts,
         export_ports=export_ports,
         operation=operation,
+    )
+    selected_account = _selected_account_reference(
+        producer_snapshot,
+        accounts=accounts,
+        embedded_refund_account=str(work_unit.modelo) == Modelo("360").value,
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
@@ -1186,6 +1379,7 @@ def _persist_exported_draft(
             iva_wallet_provenance=iva_wallet_provenance,
             resolved_result_disposition=resolved_result_disposition,
             prior_domiciliation_election=prior_domiciliation_election,
+            selected_account=selected_account,
             exported_at=exported_at,
             bucket_event_repository=export_ports.bucket_event,
         )
@@ -1248,6 +1442,7 @@ def _persist_exported_draft(
             else None
         ),
         prior_domiciliation_election=prior_domiciliation_election,
+        selected_account=selected_account,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
         software_identity_grade=None if software_identity is None else software_identity.grade,
@@ -1303,6 +1498,7 @@ def _emit_export_event(
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
+    selected_account: ModeloExportAccountReference | None,
     exported_at: datetime,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> BucketEvent:
@@ -1343,6 +1539,12 @@ def _emit_export_event(
     }:
         event_payload["refund_election"] = command.refund_election.value
     event_payload["prior_domiciliation_election"] = prior_domiciliation_election.election.value
+    if selected_account is not None:
+        # The role and the opaque register id only: account material never
+        # reaches the event catalogue.
+        event_payload["selected_account_role"] = selected_account.role.value
+        if selected_account.own_account_id is not None:
+            event_payload["selected_own_account_id"] = selected_account.own_account_id
     if prior_domiciliation_election.baseline_filing_record_id is not None:
         event_payload["prior_domiciliation_baseline_filing_record_id"] = (
             prior_domiciliation_election.baseline_filing_record_id
@@ -1757,6 +1959,7 @@ def export_modelo_revision(
 
 
 __all__ = [
+    "ModeloExportAccountReference",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportEvidenceMissingError",

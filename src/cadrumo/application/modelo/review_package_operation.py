@@ -34,6 +34,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -83,6 +84,8 @@ class ModeloReviewPackageBuildRequest(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     notes: ReviewPackageNote = ""
 
     @model_validator(mode="after")
@@ -269,6 +272,8 @@ class ModeloReviewPackageBuildExecutor:
                             refund_election=payload.refund_election,
                             payment_election=payload.payment_election,
                             prior_domiciliation_election=payload.prior_domiciliation_election,
+                            charge_account_id=payload.charge_account_id,
+                            refund_account_id=payload.refund_account_id,
                         ),
                         workflow_profile=workflow_profile,
                         operation=context.authority_operation,

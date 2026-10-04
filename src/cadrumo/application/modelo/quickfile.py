@@ -59,6 +59,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..auth.operator_probe_ports import OperatorProbePorts
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..operator_actions.models import PreconditionVerdict
@@ -192,6 +193,8 @@ class QuickfileCommand(BaseModel):
         actor: Operator label recorded into each stage's lifecycle event.
         refund_election: Per-filing negative-result disposition threaded into the
             export's fichero declaration type.
+        charge_account_id: Per-filing charge own account for the export.
+        refund_account_id: Per-filing refund own account for the export.
     """
 
     model_config = _STRICT_FROZEN
@@ -206,6 +209,8 @@ class QuickfileCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     filing_instance_evidence: FilingInstanceEvidence | None = None
 
 
@@ -581,6 +586,8 @@ def _run_export_stage(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
+                charge_account_id=command.charge_account_id,
+                refund_account_id=command.refund_account_id,
             ),
             workflow_profile=context.workflow_profile,
             export_ports=context.modelo_export_ports,

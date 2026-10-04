@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:16c56bf62222f0ddb834b836fe8d4f484d8031daea01a490feddfeb5bb1d7751'
+body_hash: 'sha256:73fb93d75e44f25ca84ac90fc07a9934b19b0b0bba261552809f88d603e5950e'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -55,7 +55,7 @@ Links transactions to own accounts at import and manual entry, removes cross-acc
 
 Resolves charge and refund accounts from the register at the export boundary for every consuming modelo and enforces the grounded domiciliacion and refund rules.
 
-- [ ] `P03.S09` - resolve charge and refund accounts from the register through ModeloExportPorts with per-filing charge-account and refund-account overrides, delete the ModeloIVAProfile account fields, align the refund check to IBAN, and record role and own_account_id in receipts and events; `src/cadrumo/application/modelo/export.py, src/cadrumo/application/filing/producer_snapshot.py, src/cadrumo/domain/deadlines/models.py, profiles.py, src/cadrumo/entrypoints/adapter_composition.py`.
+- [x] `P03.S09` - resolve charge and refund accounts from the register through ModeloExportPorts with per-filing charge-account and refund-account overrides, delete the ModeloIVAProfile account fields, align the refund check to IBAN, and record role and own_account_id in receipts and events; `src/cadrumo/application/modelo/export.py, src/cadrumo/application/filing/producer_snapshot.py, src/cadrumo/domain/deadlines/models.py, profiles.py, src/cadrumo/entrypoints/adapter_composition.py`.
 - [x] `P03.S10` - replace the 303-only domiciliacion branch with the declared disposition keys of each modelo and refuse a non-ES charge account with a typed capability refusal; `src/cadrumo/core/result_disposition.py, src/cadrumo/application/modelo/result_disposition_resolution.py`.
 - [ ] `P03.S11` - refuse U after the window payment_cutoff_on in Europe/Madrid and add an advisory where no cutoff is declared, with a registered refusal code and locales; `src/cadrumo/application/modelo/export.py, src/cadrumo/core/errors/registry/, src/cadrumo/locales/*/errors.yml`.
 - [ ] `P03.S12` - derive D versus X from the selected refund account country and prove 303 U, D, X and Nota 3 DID bytes against the design offsets; `src/cadrumo/application/modelo/result_disposition_resolution.py, src/cadrumo/application/modelo/tests/`.

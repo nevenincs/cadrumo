@@ -406,6 +406,7 @@ def build_modelo_export_ports(
     from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -445,6 +446,10 @@ def build_modelo_export_ports(
             objects=objects,
         ),
         m360_solicitud=Modelo360SolicitudRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
+        own_accounts=OwnAccountRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),

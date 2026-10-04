@@ -1063,7 +1063,6 @@ class FilingProducerSnapshot(BaseModel):
     def _validate_model_profile(self) -> FilingProducerSnapshot:
         _validate_snapshot_model_profile(self)
         _validate_snapshot_account_selection(self)
-        _validate_snapshot_profile_secrecy(self)
         return self
 
 
@@ -1240,20 +1239,6 @@ def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
     )
 
 
-def _validate_snapshot_profile_secrecy(snapshot: FilingProducerSnapshot) -> None:
-    profile_iva = _profile_iva(snapshot.model_profile)
-    if profile_iva is not None and (profile_iva.refund_account is not None or profile_iva.charge_account is not None):
-        raise ValueError("model profile must not retain accounts outside selected_account")
-
-
-def _profile_iva(model_profile: FilingModelProfileFacts) -> ModeloIVAProfile | None:
-    if isinstance(model_profile, ModeloIVAProfile):
-        return model_profile
-    if isinstance(model_profile, Modelo202ProducerProfile):
-        return model_profile.taxpayer_profile.iva
-    return None
-
-
 def _registered_snapshot_refusal(error: ValueError) -> FilingProducerSnapshotError | None:
     """Return the typed refusal a snapshot validator raised, if it raised one.
 
@@ -1297,7 +1282,6 @@ def build_filing_producer_snapshot(
     ``account_page_refund_account`` selects the refund account although the
     disposition is not a refund: Modelo 303 Nota 3, and every modelo 360 solicitud.
     """
-    safe_model_profile = _without_embedded_accounts(model_profile)
     selected_account = _select_filing_account(
         elections,
         refund_account=refund_account,
@@ -1310,7 +1294,7 @@ def build_filing_producer_snapshot(
             taxpayer_tax_id=taxpayer_tax_id,
             taxpayer_identity=taxpayer_identity,
             presenter=presenter,
-            model_profile=safe_model_profile,
+            model_profile=model_profile,
             elections=elections,
             amendment_evidence=amendment_evidence,
             selected_account=selected_account,
@@ -1340,23 +1324,10 @@ def _select_filing_account(
     if account_page_refund_account:
         # Modelo 303 Nota 3 and modelo 360: the account page carries the refund
         # account even though the disposition itself is not a refund.
-        if refund_account is None:
+        if refund_account is None or refund_account.iban is None:
             raise FilingProducerSnapshotError("the account page requires a refund account")
         return RefundAccountSelection(role="refund", account=refund_account)
     return None
-
-
-def _without_embedded_accounts(model_profile: FilingModelProfileFacts) -> FilingModelProfileFacts:
-    if isinstance(model_profile, ModeloIVAProfile):
-        return model_profile.model_copy(update={"refund_account": None, "charge_account": None})
-    if isinstance(model_profile, Modelo202ProducerProfile):
-        taxpayer_profile = model_profile.taxpayer_profile
-        if taxpayer_profile.iva is None:
-            return model_profile
-        safe_iva = taxpayer_profile.iva.model_copy(update={"refund_account": None, "charge_account": None})
-        safe_taxpayer = taxpayer_profile.model_copy(update={"iva": safe_iva})
-        return model_profile.model_copy(update={"taxpayer_profile": safe_taxpayer})
-    return model_profile
 
 
 __all__ = [

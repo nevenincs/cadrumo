@@ -29,6 +29,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.transactions.own_accounts import OwnAccountRegister
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
@@ -41,6 +42,14 @@ class Modelo360SolicitudRegisterReaderProtocol(Protocol):
 
     def load(self) -> Modelo360SolicitudRegister:
         """Return the register, empty when no solicitud was ever declared."""
+        ...
+
+
+class OwnAccountRegisterReaderProtocol(Protocol):
+    """Read the encrypted register of the taxpayer's own bank accounts."""
+
+    def load(self) -> OwnAccountRegister:
+        """Return the register, empty when no own account was ever entered."""
         ...
 
 
@@ -65,6 +74,8 @@ class ModeloExportPorts:
     prorrata_register: ProrrataRegisterRepositoryProtocol
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
     m360_solicitud: Modelo360SolicitudRegisterReaderProtocol
+    own_accounts: OwnAccountRegisterReaderProtocol
+    """The own-account register every charge and refund account is resolved from."""
     transaction: TransactionCatalogueRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
@@ -94,4 +105,5 @@ __all__ = [
     "Modelo360SolicitudRegisterReaderProtocol",
     "ModeloExportPorts",
     "ModeloExportPortsFactory",
+    "OwnAccountRegisterReaderProtocol",
 ]

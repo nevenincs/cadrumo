@@ -3,8 +3,7 @@
 The refund and charge accounts are financial identity data. When one is
 refused, the error names the account and the broken rule, never the value, so
 neither the rendered message, the error context, nor the registered cause
-carries it -- whether the account is validated alone or inside the profile
-that holds it.
+carries it.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ from collections.abc import Callable
 import pytest
 from pydantic import ValidationError
 
-from ..models import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, Schedule, TaxpayerProfile
+from ..models import ChargeAccount, RefundAccount, Schedule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -38,23 +37,9 @@ def _texts(error: ValidationError) -> tuple[str, ...]:
     return tuple(texts)
 
 
-def _profile_with(refund_iban: str) -> TaxpayerProfile:
-    return TaxpayerProfile.model_validate(
-        {
-            "tax_id": "X1234567L",
-            "iva_regime": IVARegime("GENERAL"),
-            "iva": {"tax_territory": "comun", "refund_account": {"iban": refund_iban}},
-        }
-    )
-
-
 _BUILDERS: dict[str, Callable[[str], object]] = {
     "refund account": lambda iban: RefundAccount(iban=iban),
     "charge account": lambda iban: ChargeAccount(iban=iban),
-    "refund account inside the iva profile": lambda iban: ModeloIVAProfile.model_validate(
-        {"tax_territory": "comun", "refund_account": {"iban": iban}}
-    ),
-    "refund account inside the taxpayer profile": _profile_with,
 }
 
 
@@ -82,8 +67,8 @@ def test_a_valid_iban_is_still_accepted_and_canonicalised() -> None:
     assert ChargeAccount(iban=valid).iban == "ES9121000418450200051332"
 
 
-def test_a_refused_schedule_never_echoes_the_profile_account() -> None:
-    """A schedule is refused with its whole input in hand; the profile's account is not echoed."""
+def test_a_refused_schedule_never_echoes_an_account_submitted_with_its_profile() -> None:
+    """A schedule is refused with its whole input in hand; an account in that input is not echoed."""
     valid = "ES9121000418450200051332"
 
     with pytest.raises(ValidationError) as caught:

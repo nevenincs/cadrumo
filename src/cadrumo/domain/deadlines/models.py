@@ -167,18 +167,17 @@ class RefundAccount(BaseModel):
 
     Refund-only. AEAT's DR303 position 23 is a single dual-purpose field
     labelled ``Domiciliación/Devolución - IBAN``, so the record has somewhere to
-    state a charge account too -- but this profile carries no separate charge
-    account, and the export path must not infer one by reusing this account for
-    a domiciliación del ingreso: nominating an account to RECEIVE a refund is
-    not an authorisation to DEBIT it. The export path refuses that election
-    unconditionally rather than make the inference.
+    state a charge account too -- but the export path must not infer a charge
+    account by reusing this account for a domiciliación del ingreso: nominating
+    an account to RECEIVE a refund is not an authorisation to DEBIT it. The
+    charge account is the separate :class:`ChargeAccount`.
 
     Groups the IBAN with the foreign-bank block used for a non-SEPA
-    account. Every field is sensitive financial identity data: per the
-    ``sensitive-financial-data-secure-storage-only`` invariant it lives
-    only in the encrypted secure-object store (``sensitivity="financial"``
-    on the profile schema), is read transiently into memory at export
-    time, and is never written to plaintext, logs, or a side store.
+    account. Every field is sensitive financial identity data: it is the
+    export-time projection of an own account held in the encrypted ledger
+    own-account register (or, for a modelo 360 solicitud, of the account the
+    solicitud embeds), is read transiently into memory at export time, and is
+    never written to plaintext, logs, or a side store.
 
     The IBAN is validated structurally at this boundary — country code,
     check digits, BBAN length, and the ISO 13616 mod-97 residue — so a
@@ -227,7 +226,7 @@ class RefundAccount(BaseModel):
 
 
 class ChargeAccount(BaseModel):
-    """The cuenta de cargo AEAT may debit for a Modelo 303 domiciliación.
+    """The cuenta de cargo AEAT may debit for a domiciliación del ingreso.
 
     This is deliberately distinct from :class:`RefundAccount`.  The DR303 DID
     page has one IBAN position labelled ``Domiciliación/Devolución - IBAN``,
@@ -236,9 +235,9 @@ class ChargeAccount(BaseModel):
     contains exactly the affirmative debit instruction the operator recorded:
     one IBAN and no refund-only SWIFT, foreign-bank, or SEPA-mark fields.
 
-    Like the refund account, this financial identity data exists only in the
-    encrypted secure-object store and is read transiently when the export is
-    composed.  It is never logged or copied to a plaintext side store.
+    Like the refund account, this financial identity data is projected from
+    the encrypted ledger own-account register and is read transiently when the
+    export is composed.  It is never logged or copied to a plaintext side store.
 
     Attributes:
         iban: The authorised debit-account IBAN, canonicalised to the ISO 13616
@@ -357,15 +356,6 @@ class ModeloIVAProfile(BaseModel):
             status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
-        refund_account: The encrypted cuenta-devolución refund account
-            AEAT pays a Modelo 303 refund into. ``None`` when no refund
-            account is on file; a refund disposition with no refund
-            account is refused at export rather than emitting an empty
-            DID block.
-        charge_account: The encrypted cuenta de cargo AEAT may debit when
-            the operator elects domiciliación del ingreso. It is intentionally
-            separate from ``refund_account``; a U export with no recorded
-            charge account is refused rather than reusing a refund destination.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -382,8 +372,6 @@ class ModeloIVAProfile(BaseModel):
     cash_accounting_regime_enrolled: bool
     voluntary_sii_enrolled: bool
     hydrocarbon_deposit_advance_payment_deduction_entitled: bool
-    refund_account: RefundAccount | None = None
-    charge_account: ChargeAccount | None = None
 
     @field_validator("tax_territory", "regime_composition", mode="before")
     @classmethod

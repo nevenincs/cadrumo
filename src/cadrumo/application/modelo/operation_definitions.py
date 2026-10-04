@@ -1307,6 +1307,8 @@ class ModeloExportExecutor:
                 refund_election=payload.refund_election,
                 payment_election=payload.payment_election,
                 prior_domiciliation_election=payload.prior_domiciliation_election,
+                charge_account_id=payload.charge_account_id,
+                refund_account_id=payload.refund_account_id,
                 replace_existing=payload.replace_existing,
             ),
             workflow_profile=workflow_profile,

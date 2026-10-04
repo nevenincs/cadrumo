@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.own_accounts import OwnAccountRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -108,6 +109,7 @@ def _compose_modelo_export_ports(
         prorrata_register=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
         bienes_inversion=BienesInversionIvaRegisterRepository(bucket_id=bucket_id, objects=objects),
         m360_solicitud=Modelo360SolicitudRepository(bucket_id=bucket_id, objects=objects),
+        own_accounts=OwnAccountRepository(bucket_id=bucket_id, objects=objects),
         transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         draft_review_ports=_draft_review_ports_for_test(bucket_id=bucket_id, objects=objects),
         retencion_observation_ports=RetencionObservationPorts(

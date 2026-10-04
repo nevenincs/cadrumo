@@ -1019,8 +1019,6 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        refund_account=refund_account,
-        charge_account=charge_account,
     )
     refund_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
@@ -1036,8 +1034,6 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     )
     assert isinstance(refund_snapshot.selected_account, RefundAccountSelection)
     assert isinstance(refund_snapshot.model_profile, ModeloIVAProfile)
-    assert refund_snapshot.model_profile.refund_account is None
-    assert refund_snapshot.model_profile.charge_account is None
     assert _REFUND_IBAN in refund_snapshot.model_dump_json()
     assert _CHARGE_IBAN not in refund_snapshot.model_dump_json()
     refund_values = filing_producer_values(refund_snapshot)

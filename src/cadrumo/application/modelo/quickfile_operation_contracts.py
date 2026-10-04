@@ -18,6 +18,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
@@ -66,6 +67,8 @@ class QuickfileRequest(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None
     inputs: QuickfileCalculationInputs = QuickfileCalculationInputs()
     detail_rows: tuple[ModeloDetailRowWireV1, ...] = Field(default=(), max_length=20_000)

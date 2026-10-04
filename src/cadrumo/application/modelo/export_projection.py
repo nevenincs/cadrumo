@@ -26,7 +26,7 @@ from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
-from .export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
 
 
 class ModeloPriorDomiciliationPublicProvenance(BaseModel):
@@ -128,6 +128,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     payment_election: PaymentElection | None
     refund_election: RefundElection | None
     prior_domiciliation_election: ModeloPriorDomiciliationPublicProvenance
+    selected_account: ModeloExportAccountReference | None = None
     casilla_provenance: tuple[ModeloCasillaProvenance, ...]
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None
     local_evidence_status: str = Field(min_length=1)
@@ -158,6 +159,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             prior_domiciliation_election=ModeloPriorDomiciliationPublicProvenance.from_provenance(
                 result.prior_domiciliation_election
             ),
+            selected_account=result.selected_account,
             casilla_provenance=result.casilla_provenance,
             iva_wallet_decision_provenance=(
                 ModeloIvaWalletDecisionPublicProvenance.from_provenance(result.iva_wallet_decision_provenance)
@@ -190,6 +192,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             payment_election=self.payment_election,
             refund_election=self.refund_election,
             prior_domiciliation_election=self.prior_domiciliation_election.to_provenance(),
+            selected_account=self.selected_account,
             casilla_provenance=self.casilla_provenance,
             iva_wallet_decision_provenance=(
                 self.iva_wallet_decision_provenance.to_provenance()

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4b74661c997303d91d775150bd2d00598464e1ee50dbfdbcaf23b5147172fb7'
+body_hash: 'sha256:52e5f53b7448e4c0f68e86e73e3e5951595562587da189528d79136dac5e10b2'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -149,6 +149,33 @@ related:
 - `S04` `verify:` `ty on touched files` -> `pass`
 - `S04` `verify:` `python -m dev.locales audit` -> `pass`
 - `S04` `by:` `lane-a`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S09` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S09` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S09` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile_operation_contracts.py`
+- `S09` `M` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_export_contracts.py`
+- `S09` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S09` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S09` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S09` `M` `src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py`
+- `S09` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S09` `M` `src/cadrumo/domain/deadlines/tests/test_account_iban_redaction.py`
+- `S09` `M` `dev/registry/tests/test_m303_did_account_wire_isolated_authority.py`
+- `S09` `M` `dev/registry/pipeline/tests/test_m303_generated_envelope_proof.py`
+- `S09` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S09` `verify:` `pytest application/modelo, application/filing, domain/deadlines, adapters/persistence/profile, entrypoints/tests/profile_persistence (no new failures vs pre-edit baseline of 62 failed + 4 errors; 6 baseline failures now pass)` -> `pass`
+- `S09` `verify:` `pytest export CLI surface parity + export verb + payer fact declarations (55 passed)` -> `pass`
+- `S09` `verify:` `pytest dev/registry m303 DID wire + generated envelope proof (5 failures: envelope language-role and tampered-occurrence checks, unrelated to accounts)` -> `fail`
+- `S09` `verify:` `ruff check + ruff format on touched files` -> `pass`
+- `S09` `verify:` `ty on touched files` -> `pass`
+- `S09` `verify:` `just check-import-boundaries (15/15 contracts kept; pre-existing dev/docs/serve_languages.py re-export and stale load-target metadata)` -> `fail`
+- `S09` `by:` `lane-d`
 
 ## Notes
 
@@ -159,3 +186,4 @@ related:
 - `S14` docs goldens how-to/modelo-100 and modelo-349 recorded the fabricated I disposition and need a refresh after the authority is republished
 - `S03` ty on `operation_composition.py` reports one missing-argument diagnostic from Lane B's uncommitted import-ports change, not this Step.
 - `S04` CLI spec set: 643 passed; the remaining failures are environmental or other lanes (OS keyring logon-session probe, `runtime_unavailable,` ledger import surface). The CLI reference regeneration belongs to P06a.S25; import-load-target metadata regeneration is left for the shared gate owner.
+- `S09` per-filing --charge-account/--refund-account CLI options are left to P06a.S23 (Lane F owns entrypoints/cli); the request, command and operation models carry the overrides

@@ -252,7 +252,7 @@ class _OverriddenPayerFacts:
         ),
         pytest.param(
             f"payer_fact.{_SII_FACT}.any_of_profile_keys",
-            "iva.sii_enrolled|iva.refund_account",
+            "iva.sii_enrolled|iva.tax_territory",
             "must be a boolean profile field",
             id="derived-key-not-boolean",
         ),

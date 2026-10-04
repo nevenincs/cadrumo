@@ -13,6 +13,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.models import CredentialFreeOperationRequest
 from .calculation_report_export import (
     ModeloCalculationReportResult,
@@ -42,6 +43,10 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    #: Per-filing own-account choices by opaque register id; ``None`` resolves
+    #: the register's designations. Account material never enters the request.
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     #: Whether the operator chose to replace a file already at ``output_path``;
     #: without that choice an existing file refuses the export.
     replace_existing: bool = False

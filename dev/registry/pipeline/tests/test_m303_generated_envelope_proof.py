@@ -269,8 +269,8 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         model_profile=taxpayer.iva,
         elections=m303_did._elections(ResultDisposition.DEVOLUCION),
         amendment_evidence=None,
-        refund_account=taxpayer.iva.refund_account,
-        charge_account=taxpayer.iva.charge_account,
+        refund_account=m303_did._REFUND_ACCOUNT,
+        charge_account=m303_did._CHARGE_ACCOUNT,
         m303_filing_facts=facts,
     )
     return snapshot, producer
