@@ -3,6 +3,7 @@ mod clipboard;
 mod external;
 mod interrupts;
 mod menu;
+pub mod single_instance;
 pub mod token;
 #[cfg(windows)]
 pub mod webview;
@@ -13,7 +14,7 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Opera
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::{
-    AppHandle, Config, Manager, RunEvent, Runtime, State, Webview,
+    AppHandle, Config, Manager, RunEvent, Runtime, State, Webview, WindowEvent,
     plugin::TauriPlugin,
     utils::config::{FrontendDist, WindowConfig},
 };
@@ -140,6 +141,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
     let popups = Arc::new(menu::Popups::default());
     let recorder = popups.clone();
+    let activation = launch.diagnostics.clone();
     let window_states = Arc::new(window_state::WindowStates::open(
         &launch.webview,
         launch.diagnostics.clone(),
@@ -148,15 +150,23 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
         .setup(move |app, _| {
             #[cfg(windows)]
             interrupts::restore(&diagnostics);
+            single_instance::verify(app.config())?;
             app.manage(Shell { output_language });
             app.manage(popups);
             Ok(())
         })
-        .on_window_ready(move |window| window_states.attach(&window))
-        .on_event(move |_, event| {
-            if let RunEvent::MenuEvent(event) = event {
-                recorder.record(&event.id().0);
+        .on_window_ready(move |window| {
+            window_states.attach(&window);
+            single_instance::attach(&window, activation.clone());
+        })
+        .on_event(move |_, event| match event {
+            RunEvent::MenuEvent(event) => recorder.record(&event.id().0),
+            RunEvent::WindowEvent {
+                event: WindowEvent::Destroyed,
+                ..
             }
+            | RunEvent::Exit => single_instance::close(),
+            _ => {}
         });
     #[cfg(windows)]
     let builder = {

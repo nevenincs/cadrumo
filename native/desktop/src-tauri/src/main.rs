@@ -27,6 +27,15 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     let arguments = std::env::args_os().skip(1).collect();
     let mode = launch::select(arguments, launch::desktop_available());
     diagnostics.event(EventKind::HostStarted, None, None);
+    // The GUI claims the per-user instance before any per-user state opens.
+    let _instance = match &mode {
+        Ok(mode) => match shell::single_instance::admit(mode)? {
+            shell::single_instance::Admission::Activated => return Ok(0),
+            shell::single_instance::Admission::Primary(primary) => Some(primary),
+            shell::single_instance::Admission::Headless => None,
+        },
+        Err(_) => None,
+    };
     let root = match std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").filter(|v| !v.is_empty()) {
         Some(path) => PathBuf::from(path),
         None => std::env::current_exe()

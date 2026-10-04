@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1102c91a96cec315c57b9cadbd2e773978549a0c90344dd1695f51700f42e3bc'
+body_hash: 'sha256:5168f49d54282253a44460db9f345bd7db969fd2c5360a0e08ff45367dbb9d54'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -309,6 +309,23 @@ related:
 - `S05` `verify:` `npm run check in native/desktop/frontend` -> `pass`
 - `S05` `verify:` `node scripts/tauri.mjs build Release, expanded context shows FrontendDist Directory and 7 embedded assets` -> `pass`
 - `S05` `by:` `high-executor`
+- `S15` `A` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/single_instance/linux.rs`
+- `S15` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/main.rs`
+- `S15` `M` `native/platform/src/desktop.rs`
+- `S15` `verify:` `platform cargo test --locked --lib desktop:: (10 instance tests: activation, families, release and abandonment, refused request timeout, waiting handover, same-thread refusal, serve twice, owner comparison, foreign-DACL and wrong-type squatters), with and without webview2` -> `pass`
+- `S15` `verify:` `platform mutation check: dropping the same-thread guard, acknowledging refused requests, or skipping ReleaseMutex each fail a platform test` -> `pass`
+- `S15` `verify:` `platform cargo clippy --all-targets -D warnings with and without webview2: only the 5 missing_safety_doc findings in HEAD lib.rs; none in desktop.rs` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked single_instance (6 tests: two copied test binaries at two install paths, second exits 0 activated and the holder counts 1, then the second takes the lock; key ignores version and path; key equals generate_context identifier; headless passthrough never resolves the key; pending activation focuses once and closing refuses)` -> `pass`
+- `S15` `verify:` `desktop mutation check: keying the claim by install directory fails the two-install-path and headless-control tests` -> `pass`
+- `S15` `verify:` `desktop cargo clippy --locked --all-targets -D warnings with and without live-package-tests` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked full suite without live tests (93)` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked --features live-package-tests (S02 scratch package): 106 of 108, failures are docs staged_documentation PackageUnavailable and console_kind missing aeat entrypoint, both package-fixture mismatches outside S15` -> `fail`
+- `S15` `verify:` `real cadrumo.exe --headless -- --version and --version while a helper held the md.neve.cadrumo lock: rc 0, same 8.6-9.2 s latency as without the lock, holder counted 0 activations` -> `pass`
+- `S15` `verify:` `linux backend std-only rustc --test and clippy-driver -D clippy::all in rust:1.96-slim container (5 tests: activation without reading the connection, families, stale socket, refusing holder timeout, open directory and invalid family refusal)` -> `pass`
+- `S15` `verify:` `rustfmt --check on touched files` -> `pass`
+- `S15` `by:` `high-executor`
 
 ## Notes
 
@@ -345,3 +362,10 @@ related:
 - `S04` groupb integration: live-only Credit::sent, Session::delivered and Session::paused gated on live-package-tests (clippy without the feature failed on dead code); relocated test rewritten to an explicit canonical root override with a pin-removal falsifier
 - `S05` Earlier host builds embedded no frontend: tauriConfig wrote frontendDist as an absolute Windows path, which Tauri parsed as FrontendDist::Url with scheme y:, leaving the EmbeddedAssets map empty. Fixed to a forward-slash path relative to the generated src-tauri directory.
 - `S05` Falsification: the new configuration test fails when frontendDist is reverted to the absolute path.
+- `S15` Mechanism: own named mutex plus activation events in native/platform/src/desktop.rs, not tauri-plugin-single-instance 2.4.0. The plugin keys by identifier (ok) but its Windows mutex has default security and no user component, it sends cwd and all argv over `WM_COPYDATA` to any same-named window and parses lpData with `CStr::from_ptr` without checking cbData, it falls through to a second GUI when the mutex exists but the window is not up yet, and on Linux it sends argv and cwd over the session D-Bus and unwraps or falls through on bus errors `(platform_impl/windows.rs:58-95,145-158;` linux.rs:56-88)
+- `S15` Windows names are `Local\<identifier>.desktop.<user` SID>.{lock,activate,acknowledge}, owner-only SDDL `O:<sid>D:P(A;;GA;;;<sid>),` and an existing object not owned by the token user is refused. Local is per session: the same user in two concurrent sessions would get two windows; the ADR states per user and the orchestrator asked for session-local
+- `S15` The owner-mismatch refusal is covered only by a direct comparison test (TrustedInstaller-owned System32 file); a claim against an object another account owns needs a second account
+- `S15` Linux backend: flock on `XDG_RUNTIME_DIR/<identifier>.desktop.lock` plus a Unix socket; tested standalone in a container; the desktop crate was not compiled for Linux here (no GTK toolchain)
+- `S15` GUI focus and restore were not exercised: the agent runs in Session 0; left to the live smoke run
+- `S15` Cross-version invariant: every future version must keep these object names and the activation protocol, or two versions could open windows at once
+- `S15` Checks ran on an isolated snapshot (build/s15-desktop-host/snap) of HEAD plus the S15 files, with HEAD native/platform/src/lib.rs and the s07-cmake generated contract; another worker has uncommitted edits in native/desktop/src-tauri/src/docs and native/desktop/scripts/configuration.mjs
