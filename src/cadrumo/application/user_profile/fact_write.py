@@ -44,14 +44,12 @@ class ProfileFactWriteDoor(StrEnum):
     wizard: the command-line manager screens and the ``config profile`` verbs
     publish through this same writer, so their identities belong in the same
     closed set rather than in a second one beside it. Registered descendant
-    replacement uses :attr:`MANAGER_DESCENDANTS`; the wizard's direct
-    persistence uses :attr:`DESCENDANTS`. The registered operation records its
+    replacement uses :attr:`MANAGER_DESCENDANTS`. The registered operation records its
     frontend separately from the fact writer's application policy.
     """
 
     ANSWERS = "wizard.answers"
     PATCH = "wizard.patch"
-    DESCENDANTS = "wizard.descendants"
     MANAGER_FIELD = "manager.field"
     AUTH_CONFIGURE = "auth.configure"
     MANAGER_ROW = "manager.row"

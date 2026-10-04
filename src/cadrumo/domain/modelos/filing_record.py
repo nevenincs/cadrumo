@@ -171,15 +171,6 @@ class FilingDeclarationKind(StrEnum):
     RECTIFICATIVA = "rectificativa"
 
 
-class IvaSettlementPaymentState(StrEnum):
-    """Evidence state of the declared positive Modelo 303 liability."""
-
-    NOT_APPLICABLE = "not_applicable"
-    AWAITING_EVIDENCE = "awaiting_evidence"
-    PARTIALLY_EVIDENCED = "partially_evidenced"
-    EVIDENCED = "evidenced"
-
-
 class IvaSettlementRefundState(StrEnum):
     """Independent refund-request, approval, and payment evidence state."""
 
@@ -312,17 +303,6 @@ class IvaSettlementSnapshot(BaseModel):
     def evidenced_payment_amount(self) -> Decimal:
         """Return the total recorded by the append-only payment evidence tuple."""
         return sum((entry.amount for entry in self.payment_evidence), Decimal("0"))
-
-    @property
-    def payment_state(self) -> IvaSettlementPaymentState:
-        """Derive payment state; callers cannot independently assert it."""
-        if self.declared_liability == Decimal("0"):
-            return IvaSettlementPaymentState.NOT_APPLICABLE
-        if self.evidenced_payment_amount == Decimal("0"):
-            return IvaSettlementPaymentState.AWAITING_EVIDENCE
-        if self.evidenced_payment_amount < self.declared_liability:
-            return IvaSettlementPaymentState.PARTIALLY_EVIDENCED
-        return IvaSettlementPaymentState.EVIDENCED
 
 
 def _require_evidence_pair(
@@ -922,7 +902,6 @@ __all__ = [
     "FilingDeclarationKind",
     "FilingOrigin",
     "IvaCreditSnapshot",
-    "IvaSettlementPaymentState",
     "IvaSettlementRefundState",
     "IvaSettlementSnapshot",
     "ModeloRecord",

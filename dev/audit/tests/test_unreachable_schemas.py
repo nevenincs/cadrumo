@@ -130,3 +130,53 @@ mention(model=Payload)
     modules = {module.name: module for module in (records, caller)}
 
     assert schema_member_uses(modules, frozenset(modules), framework_contracts(modules)) == frozenset()
+
+
+def test_validated_discriminated_aliases_keep_nested_wire_fields_without_import_only_exemptions() -> None:
+    records = _module(
+        "pkg.records",
+        """
+from pydantic import BaseModel, Field
+from typing import Annotated, Literal
+class First(BaseModel):
+    kind: Literal['first'] = 'first'
+    first_value: int
+class Second(BaseModel):
+    kind: Literal['second'] = 'second'
+    second_value: str
+class Unused(BaseModel):
+    orphan: int
+type Choice = Annotated[First | Second, Field(discriminator='kind')]
+type Nested = Choice
+type Unconsumed = Unused
+class Envelope(BaseModel):
+    selected: Nested
+""",
+    )
+    caller = _module("pkg.caller", "from .records import Envelope, Unconsumed\nEnvelope.model_validate_json('{}')")
+    modules = {module.name: module for module in (records, caller)}
+    uses = schema_member_uses(modules, frozenset(modules), framework_contracts(modules))
+    assert uses == frozenset(
+        (records.name, member)
+        for member in ("Envelope.selected", "First.kind", "First.first_value", "Second.kind", "Second.second_value")
+    )
+
+
+def test_type_adapter_consumes_an_explicit_alias_without_following_unused_recursive_aliases() -> None:
+    records = _module(
+        "pkg.records",
+        """
+from pydantic import BaseModel
+class Payload(BaseModel):
+    value: int
+type Choice = Payload
+type Recursive = Recursive
+""",
+    )
+    caller = _module(
+        "pkg.caller", "from pydantic import TypeAdapter\nfrom .records import Choice, Recursive\nTypeAdapter(Choice)"
+    )
+    modules = {module.name: module for module in (records, caller)}
+    assert schema_member_uses(modules, frozenset(modules), framework_contracts(modules)) == frozenset(
+        {(records.name, "Payload.value")}
+    )

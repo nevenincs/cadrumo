@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:555f5d4fc67c5405b1cf04b64494a3c66683415d7325f028ba9f68a86ac9739d'
+body_hash: 'sha256:30f7b2389f04a0571c2c3384fd1ed1a1c9ed241e70f0d6d725decde0cee0de42'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -382,6 +382,24 @@ related:
 - `S11` `M` `src/cadrumo/application/corpus_search/tests/test_citation_lookup.py`
 - `S11` `verify:` `LLM, citation and storage grammar unit corpus (702 passed)` -> `pass`
 - `S11` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S12` `M` `dev/audit/tests/test_unreachable_schemas.py`
+- `S12` `M` `dev/audit/unreachable_schemas.py`
+- `S12` `M` `src/cadrumo/application/filing/runtime.py`
+- `S12` `M` `src/cadrumo/application/profile_preconditions.py`
+- `S12` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S12` `M` `src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
+- `S12` `M` `src/cadrumo/domain/foreign_assets/record_join.py`
+- `S12` `M` `src/cadrumo/domain/modelos/filing_record.py`
+- `S12` `M` `src/cadrumo/domain/modelos/perceptor_clave_scope.py`
+- `S12` `M` `src/cadrumo/domain/modelos/tests/test_iva_settlement_snapshot.py`
+- `S12` `M` `src/cadrumo/domain/modelos/tests/test_perceptor_clave_scope.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_lifecycle.py`
+- `S12` `verify:` `Schema, filing, asset and audit unit corpus (977 passed, two independent legal-excerpt expectation failures)` -> `fail`
+- `S12` `verify:` `Profile and localization delta (20 passed; stale wizard enrollment then repaired)` -> `pass`
+- `S12` `verify:` `Current profile writer contracts (4 passed)` -> `pass`
+- `S12` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -393,3 +411,4 @@ related:
 - `S08` Correct development-test labels expose previously hidden candidates. Whole-record dataclass serialization and typed factories now have qualified structural evidence. All remaining live candidates, including the 19 newly visible exact findings, remain open under S09. A concurrent new credential exception temporarily caused setup errors; its owner added the registry declarations and the same 68 audit controls then passed. Shared logging formatter changes are excluded from this commit. Final metadata generation and integrated gates remain S07.
 - `S09` Canonical fixture owners replace unused product projections; real JSON producer uses SchemaEnvelope. Private qualified locale constants are visible and 16 obsolete keys were removed through LocaleManager in all four catalogues. Actual authored conformance authority replaces ambient candidate borrowing; M303 fixture now carries replayable wallet evidence. Remaining M180 parser expectations and independent inventory import cycle remain under S07; 84 live heuristic candidates remain under S10. Concurrent filing clock, new wallet tests and locale additions are excluded from the checkpoint.
 - `S11` Removed unsupported summary APIs and their models; retained independent persistence field, filtering and failure assertions. Unsafe model tests drive actual encrypted cache reads and writes; tagged and vendor-qualified names round-trip unchanged. Retired the unused cache display grammar and legacy corpus-reference lookup; exact pinned citation resolution remains active. Shared external edits are outside this checkpoint.
+- `S12` Explicit discriminated and nested type aliases now retain real schema fields, with import-only and recursive negative controls. Removed unused filing single-source wrapper, perceptor-scope and activity-staleness convenience methods, unsupported payment-state enum and uncalled profile/localization enum members. Real foreign-asset year-end disagreement now calls `ceased_in` after `held_in` establishes the year cohort. Retired obsolete wizard-door enrollment; broader legal-excerpt expectations remain visibly open under S07.

@@ -40,7 +40,6 @@ class ProfilePreconditionCondition(StrEnum):
     SESSION_SCHEMA_CURRENT = "profile.session.schema_current"
     SESSION_WELL_FORMED = "profile.session.well_formed"
     SESSION_INTEGRITY_VALID = "profile.session.integrity_valid"
-    TAX_ID_DECLARED = "taxpayer.identity.tax_id.declared"
     FORMER_PRODUCT_STATE_ABSENT = "storage.former_product_state.absent"
 
 
@@ -50,7 +49,6 @@ class ProfilePreconditionEvidence(StrEnum):
     ACTIVE_PROFILE_STATE = "profile.active.state"
     PROFILE_SELECTION = "profile.selection.resolution"
     PROFILE_SESSION = "profile.session.resume"
-    TAXPAYER_IDENTITY = "taxpayer.identity.declaration"
     FORMER_PRODUCT_STATE = "storage.former_product_state.detection"
 
 

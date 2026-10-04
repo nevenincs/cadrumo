@@ -22,7 +22,6 @@ class ModeloLocalizationFieldKind(StrEnum):
     LABEL = "label"
     HELP = "help"
     TITLE = "title"
-    OFFICIAL_NAME = "official_name"
 
 
 """Every localizable field."""

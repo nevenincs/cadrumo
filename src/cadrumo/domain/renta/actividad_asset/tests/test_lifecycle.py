@@ -108,7 +108,6 @@ def test_revision_identity_is_immutable_and_lineage_resolves_without_new_identit
 
     assert revision.revision_id == _revision().revision_id
     assert revision.acquisition.resolve_current_transaction_id({"a" * 64: "d" * 64}) == "d" * 64
-    assert revision.is_stale_for({"a" * 64: "d" * 64})
     with pytest.raises(ValidationError):
         revision.asset_id = "other"  # type: ignore[misc]
 

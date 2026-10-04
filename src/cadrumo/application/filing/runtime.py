@@ -54,7 +54,7 @@ from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
-from ...domain.calculations.registry.authority_artifact import AuthorityComponentCodecError, AuthorityEvidenceProjection
+from ...domain.calculations.registry.authority_artifact import AuthorityEvidenceProjection
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
@@ -356,16 +356,6 @@ class RegistrySchemaAccessor:
         object.__setattr__(self, "subviews", MappingProxyType(dict(self.subviews)))
         object.__setattr__(self, "snapshots", MappingProxyType(dict(self.snapshots)))
         object.__setattr__(self, "sources", MappingProxyType(dict(self.sources)))
-
-    def source_payload(self, source_ref_id: SourceRefId) -> bytes:
-        """Return published authority bytes for one runtime source reference."""
-        try:
-            return self.evidence.source_bytes(str(source_ref_id))
-        except AuthorityComponentCodecError as exc:
-            raise ModeloBuilderError(
-                translated_message="application.filing.runtime.errors.registry_empty",
-                context={"reason": f"missing-published-source:{source_ref_id}"},
-            ) from exc
 
     @property
     def source_payloads(self) -> Mapping[str, bytes]:

@@ -25,7 +25,6 @@ declaration. An asset outside the ejercicio's holding period forms no record.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
@@ -108,7 +107,7 @@ def _register_disagreement(row: Modelo720ValuedRow, asset: ForeignAssetRegisterE
     if obs.valuation_event is M720ValuationEvent.EXTINCTION:
         if obs.valuation_event_date != asset.ceased_on:
             return "the extinction date differs from the registered cessation date"
-    elif asset.ceased_on is not None and asset.ceased_on <= date(filing_year, 12, 31):
+    elif asset.ceased_in(filing_year):
         return "a year-end valuation for an asset the register shows ceased by 31 December"
     return ""
 

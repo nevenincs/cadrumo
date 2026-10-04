@@ -325,10 +325,6 @@ class ActivityAssetRevision(BaseModel):
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
 
-    def is_stale_for(self, replacements: dict[str, str]) -> bool:
-        """Return whether canonical lineage now resolves beyond the observed transaction ID."""
-        return self.acquisition.resolve_current_transaction_id(replacements) != self.acquisition.observed_transaction_id
-
 
 def _validate_revision_lineage(revision: ActivityAssetRevision) -> None:
     if revision.revision_number == 1 and revision.supersedes_revision_id is not None:

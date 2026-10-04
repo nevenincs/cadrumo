@@ -48,6 +48,13 @@ def schema_member_uses(
         for node in module.tree.body
         if isinstance(node, ast.ClassDef)
     }
+    aliases = {
+        f"{name}.{node.name.id}": (name, node.value)
+        for name, module in modules.items()
+        for node in module.tree.body
+        if isinstance(node, ast.TypeAlias)
+    }
+    schema_targets = classes.keys() | aliases.keys()
     models = {
         f"{name}.{owner}"
         for name, owners in contracts.items()
@@ -88,7 +95,7 @@ def schema_member_uses(
                 if parameter in schema_parameters.get(target, ()) and candidate in models:
                     pending.append(candidate)
             if target == "pydantic.TypeAdapter":
-                pending.extend(candidate for candidate in call.arguments if candidate in classes)
+                pending.extend(candidate for candidate in call.arguments if candidate in schema_targets)
             if target.rsplit(".", 1)[-1] in _SCHEMA_METHODS or target in factories:
                 target = target.rsplit(".", 1)[0]
             if target in models:
@@ -97,9 +104,19 @@ def schema_member_uses(
     visited: set[str] = set()
     while pending:
         target = pending.pop()
-        if target in visited or target not in classes:
+        if target in visited:
             continue
         visited.add(target)
+        if target in aliases:
+            name, expression = aliases[target]
+            pending.extend(
+                qualify(name, part)
+                for part in ast.walk(expression)
+                if isinstance(part, ast.Name | ast.Attribute) and qualify(name, part) in schema_targets
+            )
+            continue
+        if target not in classes:
+            continue
         name, node = classes[target]
         if target not in models:
             # An enum used as a field is validated as a whole, not by dot access.
@@ -132,6 +149,6 @@ def schema_member_uses(
             for part in ast.walk(annotation):
                 if isinstance(part, ast.Name | ast.Attribute):
                     nested = qualify(name, part)
-                    if nested in classes:
+                    if nested in classes or nested in aliases:
                         pending.append(nested)
     return frozenset(used)

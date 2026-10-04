@@ -72,10 +72,6 @@ class PerceptorClaveScope:
     casillas: Mapping[CasillaId, tuple[ClaveScopeToken, ...]]
     effective_date: date
 
-    def is_scoped(self, casilla_id: CasillaId) -> bool:
-        """Whether the registry declares a clave scope for ``casilla_id``."""
-        return casilla_id in self.casillas
-
     def admits(self, casilla_id: CasillaId, clave: str, subclave: str | None) -> bool:
         """Whether a record with ``clave``/``subclave`` carries ``casilla_id``.
 

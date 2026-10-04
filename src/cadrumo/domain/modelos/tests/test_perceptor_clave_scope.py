@@ -67,7 +67,6 @@ def test_family_data_belongs_to_work_income_claves_only(operation: PinnedAuthori
     assert scope.admits(_CONTRACT, "A", None)
     assert not scope.admits(_CONTRACT, "C", None)
     # A casilla the registry does not scope applies to every record.
-    assert not scope.is_scoped(_UNSCOPED)
     assert scope.admits(_UNSCOPED, "G", "01")
 
 
