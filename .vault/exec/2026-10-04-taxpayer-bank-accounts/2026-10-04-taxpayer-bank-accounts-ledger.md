@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:485dc026c7d3d43cbd23ab0322b6da3008cc7c961ffa498dfee91fd1bef515fb'
+body_hash: 'sha256:9279e98cb3d303147099ab360e58e3f7991623e6b7dd35400af7e64e46847e4b'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -114,6 +114,11 @@ related:
 - `S14` `verify:` `focused disposition and 360 export tests (61 passed)` -> `pass`
 - `S14` `verify:` `ruff check, ruff format --check, ty, pyrefly on touched files` -> `pass`
 - `S14` `by:` `lane-c`
+- `S05` `M` `src/cadrumo/domain/transactions/models.py`
+- `S05` `M` `src/cadrumo/domain/transactions/tests/test_models.py`
+- `S05` `verify:` `pytest src/cadrumo/domain/transactions` -> `pass`
+- `S05` `verify:` `ruff check and format on touched files` -> `pass`
+- `S05` `by:` `vaultspec-standard-executor`
 
 ## Notes
 

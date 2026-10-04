@@ -82,13 +82,14 @@ from .model_validation import (
     validate_confidence_range,
     validate_non_negative_decimal,
 )
+from .own_accounts import OwnAccountId
 from .raw_transaction import RawTransaction
 from .retencion_facts import retencion_effective_date
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 
 
-def derive_transaction_id(raw: RawTransaction) -> str:
+def derive_transaction_id(raw: RawTransaction, *, own_account_id: str | None = None) -> str:
     """Return the stable transaction hash for one raw transaction.
 
     This content hash is the single authority for storage, audit, and
@@ -104,22 +105,29 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     freezes or re-mints the id, so the content-addressing invariant import
     dedup relies on is untouched.
 
+    The taxpayer's own account enters the hash only when the row is bound to
+    one, so an account-unassigned row keeps the id it has always had while
+    the same movement on two own accounts yields two ids.
+
     Args:
         raw: The upstream immutable raw transaction emitted by a provider.
+        own_account_id: The own bank account the movement belongs to, if bound.
 
     Returns:
         A lowercase SHA-256 digest derived from the provider identity,
-        effective value date, amount, and narrative fields.
+        effective value date, amount, narrative fields and, when bound, the
+        own account.
     """
     effective_value_date = raw.value_date or raw.booked_date
-    return content_hash_hex(
-        {
-            "amount": canonical_decimal_string(raw.amount),
-            "narrative": raw.description,
-            "provider_id": raw.provider_transaction_id,
-            "value_date": effective_value_date.isoformat(),
-        }
-    )
+    payload: dict[str, str] = {
+        "amount": canonical_decimal_string(raw.amount),
+        "narrative": raw.description,
+        "provider_id": raw.provider_transaction_id,
+        "value_date": effective_value_date.isoformat(),
+    }
+    if own_account_id is not None:
+        payload["own_account_id"] = own_account_id
+    return content_hash_hex(payload)
 
 
 _REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
@@ -150,7 +158,12 @@ def normalise_movement_reference(value: str) -> str:
     return _REFERENCE_NOISE.sub("", stripped.casefold())
 
 
-def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:
+def derive_import_fingerprint(
+    raw: RawTransaction,
+    *,
+    direction: TransactionDirection | str | None = None,
+    own_account_id: str | None = None,
+) -> str:
     """Return the stable cross-format import-dedup fingerprint for a raw row.
 
     Unlike :func:`derive_transaction_id` — which keys on the provider
@@ -166,7 +179,10 @@ def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDire
     same statement (or the same movements exported as a different file
     format) recognises the row as already present. Import callers that
     have parsed flow direction must pass it; callers without a parse-boundary
-    direction receive an explicit ``UNSPECIFIED`` discriminator.
+    direction receive an explicit ``UNSPECIFIED`` discriminator. A row bound to
+    an own account folds that account in, so identical movements on two own
+    accounts are not mistaken for a re-import; an unbound row's fingerprint is
+    unchanged.
     """
     effective_value_date = raw.value_date or raw.booked_date
     if isinstance(direction, TransactionDirection):
@@ -175,15 +191,16 @@ def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDire
         direction_value = "UNSPECIFIED"
     else:
         direction_value = direction
-    return content_hash_hex(
-        {
-            "amount": canonical_decimal_string(raw.amount),
-            "currency": raw.currency,
-            "direction": direction_value,
-            "reference": normalise_movement_reference(raw.description),
-            "value_date": effective_value_date.isoformat(),
-        }
-    )
+    payload: dict[str, str] = {
+        "amount": canonical_decimal_string(raw.amount),
+        "currency": raw.currency,
+        "direction": direction_value,
+        "reference": normalise_movement_reference(raw.description),
+        "value_date": effective_value_date.isoformat(),
+    }
+    if own_account_id is not None:
+        payload["own_account_id"] = own_account_id
+    return content_hash_hex(payload)
 
 
 def derive_movement_day_key(raw: RawTransaction) -> str:
@@ -203,7 +220,8 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     raw = data.get("raw")
     if not isinstance(raw, RawTransaction):
         raise TransactionValidationError("raw is required before transaction_id can be derived")
-    return derive_transaction_id(raw)
+    own_account_id = data.get("own_account_id")
+    return derive_transaction_id(raw, own_account_id=own_account_id if isinstance(own_account_id, str) else None)
 
 
 def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
@@ -288,10 +306,13 @@ class Transaction(BaseModel):
 
     Attributes:
         transaction_id: Lowercase 64-char SHA-256 derived deterministically
-            from the wrapped raw record by :func:`derive_transaction_id`.
-            Re-validated on every parse to detect tampering.
+            from the wrapped raw record (and ``own_account_id`` when bound) by
+            :func:`derive_transaction_id`. Re-validated on every parse to
+            detect tampering.
         raw: The verbatim
             :class:`domain.transactions.raw_transaction.RawTransaction`.
+        own_account_id: The taxpayer's own bank account the movement belongs
+            to, or ``None`` when the row is account-unassigned.
         direction: Closed :class:`TransactionDirection`.
         business_classification: Current :class:`BusinessClassification`
             decision; defaults to
@@ -504,6 +525,7 @@ class Transaction(BaseModel):
     model_config = _STRICT_FROZEN
 
     raw: RawTransaction
+    own_account_id: OwnAccountId | None = None
     transaction_id: TransactionId = Field(default_factory=_derive_transaction_id_from_validated_data)
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
@@ -715,7 +737,7 @@ class Transaction(BaseModel):
     @pydantic_validation_boundary
     def _enforce_derived_transaction_id(self) -> Self:
         """Validate ``transaction_id`` against the already-validated raw record."""
-        if self.transaction_id != derive_transaction_id(self.raw):
+        if self.transaction_id != derive_transaction_id(self.raw, own_account_id=self.own_account_id):
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
         return self
 
@@ -1064,7 +1086,13 @@ def existing_transaction_import_fingerprints(transaction: Transaction) -> frozen
     must use this exact projection: a directionless fallback would incorrectly
     collapse otherwise distinct incoming and outgoing movements.
     """
-    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
+    fingerprints = {
+        derive_import_fingerprint(
+            transaction.raw,
+            direction=transaction.direction,
+            own_account_id=transaction.own_account_id,
+        )
+    }
     if transaction.import_fingerprint:
         fingerprints.add(transaction.import_fingerprint)
     return frozenset(fingerprints)
