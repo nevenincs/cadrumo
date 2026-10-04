@@ -15,8 +15,8 @@ import pytest
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ..errors import LiveApplicationInputError
-from ..justificante import resolve_period_expediente
-from ..justificante_ports import JustificanteDeclaration, JustificanteExpediente
+from ..justificante import resolve_period_declaration
+from ..justificante_ports import JustificanteDeclaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,21 +45,15 @@ def _declaration(
     )
 
 
-def _expediente(*, expediente_id: str) -> JustificanteExpediente:
-    return JustificanteExpediente(expediente_id=expediente_id)
-
-
 _DECLARATIONS = (
     _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC)),
     _declaration(period=_PERIOD_2T, expediente_id=_EXP_2T, presented_at=datetime(2026, 7, 18, 9, 0, tzinfo=UTC)),
 )
-_EXPEDIENTES = (_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=_EXP_2T))
 
 
 def test_resolves_first_quarter_to_its_own_expediente() -> None:
-    resolved = resolve_period_expediente(
+    resolved = resolve_period_declaration(
         declarations=_DECLARATIONS,
-        expedientes=_EXPEDIENTES,
         modelo=_MODELO,
         period=_PERIOD_1T,
     )
@@ -67,17 +61,15 @@ def test_resolves_first_quarter_to_its_own_expediente() -> None:
 
 
 def test_resolves_second_quarter_to_a_distinct_expediente() -> None:
-    resolved = resolve_period_expediente(
+    resolved = resolve_period_declaration(
         declarations=_DECLARATIONS,
-        expedientes=_EXPEDIENTES,
         modelo=_MODELO,
         period=_PERIOD_2T,
     )
     assert resolved.expediente_id == _EXP_2T
     # The primary-risk invariant: the two quarters never collapse to one.
-    first = resolve_period_expediente(
+    first = resolve_period_declaration(
         declarations=_DECLARATIONS,
-        expedientes=_EXPEDIENTES,
         modelo=_MODELO,
         period=_PERIOD_1T,
     )
@@ -89,24 +81,28 @@ def test_missing_period_declaration_refuses_rather_than_falls_back() -> None:
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.no_filed_declaration",
     ):
-        resolve_period_expediente(
+        resolve_period_declaration(
             declarations=_DECLARATIONS,
-            expedientes=_EXPEDIENTES,
             modelo=_MODELO,
             period=_PERIOD_3T,
         )
 
 
-def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
-    with pytest.raises(
-        LiveApplicationInputError,
-        match=r"application\.live\.justificante\.errors\.expediente_not_in_tree",
-    ):
-        resolve_period_expediente(
+def test_exact_register_row_needs_no_procedure_tree_entry() -> None:
+    resolved = resolve_period_declaration(
+        declarations=_DECLARATIONS,
+        modelo=_MODELO,
+        period=_PERIOD_2T,
+    )
+    assert resolved is _DECLARATIONS[1]
+
+
+def test_other_year_declaration_does_not_match_same_quarter() -> None:
+    with pytest.raises(LiveApplicationInputError, match="no_filed_declaration"):
+        resolve_period_declaration(
             declarations=_DECLARATIONS,
-            expedientes=(_expediente(expediente_id=_EXP_1T),),  # tree missing the 2T expediente
             modelo=_MODELO,
-            period=_PERIOD_2T,
+            period=Period.from_year_and_code(_YEAR - 1, "1T"),
         )
 
 
@@ -118,9 +114,8 @@ def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
         expediente_id=refile_exp,
         presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC),
     )
-    resolved = resolve_period_expediente(
+    resolved = resolve_period_declaration(
         declarations=(early, late),
-        expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=refile_exp)),
         modelo=_MODELO,
         period=_PERIOD_1T,
     )
@@ -146,9 +141,8 @@ def test_later_cancellation_does_not_win_over_earlier_active_filing() -> None:
         presented_at=datetime(2026, 5, 10, 9, 0, tzinfo=UTC),
         estado="Anulada",
     )
-    resolved = resolve_period_expediente(
+    resolved = resolve_period_declaration(
         declarations=(accepted, cancelled),
-        expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=cancelled_exp)),
         modelo=_MODELO,
         period=_PERIOD_1T,
     )

@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:ead88c9bd20c7057748d8f15a97d868f5b2cc5ecf99edf88f1e60b431ad0c73d'
+body_hash: 'sha256:907d39cb5e4c9bf5f53fc2c59c46197e902c0e490d6290d2ad996dbfe9a762d0'
 ---
 
 # Live reconciliation repair
@@ -26,14 +26,17 @@ The user explicitly authorized fixing all failures observed during authenticated
 ## Steps
 
 - [x] `S01` - Preserve nullable scalar values through populated workbench transport; `src/cadrumo/application/operations/_public_mirror_projection.py and generation tests`.
-- [ ] `S02` - Retrieve exact-period justificantes from authoritative declaration register controls; `src/cadrumo/application/live/justificante.py and receipt ports adapters tests`.
+- [x] `S02` - Retrieve exact-period justificantes from authoritative declaration register controls; `src/cadrumo/application/live/justificante.py and receipt ports adapters tests`.
 - [ ] `S03` - Restore captured submitted-file parsing against source-grounded framing; `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py and framing owner tests`.
+- [ ] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
 - [ ] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
 - [ ] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
 
 ## Parallelization
 
 Delegate S01 public mirror projection and tests to mirror_fix. Delegate S02 justificante selection and adapters/tests to receipt_fix. After S01, mirror_fix owns S03 inbound submitted-file parsing and tests, preserving prior parser edits. Delegate independent S04 AEAT Sync reconciliation reader/projection/tests to drift_surface; final integration follows S01-S03. Lead owns S05 actual runtime acceptance and integrated review. All workers preserve others edits; lead serializes vault metadata and commits.
+
+After S02, receipt_fix owns S06 explicit declaration-source pull and local comparison operation. It may implement independently of S04, which consumes the existing persisted record format. S05 verifies both source paths after integration.
 
 ## Verification
 

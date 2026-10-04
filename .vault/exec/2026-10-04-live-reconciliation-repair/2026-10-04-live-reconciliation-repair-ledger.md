@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:424437ba4d47589c7c3bb82b25a95202a569bbdf2e68c72fa09aa6daf2743455'
+body_hash: 'sha256:95993b752eebe847e8399aeec6a69d45a571dd2e58440341b2ef30e327e6d4d8'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -46,3 +46,18 @@ related:
 - `S01` `verify:` `scoped Ruff format and lint` -> `pass`
 - `S01` `verify:` `scoped ty basedpyright pyrefly` -> `pass`
 - `S01` `by:` `vaultspec-standard-executor`
+- `S02` `M` `src/cadrumo/application/live/justificante.py`
+- `S02` `M` `src/cadrumo/application/live/justificante_ports.py`
+- `S02` `M` `src/cadrumo/application/live/tests/test_justificante_capture_resolution.py`
+- `S02` `M` `src/cadrumo/entrypoints/justificante_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_justificante_capture_operation.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
+- `S02` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_register_justificante_capture.py`
+- `S02` `M` `.vault/adr/2026-06-10-live-justificante-reconcile-adr.md`
+- `S02` `verify:` `focused receipt resolution capture unit integration 13 tests` -> `pass`
+- `S02` `verify:` `scoped Ruff style format and ty` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S02` Live authentication request expired; fresh pull acceptance belongs to S05. Broader adapter tests exposed unavailable browser provisioning and preexisting export fixture disagreement.

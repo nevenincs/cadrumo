@@ -37,7 +37,6 @@ from ...application.live.justificante_capture_operation import (
 from ...application.live.justificante_ports import (
     CapturedJustificante,
     JustificanteDeclaration,
-    JustificanteExpediente,
     JustificanteRegistrationPorts,
 )
 from ...application.modelo.filing_chain_reconciliation import (
@@ -193,13 +192,13 @@ class _ReadPort:
         self.resources = resources
         self.authority = authority
 
-    async def declarations_and_expedientes(
+    async def declarations(
         self,
         *,
         modelo: str,
         year: int,
         **_kwargs: object,
-    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
+    ) -> Sequence[JustificanteDeclaration]:
         assert self.resources.active
         assert (modelo, year) == (_MODELO, _YEAR)
         self.events.append("declarations-and-expedientes-read")
@@ -210,7 +209,7 @@ class _ReadPort:
             estado="ALTA",
             presented_at=_NOW,
         )
-        return (declaration,), (JustificanteExpediente(expediente_id=_EXPEDIENTE),)
+        return (declaration,)
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:
         assert self.resources.active

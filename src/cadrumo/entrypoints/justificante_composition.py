@@ -12,9 +12,9 @@ from typing import cast
 from ..adapters.inbound.justificante.parser import parse_justificante_bytes
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
+from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
-from ..adapters.outbound.aeat.sede.schema import Expediente
-from ..adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ..adapters.outbound.aeat.verify.contract import (
     VerifyBrowserSessionFactory,
     VerifyBrowserSessionLike,
@@ -43,7 +43,6 @@ from ..application.live.justificante_ports import (
     CapturedJustificante,
     JustificanteAuthenticityVerifierPort,
     JustificanteDeclaration,
-    JustificanteExpediente,
     JustificanteLiveReadPort,
     JustificanteRegistrationPorts,
 )
@@ -119,16 +118,16 @@ class _LiveRead:
         self._operation = operation
         self._session: AeatSession | None = None
         self._settings: Settings | None = None
-        self._expedientes: dict[str, Expediente] = {}
+        self._declarations: dict[str, Declaracion] = {}
 
-    async def declarations_and_expedientes(
+    async def declarations(
         self,
         *,
         modelo: str,
         year: int,
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
-    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
+    ) -> Sequence[JustificanteDeclaration]:
         session, settings = await active_verified_session(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
             browser_session_factory=default_browser_session_factory,
@@ -148,40 +147,41 @@ class _LiveRead:
             ) as register,
         ):
             declarations = tuple(await register.walk(modelo=modelo, ejercicio=year))
-        expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
         self._session = session
         self._settings = settings
-        self._expedientes = {item.expediente_id: item for item in expedientes}
-        return (
-            tuple(
-                JustificanteDeclaration(
-                    modelo=item.modelo,
-                    period=item.period,
-                    expediente_id=item.expediente_id,
-                    estado=item.estado,
-                    presented_at=item.presented_at,
-                )
-                for item in declarations
-            ),
-            tuple(JustificanteExpediente(expediente_id=item.expediente_id) for item in expedientes),
+        self._declarations = {item.expediente_id: item for item in declarations}
+        return tuple(
+            JustificanteDeclaration(
+                modelo=item.modelo,
+                period=item.period,
+                expediente_id=item.expediente_id,
+                estado=item.estado,
+                presented_at=item.presented_at,
+            )
+            for item in declarations
         )
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:
         session = self._session
         settings = self._settings
-        expediente = self._expedientes.get(expediente_id)
-        if session is None or settings is None or expediente is None:
+        declaration = self._declarations.get(expediente_id)
+        if session is None or settings is None or declaration is None:
             raise InternalInvariantError("live justificante capture requires declaration discovery")
-        capture = await capture_justificante(
-            session,
-            expediente,
-            settings=settings,
-        )
+        async with (
+            shared_playwright(session) as playwright,
+            open_declarations_register(
+                session,
+                operation=self._operation,
+                settings=settings,
+                playwright=playwright,
+            ) as register,
+        ):
+            artefact, body = await register.capture_justificante(declaration)
         return CapturedJustificante(
-            expediente_id=capture.expediente.expediente_id,
-            csv=capture.ref.csv,
-            pdf_bytes=capture.pdf_bytes,
-            pdf_sha256=capture.pdf_sha256,
+            expediente_id=declaration.expediente_id,
+            csv=extract_csv_from_url(str(artefact.source_url)),
+            pdf_bytes=body,
+            pdf_sha256=artefact.sha256,
         )
 
 

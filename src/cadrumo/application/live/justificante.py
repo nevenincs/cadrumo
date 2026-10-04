@@ -85,7 +85,6 @@ from .filed_data_ports import FiledEffectGuard
 from .justificante_ports import (
     JustificanteAuthenticityVerifierPort,
     JustificanteDeclaration,
-    JustificanteExpediente,
     JustificanteLiveReadPort,
     JustificanteRegistrationPorts,
     JustificanteSnapshotPersistencePort,
@@ -281,37 +280,17 @@ def derive_justificante_capture_snapshot_id(
     )
 
 
-def resolve_period_expediente(
+def resolve_period_declaration(
     *,
     declarations: Sequence[JustificanteDeclaration],
-    expedientes: Sequence[JustificanteExpediente],
     modelo: str,
     period: Period,
-) -> JustificanteExpediente:
-    """Resolve the capturable expediente for one ``(modelo, period)`` filing.
+) -> JustificanteDeclaration:
+    """Select the latest accepted register row for the exact model and period.
 
-    The procedure-tree :class:`Expediente` carries no period, so for a
-    multi-period modelo (quarterly 1T-4T) it cannot disambiguate which
-    quarter's receipt to pull. The period-bearing surface is the filed
-    *declarations register* (:class:`Declaracion` carries ``period`` and
-    ``expediente_id``). This resolver picks the declaration matching the
-    target ``(modelo, period)`` (the latest filing for that period when a
-    period was re-filed), then cross-references its ``expediente_id`` against
-    the tree to return the capturable expediente. It NEVER returns a
-    different period's expediente: a missing or unmatched declaration raises
-    rather than falling back to a wrong-quarter receipt.
-
-    The within-period tiebreak ranks the accepted (``ALTA``) declaration ahead
-    of ``presented_at``, matching the two sibling period-resolution surfaces
-    (``latest_declarations_by_period`` and the sede walker's latest-selection),
-    so a later cancellation / correction row (a non-``ALTA`` ``estado`` such as
-    ``Anulada`` or ``Baja``) presented after the accepted filing does not win
-    and pull the wrong-state receipt.
-
-    Raises:
-        LiveApplicationInputError: when no declaration matches the requested
-            period, or the matched declaration's expediente is absent from
-            the tree.
+    The procedure tree is a different AEAT surface and need not contain filed
+    declarations. The selected row itself owns the authenticated receipt control.
+    Never substitute another quarter or year when the requested row is absent.
     """
     target_period = period.registry_token
     candidates = [
@@ -330,17 +309,7 @@ def resolve_period_expediente(
             declaration.expediente_id,
         ),
     )
-    for expediente in expedientes:
-        if expediente.expediente_id == chosen.expediente_id:
-            return expediente
-    raise LiveApplicationInputError(
-        translated_message="application.live.justificante.errors.expediente_not_in_tree",
-        context={
-            "modelo": modelo,
-            "period": target_period,
-            "expediente_id": chosen.expediente_id,
-        },
-    )
+    return chosen
 
 
 def _captured_snapshot(record: object) -> JustificanteCaptureSnapshot:
@@ -1067,12 +1036,11 @@ async def capture_justificante_snapshot_outcome(
     authority_operation: PinnedAuthorityOperation | None = None,
 ) -> JustificanteCaptureOutcome:
     """Capture a justificante and report the separate metadata and filing-evidence outcomes."""
-    declarations, expedientes = await read_port.declarations_and_expedientes(
+    declarations = await read_port.declarations(
         modelo=modelo, year=year, effect_guard=effect_guard, on_session_write=on_session_write
     )
-    expediente = resolve_period_expediente(
+    expediente = resolve_period_declaration(
         declarations=declarations,
-        expedientes=expedientes,
         modelo=modelo,
         period=period,
     )
@@ -1115,7 +1083,7 @@ __all__ = [
     "parse_capture_to_justificante",
     "register_capture_as_filing_evidence",
     "register_capture_justificante_metadata",
-    "resolve_period_expediente",
+    "resolve_period_declaration",
     "stamp_capture_evidence_if_filed",
     "verify_capture_authenticity",
 ]

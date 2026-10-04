@@ -64,6 +64,7 @@ from ._declarations_fetch import (
     SEDE_BASE,
     assert_declarations_read_browser_action,
     assert_declarations_read_http,
+    capture_row_pdf_artefact,
     get_buscar_settle_ms,
     get_form_interaction_timeout_ms,
 )
@@ -76,6 +77,7 @@ from .declarations_observations import (
 from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
+    FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
@@ -426,6 +428,34 @@ class DeclaracionesRegisterSession:
             ejercicio,
         )
         return results
+
+    async def capture_justificante(self, declaration: Declaracion) -> tuple[FiledDeclaracionArtefact, bytes]:
+        """Read the selected register row's receipt without requiring calculation extraction."""
+        snapshot = _registry_snapshot_for_declaration(declaration, operation=self._operation)
+        read_policy = _read_guard_policy_from_snapshot(snapshot)
+        if not await _drive_search(
+            self._page,
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            read_policy=read_policy,
+        ):
+            raise SedeNavigationError("AEAT declarations register no longer offers the selected filing year")
+        current = _register_rows_from_snapshot(
+            await self._page.content(),
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+        )
+        selected = next((item for item in current if item.expediente_id == declaration.expediente_id), None)
+        if selected is None or selected.period != declaration.period or not selected.justificante_link_text:
+            raise SedeNavigationError("AEAT declarations register no longer exposes the selected period's receipt")
+        return await capture_row_pdf_artefact(
+            context=self._context,
+            row_locator=_row_locator_for_expediente(self._page, expediente_id=selected.expediente_id),
+            declaration=selected,
+            cell_index=selected.justificante_cell_index,
+            kind="justificante_pdf",
+            read_policy=read_policy,
+        )
 
     async def capture_observation(
         self,
