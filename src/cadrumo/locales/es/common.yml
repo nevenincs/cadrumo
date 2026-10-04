@@ -2247,6 +2247,11 @@ tui:
       title: Lector de documentos
   modelo:
     export:
+      account:
+        charge_label: Cuenta en la que la AEAT carga (domiciliación)
+        designated: Según la designación de tus cuentas propias
+        designated_option: '%{account} (designada)'
+        refund_label: Cuenta en la que la AEAT ingresa la devolución
       artefact:
         calculation_report_csv: Informe de cálculo (CSV), solo registro local
         calculation_report_pdf: Resumen del cálculo firmado (PDF), solo registro local
@@ -2268,6 +2273,7 @@ tui:
       replace_existing:
         label: Sustituir el fichero que ya exista en esta ruta
       result:
+        account_in_filing: incluida en los datos de la propia declaración
         close: Cerrar
         completeness:
           not_assessed: 'No evaluada: un informe de cálculo no es un fichero de presentación'
@@ -2283,11 +2289,13 @@ tui:
           artefact: Documento exportado
           byte_size: Tamaño (bytes)
           calculation_revision_id: Cálculo guardado
+          charge_account: Cuenta de cargo
           completeness: Integridad
           evidence_status: Estado como evidencia
           export_format: Formato
           file_sha256: SHA-256 del fichero
           output_path: Fichero
+          refund_account: Cuenta de devolución
           software_identity_grade: Identidad de software en la cabecera del fichero
         software_identity_grade:
           development_mock: Identidad de desarrollo (todo ceros); la AEAT no la acepta
@@ -2304,6 +2312,8 @@ tui:
             del modelo, así que no ha podido confirmar que todas las casillas obligatorias
             lleguen al fichero. Revisa las casillas exportadas frente al Diseño de
             Registros oficial antes de presentar.'
+          cutoff_unverified: El plazo de presentación no indica fecha límite de domiciliación,
+            así que no se pudo comprobar si la AEAT aún acepta esta domiciliación.
           development_software_identity: La cabecera del fichero lleva la identidad
             de software de desarrollo con todo ceros; la AEAT no aceptará este fichero
             para su presentación.

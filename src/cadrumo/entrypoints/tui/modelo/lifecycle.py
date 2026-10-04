@@ -238,6 +238,8 @@ class ModeloWorkspaceLifecycleDoor:
         prior_domiciliation_election: PriorDomiciliationElection,
         replace_existing: bool = False,
         artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
+        charge_account_id: str | None = None,
+        refund_account_id: str | None = None,
     ) -> OperationControllerPort:
         """Export the selected verified revision to the operator-selected path with the operator's choices.
 
@@ -255,6 +257,8 @@ class ModeloWorkspaceLifecycleDoor:
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    charge_account_id=charge_account_id,
+                    refund_account_id=refund_account_id,
                     replace_existing=replace_existing,
                     artefact=artefact,
                     report_language=OutputLanguage(output_language()),

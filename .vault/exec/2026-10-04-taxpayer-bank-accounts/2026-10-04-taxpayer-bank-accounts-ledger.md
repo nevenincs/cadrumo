@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6191ccf8e598041d27b690fb87b78c2eee8a43693d84463421f87175a506fa90'
+body_hash: 'sha256:4c854b00f166609b71c61578f407c4e07110d75b5585293f021be3cec75f4879'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -380,6 +380,25 @@ related:
 - `S28` `verify:` `pytest dev/registry/pipeline/tests: failures trace to registry state (360 source ineligible for 2010, bootstrap targets already generated, 210 export_layouts clearance, m390 maps), none to required_with` -> `fail`
 - `S28` `verify:` `ruff check + ruff format + ty on touched scopes` -> `pass`
 - `S28` `by:` `lane-d`
+- `S19` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_accounts.py`
+- `S19` `A` `dev/tui/harness/modelo_export_fixtures.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/export.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_export_result_screen.py`
+- `S19` `M` `dev/tui/harness/surfaces.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/es/common.yml`
+- `S19` `M` `src/cadrumo/locales/ca/common.yml`
+- `S19` `M` `src/cadrumo/locales/hu/common.yml`
+- `S19` `verify:` `pytest tui/modelo tui/ledger/tests test_tui_review_elements (970 passed; 3 pre-existing failures: test_grid_tables_real x2 fails identically with this Step reverted, adapter-import sweep)` -> `pass`
+- `S19` `verify:` `pytest test_workbench_export_accounts test_export_result_screen (22 passed)` -> `pass`
+- `S19` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S19` `verify:` `dev.tui visual review: render modelo-export-accounts and modelo-export-result-account at default viewports in both themes (16 frames, no failures, no missing glyphs or geometry findings), frames inspected for masking, scroll reach and layout; inventory now covers WorkbenchExportScreen and ModeloExportResultScreen` -> `pass`
+- `S19` `by:` `lane-e`
 
 ## Notes
 
@@ -401,3 +420,4 @@ related:
 - `S20` `test_ledger_import_ux` CLI native tests fail with `REFUSED_LOCAL_RUNTIME` with and without this Step (checked against the committed `import_operation.py);` the TUI import door reads bank statements only, invoice books are refused with a pointer to app ledger invoice import because they have no registered preview; LedgerImportRequest gains `expected_source_sha256` and the result `source_digests` (application/ledger is Lane B scope, touched because the digest binding must be enforced in the worker)
 - `S28` `complementaria_page_marker` (amendment-driven C) is also mapped on the page indicators of 131, 232, 303 and 353, where DR353 and DR303 read the slot as a continuation-page marker too; only 360 moved to `continuation_page_marker` here
 - `S28` `required_with` is a new reviewed semantic-map and layout field: the block campos keep the design's obligatorio beside the anchor and render their blank fill without it
+- `S19` pickers are offered where the dialog asks elections (303); the export panel now scrolls, since the 303 dialog was already clipped below its elections at 80x24; capability refusals (missing, non-ES, past-cutoff) already reach the workbench notice through the recorded error detail, so no new refusal path was added; the export result value column truncates long values at narrow widths, pre-existing

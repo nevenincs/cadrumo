@@ -2226,6 +2226,11 @@ tui:
       title: Dokumentumolvasó
   modelo:
     export:
+      account:
+        charge_label: A számla, amelyet az AEAT megterhel (domiciliación)
+        designated: A saját számláidnál megadott kijelölés szerint
+        designated_option: '%{account} (kijelölt)'
+        refund_label: A számla, amelyre az AEAT a visszatérítést utalja
       artefact:
         calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
         calculation_report_pdf: Aláírt számítási összesítő (PDF), csak helyi nyilvántartás
@@ -2247,6 +2252,7 @@ tui:
       replace_existing:
         label: Az ezen az elérési úton már meglévő fájl lecserélése
       result:
+        account_in_filing: a bevallás saját adatai között
         close: Bezárás
         completeness:
           not_assessed: 'Nem értékelt: a számítási jelentés nem benyújtási fájl'
@@ -2262,11 +2268,13 @@ tui:
           artefact: Exportált dokumentum
           byte_size: Méret (bájt)
           calculation_revision_id: Mentett számítás
+          charge_account: Terhelési számla
           completeness: Teljesség
           evidence_status: Bizonyíték státusza
           export_format: Formátum
           file_sha256: A fájl SHA-256 kivonata
           output_path: Fájl
+          refund_account: Visszatérítési számla
           software_identity_grade: Szoftverazonosító a fájl fejlécében
         software_identity_grade:
           development_mock: Fejlesztői azonosító (csupa nulla); az AEAT nem fogadja
@@ -2283,6 +2291,8 @@ tui:
             ezért nem tudta megerősíteni, hogy minden kötelező rovat bekerült a fájlba.
             Benyújtás előtt vesd össze az exportált rovatokat a hivatalos Diseño de
             Registros rekordleírással.'
+          cutoff_unverified: A benyújtási időszak nem ad meg csoportos beszedési határidőt,
+            így nem ellenőrizhető, hogy az AEAT még elfogadja-e ezt a csoportos beszedést.
           development_software_identity: A fájl fejléce a csupa nullából álló fejlesztői
             szoftverazonosítót hordozza; az AEAT ezt a fájlt nem fogadja el benyújtásra.
           development_software_identity_of_filing_file: A Modelo benyújtási fájlja

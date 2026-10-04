@@ -2236,6 +2236,11 @@ tui:
       title: Lector de documents
   modelo:
     export:
+      account:
+        charge_label: Compte on l'AEAT carrega (domiciliació)
+        designated: Segons la designació dels teus comptes propis
+        designated_option: '%{account} (designat)'
+        refund_label: Compte on l'AEAT ingressa la devolució
       artefact:
         calculation_report_csv: Informe de càlcul (CSV), només registre local
         calculation_report_pdf: Resum del càlcul signat (PDF), només registre local
@@ -2257,6 +2262,7 @@ tui:
       replace_existing:
         label: Substituir el fitxer que ja existeixi en aquest camí
       result:
+        account_in_filing: inclosa en les dades de la mateixa declaració
         close: Tanca
         completeness:
           not_assessed: 'No avaluada: un informe de càlcul no és un fitxer de presentació'
@@ -2272,11 +2278,13 @@ tui:
           artefact: Document exportat
           byte_size: Mida (bytes)
           calculation_revision_id: Càlcul desat
+          charge_account: Compte de càrrec
           completeness: Integritat
           evidence_status: Estat com a evidència
           export_format: Format
           file_sha256: SHA-256 del fitxer
           output_path: Fitxer
+          refund_account: Compte de devolució
           software_identity_grade: Identitat de programari a la capçalera del fitxer
         software_identity_grade:
           development_mock: Identitat de desenvolupament (tot zeros); l'AEAT no l'accepta
@@ -2293,6 +2301,8 @@ tui:
             del model, així que no ha pogut confirmar que totes les caselles obligatòries
             arribin al fitxer. Revisa les caselles exportades amb el Diseño de Registros
             oficial abans de presentar.'
+          cutoff_unverified: El termini de presentació no indica data límit de domiciliació,
+            així que no s'ha pogut comprovar si l'AEAT encara accepta aquesta domiciliació.
           development_software_identity: La capçalera del fitxer porta la identitat
             de programari de desenvolupament amb tot zeros; l'AEAT no acceptarà aquest
             fitxer per presentar-lo.

@@ -122,6 +122,7 @@ class _DeclarationDestination:
             declarations=declarations.declarations,
             source=lambda selected: RuntimeModeloWorkbenchSource(self._root._client, selected),
             door=self.lifecycle_door,
+            own_accounts=compose_runtime_own_account_door(client=self._root._client, profile_label=self._root._label),
         )(declaration)
 
     def calendar_declaration(

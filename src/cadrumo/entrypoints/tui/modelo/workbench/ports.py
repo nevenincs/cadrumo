@@ -26,6 +26,7 @@ from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 if TYPE_CHECKING:
     from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
+    from ...ledger.own_accounts import LedgerOwnAccountDoorV1
     from ...operations.controller_port import OperationControllerPort
 
 
@@ -130,10 +131,18 @@ class WorkbenchCalculationEvidence:
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchExportOffer:
-    """The exports this installation can publish, and whether the declaration asks payment elections."""
+    """The exports this installation can publish, and whether the declaration asks payment elections.
+
+    ``own_accounts`` reads the taxpayer's own bank accounts so the dialog can offer
+    the charge and refund account for this filing, prefilled from the designations
+    for ``modelo``; ``None`` offers no account choice and the export resolves the
+    designations itself.
+    """
 
     artefacts: tuple[ModeloExportArtefact, ...]
     asks_elections: bool
+    modelo: str = ""
+    own_accounts: LedgerOwnAccountDoorV1 | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +155,9 @@ class WorkbenchExportRequest:
     payment_election: PaymentElection
     prior_domiciliation_election: PriorDomiciliationElection
     replace_existing: bool
+    #: Per-filing own-account choices by opaque id; ``None`` lets the export resolve the designations.
+    charge_account_id: str | None = None
+    refund_account_id: str | None = None
 
 
 class ModeloWorkbenchActionsV1(Protocol):

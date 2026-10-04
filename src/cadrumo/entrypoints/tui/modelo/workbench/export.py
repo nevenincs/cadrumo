@@ -4,8 +4,11 @@ The dialog offers only the artefacts this installation can publish, so the
 filer never picks an export the installation would refuse. A Modelo 303 asks the
 three declaration-shaping elections -- refund, payment and prior direct debit --
 each pre-set to its neutral default and never blank; other modelos submit those
-defaults without asking. Nothing is exported here: the dialog returns the typed
-request and the workbench runs it through the supervised operation.
+defaults without asking. Beside the elections it offers the own bank account
+AEAT debits and the one it pays a refund into, each prefilled from the Ledger
+designation for this modelo and shown masked. Nothing is exported here: the
+dialog returns the typed request and the workbench runs it through the
+supervised operation.
 """
 
 from __future__ import annotations
@@ -17,17 +20,26 @@ from typing import ClassVar, Final, cast, override
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Select, Static
 
+from .....application.ledger.own_account_operation import (
+    LedgerOwnAccountRequest,
+    LedgerOwnAccountResult,
+    OwnAccountProjection,
+)
+from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.optional_extras import PDF_EXTRA, OptionalExtra, optional_extra_available
 from .....core.payment_election import PaymentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
+from .....domain.transactions.own_accounts import OwnAccountRole
 from ...components.theme import tokenised
+from ...ledger.own_accounts import LedgerOwnAccountDoorV1
+from ...ledger.workspace_presentation import door_refusal_text
 from ..export_result import EXPORT_ARTEFACT_LOCALE_KEYS
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchExportOffer, WorkbenchExportRequest
@@ -51,6 +63,19 @@ PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: Final[Mapping[PriorDomiciliationElecti
         PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
     }
 )
+
+#: The account choice that leaves the export to resolve the Ledger designations.
+DESIGNATED_ACCOUNT: Final = "-"
+_ACCOUNT_CONTROLS: Final[Mapping[OwnAccountRole, str]] = MappingProxyType(
+    {OwnAccountRole.CHARGE: "export-charge-account", OwnAccountRole.REFUND: "export-refund-account"}
+)
+
+
+def designated_account_id(result: LedgerOwnAccountResult, role: OwnAccountRole, modelo: str) -> str | None:
+    """The account the register designates for ``role`` on ``modelo``: its own scope first, then every modelo."""
+    scoped = {(item.role, item.modelo): item.own_account_id for item in result.designations}
+    return scoped.get((role, modelo)) or scoped.get((role, None))
+
 
 #: An artefact that needs an optional extra is offered only when the extra is
 #: installed, so the operator never picks an export the installation would
@@ -124,7 +149,7 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
 
     @override
     def compose(self) -> ComposeResult:
-        with Container(id="export-backdrop"), Vertical(id="export-panel"):
+        with Container(id="export-backdrop"), VerticalScroll(id="export-panel"):
             yield Static(tr("tui.modelo.workbench.export.title"), id="export-title", markup=False)
             yield Input(placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"), id="export-path")
             yield Static(tr("tui.modelo.export.artefact.label"), markup=False)
@@ -138,6 +163,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
             )
             if self._offer.asks_elections:
                 yield from self._compose_elections()
+                if self._offer.own_accounts is not None:
+                    yield from self._compose_accounts()
             yield Checkbox(tr("tui.modelo.export.replace_existing.label"), id="export-replace")
             yield Static("", id="export-notice", markup=False)
             with Horizontal(id="export-actions"):
@@ -173,6 +200,46 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
                 id=control_id,
             )
 
+    def _compose_accounts(self) -> ComposeResult:
+        for role, control_id in _ACCOUNT_CONTROLS.items():
+            yield Static(tr(f"tui.modelo.export.account.{role.value}_label"), markup=False)
+            yield Select[str](
+                ((tr("tui.modelo.export.account.designated"), DESIGNATED_ACCOUNT),),
+                value=DESIGNATED_ACCOUNT,
+                allow_blank=False,
+                id=control_id,
+            )
+
+    async def _load_accounts(self, door: LedgerOwnAccountDoorV1) -> None:
+        """Offer the open own accounts, masked, each role prefilled from its designation for this modelo."""
+        try:
+            result = await door(LedgerOwnAccountRequest(profile_id=door.profile_id, action="list"))
+        except CadrumoError as error:
+            self.query_one("#export-notice", Static).update(door_refusal_text(error))
+            return
+        open_accounts = tuple(item for item in result.accounts if item.closed_on is None)
+        for role, control_id in _ACCOUNT_CONTROLS.items():
+            designated = designated_account_id(result, role, self._offer.modelo)
+            options = [(tr("tui.modelo.export.account.designated"), DESIGNATED_ACCOUNT)]
+            options.extend((self._account_label(item, designated), item.own_account_id) for item in open_accounts)
+            select = cast("Select[str]", self.query_one(f"#{control_id}", Select))
+            select.set_options(options)
+            known = any(item.own_account_id == designated for item in open_accounts)
+            select.value = designated if designated is not None and known else DESIGNATED_ACCOUNT
+
+    @staticmethod
+    def _account_label(account: OwnAccountProjection, designated: str | None) -> str:
+        label = f"{account.own_account_id} · {account.label} · {account.masked_iban}"
+        if account.own_account_id == designated:
+            return tr("tui.modelo.export.account.designated_option", account=label)
+        return label
+
+    def _account(self, role: OwnAccountRole) -> str | None:
+        if not self._offer.asks_elections or self._offer.own_accounts is None:
+            return None
+        value = self._election(_ACCOUNT_CONTROLS[role])
+        return None if value == DESIGNATED_ACCOUNT else value
+
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""
         fit_dialog_width(self, event.size.width)
@@ -181,6 +248,9 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
         """Start in the destination field."""
         fit_dialog_width(self, self.app.size.width)
         self.query_one("#export-path", Input).focus()
+        door = self._offer.own_accounts
+        if self._offer.asks_elections and door is not None:
+            self.run_worker(self._load_accounts(door), group="export-accounts")
 
     def _election(self, control_id: str) -> str:
         """Return the selected election, refusing rather than stringifying a blank selection."""
@@ -212,6 +282,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
             if asks
             else PriorDomiciliationElection.KEEP,
             replace_existing=self.query_one("#export-replace", Checkbox).value,
+            charge_account_id=self._account(OwnAccountRole.CHARGE),
+            refund_account_id=self._account(OwnAccountRole.REFUND),
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -237,9 +309,11 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
 
 
 __all__ = [
+    "DESIGNATED_ACCOUNT",
     "PAYMENT_ELECTION_LOCALE_KEYS",
     "PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS",
     "REFUND_ELECTION_LOCALE_KEYS",
     "WorkbenchExportScreen",
+    "designated_account_id",
     "offered_export_artefacts",
 ]

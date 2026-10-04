@@ -273,6 +273,25 @@ def _ledger_import_account_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _modelo_export_surfaces() -> tuple[Surface, ...]:
+    """The export dialog's own-account choice and the result that names it."""
+    from .modelo_export_fixtures import (
+        ModeloExportFixtureState,
+        build_modelo_export_fixture,
+        modelo_export_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"modelo-export-{state.value}",
+            f"Modelo export with an own-account choice: {state.value}",
+            partial(build_modelo_export_fixture, state),
+            interfaces=modelo_export_fixture_interfaces(state),
+        )
+        for state in ModeloExportFixtureState
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
@@ -281,6 +300,7 @@ SURFACES: dict[str, Surface] = {
         *_profile_surfaces(),
         *_ledger_own_account_surfaces(),
         *_ledger_import_account_surfaces(),
+        *_modelo_export_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

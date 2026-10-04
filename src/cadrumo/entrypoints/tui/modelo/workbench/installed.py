@@ -95,6 +95,7 @@ from .screen import ModeloWorkbenchScreen
 if TYPE_CHECKING:
     from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
+    from ...ledger.own_accounts import LedgerOwnAccountDoorV1
     from ...operations.controller_port import OperationControllerPort
 
 
@@ -180,11 +181,13 @@ class InstalledModeloWorkbench:
         declaration: DeclarationsWorkspaceDeclarationRefV1,
         source: ModeloWorkbenchSourceV1,
         door: LifecycleDoorFactory,
+        own_accounts: LedgerOwnAccountDoorV1 | None = None,
     ) -> None:
-        """Bind the declaration, its workbench source and its door factory."""
+        """Bind the declaration, its workbench source, its door factory and the own-account register door."""
         self._declaration = declaration
         self._source = source
         self._door_factory = door
+        self._own_accounts = own_accounts
         self._state: _ReadState | None = None
         self._apply_operation: _PendingApply | None = None
 
@@ -356,7 +359,10 @@ class InstalledModeloWorkbench:
     def export_offer(self) -> WorkbenchExportOffer:
         """Offer what this installation can publish; a Modelo 303 asks its payment elections."""
         return WorkbenchExportOffer(
-            artefacts=offered_export_artefacts(), asks_elections=str(self._declaration.modelo) == "303"
+            artefacts=offered_export_artefacts(),
+            asks_elections=str(self._declaration.modelo) == "303",
+            modelo=str(self._declaration.modelo),
+            own_accounts=self._own_accounts,
         )
 
     async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
@@ -368,6 +374,8 @@ class InstalledModeloWorkbench:
             prior_domiciliation_election=request.prior_domiciliation_election,
             replace_existing=request.replace_existing,
             artefact=request.artefact,
+            charge_account_id=request.charge_account_id,
+            refund_account_id=request.refund_account_id,
         )
 
     async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
@@ -454,6 +462,7 @@ def compose_installed_modelo_workbench_factory(
     declarations: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
     source: DeclarationSourceFactory,
     door: DeclarationDoorFactory,
+    own_accounts: LedgerOwnAccountDoorV1 | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Open a workbench for exactly the declarations this generation admitted.
 
@@ -475,6 +484,7 @@ def compose_installed_modelo_workbench_factory(
             declaration=declaration,
             source=source(declaration),
             door=lambda read: door(declaration, read),
+            own_accounts=own_accounts,
         )
         return ModeloWorkbenchScreen(workbench, actions=workbench)
 

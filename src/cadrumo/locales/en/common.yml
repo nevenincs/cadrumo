@@ -2191,6 +2191,11 @@ tui:
       title: Document reader
   modelo:
     export:
+      account:
+        charge_label: Account AEAT debits (domiciliación)
+        designated: As designated in your own accounts
+        designated_option: '%{account} (designated)'
+        refund_label: Account AEAT pays a refund into
       artefact:
         calculation_report_csv: Calculation report (CSV), a local record only
         calculation_report_pdf: Signed calculation summary (PDF), a local record only
@@ -2212,6 +2217,7 @@ tui:
       replace_existing:
         label: Replace a file already at this path
       result:
+        account_in_filing: held in the filing's own facts
         close: Close
         completeness:
           not_assessed: 'Not assessed: a calculation report is not a filing file'
@@ -2227,11 +2233,13 @@ tui:
           artefact: Exported document
           byte_size: Size (bytes)
           calculation_revision_id: Saved calculation
+          charge_account: Charge account
           completeness: Completeness
           evidence_status: Evidence status
           export_format: Format
           file_sha256: SHA-256 of the file
           output_path: File
+          refund_account: Refund account
           software_identity_grade: Software identity in the file header
         software_identity_grade:
           development_mock: Development identity (all zeros); not accepted by AEAT
@@ -2246,6 +2254,8 @@ tui:
             Cadrumo has no completeness list for this version of the modelo, so it
             could not confirm that every required box reached the file. Review the
             exported boxes against the official Diseño de Registros before filing.'
+          cutoff_unverified: The filing window declares no direct-debit deadline,
+            so whether AEAT still accepts this domiciliación could not be checked.
           development_software_identity: The file header carries the all-zero development
             software identity; AEAT will not accept this file for presentation.
           development_software_identity_of_filing_file: The filing file for this modelo

@@ -133,6 +133,11 @@ def export_result_warnings(result: ModeloExportPublicResultV3 | None) -> tuple[N
                 else tr("tui.modelo.export.result.warning.development_software_identity_of_filing_file"),
             )
         )
+    receipt = result.fichero_boe
+    if receipt is not None and receipt.domiciliation_cutoff_unverified:
+        warnings.append(
+            NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.warning.cutoff_unverified"))
+        )
     if result.completeness is ModeloExportCompleteness.UNVERIFIED:
         warnings.append(
             NoticePresentation(
@@ -189,6 +194,13 @@ class ModeloExportResultScreen(ModalScreen[None]):
             rows.update(EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS)
         for row_key, label_key in rows.items():
             table.add_row(tr(label_key), values[row_key], key=row_key)
+        account = None if result.fichero_boe is None else result.fichero_boe.selected_account
+        if account is not None:
+            table.add_row(
+                tr(f"tui.modelo.export.result.label.{account.role.value}_account"),
+                account.own_account_id or tr("tui.modelo.export.result.account_in_filing"),
+                key="selected_account",
+            )
 
     def action_technical(self) -> None:
         """Reveal or hide the calculation identity and exact exported-file digest."""

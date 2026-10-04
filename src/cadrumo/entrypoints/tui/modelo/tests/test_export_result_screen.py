@@ -22,7 +22,7 @@ from .....adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
 from .....application.modelo.calculation_report_export import ModeloCalculationReportResult
-from .....application.modelo.export import ModeloExportResult
+from .....application.modelo.export import ModeloExportAccountReference, ModeloExportResult
 from .....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
@@ -43,6 +43,7 @@ from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....core.period import Period
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from .....domain.transactions.own_accounts import OwnAccountRole
 from ....adapter_composition import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
 from ..export_result import (
@@ -92,6 +93,8 @@ def _filing_file_receipt(
     *,
     completeness_unverified: bool,
     software_identity_grade: AeatSoftwareIdentityGrade | None,
+    domiciliation_cutoff_unverified: bool = False,
+    selected_account: ModeloExportAccountReference | None = None,
 ) -> ModeloExportSettledResult:
     return ModeloExportSettledResult(
         fichero_boe=ModeloExportResult(
@@ -110,6 +113,8 @@ def _filing_file_receipt(
             bucket_event_id="event-1",
             software_identity_grade=software_identity_grade,
             completeness_unverified=completeness_unverified,
+            domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
+            selected_account=selected_account,
         )
     )
 
@@ -183,6 +188,26 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
         await pilot.pause()
 
     assert closed == [None]
+
+
+@pytest.mark.asyncio
+async def test_an_unverified_cutoff_is_warned_and_the_account_is_named_by_role_and_id(tmp_path: Path) -> None:
+    """A domiciliación with no declared cutoff is an advisory, and the account appears only by its opaque id."""
+    result = _publicly_projected(
+        _filing_file_receipt(
+            tmp_path,
+            completeness_unverified=False,
+            software_identity_grade=None,
+            domiciliation_cutoff_unverified=True,
+            selected_account=ModeloExportAccountReference(role=OwnAccountRole.CHARGE, own_account_id="acc-01"),
+        )
+    )
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(result))
+        await pilot.pause()
+        assert tr("tui.modelo.export.result.warning.cutoff_unverified") in _warnings(app)
+        assert _table_values(app)["selected_account"] == "acc-01"
 
 
 @pytest.mark.asyncio

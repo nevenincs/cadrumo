@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:c02cec013ab6ebca438ae3a3cce800ea6c98b9ae81c0766f94180548ad1ba4d6'
+body_hash: 'sha256:77df0c3e7fe2709e9c0885b9c219d6f6b9a22e9e677795caa83095739d23f642'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -83,7 +83,7 @@ Closes the 303 refusals that are account-adjacent but not solved by the register
 Puts own-account setup, import binding and per-filing account election in the Textual workbench.
 
 - [x] `P06.S18` - build and enroll the Ledger bank-accounts screen with full parity to app ledger account: masked list and detail view, add, edit, close, remove (refused while referenced) and charge or refund designation per modelo through injected doors and the ledger.own_account operation; enroll every state as dev/tui harness surfaces and pass visual review in the inventory, render and review server; `src/cadrumo/entrypoints/tui/ledger/, dev/tui/harness/`.
-- [ ] `P06.S19` - add account pickers prefilled from designations, the cutoff advisory and capability refusals to the Modelo export and review screens; `src/cadrumo/entrypoints/tui/modelo/workbench/`.
+- [x] `P06.S19` - add account pickers prefilled from designations, the cutoff advisory and capability refusals to the Modelo export and review screens; `src/cadrumo/entrypoints/tui/modelo/workbench/`.
 - [x] `P06.S20` - add the own-account picker to the import flow and bind preview and apply to the file content digest; `src/cadrumo/entrypoints/tui/ledger/import_flow.py, src/cadrumo/entrypoints/tui/ledger/models.py`.
 - [ ] `P06.S21` - add the 360 solicitud form with the solicitante or representante account choice; `src/cadrumo/entrypoints/tui/modelo/`.
 
