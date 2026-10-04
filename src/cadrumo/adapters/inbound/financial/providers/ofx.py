@@ -30,6 +30,7 @@ machine identity rather than a rendered installation command.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -76,7 +77,8 @@ def _looks_like_ofx(path: Path) -> bool:
     if path.suffix.lower() in OFX_EXTENSIONS:
         return True
     try:
-        head = path.read_bytes()[:256].upper()
+        with path.open("rb") as handle:
+            head = handle.read(256).upper()
     except OSError:
         return False
     return b"OFXHEADER" in head or b"<OFX>" in head or b"<BANKTRANLIST>" in head
@@ -216,8 +218,9 @@ class OfxProvider(FinancialProvider):
                 },
             )
         try:
-            statements = self._load_statements(path)
-            source_sha256 = self._compute_sha256(self._read_source_bytes(path))
+            source_bytes = self._read_source_bytes(path)
+            source_sha256 = self._compute_sha256(source_bytes)
+            statements = self._load_statements(source_bytes)
             transaction_count = 0
             for statement in statements:
                 _, account_id = _resolve_statement_context(statement)
@@ -250,7 +253,7 @@ class OfxProvider(FinancialProvider):
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
-        for statement in self._load_statements(path):
+        for statement in self._load_statements(source_bytes):
             currency, account_id = _resolve_statement_context(statement)
             for transaction in statement.transactions:
                 source_row_index += 1
@@ -333,8 +336,11 @@ class OfxProvider(FinancialProvider):
             booked_date=booked_date,
         )
 
-    def _load_statements(self, path: Path) -> tuple[_OfxStatementLike, ...]:
-        """Parse and spec-validate every statement block exposed by an OFX file.
+    def _load_statements(self, source_bytes: bytes) -> tuple[_OfxStatementLike, ...]:
+        """Parse and spec-validate every statement block in the guarded source bytes.
+
+        Parsing the bytes already read (and hashed) for provenance keeps the
+        recorded digest bound to exactly the content that produced the rows.
 
         Raises:
             MissingOptionalExtraError: If the ``ofx`` extra is not installed.
@@ -344,8 +350,7 @@ class OfxProvider(FinancialProvider):
 
         tree = OFXTree()
         try:
-            with path.open("rb") as handle:
-                tree.parse(handle)
+            tree.parse(io.BytesIO(source_bytes))
             parsed = tree.convert()
         # BROAD-EXCEPT-RATIONALE-OFX-PARSE: ofxtools surfaces several
         # unrelated failure types from its header parser and spec-validation

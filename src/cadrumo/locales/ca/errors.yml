@@ -1444,6 +1444,9 @@ errors:
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
+    ledger_import_period_without_span: El període {period} no abasta dates del calendari,
+      així que no pot filtrar les files importades. Fes servir un trimestre, un mes
+      o 0A.
     ledger_import_requires_bucket: La importació d'un extracte bancari requereix un
       perfil actiu, llevat del mode de prova.
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors

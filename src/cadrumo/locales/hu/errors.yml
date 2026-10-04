@@ -1363,6 +1363,8 @@ errors:
   transaction:
     import_source_invalid: A forrás nem érvényes főkönyvi dokumentum
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'
+    ledger_import_period_without_span: A(z) {period} időszak nem fed le naptári dátumokat,
+      ezért nem szűrheti az importált sorokat. Használj negyedévet, hónapot vagy 0A-t.
     ledger_import_requires_bucket: A főkönyvi forrásimporthoz aktív profil szükséges,
       kivéve, ha száraz-futási mód van használatban.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert

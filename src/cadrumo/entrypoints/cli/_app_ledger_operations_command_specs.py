@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ...application.operator_surface.command_ports import CommandNodeKind
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
@@ -317,8 +319,8 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_role=TransportRole.AUXILIARY,
             ),
             _boolean_flag_option("verbose", ("--verbose",), "cli.ledger.import.verbose_help"),
-            _OPTIONAL_PERIOD_OPTION,
-            _OPTIONAL_YEAR_OPTION,
+            replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help")),
+            replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help")),
         ),
         policy=_POLICY_2,
         handler=LazyBinding.available(DeferredTarget("._ledger_import_cli", "ledger_import", __package__)),

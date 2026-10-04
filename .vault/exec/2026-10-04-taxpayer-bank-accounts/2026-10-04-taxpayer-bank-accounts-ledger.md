@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:bfc9eb7fa6c4152371cf3733a468c1d8dfcfe3d5d497ed245d2ab169ba3981ac'
+body_hash: 'sha256:cbe9b0560f48a677ca4e2afbf05233147b7e67326d004c9b0ced176dbad94de9'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -81,8 +81,45 @@ related:
 - `S02` `verify:` `ruff check and format on touched files` -> `pass`
 - `S02` `verify:` `ty on touched files` -> `pass`
 - `S02` `by:` `lane-a`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/ledger_import.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/base.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/detection.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/ofx.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/pdf_n26.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/xls.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/xlsx.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/tests/test_provider_id_dispatch.py`
+- `S08` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_provider_id_enum.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_ux.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_import_export.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S08` `M` `src/cadrumo/locales/en/cli.yml`
+- `S08` `M` `src/cadrumo/locales/es/cli.yml`
+- `S08` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S08` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S08` `M` `src/cadrumo/locales/en/errors.yml`
+- `S08` `M` `src/cadrumo/locales/es/errors.yml`
+- `S08` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S08` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S08` `M` `docs/how-to/import-bank-statements.md`
+- `S08` `M` `docs/locales/es/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `M` `docs/locales/ca/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `M` `docs/locales/hu/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `A` `src/cadrumo/adapters/inbound/financial/providers/tests/test_source_byte_binding.py`
+- `S08` `verify:` `pytest src/cadrumo/adapters/inbound/financial` -> `pass`
+- `S08` `verify:` `pytest src/cadrumo/application/ledger/tests src/cadrumo/application/transactions` -> `pass`
+- `S08` `verify:` `pytest test_ledger_import_ux.py -k period-or-relative-import` -> `pass`
+- `S08` `verify:` `pytest entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py` -> `pass`
+- `S08` `verify:` `ruff check and format on touched files` -> `pass`
+- `S08` `verify:` `just check-types touched files` -> `pass`
+- `S08` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
 - `S01` import-boundary gate: 15/15 contracts kept; its failure is the pre-existing `dev/docs/serve_languages.py` re-export and stale import-load-target metadata. 2 pre-existing failures in core/errors exception-hygiene tests name unrelated modules.
 - `S02` Directory run: own-account and namespace tests pass; 39 failures are pre-existing and unrelated (OS keyring logon-session probe, evidence-draft extraction, composing-write declarations naming other modules).
+- `S08` `docs/_sequences` import-provider-list golden not refreshed: dev.docs.sequences refresh fails in registry composition on Lane A in-flight `own_account_operation;` refresh pending

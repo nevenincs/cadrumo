@@ -3344,10 +3344,16 @@ cli:
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
+      no_rows_in_period: 'No s''ha importat cap entrada: cap fila de l''arxiu té una
+        data dins del període seleccionat.'
+      period_help: 'Importa només les files amb data valor (o data de càrrec) dins
+        d''aquest període AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Requereix
+        --year.'
       provider_help: Proveïdor del format de l'extracte.
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Comprovar els apunts després de la importació
       verify_source_help: Fitxer original usat per comprovar les files importades.
+      year_help: Any del filtre --period (p. ex. 2024).
     labels:
       active: Actives
       amount: Import

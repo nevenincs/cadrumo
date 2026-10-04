@@ -184,6 +184,17 @@ def _empty_import_notice(result: LedgerImportResultProjection) -> tuple[str, Not
                 context={"imported": "0", "skipped": str(result.skipped)},
             ),
         )
+    if result.period is not None and result.rows == 0:
+        message = tr("cli.ledger.import.no_rows_in_period")
+        return (
+            f"{tr('cli.ledger.labels.notice')}\t{message}",
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.import.no_rows_in_period",
+                message=message,
+                context={"imported": "0", "skipped": "0"},
+            ),
+        )
     message = tr("cli.ledger.import.no_rows_imported")
     return (
         f"{tr('cli.ledger.labels.notice')}\t{message}",

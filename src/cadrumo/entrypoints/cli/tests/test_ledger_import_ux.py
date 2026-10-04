@@ -20,7 +20,7 @@ from .ledger_ux_support import (
     _invoke_exact_profile,
     _open_bucket_session,
 )
-from .runtime_profile_cli_fixture import native_cli_profile_scope
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -281,6 +281,54 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
     assert _notice_projection(document, "ledger.import.no_rows_imported") == {
         "severity": "info",
         "code": "ledger.import.no_rows_imported",
+        "context": {"imported": "0", "skipped": "0"},
+        "action": None,
+    }
+
+
+def _two_quarter_statement(tmp_path: Path) -> Path:
+    statement = tmp_path / "two-quarters.csv"
+    statement.write_text(
+        _N26_HEADER
+        + "2026-01-15,Client SL,Invoice 1,121.00,EUR,n26-101\n"
+        + "2026-04-15,Client SL,Invoice 2,242.00,EUR,n26-102\n",
+        encoding="utf-8",
+    )
+    return statement
+
+
+def _period_import(profile: NativeCliProfileFixture, statement: Path, *scope: str) -> dict[str, object]:
+    result = _invoke_exact_profile(
+        profile,
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", *scope],
+    )
+    assert result.exit_code == 0, result.output
+    return _json_document(result.output)
+
+
+def test_import_period_keeps_only_rows_dated_inside_it(tmp_path: Path) -> None:
+    """`--period`/`--year` import the rows whose date falls in the period and no others."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="period-ledger-import", facts={})
+        scoped = _json_object(_period_import(profile, statement, "--period", "1T", "--year", "2026")["result"])
+        whole = _json_object(_period_import(profile, statement)["result"])
+
+    assert (scoped["rows"], scoped["imported"], scoped["skipped"]) == (1, 1, 0)
+    assert (whole["rows"], whole["imported"], whole["skipped"]) == (2, 1, 1)
+
+
+def test_import_period_matching_no_rows_explains_the_zero_import(tmp_path: Path) -> None:
+    """A period no row falls in says so instead of claiming the file had no data rows."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="period-ledger-import", facts={})
+        document = _period_import(profile, statement, "--period", "4T", "--year", "2026")
+
+    assert _json_object(document["result"])["imported"] == 0
+    assert _notice_projection(document, "ledger.import.no_rows_in_period") == {
+        "severity": "info",
+        "code": "ledger.import.no_rows_in_period",
         "context": {"imported": "0", "skipped": "0"},
         "action": None,
     }

@@ -1338,6 +1338,8 @@ errors:
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
+    ledger_import_period_without_span: Period {period} has no calendar date span,
+      so it cannot filter imported rows. Use a quarter, a month or 0A.
     ledger_import_requires_bucket: Ledger source import requires an active profile
       unless dry-run mode is used.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:

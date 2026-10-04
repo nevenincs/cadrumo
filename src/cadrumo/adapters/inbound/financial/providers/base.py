@@ -209,6 +209,40 @@ def _resolved_absolute_source_path(absolute_path: str) -> Path:
     return Path(absolute_path).resolve()
 
 
+def require_admissible_source(path: Path) -> Path:
+    """Return the resolved source path after the shared input safety guards.
+
+    Refuses a symlink, a missing or non-regular file, and a source over the
+    ingest size ceiling. Detection applies it before sniffing or probing any
+    provider, and every provider applies it before reading bytes.
+
+    Raises:
+        InvalidFinancialSourceError: When the source is not admissible.
+    """
+    if path.is_symlink():
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_is_symlink",
+            context={"path": str(path)},
+        )
+    resolved = path.resolve()
+    if not resolved.exists() or not resolved.is_file():
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_not_found",
+            context={"path": str(resolved)},
+        )
+    size = resolved.stat().st_size
+    if size > _MAX_SOURCE_BYTES:
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_too_large",
+            context={
+                "path": str(resolved),
+                "size_bytes": size,
+                "max_bytes": _MAX_SOURCE_BYTES,
+            },
+        )
+    return resolved
+
+
 class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
 
@@ -350,33 +384,13 @@ class FinancialProvider(ABC):
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read raw source bytes after enforcing adapter input safety guards.
 
-        The shared guard refuses symlinks, missing files, non-files, and sources
-        over the configured size ceiling before format-specific parsers receive
-        bytes. Concrete providers reuse the same bytes for validation,
-        extraction, and SHA-256 provenance.
+        :func:`require_admissible_source` refuses symlinks, missing files,
+        non-files, and sources over the configured size ceiling before
+        format-specific parsers receive bytes. Concrete providers parse the same
+        bytes they hash, so the SHA-256 provenance names exactly the content
+        that produced the rows.
         """
-        if path.is_symlink():
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_is_symlink",
-                context={"path": str(path)},
-            )
-        resolved = path.resolve()
-        if not resolved.exists() or not resolved.is_file():
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_not_found",
-                context={"path": str(resolved)},
-            )
-        size = resolved.stat().st_size
-        if size > _MAX_SOURCE_BYTES:
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_too_large",
-                context={
-                    "path": str(resolved),
-                    "size_bytes": size,
-                    "max_bytes": _MAX_SOURCE_BYTES,
-                },
-            )
-        return resolved.read_bytes()
+        return require_admissible_source(path).read_bytes()
 
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:

@@ -18,6 +18,7 @@ every N26 current-account or FX statement variant.
 
 from __future__ import annotations
 
+import io
 import re
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -131,7 +132,7 @@ class PdfN26Provider(FinancialProvider):
             A :class:`ProviderValidation` with the validation outcome.
         """
         try:
-            pages = self._extract_pages(path)
+            pages = self._extract_pages(self._read_source_bytes(path))
             self._require_n26_statement(pages)
             currency = _extract_statement_currency(pages)
             row_count = sum(1 for _ in _iter_statement_rows(pages))
@@ -155,7 +156,7 @@ class PdfN26Provider(FinancialProvider):
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the N26 PDF statement."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
-        pages = self._extract_pages(path)
+        pages = self._extract_pages(source_bytes)
         self._require_n26_statement(pages)
         currency = _extract_statement_currency(pages)
         for source_row_index, parsed_row in enumerate(_iter_statement_rows(pages), start=1):
@@ -201,14 +202,14 @@ class PdfN26Provider(FinancialProvider):
                 raw_fields=raw_fields,
             )
 
-    def _extract_pages(self, path: Path) -> tuple[tuple[str, ...], ...]:
-        """Return normalized text lines for every PDF page."""
+    def _extract_pages(self, source_bytes: bytes) -> tuple[tuple[str, ...], ...]:
+        """Return normalized text lines for every page of the guarded PDF bytes."""
         try:
             import pdfplumber
         except ImportError as exc:
             raise InvalidFinancialSourceError("pdfplumber is not installed") from exc
         try:
-            with pdfplumber.open(str(path)) as pdf:
+            with pdfplumber.open(io.BytesIO(source_bytes)) as pdf:
                 pages: list[tuple[str, ...]] = []
                 for page in pdf.pages:
                     text = page.extract_text() or ""

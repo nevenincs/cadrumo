@@ -3105,10 +3105,15 @@ cli:
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
+      no_rows_in_period: 'No entries were imported: none of the file''s rows has a
+        date within the selected period.'
+      period_help: 'Import only rows whose value date (or booking date) falls in this
+        AEAT period: 1T-4T (quarters), 0A (annual), 01-12 (months). Requires --year.'
       provider_help: Statement format provider.
       verbose_help: Show detailed information during import
       verify_help: Check entries after import
       verify_source_help: Original file used to check imported rows.
+      year_help: Year of the --period filter (e.g. 2024).
     labels:
       active: Active
       amount: Amount

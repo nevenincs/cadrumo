@@ -58,7 +58,7 @@ row:
 
 `--provider csv` names the statement format. `--provider auto` asks `aeat` to
 detect it. The recognized providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
-`excel`, `n26`, `pdf`, and `pdf-n26`. If detection picks the wrong format,
+`xls`, and `pdf-n26` (an N26 PDF statement). If detection picks the wrong format,
 replace `auto` with the exact provider - run `aeat app ledger import --help` or
 see the [CLI reference](../cli/index.rst) for the current provider list.
 

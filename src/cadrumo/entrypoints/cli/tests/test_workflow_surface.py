@@ -551,7 +551,7 @@ def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
     )
 
     imported = _invoke(
-        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26", "--dry-run"],
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     overview = _invoke(["--format", "json", "app", "overview", "status"])
 
@@ -586,7 +586,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         encoding="utf-8",
     )
 
-    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26"])
+    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
 
     assert imported.exit_code == 0, imported.output
     import_envelope = json.loads(_json_output(imported))
@@ -645,7 +645,7 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
             "--file",
             str(statement),
             "--provider",
-            "n26",
+            "csv",
             "--dry-run",
             "--verify",
             "--verify-source",
@@ -698,7 +698,7 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
                 "--file",
                 str(statement),
                 "--provider",
-                "n26",
+                "csv",
                 "--dry-run",
                 "--verify",
                 "--verify-source",

@@ -72,7 +72,7 @@ class XlsProvider(FinancialProvider):
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that ``path`` is a readable ``.xls`` workbook with a known bank layout and data rows."""
         try:
-            selected = self._select_worksheet(path)
+            selected = self._select_worksheet(self._read_source_bytes(path), path=path)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         match = selected.match
@@ -96,8 +96,9 @@ class XlsProvider(FinancialProvider):
     @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the best-matching worksheet."""
-        source_sha256 = self._compute_sha256(self._read_source_bytes(path))
-        selected = self._select_worksheet(path)
+        source_bytes = self._read_source_bytes(path)
+        source_sha256 = self._compute_sha256(source_bytes)
+        selected = self._select_worksheet(source_bytes, path=path)
         yield from iter_worksheet_rows(
             provider=self,
             path=path,
@@ -107,10 +108,10 @@ class XlsProvider(FinancialProvider):
             sheet_name=selected.name,
         )
 
-    def _select_worksheet(self, path: Path) -> _SelectedWorksheet:
+    def _select_worksheet(self, source_bytes: bytes, *, path: Path) -> _SelectedWorksheet:
         """Read the workbook, choose its best worksheet and refuse formula cells in its data rows."""
         try:
-            worksheets = read_legacy_workbook(self._read_source_bytes(path))
+            worksheets = read_legacy_workbook(source_bytes)
         except TabularSourceError as exc:
             raise InvalidFinancialSourceError(f"could not open legacy workbook {path.name}: {exc}") from exc
         best = _best_worksheet_layout(worksheets)

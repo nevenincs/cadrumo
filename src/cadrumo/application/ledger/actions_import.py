@@ -26,6 +26,7 @@ from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXT
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable
+from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
@@ -75,16 +76,18 @@ from .protocols import (
 
 
 class LedgerProviderID(StrEnum):
-    """Canonical provider ID strings accepted by the ledger import dispatch."""
+    """Canonical provider ID strings accepted by the ledger import dispatch.
+
+    Each token names the parser it selects: ``auto`` is the only token that
+    runs detection, and a format token never stands for another format.
+    """
 
     AUTO = "auto"
     CSV = "csv"
     OFX = "ofx"
     QFX = "qfx"
     XLSX = "xlsx"
-    EXCEL = "excel"
-    N26 = "n26"
-    PDF = "pdf"
+    XLS = "xls"
     PDF_N26 = "pdf-n26"
 
 
@@ -279,12 +282,34 @@ def _prepare_source_import(
     provider = _resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    parsed_rows = tuple(provider.ingest(command.path))
+    parsed_rows = _rows_in_period(tuple(provider.ingest(command.path)), command.period)
     return _PreparedSourceImport(
         parsed_rows=parsed_rows,
         validation=validation,
         source_verification=source_verification,
     )
+
+
+def _rows_in_period(
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
+    period: Period | None,
+) -> tuple[ParsedLedgerRowProtocol, ...]:
+    """Keep the rows whose effective date falls in ``period``, or all rows without one.
+
+    The effective date is the value date, else the booking date, the same
+    date every other ledger period scope reads.
+
+    Raises:
+        TransactionValidationError: When ``period`` has no calendar date span.
+    """
+    if period is None:
+        return parsed_rows
+    if not period.has_date_span():
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_period_without_span",
+            context={"period": str(period)},
+        )
+    return tuple(parsed for parsed in parsed_rows if period.contains(parsed.raw.value_date or parsed.raw.booked_date))
 
 
 def _load_source_catalogue(

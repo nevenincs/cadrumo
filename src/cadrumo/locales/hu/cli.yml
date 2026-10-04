@@ -3312,10 +3312,16 @@ cli:
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
+      no_rows_in_period: 'Nem importáltál bejegyzést: a fájl egyik sorának dátuma
+        sem esik a kiválasztott időszakba.'
+      period_help: 'Csak azokat a sorokat importálja, amelyek értéknapja (vagy könyvelési
+        napja) ebbe az AEAT-időszakba esik: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok).
+        A --year megadása kötelező.'
       provider_help: Kivonatformátum-szolgáltató.
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Tételek ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
+      year_help: A --period szűrő éve (pl. 2024).
     labels:
       active: Aktív
       amount: Összeg

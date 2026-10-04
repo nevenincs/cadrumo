@@ -3365,10 +3365,16 @@ cli:
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
         de datos.'
+      no_rows_in_period: 'No se importó ninguna entrada: ninguna fila del archivo
+        tiene una fecha dentro del periodo seleccionado.'
+      period_help: 'Importa solo las filas cuya fecha valor (o fecha de cargo) cae
+        en este periodo AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Requiere
+        --year.'
       provider_help: Proveedor del formato del extracto.
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Comprobar los apuntes después de la importación
       verify_source_help: Fichero original usado para comprobar las filas importadas.
+      year_help: Año del filtro --period (p. ej. 2024).
     labels:
       active: Activas
       amount: Importe

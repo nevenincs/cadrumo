@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Final
 
 import pytest
@@ -22,6 +23,7 @@ from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPE
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .._command_target import resolve_deferred_target
 from ..command_parameter_contracts import ArgumentSpec, ParameterSpec
+from ..command_shared_contracts import TranslationKey
 from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 
@@ -442,8 +444,8 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 is_flag=True,
                 flag_value=True,
             ),
-            _expected_option("period", "--period", "cli.ledger.export.period_help"),
-            _expected_option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int"),
+            _expected_option("period", "--period", "cli.ledger.import.period_help"),
+            _expected_option("year", "--year", "cli.ledger.import.year_help", annotation="builtins:int"),
         ),
     ),
     _expected_command(
@@ -1184,11 +1186,15 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
     ] is _MERGE_REASON_OPTION
     for spec, positions in (
         (operations["app_ledger_export"], (3, 4)),
-        (operations["app_ledger_import"], (6, 7)),
         (management["app_ledger_list"], (1, 2)),
     ):
         assert spec.parameters[positions[0]] is _OPTIONAL_PERIOD_OPTION
         assert spec.parameters[positions[1]] is _OPTIONAL_YEAR_OPTION
+    # Import filters rows by the period, so it reuses the shared contracts and
+    # replaces only the help text that describes what the scope does.
+    import_period, import_year = operations["app_ledger_import"].parameters[6:8]
+    assert import_period == replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help"))
+    assert import_year == replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help"))
 
     assert (
         tuple(
