@@ -18,7 +18,7 @@ from ...application.runtime.profile_worker import (
 )
 from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...core.async_cleanup import AsyncResourceCleanupError
-from ...core.storage_environment import storage_directory
+from ...core.storage_environment import ChildEnvironmentProfile, child_environment
 from ...core.time.clock import now
 from .framing import accept_runtime_handshake
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
@@ -27,7 +27,6 @@ from .profile_worker_human_admission import ProfileWorkerHumanAdmission
 from .runtime_frame_io import read_document, write_document
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 from .worker_authorization import WorkerAuthorizationServer
-from .worker_environment import worker_path_environment_names
 from .worker_native_identity import worker_operation_namespace
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
@@ -252,16 +251,15 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
 
 
 def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
-    """Retain authority and storage controls across the isolated worker boundary."""
-    if sys.platform == "win32":
-        environment = {
-            key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
-        }
-    else:
-        environment = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
-        path_names = worker_path_environment_names()
-        environment.update({key: value for key, value in os.environ.items() if key in path_names})
-    temporary_root = storage_directory("CADRUMO_TEMP_DIR", "tmp", root=storage_root)
-    temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-    environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
-    return environment
+    """Pin the storage root and keep operator storage controls across the isolated worker boundary.
+
+    POSIX workers start from a fixed noncredential environment; Windows workers
+    keep the ambient environment minus the declared cleared classes.
+    """
+    posix_base = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+    return child_environment(
+        ChildEnvironmentProfile.OPERATOR,
+        storage_root,
+        base=None if sys.platform == "win32" else posix_base,
+        sys_platform=sys.platform,
+    )

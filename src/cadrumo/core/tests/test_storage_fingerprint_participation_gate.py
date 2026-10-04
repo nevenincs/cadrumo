@@ -98,6 +98,10 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Browser working profiles change during capture and are cleaned by their session owner.",
     ),
     ExclusionExpectation(
+        "cadrumo_webview_dir",
+        "The desktop renderer's profile and cache change on every window and hold no taxpayer facts.",
+    ),
+    ExclusionExpectation(
         "cadrumo_runs_dir",
         "Self-reference. This is observability's own output, so hashing it makes every run's "
         "digest depend on the traces the immediately preceding run left, and a hermetic replay "

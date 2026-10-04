@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
+from .storage_environment import STORAGE_ROOT
 
 
 class StorageNodeKind(StrEnum):
@@ -180,8 +181,11 @@ class FingerprintParticipation(StrEnum):
     EXCLUDED = "excluded"
 
 
-STORAGE_ROOT_SETTINGS_FIELD: Final[str] = "cadrumo_local_storage_root"
+STORAGE_ROOT_SETTINGS_FIELD: Final[str] = STORAGE_ROOT.variable.lower()
 """The settings field naming the anchor every root-scoped member resolves against.
+
+Derived from the root declaration in :mod:`core.storage_environment`, which
+owns the variable, its precedence and its defaults.
 
 Neither a member nor an escape, and given its own name so it cannot be mistaken
 for either. It is not a member because the taxonomy declares locations
@@ -210,6 +214,7 @@ class StorageCategory(StrEnum):
     OLLAMA_MODELS = "ollama-models"
     OLLAMA_HOME = "ollama-home"
     GNOME_EXTENSIONS = "gnome-extensions"
+    DESKTOP_WEBVIEW = "desktop-webview"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"

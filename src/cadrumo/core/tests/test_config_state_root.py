@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,10 @@ from ..config_state_root import (
     live_state_root_inputs,
     resolve_state_root,
 )
+from ..errors.hierarchy import CoreValidationError
+from ..paths import resolve_project_path
+from ..product_identity import PRODUCT_IDENTITY
+from ..storage_environment import StorageMode
 from ..storage_environment import project_root as authored_project_root
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_path
@@ -111,6 +116,54 @@ def test_relative_root_override_uses_the_project_anchor(tmp_path: Path) -> None:
         platform="linux", environ={"CADRUMO_STORAGE_ROOT": "custom"}, home=tmp_path, repository_root=tmp_path
     )
     assert resolve_state_root(inputs).storage_root == tmp_path / "custom"
+
+
+def _installed_inputs(base: Path, **environ: str) -> StateRootInputs:
+    """Installed-mode inputs for this host whose per-user base is ``base``."""
+    variable = {"win32": "LOCALAPPDATA", "darwin": "HOME"}.get(sys.platform, "XDG_DATA_HOME")
+    return StateRootInputs(
+        platform=sys.platform,
+        environ={variable: str(base), **environ},
+        home=base,
+        mode=StorageMode.INSTALLED,
+    )
+
+
+def _installed_default(base: Path) -> Path:
+    if sys.platform == "darwin":
+        return (base / "Library" / "Application Support" / PRODUCT_IDENTITY.python_package).resolve()
+    return (base / PRODUCT_IDENTITY.python_package).resolve()
+
+
+def test_installed_inputs_anchor_at_the_per_user_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    resolution = resolve_state_root(_installed_inputs(tmp_path / "user-data"))
+    assert resolution.platform_user_data_root == _installed_default(tmp_path / "user-data")
+    assert resolution.storage_root == _installed_default(tmp_path / "user-data")
+    assert resolve_project_path("certs/x.p12", state_root_inputs=_installed_inputs(tmp_path / "user-data")) == (
+        _installed_default(tmp_path / "user-data") / "certs" / "x.p12"
+    )
+
+
+def test_installed_inputs_refuse_a_relative_root_and_a_missing_base(tmp_path: Path) -> None:
+    with pytest.raises(CoreValidationError, match="must be an absolute directory"):
+        resolve_state_root(_installed_inputs(tmp_path, CADRUMO_LOCAL_STORAGE_ROOT="var/storage"))
+    missing = StateRootInputs(platform=sys.platform, environ={}, home=tmp_path, mode=StorageMode.INSTALLED)
+    with pytest.raises(CoreValidationError, match="per-user data directory"):
+        resolve_state_root(missing)
+
+
+def test_installed_inputs_keep_an_absolute_override(tmp_path: Path) -> None:
+    explicit = tmp_path / "operator"
+    resolution = resolve_state_root(_installed_inputs(tmp_path / "user-data", CADRUMO_LOCAL_STORAGE_ROOT=str(explicit)))
+    assert resolution.storage_root == explicit.resolve()
+    assert resolution.platform_user_data_root == _installed_default(tmp_path / "user-data")
+
+
+def test_installed_mode_with_a_repository_root_is_refused(tmp_path: Path) -> None:
+    inputs = StateRootInputs(platform=sys.platform, environ={}, home=tmp_path, mode=StorageMode.INSTALLED)
+    with pytest.raises(ValueError, match="installed state root has no repository root"):
+        resolve_state_root(inputs.model_copy(update={"repository_root": tmp_path}))
 
 
 def test_fresh_cadrumo_state_is_resolved_and_reused(tmp_path: Path) -> None:

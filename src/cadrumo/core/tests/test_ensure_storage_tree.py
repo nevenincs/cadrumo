@@ -27,7 +27,8 @@ from ...tests.env_scope import isolated_aeat_env
 from ..config import Settings, load_settings, override_settings, settings_override
 from ..directory_scan import iter_directory
 from ..errors.hierarchy import CoreValidationError
-from ..storage_materialization import ensure_storage_tree
+from ..storage_environment import STORAGE_ROOT
+from ..storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -171,6 +172,23 @@ def test_fresh_runtime_namespace_is_private_and_existing_permissions_are_preserv
         ensure_storage_tree()
         assert stat.S_IMODE(namespace.stat().st_mode) == 0o755
         assert sentinel.read_bytes() == b"operator state"
+
+
+def test_the_root_mode_is_the_declared_owner_only_mode() -> None:
+    assert STORAGE_ROOT_MODE == STORAGE_ROOT.posix_directory_mode == 0o700
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")
+def test_a_created_root_takes_the_declared_mode_under_a_permissive_umask(tmp_path: Path) -> None:
+    """The root is created owner-only, so it is never briefly readable by others."""
+    root = tmp_path / "fresh" / "state"
+    previous = os.umask(0o022)
+    try:
+        with override_settings(cadrumo_local_storage_root=root):
+            ensure_storage_tree()
+    finally:
+        os.umask(previous)
+    assert stat.S_IMODE(root.stat().st_mode) == 0o700
 
 
 def test_a_file_valued_setting_gets_its_parent_not_a_directory(tmp_path: Path) -> None:

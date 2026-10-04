@@ -59,6 +59,15 @@ from .errors.hierarchy import pydantic_validation_boundary
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
+from .storage_environment import (
+    STORAGE_ROOT,
+    configured_root_value,
+    development_tool_env_var_names,
+    product_env_var_names,
+    storage_mode,
+    storage_root_override,
+)
+from .storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from .telemetry.tier import TelemetryTier
 
 if TYPE_CHECKING:
@@ -112,9 +121,12 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
                     self.env_vars[key] = cleaned
                 else:
                     self.env_vars.pop(key)
-        root = self.env_vars.get("cadrumo_storage_root")
-        if root and not self.env_vars.get("cadrumo_local_storage_root"):
-            self.env_vars["cadrumo_local_storage_root"] = root
+        variables = {name.upper(): value for name, value in self.env_vars.items() if isinstance(value, str)}
+        root = configured_root_value(variables, storage_mode().mode)
+        if root is not None:
+            self.env_vars[STORAGE_ROOT.variable.lower()] = root
+        else:
+            self.env_vars.pop(STORAGE_ROOT.variable.lower(), None)
         try:
             return super().__call__()
         finally:
@@ -345,9 +357,10 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. Defaults to CADRUMO_STORAGE_ROOT, "
-            "or var/storage beneath the repository. This backend refinement wins "
-            "over the shared root. Relative roots anchor to the repository."
+            "paired with a `.meta.json` sidecar. Defaults to var/storage in a source "
+            "checkout and to the per-user application-data directory when installed. "
+            "This backend refinement wins over the shared development root. Relative "
+            "roots anchor to the checkout and are refused when installed."
         ),
     )
     cadrumo_temp_dir: Path = Field(
@@ -369,6 +382,10 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     )
     cadrumo_gnome_extensions_dir: Path = Field(
         default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
+    )
+    cadrumo_webview_dir: Path = Field(
+        default=Path("webview"),
+        description="Desktop webview profile beneath the storage root; the renderer evicts its own cache.",
     )
     cadrumo_google_drive_root_folder_id: str | None = Field(
         default=None,
@@ -1009,23 +1026,16 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         been cut is still a field, but no environment variable reaches it,
         so listing it here would document a control that does nothing.
         """
-        names: set[str] = {name.upper() for name in cls.model_fields} | {"CADRUMO_STORAGE_ROOT"}
+        names: set[str] = {name.upper() for name in cls.model_fields} | set(STORAGE_ROOT.precedence)
         return names - _NON_ENVIRONMENT_SELECTION_NAMES
 
     @classmethod
     def storage_env_var_names(cls) -> frozenset[str]:
-        """Return path controls safe to carry across isolated process launch boundaries."""
-        from .storage_environment import TOOL_STORAGE_LOCATIONS
-        from .storage_taxonomy_locations import STORAGE_TAXONOMY
+        """Return path controls safe to carry across isolated process launch boundaries.
 
-        names = {"CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT"}
-        names.update(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
-        names.update(
-            location.settings_field.upper()
-            for location in STORAGE_TAXONOMY.values()
-            if location.settings_field is not None and location.settings_field in cls.model_fields
-        )
-        return frozenset(names)
+        The product allowlist plus the development tool refinements.
+        """
+        return product_env_var_names() | development_tool_env_var_names()
 
     @staticmethod
     def external_constants() -> ExternalConstants:
@@ -1050,6 +1060,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         "cadrumo_ollama_models_dir",
         "cadrumo_ollama_home_dir",
         "cadrumo_gnome_extensions_dir",
+        "cadrumo_webview_dir",
         "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
         "cadrumo_financial_txs_dir",
@@ -1085,6 +1096,8 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
         from .storage_taxonomy_locations import STORAGE_TAXONOMY
 
+        if info.field_name == STORAGE_ROOT_SETTINGS_FIELD and value is not None:
+            return normalize_project_relative_path(storage_root_override(value))
         if info.field_name in {location.settings_field for location in STORAGE_TAXONOMY.values()}:
             if value is None:
                 return None

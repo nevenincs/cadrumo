@@ -1,6 +1,9 @@
-"""Repository-backed application-data defaults and injectable state-root resolution.
+"""Application-data anchor and injectable state-root resolution.
 
-Every resolver entry point uses the canonical storage environment authority.
+Every resolver entry point applies the storage root declaration in
+:mod:`core.storage_environment`: a checkout anchors at the checkout, an
+installed package anchors at the per-user default root, and neither reads the
+process working directory.
 """
 
 from __future__ import annotations
@@ -13,7 +16,14 @@ from pydantic import BaseModel
 
 from .errors.hierarchy import CoreError
 from .models import STRICT_FROZEN_CONFIG
-from .storage_environment import configured_storage_root, project_root
+from .storage_environment import (
+    StorageMode,
+    StorageModeEvidence,
+    configured_storage_root,
+    host_installed_default_root,
+    storage_mode,
+    storage_root_for,
+)
 from .storage_taxonomy import StorageCategory
 from .storage_taxonomy_locations import storage_location
 
@@ -55,7 +65,12 @@ def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None 
 
 
 class StateRootInputs(BaseModel):
-    """Frozen inputs for state-root resolution, including the project anchor."""
+    """Frozen inputs for state-root resolution.
+
+    ``repository_root`` names a checkout and selects development mode.
+    ``mode`` selects a mode explicitly; when both are absent the mode of the
+    running package tree applies.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -63,6 +78,7 @@ class StateRootInputs(BaseModel):
     environ: dict[str, str]
     home: Path
     repository_root: Path | None = None
+    mode: StorageMode | None = None
 
 
 class StateRootResolution(BaseModel):
@@ -85,24 +101,40 @@ def live_state_root_inputs() -> StateRootInputs:
         platform=sys.platform,
         environ=dict(os.environ),
         home=Path.home(),
-        repository_root=project_root(),
+        repository_root=storage_mode().checkout,
     )
 
 
+def _mode_evidence(inputs: StateRootInputs) -> StorageModeEvidence:
+    if inputs.repository_root is not None:
+        if inputs.mode is StorageMode.INSTALLED:
+            raise ValueError("an installed state root has no repository root")
+        return StorageModeEvidence(StorageMode.DEVELOPMENT, inputs.repository_root)
+    detected = storage_mode()
+    if inputs.mode is None or inputs.mode is detected.mode:
+        return detected
+    if inputs.mode is StorageMode.DEVELOPMENT:
+        raise ValueError("a development state root needs its repository root")
+    return StorageModeEvidence(StorageMode.INSTALLED, None)
+
+
 def platform_user_data_root(inputs: StateRootInputs) -> Path:
-    """Return the project application-data anchor on every platform."""
-    return (inputs.repository_root or project_root()).resolve()
+    """Return the anchor for relative paths: the checkout, or the installed default root."""
+    evidence = _mode_evidence(inputs)
+    if evidence.checkout is not None:
+        return evidence.checkout.resolve()
+    return host_installed_default_root(inputs.environ, sys_platform=inputs.platform)
 
 
 def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
-    """Resolve all defaults and relative overrides beneath the project anchor."""
-    anchor = platform_user_data_root(inputs)
+    """Resolve the relative-path anchor and the storage root from one set of inputs."""
+    evidence = _mode_evidence(inputs)
     return StateRootResolution(
-        platform_user_data_root=anchor,
-        storage_root=configured_storage_root(environ=inputs.environ, repository_root=anchor),
+        platform_user_data_root=platform_user_data_root(inputs),
+        storage_root=storage_root_for(inputs.environ, evidence, sys_platform=inputs.platform),
     )
 
 
 def default_storage_root() -> Path:
     """Return the canonical environment-controlled storage default for Settings."""
-    return resolve_state_root(live_state_root_inputs()).storage_root
+    return configured_storage_root()

@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core.storage_environment import storage_directory
+from ...core.storage_environment import STORAGE_ROOT, storage_directory
 from ...core.type_guards import is_object_collection, is_object_dict
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
@@ -243,7 +243,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
         yield
         return
 
-    keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL")
+    keys = (STORAGE_ROOT.variable, "CADRUMO_DATABASE_URL")
     saved = {key: os.environ.get(key) for key in keys}
     # Metadata commands still isolate themselves from the operator's active
     # database, while their throwaway files follow the configured Cadrumo temp
@@ -261,7 +261,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:
         root = Path(temporary_root)
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ[STORAGE_ROOT.variable] = str(root)
         database_filename = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
         os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / database_filename).as_posix()}"
         try:

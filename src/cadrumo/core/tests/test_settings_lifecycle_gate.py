@@ -202,12 +202,10 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
 
 
 #: Narrow site pins for deliberate non-storage literals in production.
-#: The storage environment function owns the canonical repository-local root
-#: default itself; the runtime installer probe only reads standard executable
-#: locations and never writes operator data to those directories.
+#: The runtime installer probe only reads standard executable locations and
+#: never writes operator data to those directories.
 PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("core/storage_environment.py", "configured_storage_root"),
         ("application/provisioning_host.py", "_standard_executable_paths"),
     },
 )

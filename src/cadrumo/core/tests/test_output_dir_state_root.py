@@ -48,6 +48,7 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_ollama_home_dir": "components/ollama/home",
     "cadrumo_gnome_extensions_dir": "integrations/gnome/extensions",
     "cadrumo_chromium_data_root": "chromium-data",
+    "cadrumo_webview_dir": "webview",
     "cadrumo_token_dir": "tokens",
     "cadrumo_secret_store_dir": "secrets",
     "cadrumo_blob_store_dir": "blobs",

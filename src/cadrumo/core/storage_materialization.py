@@ -12,9 +12,10 @@ from typing import Final
 
 from .config import Settings, load_settings
 from .errors.hierarchy import CoreValidationError
+from .storage_environment import STORAGE_ROOT, ensure_storage_root
 from .storage_taxonomy import StorageCategory, StorageGrouping
 
-STORAGE_ROOT_MODE: Final[int] = 0o700
+STORAGE_ROOT_MODE: Final[int] = STORAGE_ROOT.posix_directory_mode
 """Permission mode :func:`ensure_storage_tree` requests on the state root."""
 
 
@@ -51,7 +52,9 @@ def ensure_storage_tree(
         if _require_directory(target, explicit_override=False):
             continue
         try:
-            if target == runtime_namespace:
+            if target == root:
+                ensure_storage_root(target)
+            elif target == runtime_namespace:
                 target.mkdir(parents=True, exist_ok=True, mode=0o700)
             else:
                 target.mkdir(parents=True, exist_ok=True)

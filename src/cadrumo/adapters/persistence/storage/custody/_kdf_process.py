@@ -10,6 +10,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
+from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_limits import (
@@ -119,14 +120,16 @@ def worker_command(
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
-    environment = {
-        "CADRUMO_LOG_DIR": str(neutral_root / "logs"),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(neutral_root / "state"),
-        "HOME": str(neutral_root),
-        "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONHASHSEED": "0",
-        "PYTHONNOUSERSITE": "1",
-    }
+    # The strict profile pins a neutral root and carries no operator override.
+    environment = child_environment(ChildEnvironmentProfile.STRICT, neutral_root / "state", base={})
+    environment.update(
+        {
+            "HOME": str(neutral_root),
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONHASHSEED": "0",
+            "PYTHONNOUSERSITE": "1",
+        }
+    )
     if sys.platform == "win32":
         system_root = os.environ.get("SYSTEMROOT")
         if system_root is None:

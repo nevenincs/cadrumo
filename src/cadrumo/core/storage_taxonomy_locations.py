@@ -114,6 +114,19 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
+        StorageCategory.DESKTOP_WEBVIEW,
+        "webview",
+        dormant_reason=(
+            "The native desktop host places its webview profile here through the generated native "
+            "contract; no Python module reads it."
+        ),
+        settings_field="cadrumo_webview_dir",
+        # The renderer evicts its own cache; generic reclaim must not delete a live profile.
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
         StorageCategory.TEMPORARY_FILES,
         "tmp",
         consumer_module="adapters/persistence/storage/custody/_kdf_worker_supervision.py",

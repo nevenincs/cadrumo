@@ -41,6 +41,7 @@ from ..config import (
 )
 from ..config_support import StorageRouteKind
 from ..external_constants import load_external_constants
+from ..storage_environment import project_root
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 
@@ -419,26 +420,22 @@ class TestDatabaseUrlDerivation:
 
     def test_load_settings_normalizes_a_relative_root_before_the_atomic_observation(
         self,
-        tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """A relative root cannot reread B while constructing the cache entry for A."""
+        """A relative root cannot reread B while constructing the cache entry for A.
+
+        The cache-key observation and the settings field anchor the relative
+        root through the same declaration, so both name one canonical root.
+        """
         from .. import bucket_pointer, config
 
         relative_root = Path("relative-s168-root")
-        canonical_root = tmp_path / "canonical-state"
+        canonical_root = (project_root() / relative_root).resolve()
         observed = [
             BucketPointer.selected(bucket_id="profile-a", transition_revision=4),
             BucketPointer.selected(bucket_id="profile-b", transition_revision=5),
         ]
         calls = 0
-
-        original_normalize = config.normalize_project_relative_path
-
-        def normalize_root(value: Path | None) -> Path | None:
-            if value == relative_root:
-                return canonical_root
-            return original_normalize(value)
 
         def switch_after_observation(root: Path) -> BucketPointer:
             nonlocal calls
@@ -447,7 +444,6 @@ class TestDatabaseUrlDerivation:
             calls += 1
             return selected
 
-        monkeypatch.setattr(config, "normalize_project_relative_path", normalize_root)
         monkeypatch.setattr(bucket_pointer, "read_pointer", switch_after_observation)
         override_token = config.settings_override.set(None)
         reset_settings_cache()
