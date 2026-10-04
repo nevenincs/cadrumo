@@ -36,9 +36,8 @@ from typing import Final, cast
 
 import psutil
 
-from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
-
 from cadrumo.core.storage_environment import resolve_storage_path
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 
 from .import_authority import read_authority
@@ -211,9 +210,10 @@ def run_within_budget(
         raise StepBudgetExceededError(
             f"has no work budget ({budget.cpu_seconds:g} CPU-s, {budget.stall_seconds:g} s stall limit)"
         )
-    with tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stdout_file, tempfile.TemporaryFile(
-        dir=prepare_temporary_directory()
-    ) as stderr_file:
+    with (
+        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stdout_file,
+        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stderr_file,
+    ):
         returncode, cpu_seconds = asyncio.run(
             _supervise(
                 tuple(argv),

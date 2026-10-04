@@ -32,16 +32,14 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
     scan_directory,
 )
 from cadrumo.core.hashing import blake2b_hex
-from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -49,6 +47,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 from ._toml_helpers import as_toml_table as _as_toml_table

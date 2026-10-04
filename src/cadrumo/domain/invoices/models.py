@@ -49,6 +49,7 @@ from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_mem
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from .business_premises import BusinessPremisesLease
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -330,6 +331,7 @@ class Invoice(BaseModel):
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
+    business_premises_lease: BusinessPremisesLease | None = None
     iva_category: IvaCategory | None = None
     operation_type: IntracomOperationType | None = None
     # RD 1619/2012 disposición adicional cuarta: set when this invoice
@@ -407,6 +409,17 @@ class Invoice(BaseModel):
     # raw ledger rows. Manual and other non-file-created invoices legitimately
     # carry no source row, so this remains optional rather than inventing one.
     provenance: RawProvenance | None = None
+
+    @field_validator("business_premises_lease", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _normalize_business_premises_lease_wire_value(cls, value: object) -> object:
+        """Rehydrate the nested family from its secure-object JSON mapping."""
+        if value is None or isinstance(value, BusinessPremisesLease):
+            return value
+        if isinstance(value, Mapping):
+            return BusinessPremisesLease.model_validate(STR_KEYED_MAPPING_ADAPTER.validate_python(value))
+        return value
 
     @field_validator("provenance", mode="before")
     @classmethod
@@ -923,6 +936,14 @@ class Invoice(BaseModel):
                 ),
             ),
         )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_business_premises_lease_kind(self) -> Self:
+        """The lessor records a business-premises lease on an issued invoice."""
+        if self.business_premises_lease is not None and self.kind is not InvoiceKind.ISSUED:
+            raise InvoiceValidationError("a business-premises lease only applies to an issued invoice")
         return self
 
     @model_validator(mode="after")

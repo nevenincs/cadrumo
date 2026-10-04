@@ -23,9 +23,9 @@ from typing import Protocol
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.user_profile.access_contracts import LoginEligibility
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_path
-from ...application.user_profile.access_contracts import LoginEligibility
 from .linux_pidfd import open_linux_pidfd
 
 GNOME_LOGIN_EXTENSION_UUID = "login-observation@cadrumo.org"

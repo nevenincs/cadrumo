@@ -11,10 +11,15 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
+from ...domain.invoices.business_premises import (
+    BusinessPremisesLease,
+    SituacionInmueble,
+    business_premises_lease_from_inputs,
+)
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
@@ -104,6 +109,56 @@ class InvoiceAddLine(BaseModel):
         )
 
 
+class InvoiceAddBusinessPremisesLease(BaseModel):
+    """Strict invoice-add transport; domain owns normalization and invariants."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    situacion_inmueble: SituacionInmueble | None = None
+    referencia_catastral: str | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_valid_domain_facts(self) -> InvoiceAddBusinessPremisesLease:
+        self._construct_domain()
+        return self
+
+    @classmethod
+    def from_domain(
+        cls,
+        lease: BusinessPremisesLease | None,
+    ) -> InvoiceAddBusinessPremisesLease | None:
+        """Project an already-normalized domain value into the operation wire shape."""
+        if lease is None:
+            return None
+        return cls(
+            situacion_inmueble=lease.situacion_inmueble,
+            referencia_catastral=lease.referencia_catastral,
+        )
+
+    def to_domain(self) -> BusinessPremisesLease:
+        """Revalidate Python wire types, then delegate facts to the domain owner."""
+        validated = InvoiceAddBusinessPremisesLease.model_validate(
+            {
+                "situacion_inmueble": self.situacion_inmueble,
+                "referencia_catastral": self.referencia_catastral,
+            },
+            strict=True,
+        )
+        return validated._construct_domain()
+
+    def _construct_domain(self) -> BusinessPremisesLease:
+        """Use the canonical domain factory for lease normalization and validity."""
+        lease = business_premises_lease_from_inputs(
+            lease_selected=True,
+            situacion_inmueble=self.situacion_inmueble,
+            referencia_catastral=self.referencia_catastral,
+        )
+        if lease is None:
+            raise InvoiceValidationError("selected premises facts did not produce a lease")
+        return lease
+
+
 class InvoiceAddRequest(BaseModel):
     """Private exact-profile request matching the rich direct-add command."""
 
@@ -129,6 +184,7 @@ class InvoiceAddRequest(BaseModel):
     series: str | None = None
     rectifies_invoice_number: str | None = None
     recargo_amount: PublicDecimal | None = None
+    business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
     lines: tuple[InvoiceAddLine, ...] = ()
 
     @model_validator(mode="after")
@@ -281,6 +337,7 @@ def _require_invoice_add_refusal_receipt(receipt: OperationTerminalReceipt, resu
 __all__ = [
     "INVOICE_ADD_OPERATION_DEFINITION_ID",
     "INVOICE_ADD_VALIDATION_REFUSAL_CODE",
+    "InvoiceAddBusinessPremisesLease",
     "InvoiceAddExecutionResult",
     "InvoiceAddLine",
     "InvoiceAddRequest",

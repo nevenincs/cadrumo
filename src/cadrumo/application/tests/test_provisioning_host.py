@@ -237,10 +237,13 @@ def test_start_spawns_the_located_runtime_with_controlled_model_storage_and_wait
 ) -> None:
     spawner = _Spawner(bring_up=True)
     monkeypatch.setenv("CADRUMO_OLLAMA_MODELS_DIR", "models/test")
-    with _runtime(up=False) as chat_url, override_settings(
-        cadrumo_llm_ollama_chat_url=chat_url,
-        cadrumo_local_storage_root=tmp_path / "configured-storage",
-        cadrumo_temp_dir=tmp_path / "configured-storage" / "tmp",
+    with (
+        _runtime(up=False) as chat_url,
+        override_settings(
+            cadrumo_llm_ollama_chat_url=chat_url,
+            cadrumo_local_storage_root=tmp_path / "configured-storage",
+            cadrumo_temp_dir=tmp_path / "configured-storage" / "tmp",
+        ),
     ):
         outcome = start_runtime(spawn=spawner, which=_lookup({"ollama": "/usr/bin/ollama"}), timeout_s=5)
     assert outcome.running is True

@@ -250,9 +250,7 @@ def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
     """Retain storage controls and bind scratch storage across the isolated worker boundary."""
     if sys.platform == "win32":
         environment = {
-            key: value
-            for key, value in os.environ.items()
-            if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+            key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
         }
     else:
         environment = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}

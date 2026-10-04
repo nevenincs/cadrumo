@@ -19,8 +19,8 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.config import override_settings
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.core.config import override_settings
 
 from .. import linux_gnome_lock, linux_login, linux_logind_native
 from ..linux_gnome_lock import (
@@ -270,7 +270,6 @@ def test_insecure_storage_ancestor_refuses_before_any_bus_call(tmp_path: Path) -
     os.chmod(writable_ancestor, 0o777)  # noqa: S103 - deliberately unsafe refusal fixture
     root = writable_ancestor / "storage"
     assert writable_ancestor in root.parents and writable_ancestor.stat().st_mode & 0o022
-    with override_settings(cadrumo_local_storage_root=root):
-        with pytest.raises(RuntimeRefusalError) as refused:
-            linux_gnome_lock.require_gnome_login_producer(os.getuid())
+    with override_settings(cadrumo_local_storage_root=root), pytest.raises(RuntimeRefusalError) as refused:
+        linux_gnome_lock.require_gnome_login_producer(os.getuid())
     assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE

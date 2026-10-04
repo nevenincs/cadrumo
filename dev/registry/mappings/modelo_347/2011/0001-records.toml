@@ -29,9 +29,21 @@ importe_q2 = "contraparte.importe-Q2"
 importe_q3 = "contraparte.importe-Q3"
 importe_q4 = "contraparte.importe-Q4"
 residence_country_code = "contraparte.pais-codigo"
+provincia_code = "contraparte.provincia-codigo"
+business_premises_lease_mark = "contraparte.arrendamiento-local-negocio"
 
 [[records]]
 sheet = "Tipo 2 - Registro De Inmueble"
 record_identity = "Tipo 2 - Registro De Inmueble"
 export_record_id = "m347-inmueble"
 record_type = "inmueble"
+required = false
+repeat = "binding_rows"
+
+[records.row_field_casilla_ids]
+declarado_tax_id = "inmueble.arrendatario-nif"
+party_legal_name = "inmueble.arrendatario-nombre"
+importe_total = "inmueble.importe-operacion"
+situacion_inmueble = "inmueble.situacion"
+referencia_catastral = "inmueble.referencia-catastral"
+premises_address = "inmueble.direccion"

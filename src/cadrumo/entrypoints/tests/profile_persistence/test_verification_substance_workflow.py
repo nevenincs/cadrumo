@@ -27,10 +27,6 @@ from ....core.identity.hex_ids import CalculationRevisionId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema_verification import (
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    parse_verification_predicate_expression,
-)
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -215,91 +211,6 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
         if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == _CASILLA_02
     ]
     assert not casilla_02_missing, "bound casilla 02 must not produce a MISSING_REQUIRED_CASILLA finding"
-
-
-def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> None:
-    """The canonical predicate-operator set MUST be runtime-evaluable.
-
-    The single source of truth lives at
-    cadrumo.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
-    The validator (in _validate_surfaces) uses it to reject unknown
-    operators at registry-load time. The runtime evaluator
-    (evaluate_predicate_expression) has its own regex per operator.
-    Drift between the two sets is a silent-pass hazard.
-
-    Structural gate: each known operator MUST have a matching
-    regex registered in _verification_predicates._PREDICATE_<NAME_UPPER>. The probe
-    map below names the expected module-level regex variable per
-    operator; the test asserts (a) the regex exists, (b) it matches
-    the canonical probe expression for the operator. If a future change
-    to the module that owns ``advisory_when_ratio_ge`` ever renames or
-    removes that regex without updating the canonical set, this
-    test fires.
-    """
-    probe_expressions: dict[str, str] = {
-        "all_nonzero": 'all_nonzero(["01", "02"])',
-        "any_nonzero": 'any_nonzero(["01", "02"])',
-        "at_most_one_positive": 'at_most_one_positive(["01", "02"])',
-        "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
-        "positive_application_le_present_stock": ('positive_application_le_present_stock(["DP200014:00547", "00670"])'),
-        "advisory_when_positive": 'advisory_when_positive(["0527"])',
-        "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
-        "equals": 'equals(["27", "iva.cuota-devengada-total"])',
-        "equals_sum": 'equals_sum(["27", "03", "06", "09"])',
-        "implies_nonzero": 'implies_nonzero(["01", "07"])',
-        "implies_any_nonzero": 'implies_any_nonzero(["iva.cuota-devengada-total", "03", "06", "09"])',
-        "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
-        "profile_flag_enabled": 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")',
-        "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
-        "casilla_equals_implies_nonzero": (
-            'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
-        ),
-        "casilla_equals_implies_profile_flag": (
-            'casilla_equals_implies_profile_flag(["tipo_renta", "ue_residente", "ue_eee_status"])'
-        ),
-        "casilla_equals_implies_diverges": (
-            'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", '
-            '"modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
-        ),
-        "deduccion_requires_adquisicion_before": (
-            'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
-        ),
-        "advisory_when_computed_diverges": (
-            'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
-        ),
-    }
-    regex_attr_names: dict[str, str] = {
-        "all_nonzero": "_PREDICATE_ALL_NONZERO",
-        "any_nonzero": "_PREDICATE_ANY_NONZERO",
-        "at_most_one_positive": "_PREDICATE_AT_MOST_ONE_POSITIVE",
-        "cap_le_when_positive": "_PREDICATE_CAP_LE_WHEN_POSITIVE",
-        "advisory_when_positive": "_PREDICATE_ADVISORY_WHEN_POSITIVE",
-        "advisory_when_ratio_ge": "_PREDICATE_ADVISORY_WHEN_RATIO_GE",
-        "equals": "_PREDICATE_EQUALS",
-        "equals_sum": "_PREDICATE_EQUALS_SUM",
-        "implies_nonzero": "_PREDICATE_IMPLIES_NONZERO",
-        "implies_any_nonzero": "_PREDICATE_IMPLIES_ANY_NONZERO",
-        "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
-        "profile_flag_enabled": "_PREDICATE_PROFILE_FLAG_ENABLED",
-        "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
-        "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
-        "casilla_equals_implies_profile_flag": "_PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG",
-        "casilla_equals_implies_diverges": "_PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES",
-        "deduccion_requires_adquisicion_before": "_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE",
-        "advisory_when_computed_diverges": "_PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES",
-    }
-
-    missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
-    assert not missing_probes, (
-        f"Probe map is missing entries for known operators {sorted(missing_probes)!r}; "
-        "extend probe_expressions and regex_attr_names when adding a new operator to the canonical set"
-    )
-
-    for operator_name in regex_attr_names:
-        probe = probe_expressions[operator_name]
-        parsed = parse_verification_predicate_expression(probe)
-        assert parsed is not None, f"schema parser did not recognise {operator_name!r}: {probe!r}"
-        assert parsed.operator.value == operator_name
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:

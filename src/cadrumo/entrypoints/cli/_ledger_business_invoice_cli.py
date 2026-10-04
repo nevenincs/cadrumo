@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.invoices.catalogue_add_contracts import (
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddLine,
     InvoiceAddRequest,
     InvoiceAddResult,
@@ -48,6 +49,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.type_guards import is_object_list_or_tuple
+from ...domain.invoices.business_premises import business_premises_lease_from_inputs
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -56,7 +58,7 @@ from ...domain.invoices.enums import (
     require_invoice_class,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceLine, require_situacion_inmueble
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory, IvaRateKind
 from ._date_parsing import _parse_iso_date
@@ -943,9 +945,13 @@ def _invoice_add_request(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=public_amount(recargo, label="recargo"),
-        arrendamiento_local_negocio=arrendamiento_local_negocio,
-        situacion_inmueble=None if situacion_inmueble is None else require_situacion_inmueble(situacion_inmueble),
-        referencia_catastral=referencia_catastral,
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+            business_premises_lease_from_inputs(
+                lease_selected=arrendamiento_local_negocio,
+                situacion_inmueble=situacion_inmueble,
+                referencia_catastral=referencia_catastral,
+            )
+        ),
         lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
     )
     return request

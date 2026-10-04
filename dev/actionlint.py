@@ -42,7 +42,6 @@ installed to install something.
 from __future__ import annotations
 
 import hashlib
-import os
 import platform
 import shutil
 import subprocess
@@ -53,9 +52,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+from dev._paths import REPO_ROOT
 
 VERSION = "1.7.12"
 
@@ -121,11 +119,14 @@ def _cache_root() -> Path:
     move the tool independently; runner-specific cache variables are ignored
     so ambient CI configuration cannot redirect project writes.
     """
-    return storage_directory(
-        "CADRUMO_ACTIONLINT_DIR",
-        "development/tools/actionlint",
-        root=configured_storage_root(repository_root=REPO_ROOT),
-    ) / VERSION
+    return (
+        storage_directory(
+            "CADRUMO_ACTIONLINT_DIR",
+            "development/tools/actionlint",
+            root=configured_storage_root(repository_root=REPO_ROOT),
+        )
+        / VERSION
+    )
 
 
 def _download(path: str, into: Path) -> None:

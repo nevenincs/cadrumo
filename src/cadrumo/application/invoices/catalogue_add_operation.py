@@ -54,7 +54,6 @@ from .catalogue_add_contracts import (
     project_invoice_add_result,
 )
 from .catalogue_creation import (
-    BusinessPremisesLeaseFacts,
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
     create_catalogue_invoice,
@@ -264,6 +263,10 @@ def _prepare_invoice_add(
     profile: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> tuple[CatalogueCreationPorts, Invoice, bool]:
+    # model_construct can bypass the transport validator; re-enter the domain owner before port creation.
+    business_premises_lease = (
+        None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
+    )
     ports = factory(bucket_id=profile)
     effective_date = payload.operation_date or payload.issued_at
     with validating_governed_facts(authority_operation):
@@ -309,11 +312,7 @@ def _prepare_invoice_add(
         series=payload.series,
         rectifies_invoice_number=payload.rectifies_invoice_number,
         recargo_amount=(None if payload.recargo_amount is None else Decimal(payload.recargo_amount.decimal)),
-        business_premises_lease=BusinessPremisesLeaseFacts(
-            arrendamiento_local_negocio=payload.arrendamiento_local_negocio,
-            situacion_inmueble=payload.situacion_inmueble,
-            referencia_catastral=payload.referencia_catastral,
-        ),
+        business_premises_lease=business_premises_lease,
         lines=lines or None,
         rate_provider=ports.rate_provider,
         operation=authority_operation,

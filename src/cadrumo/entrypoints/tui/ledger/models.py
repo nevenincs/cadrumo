@@ -33,7 +33,8 @@ from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....domain.invoices.models import Invoice, SituacionInmueble
+from ....domain.invoices.business_premises import SituacionInmueble
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.models import Transaction

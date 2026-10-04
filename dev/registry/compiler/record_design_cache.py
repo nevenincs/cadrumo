@@ -19,14 +19,13 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
-
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.registry.compiler import record_design_schema
 from dev.registry.compiler.record_design_schema import RecordDesignExtraction

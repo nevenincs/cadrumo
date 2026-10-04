@@ -19,9 +19,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId
 from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
+from .formula_input_keys import canonicalize_formula_input_keys
 from .schema_scalars import validate_registry_text_scalar
 from .schema_surfaces import CasillaDefinition
 from .tax_id_format import runtime_tax_id_format
@@ -39,26 +40,7 @@ def validated_text_input_casilla_ids[InputKey, InputValue](
     non-empty strings after whitespace trimming so text leaves enter the formula
     runtime in canonical form.
     """
-    invalid = tuple(repr(key) for key in text_inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-    malformed: list[str] = []
-    canonical_text_inputs: dict[CasillaId, InputValue] = {}
-    for key in text_inputs:
-        try:
-            canonical_text_inputs[validated_casilla_id(key, surface="text_input casilla.id")] = text_inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
+    canonical_text_inputs = canonicalize_formula_input_keys(text_inputs, surface="text_input")
     resolved_text_inputs: dict[CasillaId, str] = {}
     for key, value in canonical_text_inputs.items():
         if not isinstance(value, str):

@@ -33,8 +33,6 @@ from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
-from dev._paths import prepare_temporary_directory
-
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
@@ -69,6 +67,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILIT
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
+from dev._paths import prepare_temporary_directory
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden

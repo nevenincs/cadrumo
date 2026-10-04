@@ -29,6 +29,11 @@ is refused with guidance (eviction applies only to the canonical port we own).
 The first serve performs an initial build so the review is never a stale
 snapshot; subsequent edits rebuild incrementally.
 
+After each English build, the regular docs build driver refreshes the translated
+sites under their language prefixes. These builds use private source copies so
+localized generated references cannot overwrite the watched English sources.
+The browser refresh waits for those roots, keeping the language dropdown usable.
+
 Every rebuild is a whole-site build, so the generated references (the CLI
 reference, glossary, casilla and legal pages, and under full scope the API
 stubs) regenerate at ``builder-inited`` (see ``docs/conf.py``). Surfaces that
@@ -51,6 +56,7 @@ import http.client
 import ipaddress
 import json
 import os
+import shlex
 import socket
 import subprocess
 import sys
@@ -220,6 +226,9 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         # only trigger rebuilds that render nothing new.
         command.extend(["--watch", str(repo_root / PRODUCT_PACKAGE)])
     command.extend(["--host", host, "--port", str(port)])
+    # The header links to sibling language roots. Rebuild those before the
+    # live server refreshes, including on the initial build.
+    command.extend(["--post-build", shlex.join([sys.executable, "-m", "dev.docs.serve_languages"])])
     if open_browser:
         command.append("--open-browser")
     for pattern in _ignore_patterns():
@@ -551,6 +560,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
             "CADRUMO_DOCS_BUILD_ROOT": str(build_root),
             SEQUENCE_CHECK_SKIP_ENV: "1",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_DOCS_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
             "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(
                 prefix="cadrumo-docs-serve-", dir=prepare_temporary_directory()

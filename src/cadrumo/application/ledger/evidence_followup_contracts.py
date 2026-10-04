@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Annotated, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.config import Settings
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from .attachment_review import AttachmentReviewItem
@@ -60,6 +62,9 @@ _AttachmentRows = Annotated[tuple[AttachmentReviewItem, ...], Field(max_length=M
 
 
 _BlockerRows = Annotated[tuple[ConfirmationBlockerProjectionV1, ...], Field(max_length=128)]
+
+
+_UTC_AFTER_VALIDATOR = pydantic_validation_boundary(validate_utc_aware)
 
 
 class AttachmentStoreFactory(Protocol):
@@ -164,7 +169,8 @@ class ConsentedDispatchProjection(BaseModel):
     provider: str
     model: str
     surface: str
-    recorded_at: UtcInstant
+    recorded_at: datetime
+    _recorded_at_is_utc = field_validator("recorded_at", mode="after")(_UTC_AFTER_VALIDATOR)
 
     @classmethod
     def from_dispatch(cls, value: ConsentedDispatch) -> ConsentedDispatchProjection:
@@ -179,7 +185,8 @@ class CloudDerivedArtefactProjection(BaseModel):
     evidence_reference: str
     provenance_stamp: str
     transport: str | None = None
-    drafted_at: UtcInstant
+    drafted_at: datetime
+    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
 
     @classmethod
     def from_artefact(cls, value: CloudDerivedArtefact) -> CloudDerivedArtefactProjection:
@@ -235,7 +242,8 @@ class EvidenceReviewQueueRowProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     evidence_reference: _Reference
     extractor: _ShortText
-    drafted_at: UtcInstant
+    drafted_at: datetime
+    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
     blocking_count: NonNegativeInt
     reasons: Annotated[tuple[ConfirmationBlockReason, ...], Field(max_length=64)] = ()
     advisory_count: NonNegativeInt
@@ -323,7 +331,8 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     profile_id: UUID
     evidence_reference: _Reference
     extractor: _ShortText
-    drafted_at: UtcInstant
+    drafted_at: datetime
+    _drafted_at_is_utc = field_validator("drafted_at", mode="after")(_UTC_AFTER_VALIDATOR)
     draft: InvoiceDraftProjectionV1
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
     blockers: _BlockerRows = ()

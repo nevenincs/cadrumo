@@ -48,6 +48,10 @@ msgid ""
 "coverage appendix. Report identifiers preserve correspondence with the "
 "original analysis."
 msgstr ""
+"Els 206 articles s'agrupen segons les assignacions temàtiques originals. "
+"Cada article conserva el seu abast, mecanismes, troballes, matisos i "
+"apèndix de cobertura. Els identificadors d'informe preserven la "
+"correspondència amb l'anàlisi original."
 
 #: ../../technical/articles/catalogue.md:9
 msgid "Operator interfaces, part 1: command graph and principal workflows"

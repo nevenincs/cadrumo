@@ -25,7 +25,6 @@ add->link gap without collapsing the two stores.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -43,6 +42,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.currency.service import resolve_fx_conversion_stamp
+from ...domain.invoices.business_premises import BusinessPremisesLease
 from ...domain.invoices.enums import (
     InvoiceClass,
     IvaRate,
@@ -54,7 +54,7 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, SituacionInmueble
+from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import IvaCategory
@@ -363,33 +363,6 @@ def _apply_fx_conversion_stamp(
             invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
 
 
-@dataclass(frozen=True, slots=True)
-class BusinessPremisesLeaseFacts:
-    """The business-premises lease an issued invoice documents, as the operator states it.
-
-    RD 1065/2007 art. 34.1.d has the lessor relate each lease of a local de
-    negocio with the premises' referencia catastral and location; the
-    :class:`Invoice` aggregate validates the facts together, so they travel to
-    it as one unit.
-    """
-
-    arrendamiento_local_negocio: bool = False
-    situacion_inmueble: SituacionInmueble | None = None
-    referencia_catastral: str | None = None
-
-    def apply(self, invoice_payload: dict[str, object]) -> None:
-        """Write the stated facts onto the invoice payload, leaving an unstated one absent."""
-        if self.arrendamiento_local_negocio:
-            invoice_payload["arrendamiento_local_negocio"] = True
-        if self.situacion_inmueble is not None:
-            invoice_payload["situacion_inmueble"] = self.situacion_inmueble
-        if self.referencia_catastral is not None:
-            invoice_payload["referencia_catastral"] = self.referencia_catastral
-
-
-_NO_BUSINESS_PREMISES_LEASE = BusinessPremisesLeaseFacts()
-
-
 def build_catalogue_invoice(
     *,
     bucket_id: str | None,
@@ -413,7 +386,7 @@ def build_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
-    business_premises_lease: BusinessPremisesLeaseFacts = _NO_BUSINESS_PREMISES_LEASE,
+    business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation | None = None,
@@ -569,7 +542,7 @@ def build_catalogue_invoice(
             effective_date=devengo_date,
             operation=operation,
         )
-        business_premises_lease.apply(invoice_payload)
+        invoice_payload["business_premises_lease"] = business_premises_lease
         # The euro-conversion stamp. ``currency`` is already the canonical uppercase
         # ISO 4217 token (normalised once above), so the provider is queried with the
         # same token the record stores. WHICH date the rate is taken at, and when a
@@ -633,7 +606,6 @@ def create_catalogue_invoice(
 
 
 __all__ = [
-    "BusinessPremisesLeaseFacts",
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
     "build_catalogue_invoice_event",

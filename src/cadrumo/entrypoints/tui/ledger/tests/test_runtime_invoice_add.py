@@ -15,6 +15,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddLine,
     InvoiceAddRequest,
     InvoiceAddResult,
@@ -67,6 +68,8 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+
+from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 
 pytestmark = pytest.mark.hex_entrypoint
 
@@ -543,6 +546,9 @@ def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
 
     request = _request_from_entry(_PROFILE_ID, entry)
 
-    assert request.arrendamiento_local_negocio is True
-    assert request.situacion_inmueble == "1"
-    assert request.referencia_catastral == "9872023VH5797S0001WX"
+    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease.from_domain(
+        BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral="9872023VH5797S0001WX",
+        )
+    )

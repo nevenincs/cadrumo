@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 
 from ...application.modelo.m145_communication_contracts import (
@@ -13,7 +13,7 @@ from ...application.modelo.m145_communication_contracts import (
     M145_COMMUNICATION_OPERATION_IDS,
     M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID,
     M145CommunicationCreateRequest,
-    M145CommunicationErrorContextFact,
+    M145CommunicationExportProjection,
     M145CommunicationFieldValueProjection,
     M145CommunicationOperationId,
     M145CommunicationOperationResult,
@@ -28,12 +28,16 @@ from ...application.modelo.m145_communication_records import (
     read_m145_communication_record,
 )
 from ...core.casilla_id import CasillaId
+from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.export import resolve_export_layout
+from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -49,7 +53,6 @@ from .m145_communication_operation_test_support import (
 # The seeding helper records every communication for this year and period.
 _COMMUNICATION_YEAR = 2026
 _PERIOD = M145CommunicationPeriod.COMMUNICATION
-_EXPORT_REFUSAL = "REFUSED_M145_COMMUNICATION_RECORD_EXPORT"
 # Modelo bucket events persist the modelo-wide payload version (revision_persistence.py:144).
 _MODELO_EVENT_PAYLOAD_VERSION = 2
 _TRANSITION_EVENT: dict[str, BucketEventType] = {
@@ -170,20 +173,62 @@ def _expected_validation(
     )
 
 
-def _unrenderable_export_record_id(record: M145CommunicationRecord, snapshot: RegistrySnapshot) -> str:
-    """Name the first layout record (in declared order) that requires a casilla the seed never supplied.
+def _expected_wire_text(field: ExportFieldDefinition, values: Mapping[CasillaId, str]) -> str:
+    """Write one seed slot from the DR-145 conventions, not through the export codec.
 
-    The canonical seed omits ``comunicacion.pagina-complementaria``, which the
-    registry's DR-145 layout declares as a required one-character field. The
-    fixed-width renderer refuses a required field with no value rather than
-    padding it (m145_communication_records.py:905).
+    Text is left-justified and space-filled, numbers are right-justified and
+    zero-filled, and an absent slot is spaces or zeros by the same rule. The
+    seed leaves ``comunicacion.pagina-complementaria`` absent, which DR-145
+    row 2 declares as blank for the principal page.
     """
+    assert field.length is not None
+    if field.kind is CasillaFieldKind.LITERAL:
+        assert field.literal is not None and len(field.literal) == field.length
+        return field.literal
+    if field.kind is CasillaFieldKind.FILLER:
+        return " " * field.length
+    assert field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None, field.id
+    value = values.get(field.casilla_id)
+    if field.data_type == "text":
+        return (value or "").ljust(field.length)
+    assert field.data_type in {"integer", "money"}, (field.id, field.data_type)
+    assert value is None or value.isdecimal(), (field.id, value)
+    return (value or "").rjust(field.length, "0")
+
+
+def _expected_export(
+    case: M145CommunicationOperationConformanceCase, snapshot: RegistrySnapshot
+) -> M145CommunicationExportProjection:
+    """Build the export the seed must produce from the registry layout and the seed values alone."""
+    record = case.record_before
+    assert record is not None
     layout = resolve_export_layout(snapshot).layout
-    for definition in sorted(layout.records, key=lambda item: item.order):
-        for field in definition.fields:
-            if field.required and field.casilla_id is not None and field.casilla_id not in record.field_values:
-                return definition.id
-    raise AssertionError("every required export field is supplied; this scenario expects one to be missing")
+    (definition,) = layout.records
+    # DR-145 is one 610-character record with no terminator (dr145v20.pdf rows 1-59).
+    assert definition.line_ending == "none"
+    fields = sorted(definition.fields, key=lambda item: item.offset or 0)
+    payload_text = "".join(_expected_wire_text(field, record.field_values) for field in fields)
+    assert len(payload_text) == 610
+    assert payload_text.startswith("<T145010> 12345678ZGarcia")
+    assert payload_text.endswith("</T145010>")
+    payload = payload_text.encode(definition.encoding)
+    return M145CommunicationExportProjection(
+        communication_record_id=record.communication_record_id,
+        bucket_id=str(case.profile_id),
+        service_owner="cadrumo.application.modelo",
+        modelo="145",
+        communication_year=_COMMUNICATION_YEAR,
+        period_token=_PERIOD,
+        revision_id=snapshot.revision.id,
+        export_layout_id=layout.id,
+        encoding=ExportEncoding(definition.encoding),
+        record_count=1,
+        byte_length=len(payload),
+        payload_sha256=sha256_hex(payload),
+        payload_text=payload_text,
+        legal_refs=tuple(sorted(str(ref) for ref in layout.legal_refs)),
+        source_refs=tuple(sorted(str(ref) for ref in layout.source_refs)),
+    )
 
 
 def _assert_store(
@@ -191,6 +236,7 @@ def _assert_store(
     *,
     record: M145CommunicationRecord | None,
     event_type: BucketEventType | None,
+    export: M145CommunicationExportProjection | None = None,
 ) -> None:
     """Prove the record now stored and exactly the audit events the command appended."""
     history = case.ports.bucket_event_repository.load()
@@ -211,7 +257,7 @@ def _assert_store(
     assert event.object_id == record.communication_record_id
     assert event.actor == case.request.model_dump()["actor"]
     assert event.payload_version == _MODELO_EVENT_PAYLOAD_VERSION
-    assert dict(event.payload) == {
+    expected_payload = {
         "communication_record_id": record.communication_record_id,
         "modelo": "145",
         "communication_year": str(_COMMUNICATION_YEAR),
@@ -219,6 +265,15 @@ def _assert_store(
         "revision_id": record.revision_id,
         "state": record.state.value,
     }
+    if export is not None:
+        # The export receipt joins the event payload (m145_communication_records.py:996-1008, :499-500).
+        expected_payload |= {
+            "export_layout_id": export.export_layout_id,
+            "payload_sha256": export.payload_sha256,
+            "byte_length": str(export.byte_length),
+            "record_count": str(export.record_count),
+        }
+    assert dict(event.payload) == expected_payload
 
 
 def _verify(
@@ -230,24 +285,23 @@ def _verify(
         snapshot = _snapshot(case.operation)
         if case.definition_id == M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID:
             assert case.record_before is not None
-            record_id = _unrenderable_export_record_id(case.record_before, snapshot)
-            refusal = projection.refusal
-            assert refusal is not None
-            assert (
-                projection.profile_id,
-                projection.operation_id,
-                projection.outcome,
-                projection.effect,
-                projection.result,
-            ) == (case.profile_id, case.definition_id, "prewrite_refusal", OperationEffect.NONE, None)
-            assert refusal.code == _EXPORT_REFUSAL
-            assert refusal.message.startswith(f"Modelo 145 export record {record_id!r} could not be rendered")
-            assert refusal.context == (
-                M145CommunicationErrorContextFact(key="export_record_id", value=record_id),
-                M145CommunicationErrorContextFact(key="reason", value="canonical_fixed_width_encoder"),
+            expected_export = _expected_export(case, snapshot)
+            assert projection == M145CommunicationOperationResult(
+                profile_id=case.profile_id,
+                operation_id=case.definition_id,
+                outcome="completed",
+                effect=OperationEffect.UPDATED,
+                result=expected_export,
             )
+            # Export derives a receipt; the record itself is left exactly as seeded.
             stored = _read(case, case.record_before.communication_record_id)
-            _assert_store(case, record=stored, event_type=None)
+            assert stored == case.record_before
+            _assert_store(
+                case,
+                record=stored,
+                event_type=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
+                export=expected_export,
+            )
             return
         if case.definition_id == M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID:
             assert case.record_before is not None
@@ -314,15 +368,8 @@ def _case(definition_id: str, effect: OperationEffect) -> RegisteredExecutorConf
 M145_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
         _case(M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID, OperationEffect.UPDATED),
-        # A canonical refusal raised before the write gate opens settles as a
-        # pre-write refusal with NONE (m145_communication_execution.py:332-339, :572).
-        RegisteredExecutorConformanceCase(
-            M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            (M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,),
-            expected_refusal_ref=_EXPORT_REFUSAL,
-        ),
+        # Export appends its receipt event, so it settles as an update.
+        _case(M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID, OperationEffect.UPDATED),
         _case(M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID, OperationEffect.UPDATED),
         _case(M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID, OperationEffect.UPDATED),
         # Validation never reaches a repository write (m145_communication_execution.py:345).

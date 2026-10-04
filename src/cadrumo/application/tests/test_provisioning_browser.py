@@ -148,9 +148,12 @@ def test_browsers_root_ignores_uncontrolled_vendor_override(tmp_path: Path) -> N
     storage_root = tmp_path / "configured-storage"
     vendor_root = tmp_path / "vendor-playwright-cache"
 
-    assert playwright_browsers_root(
-        env={"CADRUMO_STORAGE_ROOT": str(storage_root), "PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}
-    ) == (storage_root / "components/playwright").resolve()
+    assert (
+        playwright_browsers_root(
+            env={"CADRUMO_STORAGE_ROOT": str(storage_root), "PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}
+        )
+        == (storage_root / "components/playwright").resolve()
+    )
     assert playwright_browsers_root(tmp_path, env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == tmp_path
 
 

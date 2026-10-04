@@ -27,12 +27,13 @@ from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
 from ....core.money.rounding import round_to_cents as _round_to_cents
 from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .formula_input_keys import canonicalize_formula_input_keys
 from .ids import RevisionId
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
 from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
@@ -458,43 +459,11 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
     values, then :func:`domain.calculations.registry.casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """
-    _reject_non_string_input_keys(inputs)
-    canonical_inputs = _canonicalize_input_keys(inputs)
+    canonical_inputs = canonicalize_formula_input_keys(inputs, surface="input")
     unknown = undeclared_casilla_ids(revision, canonical_inputs)
     if unknown:
         raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
     return _validated_decimal_inputs(canonical_inputs)
-
-
-def _reject_non_string_input_keys[InputKey, InputValue](inputs: Mapping[InputKey, InputValue]) -> None:
-    """Reject non-string keys before canonical casilla-id validation."""
-    invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-
-
-def _canonicalize_input_keys[InputKey, InputValue](
-    inputs: Mapping[InputKey, InputValue],
-) -> dict[CasillaId, InputValue]:
-    """Validate input key shape while retaining the caller's value sequence."""
-    malformed: list[str] = []
-    canonical_inputs: dict[CasillaId, InputValue] = {}
-    for key in inputs:
-        try:
-            canonical_inputs[validated_casilla_id(key, surface="input casilla.id")] = inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
-    return canonical_inputs
 
 
 def _validated_decimal_inputs[InputValue](

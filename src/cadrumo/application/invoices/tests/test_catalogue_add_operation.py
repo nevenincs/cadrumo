@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -20,6 +21,7 @@ from ....core.operations import (
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.iva.classification import InvoiceKind
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -34,6 +36,7 @@ from .. import catalogue_add_operation as add_operation
 from ..catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddExecutionResult,
     InvoiceAddLine,
     InvoiceAddRequest,
@@ -192,6 +195,11 @@ def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeyp
     assert factory_calls == []
 
 
+def test_invoice_add_lease_wire_requires_python_enum_values() -> None:
+    with pytest.raises(ValidationError):
+        InvoiceAddBusinessPremisesLease(situacion_inmueble="1")
+
+
 def test_registration_requires_profile_scoped_commit_and_secure_request_storage() -> None:
     def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
         raise AssertionError(f"registration composed profile ports for {bucket_id}")
@@ -199,10 +207,35 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
     definition = build_invoice_add_definition(unused_factory)
     registration = build_invoice_add_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    expected_lease = BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral="9872023VH5797S0001WX",
+    )
+    wire_request = _request(
+        kind=InvoiceKind.ISSUED,
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(expected_lease),
+    )
+    decoded = registry.decode_request_payload(
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        wire_request.model_dump_json(),
+    )
+    assert isinstance(decoded, InvoiceAddRequest)
+    assert decoded.business_premises_lease is not None
+    assert decoded.business_premises_lease.to_domain() == expected_lease
+    invalid_wire = wire_request.model_dump(mode="json")
+    invalid_wire["business_premises_lease"] = {
+        "situacion_inmueble": SituacionInmueble.ABROAD.value,
+        "referencia_catastral": "9872023VH5797S0001WX",
+    }
+    with pytest.raises(ValidationError):
+        registry.decode_request_payload(
+            INVOICE_ADD_OPERATION_DEFINITION_ID,
+            json.dumps(invalid_wire),
+        )
     request = OperationRequest[InvoiceAddRequest](
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
-        payload=_request(),
+        payload=decoded,
     )
     context = OperationAccessContext(
         profile_id=_PROFILE,
@@ -516,9 +549,12 @@ def test_an_issued_business_premises_lease_reaches_the_stored_invoice(monkeypatc
     context, ports = _execute_add(
         _request(
             kind=InvoiceKind.ISSUED,
-            arrendamiento_local_negocio=True,
-            situacion_inmueble="1",
-            referencia_catastral="9872023VH5797S0001WX",
+            business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+                BusinessPremisesLease(
+                    situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+                    referencia_catastral="9872023VH5797S0001WX",
+                )
+            ),
         ),
         monkeypatch,
     )
@@ -526,14 +562,22 @@ def test_an_issued_business_premises_lease_reaches_the_stored_invoice(monkeypatc
     assert context.operands.value is not None
     assert context.operands.value.result.outcome == "created"
     (stored,) = ports.invoice_repository.load().values()
-    assert stored.arrendamiento_local_negocio is True
-    assert stored.situacion_inmueble == "1"
-    assert stored.referencia_catastral == "9872023VH5797S0001WX"
+    assert stored.business_premises_lease == BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral="9872023VH5797S0001WX",
+    )
 
 
 def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     context, ports = _execute_add(
-        _request(kind=InvoiceKind.RECEIVED, arrendamiento_local_negocio=True, situacion_inmueble="3"),
+        _request(
+            kind=InvoiceKind.RECEIVED,
+            business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+                BusinessPremisesLease(
+                    situacion_inmueble=SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
+                )
+            ),
+        ),
         monkeypatch,
     )
 
@@ -542,6 +586,64 @@ def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch
     assert len(ports.invoice_repository.load()) == 0
 
 
+@pytest.mark.parametrize(
+    ("situation", "reference"),
+    (
+        pytest.param(
+            SituacionInmueble.ABROAD,
+            "9872023VH5797S0001WX",
+            id="domain-invalid-situation-reference-pair",
+        ),
+        pytest.param(
+            "1",
+            "9872023VH5797S0001WX",
+            id="poisoned-raw-enum-string",
+        ),
+    ),
+)
+def test_executor_rechecks_poisoned_lease_before_creating_ports(
+    monkeypatch: pytest.MonkeyPatch,
+    situation: object,
+    reference: str,
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    valid_payload = _request(kind=InvoiceKind.ISSUED)
+    payload_values = valid_payload.model_dump(mode="python")
+    lease_values = InvoiceAddBusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+    ).model_dump(mode="python")
+    lease_values["situacion_inmueble"] = situation
+    lease_values["referencia_catastral"] = reference
+    payload_values["business_premises_lease"] = InvoiceAddBusinessPremisesLease.model_construct(**lease_values)
+    poisoned_payload = InvoiceAddRequest.model_construct(**payload_values)
+    poisoned_request = OperationRequest[InvoiceAddRequest].model_construct(
+        definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=poisoned_payload,
+    )
+    factory_calls: list[str] = []
+
+    def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        factory_calls.append(bucket_id)
+        pytest.fail("invalid lease reached creation-port composition")
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        result = asyncio.run(InvoiceAddExecutor(unused_factory).execute(poisoned_request, context))
+
+    assert isinstance(result, OperationRefusalEvidence)
+    assert result.refusal_code == INVOICE_ADD_VALIDATION_REFUSAL_CODE
+    assert factory_calls == []
+    assert context.events.phases == [INVOICE_ADD_OPERATION_DEFINITION_ID]
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    assert context.operands.value.result.validation_code == "invalid_invoice"
+
+
 def test_the_request_refuses_a_situacion_outside_the_record_design() -> None:
     with pytest.raises(ValidationError):
-        _request(kind=InvoiceKind.ISSUED, arrendamiento_local_negocio=True, situacion_inmueble="5")
+        _request(
+            kind=InvoiceKind.ISSUED,
+            business_premises_lease={"situacion_inmueble": "5"},
+        )

@@ -46,6 +46,10 @@ msgid ""
 "coverage appendix. Report identifiers preserve correspondence with the "
 "original analysis."
 msgstr ""
+"A 206 cikket az eredeti témabesorolásuk szerint csoportosítottuk. Minden "
+"cikk megőrzi a hatókörét, mechanizmusait, megállapításait, korlátozó "
+"feltételeit és lefedettségi függelékét. A jelentésazonosítók megőrzik az "
+"eredeti elemzéssel való megfeleltetést."
 
 #: ../../technical/articles/catalogue.md:9
 msgid "Operator interfaces, part 1: command graph and principal workflows"

@@ -13,8 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
-from dev._paths import REPO_ROOT
-
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
@@ -23,6 +21,7 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,

@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core.storage_environment import configured_storage_root, storage_directory
-
+from dev._paths import REPO_ROOT
 from dev.registry.binding_signal.common import required_mapping, stable_dump
 from dev.registry.binding_signal.consumer_audit import audit_consumers
 from dev.registry.binding_signal.report import blocking_findings, build_report, summary

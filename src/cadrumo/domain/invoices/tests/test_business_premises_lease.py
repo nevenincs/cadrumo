@@ -16,14 +16,23 @@ import pytest
 from pydantic import ValidationError
 
 from ...iva.classification import InvoiceKind
+from ..business_premises import (
+    BusinessPremisesLease,
+    SituacionInmueble,
+    business_premises_lease_from_inputs,
+    require_situacion_inmueble,
+)
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
-from ..models import Invoice, InvoiceLine, derive_invoice_id, require_situacion_inmueble
+from ..models import Invoice, InvoiceLine, derive_invoice_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
-def _lease_invoice(kind: InvoiceKind = InvoiceKind.ISSUED, **facts: object) -> Invoice:
+def _lease_invoice(
+    kind: InvoiceKind = InvoiceKind.ISSUED,
+    business_premises_lease: BusinessPremisesLease | None = None,
+) -> Invoice:
     base = Decimal("1000.00")
     iva = Decimal("210.00")
     issued_at = date(2025, 3, 1)
@@ -58,55 +67,87 @@ def _lease_invoice(kind: InvoiceKind = InvoiceKind.ISSUED, **facts: object) -> I
                 ),
             ),
             "payment_status": PaymentStatus.PAID,
-            **facts,
+            "business_premises_lease": business_premises_lease,
         },
     )
 
 
 def test_an_issued_lease_keeps_its_premises_facts_and_canonicalises_the_referencia() -> None:
     invoice = _lease_invoice(
-        arrendamiento_local_negocio=True,
-        situacion_inmueble="1",
-        referencia_catastral=" 9872023vh5797s0001wx ",
+        business_premises_lease=BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral=" 9872023vh5797s0001wx ",
+        ),
     )
 
-    assert invoice.arrendamiento_local_negocio is True
-    assert invoice.situacion_inmueble == "1"
-    assert invoice.referencia_catastral == "9872023VH5797S0001WX"
+    assert invoice.business_premises_lease is not None
+    assert invoice.business_premises_lease.situacion_inmueble == "1"
+    assert invoice.business_premises_lease.referencia_catastral == "9872023VH5797S0001WX"
+    assert invoice.invoice_id == derive_invoice_id(
+        kind=invoice.kind,
+        invoice_number=invoice.invoice_number,
+        issued_at=invoice.issued_at,
+        counterparty_tax_id=invoice.counterparty_tax_id,
+        currency=invoice.currency,
+        grand_total=invoice.grand_total,
+    )
 
 
 def test_a_lease_may_be_recorded_before_its_premises_are_known() -> None:
-    invoice = _lease_invoice(arrendamiento_local_negocio=True)
+    invoice = _lease_invoice(business_premises_lease=BusinessPremisesLease())
 
-    assert invoice.situacion_inmueble is None
-    assert invoice.referencia_catastral is None
+    assert invoice.business_premises_lease == BusinessPremisesLease()
+
+
+def test_a_captured_reference_does_not_invent_a_missing_situation() -> None:
+    lease = BusinessPremisesLease(referencia_catastral="9872023VH5797S0001WX")
+
+    assert lease.situacion_inmueble is None
+    assert lease.referencia_catastral == "9872023VH5797S0001WX"
 
 
 def test_an_invoice_without_a_lease_carries_no_premises_facts() -> None:
-    assert _lease_invoice().arrendamiento_local_negocio is False
+    assert _lease_invoice().business_premises_lease is None
+    with pytest.raises(ValidationError):
+        BusinessPremisesLease.model_validate({"arrendamiento_local_negocio": True})
 
-    with pytest.raises(ValidationError, match="arrendamiento_local_negocio"):
-        _lease_invoice(situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
+    with pytest.raises(InvoiceValidationError, match="require the business-premises lease choice"):
+        business_premises_lease_from_inputs(
+            lease_selected=False,
+            situacion_inmueble="1",
+            referencia_catastral="9872023VH5797S0001WX",
+        )
 
 
 def test_the_lease_is_the_lessors_fact_and_refuses_a_received_invoice() -> None:
     with pytest.raises(ValidationError, match="issued invoice"):
-        _lease_invoice(InvoiceKind.RECEIVED, arrendamiento_local_negocio=True, situacion_inmueble="3")
+        _lease_invoice(
+            InvoiceKind.RECEIVED,
+            business_premises_lease=BusinessPremisesLease(
+                situacion_inmueble=SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
+            ),
+        )
 
 
 @pytest.mark.parametrize("situacion", ["3", "4"])
 def test_a_situacion_without_a_spanish_referencia_refuses_one(situacion: str) -> None:
     with pytest.raises(ValidationError, match="cannot carry one"):
-        _lease_invoice(
-            arrendamiento_local_negocio=True,
-            situacion_inmueble=situacion,
-            referencia_catastral="9872023VH5797S0001WX",
+        BusinessPremisesLease.model_validate(
+            {
+                "situacion_inmueble": situacion,
+                "referencia_catastral": "9872023VH5797S0001WX",
+            }
         )
 
 
 def test_the_referencia_is_bounded_by_the_record_designs_25_positions() -> None:
     with pytest.raises(ValidationError, match="at most 25 characters"):
-        _lease_invoice(arrendamiento_local_negocio=True, situacion_inmueble="2", referencia_catastral="X" * 26)
+        BusinessPremisesLease.model_validate(
+            {
+                "situacion_inmueble": SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
+                "referencia_catastral": "X" * 26,
+            }
+        )
 
 
 def test_only_the_four_record_design_codes_are_a_situacion() -> None:

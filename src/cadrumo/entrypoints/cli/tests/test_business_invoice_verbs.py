@@ -95,7 +95,14 @@ def test_invoice_received_add_and_list_round_trip() -> None:
 
 def test_invoice_issued_add_reports_issued_kind() -> None:
     add_result = _invoke_invoice(
-        _add_args(kind="issued", nif="87654321X", number="COL-001", base="0"),
+        [
+            *_add_args(kind="issued", nif="87654321X", number="COL-001", base="0"),
+            "--arrendamiento-local-negocio",
+            "--situacion-inmueble",
+            "1",
+            "--referencia-catastral",
+            "9872023VH5797S0001WX",
+        ],
     )
     assert add_result.exit_code == 0, add_result.output
     assert "kind\tissued" in add_result.output

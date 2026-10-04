@@ -59,10 +59,7 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
                 os.fsync(descriptor)
                 child = os.open(part, _directory_flags(), dir_fd=descriptor)
             observed = os.fstat(child)
-            if (
-                observed.st_uid not in (0, uid)
-                or observed.st_mode & 0o022
-            ):
+            if observed.st_uid not in (0, uid) or observed.st_mode & 0o022:
                 os.close(child)
                 raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
             os.close(descriptor)

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from dev._paths import prepare_temporary_directory
-
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
     disable_redirect_rules,
@@ -232,9 +231,10 @@ def _rollback(release: str, *, environment: Mapping[str, str] | None = None) -> 
     if _RELEASE_ID_RE.fullmatch(release) is None:
         raise SystemExit(f"{release!r} is not a release id.")
     credentials = _delivery_credentials(env)
-    with deployment_lock(credentials.bucket), tempfile.TemporaryDirectory(
-        prefix="cadrumo-docs-rollback-", dir=prepare_temporary_directory()
-    ) as directory:
+    with (
+        deployment_lock(credentials.bucket),
+        tempfile.TemporaryDirectory(prefix="cadrumo-docs-rollback-", dir=prepare_temporary_directory()) as directory,
+    ):
         root = Path(directory)
         document = load_release(credentials.bucket, release, root)
         _activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
