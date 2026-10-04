@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a72cfcb426134f03cc356aa7a56fcb4e314fbe9ffb6eeb61453ddf39f1194bb'
+body_hash: 'sha256:c5d8d5fc2113b0df342951f4b0e1cacffb874c1fd0c15297d1f785115d15f676'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -170,6 +170,10 @@ Demonstrated installed producer defect, corrected at source; compiled/installed 
 ### typed-revision-selection-and-mismatch | medium | Validated amendment records retain their aggregate context and finite public mismatch facts
 
 Resolved production defects. The internal selection holder now retains an already repository/aggregate-validated CalculationRevision in a frozen slots dataclass rather than revalidating it without the aggregate. No public, persisted or candidate schema changed. The existing mismatch refusal now declares finite axis, requested/law revision and captured modelo/year/period context for the bounded public detail boundary; raw args and redaction policy are unchanged. Both complete selector/D1 owner modules pass29 with stable three source hashes; actual amendment11 and all four scope/privacy CLI cases pass in the separate combined17pass/1unrelated test-premise failure run, retained with exit1. Scoped Ruff/format/ty pass. Fresh native artifact inclusion and combined verification remain separate.
+
+### recorded-modelo-scope-detail | medium | Work creation and readiness retain declared public diagnostic context through settlement
+
+Resolved production omission. Work-create and readiness alone opt in to the existing public executor error-detail boundary; all other read definitions retain defaultFalse. Request/result/refusal serializers, registered capability/access guards and raw-private error policy remain unchanged. Two new cases exercise the real definitions/executors with a fault injected at the defining ports factory, then actual encrypted journal settlement, guarded detail projection and typed serialization. The whole seven-case owner passes, including retained private/redaction controls. The two affected positive operation matrix cases pass; all four actual CLI scope/privacy cases pass after the companion typed-context repair. Scoped Ruff/format/ty pass. These portable injected fault cases do not establish native/provider or installed E2E acceptance.
 
 ## Recommendations
 

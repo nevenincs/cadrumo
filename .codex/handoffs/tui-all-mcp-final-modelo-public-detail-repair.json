@@ -1,0 +1,52 @@
+{
+  "paths": [
+    {
+      "path": "src/cadrumo/application/modelo/work_create_operation.py",
+      "sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/query_read_operation.py",
+      "sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py",
+      "sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace"
+    }
+  ],
+  "definition_change": "Existing public_error_detail=True opt-in for work-create and readiness only; request/result/refusal serializers, contracts, acquire/authority/access gates unchanged. Other query read definitions defaultFalse.",
+  "durable_owner_proof": {
+    "run": "20261004T032254.684864Z-pytest-73652-a7de7f45",
+    "passed": 7,
+    "seconds": 7.14,
+    "log": ".logs/tui-all-mcp-durable-modelo-error-detail-20261004-final.txt",
+    "coverage": "Real typed work-create/readiness executors fault at injected defining ports factory before result/effect; real durable encrypted journal + public detail schema projection + typed serialization roundtrip; existing public/private/redaction/no-raw/unexpected error controls unchanged."
+  },
+  "matrix_proof": {
+    "run": "20261004T032810.850704Z-pytest-65820-d9fc64aa",
+    "passed": 2,
+    "seconds": 31.99,
+    "log": ".logs/tui-all-mcp-modelo-scope-primary-matrix-20261004.txt",
+    "ids": [
+      "modelo.work.create",
+      "modelo.readiness"
+    ],
+    "qualification": "Before separately owned typed context and internal selector holder repairs; positive primaries2 confirmed definition opt-in unchanged behavior. Four final genuine scope/privacy CLI cases pass against combined repaired owners."
+  },
+  "cli_scope_proof": {
+    "run": "20261004T033201.563705Z-pytest-49268-19943482",
+    "log": ".logs/tui-all-mcp-ux-final-affected-replay-20261004.txt",
+    "passed_ids": [
+      "test_modelo_work_ux::test_work_revision_rejects_an_unknown_revision_id",
+      "test_modelo_work_ux::test_work_create_rejects_revision_that_does_not_cover_filing_year",
+      "test_modelo_discovery_defects::test_modelo_readiness_refuses_revision_mismatch",
+      "test_modelo_discovery_defects::test_modelo_readiness_refuses_period_without_registry_coverage"
+    ]
+  },
+  "status": "source_frozen_scoped_behavior_pass",
+  "limitations": [
+    "Portable joined synthetic memory transport/custody fixture uses genuine command parser, registered executor, typed admission, password capsule and cryptography; does not prove actual native provider, installed artifact, desktop or full E2E/landing.",
+    "Initial incomplete fixture/diagnostic premises are preserved as failed-run receipts and corrected only at their declaring test/production owner; no marker skips, guards, classifier, serializers or authority policy relaxed.",
+    "Native KDF producer and generic prefix adapter reports are separate generations; actual native proof awaits sole owning refresh/replay."
+  ],
+  "actual_source_head": "28d1415ed90d9b495e80fcf696987e2282bbdf5f"
+}
