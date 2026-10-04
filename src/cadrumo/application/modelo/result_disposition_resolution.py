@@ -93,6 +93,7 @@ def resolve_modelo_result_disposition(
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
     operation: PinnedAuthorityOperation | None = None,
+    refund_account_country: str | None = None,
 ) -> ResultDisposition | None:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
@@ -123,6 +124,12 @@ def resolve_modelo_result_disposition(
     period is refused — never silently carried, never silently requested as
     devolución.
 
+    ``refund_account_country`` is the ISO 3166-1 country of the refund account
+    the filing will be paid into, when one is resolved. A devolución into an
+    account held outside Spain is a devolución por transferencia al extranjero
+    (``X``) on every modelo whose diseño declares that code; elsewhere, and
+    without a resolved account, it stays ``D``.
+
     Returns the one :class:`~core.result_disposition.ResultDisposition` both the export header
     composer and the cross-period carry persistence read, so the fichero
     disposition and the carry can never disagree. Returns ``None`` for a modelo
@@ -146,6 +153,7 @@ def resolve_modelo_result_disposition(
                 refund_election=refund_election,
                 payment_election=payment_election,
                 operation=indexed_operation,
+                refund_account_country=refund_account_country,
             )
     base_disposition = base_modelo_result_disposition(
         work_unit=work_unit,
@@ -153,13 +161,18 @@ def resolve_modelo_result_disposition(
         period=period,
         operation=operation,
     )
-    return _resolve_elected_disposition(
+    elected = _resolve_elected_disposition(
         base_disposition,
         work_unit=work_unit,
         workflow_profile=workflow_profile,
         period=period,
         refund_election=refund_election,
         payment_election=payment_election,
+    )
+    return _refund_settlement_channel(
+        elected,
+        work_unit=work_unit,
+        refund_account_country=refund_account_country,
     )
 
 
@@ -296,6 +309,35 @@ def _apply_payment_election(
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     return ResultDisposition.DOMICILIACION
+
+
+#: The account country whose refunds the diseños settle as an ordinary
+#: devolución (``D``). DR303 "Tipo de declaración" note: X is "Devolución por
+#: transferencia al extranjero", and its DID note 6 reserves the domestic IBAN
+#: form for accounts starting ``ES``.
+_DOMESTIC_REFUND_ACCOUNT_COUNTRY = "ES"
+
+
+def _refund_settlement_channel(
+    disposition: ResultDisposition | None,
+    *,
+    work_unit: WorkUnit,
+    refund_account_country: str | None,
+) -> ResultDisposition | None:
+    """Settle a devolución into a foreign account as ``X`` where the modelo declares it.
+
+    Only the channel changes: ``D`` and ``X`` are both refund dispositions, so
+    compensación carry is identical. A modelo whose closed code set has no ``X``
+    (or a fixed ``D``, such as modelo 360) keeps ``D`` whatever the account.
+    """
+    if disposition is not ResultDisposition.DEVOLUCION or refund_account_country is None:
+        return disposition
+    if refund_account_country == _DOMESTIC_REFUND_ACCOUNT_COUNTRY:
+        return disposition
+    foreign = ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO
+    if not result_disposition_declares(str(work_unit.modelo), foreign):
+        return disposition
+    return foreign
 
 
 #: The only country a domiciliación charge account may be held in. Orden

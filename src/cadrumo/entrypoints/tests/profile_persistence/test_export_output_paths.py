@@ -359,9 +359,13 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
         )
 
         exported = output_path.read_bytes().decode("latin-1")
+        # DR303 page 01000 position 13: Tipo Declaración.
+        assert exported[exported.index("<T30301000>") + 12] == "U"
         did_start = exported.index("<T303DID00>")
         did = exported[did_start : did_start + 823]
         assert did[22:56].rstrip() == charge_iban
+        # Position 194 is "Devolución - Marca SEPA": a charge account leaves it "0" (Vacía).
+        assert did[193] == "0"
         assert did[11:22].strip() == ""
         assert did[56:126].strip() == ""
         assert did[126:161].strip() == ""
@@ -560,6 +564,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
         )
 
         exported = output_path.read_text(encoding="iso-8859-1")
+        assert exported[exported.index("<T30301000>") + 12] == "C"
         did_start = exported.index("<T303DID00>")
         did = exported[did_start : did_start + 823]
         assert did[11:22].rstrip() == refund_account.swift_bic
@@ -1018,6 +1023,91 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
         assert result.resolved_result_disposition is ResultDisposition.INGRESO
         assert result.selected_account is None
         assert "<T303DID00>" not in output_path.read_bytes().decode("latin-1")
+
+
+def _redeme_profile(*, taxpayer_nif: str) -> TaxpayerProfile:
+    """A REDEME-inscribed profile: every negative period resolves to a devolución."""
+    return TaxpayerProfile(
+        tax_id=taxpayer_nif,
+        iva_regime=IVARegime("GENERAL"),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            redeme_enrolled=True,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
+    )
+
+
+# DR303 2026 offsets, 1-based in the design, 0-based slices here: page 01000
+# "Tipo Declaración" at position 13; DID SWIFT-BIC 12-22, IBAN 23-56, bank
+# block 57-193, Marca SEPA 194 (Nota 2: 1 Cuenta España, 2 Unión Europea SEPA).
+@pytest.mark.parametrize(
+    ("refund_iban", "tipo", "marca"),
+    [
+        pytest.param("ES9121000418450200051332", "D", "1", id="spanish-account-devolucion"),
+        pytest.param("DE89370400440532013000", "X", "2", id="foreign-account-transferencia-al-extranjero"),
+    ],
+)
+def test_public_refund_tipo_follows_the_refund_account_country(
+    isolated_backend: None,
+    tmp_path: Path,
+    refund_iban: str,
+    tipo: str,
+    marca: str,
+) -> None:
+    """A devolución into a Spanish account is D; into a foreign one, X, with the DID page to match."""
+    with _indexed_authority_for_test().operation() as operation:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+            negative_result=True,
+            operation=operation,
+        )
+        account_id = _register_own_account(
+            bucket_id, _own_account("Devolución", refund_iban), designate=(OwnAccountRole.REFUND,)
+        )
+        output_path = tmp_path / f"modelo-303-refund-{tipo}.txt"
+
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            ),
+            workflow_profile=_redeme_profile(taxpayer_nif=taxpayer_nif),
+            export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
+                bucket_id=bucket_id,
+                taxpayer_tax_id=taxpayer_nif,
+                work_unit=work_repo,
+                calculation=calc_repo,
+                bucket_event=event_repo,
+            ),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            operation=operation,
+        )
+
+        exported = output_path.read_bytes().decode("latin-1")
+        page_one = exported[exported.index("<T30301000>") :]
+        assert page_one[12] == tipo
+        did = exported[exported.index("<T303DID00>") :][:823]
+        assert did[11:22].strip() == ""
+        assert did[22:56].rstrip() == refund_iban
+        assert did[56:193].strip() == ""
+        assert did[193] == marca
+        assert did.endswith("</T303DID00>")
+
+        assert result.resolved_result_disposition is ResultDisposition(tipo)
+        assert result.selected_account == ModeloExportAccountReference(
+            role=OwnAccountRole.REFUND, own_account_id=account_id
+        )
+        event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+        assert event.payload["resolved_result_disposition"] == tipo
+        assert event.payload["selected_account_role"] == "refund"
+        assert refund_iban not in event.model_dump_json()
+        assert refund_iban not in result.model_dump_json()
 
 
 def test_public_domiciliacion_without_persisted_charge_account_refuses(

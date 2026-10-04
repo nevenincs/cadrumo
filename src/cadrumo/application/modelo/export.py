@@ -913,6 +913,13 @@ def _resolve_export_accounts(
     )
 
 
+def _refund_account_country(resolved: _ResolvedOwnAccount) -> str | None:
+    """The country of the refund account the filing would be paid into, when one can serve."""
+    if resolved.account is None or resolved.unavailable_reason is not None:
+        return None
+    return resolved.account.country_code
+
+
 def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:
     if resolved.account is None or resolved.unavailable_reason is not None:
         return None
@@ -1316,6 +1323,7 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
         payment_election=command.payment_election,
+        refund_account_country=_refund_account_country(accounts.refund),
     )
     producer_snapshot = _build_export_producer_snapshot(
         command=command,

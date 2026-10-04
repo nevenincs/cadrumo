@@ -128,6 +128,7 @@ def _resolve_result_disposition(
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
+    refund_account_country: str | None = None,
 ) -> str | None:
     work_unit = _result_disposition_work_unit(modelo=modelo, period=period)
     revision = _result_disposition_revision(work_unit=work_unit, casilla_values=casilla_values)
@@ -138,6 +139,7 @@ def _resolve_result_disposition(
         period=period,
         refund_election=refund_election,
         payment_election=payment_election,
+        refund_account_country=refund_account_country,
     )
     return None if disposition is None else disposition.value
 
@@ -252,6 +254,48 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
             casilla_values=casilla_values,
             profile=_result_disposition_profile(profile_kind),
             period=Period.from_year_and_code(2024, period_code),
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("modelo", "profile_kind", "period", "casilla_values", "country", "expected"),
+    (
+        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, None, "D"),
+        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "ES", "D"),
+        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "X"),
+        ("303", "ordinary", ("2024", "1T"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "C"),
+        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("357.00")}, "DE", "I"),
+        ("200", "ordinary", ("2025", "0A"), {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, "BR", "X"),
+        ("360", "ordinary", ("2025", "AD-HOC"), {}, "DE", "D"),
+    ),
+    ids=(
+        "m303-refund-without-account-stays-d",
+        "m303-refund-to-spanish-account-d",
+        "m303-refund-to-foreign-account-x",
+        "m303-carry-forward-ignores-the-account",
+        "m303-ingreso-ignores-the-account",
+        "m200-refund-to-foreign-account-x",
+        "m360-fixed-devolucion-declares-no-x",
+    ),
+)
+def test_a_devolucion_into_a_foreign_account_settles_as_x_where_the_modelo_declares_it(
+    modelo: str,
+    profile_kind: str,
+    period: tuple[str, str],
+    casilla_values: dict[CasillaId, Decimal],
+    country: str | None,
+    expected: str,
+) -> None:
+    """DR303 Tipo de declaración X is a devolución por transferencia al extranjero; only D changes."""
+    assert (
+        _resolve_result_disposition(
+            modelo=modelo,
+            casilla_values=casilla_values,
+            profile=_result_disposition_profile(profile_kind) if modelo == "303" else _profile(),
+            period=Period.from_year_and_code(int(period[0]), period[1]),
+            refund_account_country=country,
         )
         == expected
     )

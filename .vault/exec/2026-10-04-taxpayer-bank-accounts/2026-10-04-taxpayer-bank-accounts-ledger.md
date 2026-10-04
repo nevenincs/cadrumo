@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:52e5f53b7448e4c0f68e86e73e3e5951595562587da189528d79136dac5e10b2'
+body_hash: 'sha256:4738563477ab992a2173e303c1127e7d6206385674030601e43f22df01f2f119'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -176,6 +176,14 @@ related:
 - `S09` `verify:` `ty on touched files` -> `pass`
 - `S09` `verify:` `just check-import-boundaries (15/15 contracts kept; pre-existing dev/docs/serve_languages.py re-export and stale load-target metadata)` -> `fail`
 - `S09` `by:` `lane-d`
+- `S12` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S12` `M` `src/cadrumo/application/modelo/export.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S12` `verify:` `pytest test_export_output_paths.py (U, D, X and Nota 3 DID bytes and Tipo Declaracion at DR303 2026 offsets) + test_export_result_disposition.py (35 passed)` -> `pass`
+- `S12` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, core/tests/test_result_disposition.py (no new failures vs baseline)` -> `pass`
+- `S12` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S12` `by:` `lane-d`
 
 ## Notes
 
@@ -187,3 +195,5 @@ related:
 - `S03` ty on `operation_composition.py` reports one missing-argument diagnostic from Lane B's uncommitted import-ports change, not this Step.
 - `S04` CLI spec set: 643 passed; the remaining failures are environmental or other lanes (OS keyring logon-session probe, `runtime_unavailable,` ledger import surface). The CLI reference regeneration belongs to P06a.S25; import-load-target metadata regeneration is left for the shared gate owner.
 - `S09` per-filing --charge-account/--refund-account CLI options are left to P06a.S23 (Lane F owns entrypoints/cli); the request, command and operation models carry the overrides
+- `S12` the byte proofs live in `entrypoints/tests/profile_persistence` and adapters/persistence/profile/tests because they need the real encrypted register; application/modelo/tests holds no adapter-backed export tests
+- `S12` the filing transition still resolves its disposition without the refund account, so a local filing records D where the export of a foreign refund writes X; carry is unaffected (both refunds)
