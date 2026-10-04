@@ -69,21 +69,26 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+_FILING_WALLET_CAPTURED_AT = datetime(2026, 7, 15, 8, 0, 0, tzinfo=UTC)
+
+
 def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X1234567L"
-    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
+    with frozen_clock(_FILING_WALLET_CAPTURED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         with bundled_indexed_authority().operation() as operation:
             report = reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=taxpayer_nif,
-                wallet=_wallet_observation(pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif),
+                wallet=_wallet_observation(
+                    pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
+                ),
                 repository=CalculationObservationRepository(),
                 decision_repository=IvaWalletDecisionRepository(),
-                decided_at=_DECIDED_AT,
+                decided_at=_FILING_WALLET_CAPTURED_AT,
                 local_recurrence=None,
                 prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
                 operation=operation,
@@ -113,7 +118,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 iva_compensation_decision=report.decision,
                 filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_97,
-                clock=_DECIDED_AT,
+                clock=_FILING_WALLET_CAPTURED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-filing", operation=operation
                 ),
@@ -199,7 +204,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
         datetime(2026, 7, 16, 10, 0, 0, tzinfo=UTC),
     )
-    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
+    with frozen_clock(_FILING_WALLET_CAPTURED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
@@ -215,10 +220,12 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                 report = reconcile_modelo_303_iva_compensation(
                     snapshot,
                     taxpayer_nif=taxpayer_nif,
-                    wallet=_wallet_observation(pending=wallet_pending, taxpayer_nif=taxpayer_nif),
+                    wallet=_wallet_observation(
+                        pending=wallet_pending, taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
+                    ),
                     repository=CalculationObservationRepository(),
                     decision_repository=IvaWalletDecisionRepository(),
-                    decided_at=_DECIDED_AT,
+                    decided_at=_FILING_WALLET_CAPTURED_AT,
                     local_recurrence=None,
                     prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
                     operation=operation,
@@ -241,7 +248,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     iva_compensation_decision=report.decision,
                     filing_period_date=date(2026, 6, 30),
                     ports=calculation_ports,
-                    clock=_DECIDED_AT,
+                    clock=_FILING_WALLET_CAPTURED_AT,
                     filing_instance_evidence=general_m303_filing_evidence(
                         work_unit.period,
                         reference="test:iva-wallet-engine-filing-supersession",

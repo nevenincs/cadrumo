@@ -613,7 +613,7 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         output_language=OutputLanguage.ES,
                         open_recovery_client=reject_recovery,
                     )
-                    with ThreadPoolExecutor(max_workers=1) as reader:
+                    with ThreadPoolExecutor(max_workers=3) as reader:
                         binding = reader.submit(root.load).result(timeout=90)
                         presented = reader.submit(binding.refresh_home).result(timeout=5)
                         assert isinstance(presented, RootPresentationV1)
@@ -667,8 +667,11 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         assert workbench.edit_refusal() is None
                         card_box = loaded.form.result_addresses[0] if loaded.form.result_addresses else None
                         if card_box is not None:
-                            card = reader.submit(workbench.help_card, card_box, OutputLanguage.ES).result(timeout=90)
-                            assert card.casilla_id == card_box
+                            # Highlight prefetch and opening the editor can request
+                            # the same help concurrently. All must settle through
+                            # the real runtime without competing for its lease.
+                            cards = [reader.submit(workbench.help_card, card_box, OutputLanguage.ES) for _ in range(3)]
+                            assert all(card.result(timeout=90).casilla_id == card_box for card in cards)
                         actions = workbench._door()
                         assert isinstance(actions, ModeloWorkspaceLifecycleDoor)
                         assert actions.work_unit_id == work_unit_id

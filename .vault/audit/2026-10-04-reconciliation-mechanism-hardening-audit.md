@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ffdc2fdb06e2d3d427f89cd9d613c6a6d1471e850e7744d4e8ecb333100fcece'
+body_hash: 'sha256:4b0e364a0a13680765a336552da3902665e87695e886d383dbb902522a21c110'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -75,6 +75,40 @@ Review reused 78 unit and 106 integration cases for AEAT Sync/search, 11 persist
 The manual-owner check completed successfully: an explicitly launched runtime remained active while the actual CLI read four records and the uninstrumented installed TUI opened all six zones, the filed declaration and four comparisons, rendered 30 rows and checked all 28 differing local/AEAT values. All three owned runtime processes were then stopped; the temporary PDF was absent. Final root canonical private-import checking covered 11 files, including the TUI regression, with zero findings. Independent final review reports PASS with no unresolved code finding.
 
 All six corrective Steps now have applicable verification. Redacted acceptance lives in `var/reconciliation-check-20261004/verification.txt`, `mechanism-verification.json`, `history-check.json` and `tui-check.json`; exact-ID CLI evidence is `cli-1791131155162873800.txt` and final manual-owner history is `cli-1791131826487806300.txt`. The two earlier startup timeouts remain a disclosed reliability caveat, not a claimed fixed defect. No repository-wide green verdict is made.
+
+### live-iva-acceptance-gap | high | Earlier IVA verification did not include a live wallet pull
+
+The user asked whether the actual live IVA compensation balance had been pulled. Direct encrypted readback found zero live wallet observations and one synthetic local decision. The earlier S04 pass establishes corrective code and fixture verification only, not live IVA acceptance; no current compensation amount was established. The user explicitly reprioritized live IVA wallet and ledger acquisition and offered authentication. Added S07 remains open until actual capture, provenance, balance and operator surfaces are verified or an observed limitation is reported.
+
+### live-iva-history-repair | low | Live filing history now promotes through validated calculation evidence
+
+S07 identified a false incomplete-coverage refusal for late-2024 Modelo 303 casilla 169. The filed parser correctly represents its optional unset enumeration as absent. The coverage projection had nevertheless counted the absent slot as an expected observation. Coverage now excludes parsed optional absent values while retaining actual zero and present values. Four focused cases cover optional absence, populated enumeration, dropped populated enumeration and dropped zero. Reprocessing all eight encrypted real 2023–2024 observations passed; subsequent authenticated CLI pull-history for 2023–2026 captured and promoted eight declarations and 582 casillas with zero failed declarations. Eight encrypted compensation period states reload, and the latest 2024 Q4 available amount equals the independently captured live wallet. Recalculation of the 2026 Q3 test work unit retained the wallet-derived casilla110; actual CLI verification granted complete with no findings. This remains a synthetic local calculation using genuine remote compensation evidence, not verification of complete taxpayer books. TUI visible provenance and local export acceptance are pending.
+
+The 57-test IVA persistence selection initially passed55 with two positive filing fixtures failing because they captured May19 wallets but verified in July. Correcting fixture clocks to fresh July captures yields3/3 filing tests passing without changing production expiry gates. Eleven focused coverage/lifecycle tests pass. Broad declaration tests exposed stale wire-format/attribute expectations; corrective fixture-only checks pass37tests. Scoped production Ruff, ty, basedpyright and pyrefly pass. Independent review found no blocker in the coverage correction. S07 remains open pending frontend/export acceptance.
+
+### live-iva-calculation-export | low | Stored history and live wallet agree and feed the actual CLI calculation and export
+
+Authenticated pull-history completed with eight AEAT-capture period states. The local FIFO projection holds five lots whose remaining amounts total the same amount as the latest 2024 Q4 history and live wallet. The local CLI history renders eight periods, five lots, authority decisions and the explicit wallet-only status for target 2026 Q3: the immediately preceding target-period recurrence is unavailable, so equality of historical lots is not mislabeled as a target-period recurrence comparison. The 2023-start history reports an unallocated opening application from earlier history rather than inventing its generation period. Recalculation, actual CLI verify (complete, no findings), and local CLI export succeeded. Parsing the 2948-byte exported payload confirmed casilla110 equals the persisted live-wallet decision. The temporary plaintext export was removed after readback. Export explicitly reports the development software identifier; no AEAT filing was submitted and no local filing created.
+
+### tui-help-overlap | high | Fixed overlapping workbench help reads discovered by installed IVA acceptance
+
+The installed TUI displayed the saved imported casilla110 amount but rapid highlight then Enter generated concurrent same-definition/same-work-unit help operations. Cancellation of a Textual observer leaves its thread's runtime request active; the second help admission was refused as operation_unavailable. RuntimeModeloWorkbenchSource now serializes complete help reads inside the worker thread. Queue acquisition and runtime observation share a bounded deadline and session identity is checked after queue admission. No supervisor lease policy was changed. An installed TUI run after serialization displayed the value and imported origin with no help errors and four succeeded help operations in the runtime journal. Final timeout/cancellation regression checks are in progress.
+
+### native-suite-precondition | low | Broader native test fails before reaching concurrent help coverage
+
+The expanded native workbench integration test failed at line461 before its help checks: an MCP contract frontend_denied exception escaped profile_connection_operations.py and the client timed out. This test is not counted as passing or as proof of concurrent help. The actual installed TUI run and focused deterministic concurrency tests provide separate evidence for the repaired flow; retain this broader precondition failure as an explicit verification limit.
+
+### S07 populated-profile startup paging and final review
+
+Measured the real workbench generation at 933,187 bytes: 57 authorization-preserving 16 KiB pages repeatedly reconstructed the projection and intermittently exhausted the 60-second generation deadline. Increased bounded byte pages to 32 KiB (29 pages for this document), retaining fresh authorization, digest/offset checks, document/frame limits and the original deadline. Restarted runtime and clients together. The actual installed TUI subsequently loaded eight filed declarations, four saved comparisons, the contradictory-source overview, and verified both local and AEAT values for all 28 declaration differences. Justificante comparisons retain identity-only coverage advisories; unavailable evidence surfaces remain unavailable.
+
+Focused application/client paging tests pass (23), including real frontend and worker frames with authority metadata and oversized-metadata rejection. Production Ruff, format, ty, basedpyright and pyrefly pass. Independent review found no code blockers across optional-field coverage, wallet timing fixtures, bounded help locking and paging. Native paging and final wallet-screen acceptance are still pending at this checkpoint. Authority metadata sets are not schema-bounded; transport enforcement rejects oversized envelopes. The separate broad native workbench test remains failed before its help assertions at an MCP frontend-denied precondition; no full-repository pass is claimed.
+
+### S07 final acceptance complete
+
+The restarted 32 KiB runtime passed the actual installed wallet TUI pilot: saved Modelo 303 casilla 110 and its editor both match the captured balance, with imported origin and exit status zero. The native Windows multipage/global-lock continuation-refusal regression passed (20261004T181019.249621Z-pytest-79180-09658743); its 36-request fixture now includes one bounded monthly-period scope, asserts raw inventory within 32 KiB and public projection beyond one 32 KiB page. All three paging test files pass Ruff, formatting and ty. These complete the pending checks from the preceding review checkpoint.
+
+Live acceptance established eight 2023–2024 Modelo 303 declarations, 582 casillas, eight encrypted history states and five FIFO compensation lots. The wallet balance and historical remaining total agree. Actual CLI calculation consumes wallet authority in casilla 110; saved revision verification and the filing wallet gate pass; exported bytes parse back to the same value. The isolated development profile export uses development software identity, and no official submission or payment occurred. Target 2026 Q3 lacks the immediate predecessor in retained history, so the current authority decision correctly remains wallet_only rather than a claimed recurrence match. The earlier-history opening application remains explicitly unallocated. AEAT authentication has been cleared. Scope passes independent review; the unrelated broad native MCP-denial precondition failure remains disclosed.
 
 ## Recommendations
 

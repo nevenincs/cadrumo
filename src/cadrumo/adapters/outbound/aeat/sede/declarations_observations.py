@@ -469,7 +469,14 @@ def _submitted_file_coverage_for_casillas(
         source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
     )
     return _submitted_file_extraction_coverage(
-        parsed_field_ids=frozenset(field.field_id for field in parsed.fields),
+        # Optional blank slots have been parsed successfully but carry no
+        # value to observe. Required fields remain in the denominator even
+        # if a parser ever returns a missing value for them.
+        parsed_field_ids=frozenset(
+            field.field_id
+            for field in parsed.fields
+            if field.value is not None or resolved_layout.fields_by_id[field.field_id].required
+        ),
         observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
         fields_by_casilla=resolved_layout.fields_by_casilla,
     )

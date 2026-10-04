@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e643998e8a3c6424fde530f9aa63cdccce6dc48d6b5e505cea42a37b3d5d4aeb'
+body_hash: 'sha256:6da9122308a4dc699b52e66d33336cf83b0e2f318255fccc6776a7ba287fcf9a'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -116,8 +116,44 @@ related:
 - `S06` `verify:` `encrypted history local calculation unchanged and no local filing created` -> `pass`
 - `S06` `verify:` `independent integrated code and manual-runtime review` -> `pass`
 - `S06` `by:` `root`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_submitted_file_coverage.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_workbench_help_queue.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S07` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S07` `verify:` `authenticated CLI iva-wallet pull and pull-history 2023-2026` -> `pass`
+- `S07` `verify:` `encrypted wallet history FIFO and calculation readback` -> `pass`
+- `S07` `verify:` `CLI calculate verify export and exported casilla110 parse roundtrip` -> `pass`
+- `S07` `verify:` `installed TUI saved wallet value imported origin and help panel` -> `pass`
+- `S07` `verify:` `focused optional coverage and IVA lifecycle 11 tests` -> `pass`
+- `S07` `verify:` `corrected declaration adapter fixtures 37 tests` -> `pass`
+- `S07` `verify:` `corrected positive IVA filing lifecycle 3 tests` -> `pass`
+- `S07` `verify:` `help concurrency cancellation identity deadline 5 tests` -> `pass`
+- `S07` `verify:` `scoped Ruff format ty basedpyright pyrefly and private imports` -> `pass`
+- `S07` `verify:` `native human generation test MCP contract precondition` -> `fail`
+- `S07` `by:` `root`
+- `S07` `M` `src/cadrumo/application/runtime/projection_pages.py`
+- `S07` `M` `src/cadrumo/application/runtime/tests/test_projection_pages.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S07` `verify:` `Focused projection page application/client tests 23` -> `pass`
+- `S07` `verify:` `Native Windows multipage inventory and global lock continuation refusal` -> `pass`
+- `S07` `verify:` `Installed restarted runtime TUI reconciliation 28 local remote detail values` -> `pass`
+- `S07` `verify:` `Installed restarted runtime TUI wallet casilla and editor` -> `pass`
+- `S07` `verify:` `Projection production Ruff format ty basedpyright pyrefly` -> `pass`
+- `S07` `verify:` `Paging tests Ruff format ty` -> `pass`
+- `S07` `verify:` `Independent S07 integrated review` -> `pass`
+- `S07` `verify:` `Canonical scoped private import scan 12 files zero findings` -> `pass`
 
 ## Notes
 
 - `S06` Two earlier TUI startup attempts timed out; later installed runs and final manual-owner acceptance passed. Startup reliability is not claimed fixed.
 - `S06` Repository-wide import gate not green; unrelated generated metadata and concurrent changes excluded.
+- `S07` Live acceptance uses a synthetic local calculation with genuine encrypted AEAT evidence; no remote submission or local filing.
+- `S07` Native suite failed before help checks at unrelated MCP contract denial timeout; not counted as passing.
+- `S07` One uninstrumented TUI root run refused intermittently; subsequent direct root and instrumented installed calculation run passed; final reconciliation run pending.
+- `S07` Broad native workbench test retains unrelated MCP `frontend_denied` precondition failure before help assertions; no full repository green claim. Live history starts2023 and does not establish immediate target predecessor; `wallet_only` authority retained. No official submission or payment.

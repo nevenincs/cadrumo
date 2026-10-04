@@ -41,7 +41,10 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.runtime.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPageRequest
-from cadrumo.application.runtime.worker_authorization import WorkerAuthorityRequest
+from cadrumo.application.runtime.worker_authorization import (
+    WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
+    WorkerAuthorityRequest,
+)
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.automation_operations import (
@@ -50,6 +53,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.period import Period
 
 from .. import profile_connection_operations
 from ..profile_connections import RuntimeProfileConnections
@@ -327,8 +331,21 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
         tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
     ) as subject:
         requested = {uuid4() for _ in range(36)}
-        for identity in requested:
-            subject.service.request(identity, subject.proposal)
+        # Add one bounded scope so the public envelope crosses a page while
+        # the complete raw inventory still fits its separate worker IPC budget.
+        bounded_proposal = subject.proposal.model_copy(
+            update={
+                "scope": subject.proposal.scope.model_copy(
+                    update={
+                        "periods": frozenset(Period.from_year_and_code(2024, f"{month:02d}") for month in range(1, 13))
+                    }
+                )
+            }
+        )
+        for index, identity in enumerate(requested):
+            subject.service.request(identity, bounded_proposal if index == 0 else subject.proposal)
+        inventory_bytes = canonical_json_bytes(subject.service.inventory().model_dump(mode="json"))
+        assert len(inventory_bytes) <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         stop, boot = Event(), uuid4()

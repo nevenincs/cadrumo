@@ -16,7 +16,7 @@ related:
   - '[[2026-10-04-live-reconciliation-repair-audit]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:619b34f0ebd8809ca7b9f830502fc5488e9df8ce0eb7390d872e68f3ee59ba12'
+body_hash: 'sha256:e91357523a4572d1cb3b9e8dc3adf4c84e30b4c03a8e3fac264bc4d401553428'
 ---
 
 # Reconciliation mechanism hardening
@@ -35,10 +35,15 @@ The user explicitly directed iterating through justificante, declaration, workin
 - [x] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
 - [x] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
 - [x] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
+- [x] `S07` - Pull the live IVA wallet and compensation ledger from authenticated AEAT and verify the actual balance with its source provenance and CLI TUI coverage; `Live IVA wallet and Modelo 303 history capture paths plus retained profile acceptance evidence and necessary root-cause repairs`.
 
 ## Parallelization
 
 Lead owns S02 filing-chain work, S06 integrated CLI/TUI acceptance, shared checks, vault edits and all commits. receipt_fix owns S05 explicit justificante/declaration comparison and revision provenance, then S04 IVA compensation. mirror_fix owns S01 working-calculation official-evidence isolation, then S03 cross-model consistency. review_repairs independently audits wallet/cross-mechanism risks and reviews integrated changes without source writes. Workers have disjoint ownership, preserve others edits and route shared contract changes to the lead before editing. Reuse existing live test profile and fixed authority; no concurrent live browser tasks.
+
+S07 correction ownership: lead owns live capture, optional-field coverage, installed TUI help-read serialization, runtime acceptance and commits. receipt_fix owns focused help-read concurrency/cancellation regression tests and stale positive IVA filing fixture clocks. mirror_fix owns stale declaration-fixture assertions. review_repairs performs read-only integrated review. No concurrent live browser tasks or overlapping source writes.
+
+For the measured S07 startup paging bottleneck, lead owns the bounded projection page-size change and live runtime restart/acceptance. receipt_fix owns projection-page client fixtures and transport-envelope frame-size regression tests; review_repairs reviews page bounds and authority preservation. Workers do not change runtime host or authorization policy.
 
 ## Verification
 

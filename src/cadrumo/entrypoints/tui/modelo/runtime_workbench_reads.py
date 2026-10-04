@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from threading import Lock
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -47,9 +48,11 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
     payload: BaseModel,
     result_type: type[ResultT],
     session_id: UUID,
+    deadline: float | None = None,
 ) -> ResultT:
     """Run one recorded read-only worker operation to its terminal state and return its typed result."""
-    deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
+    if deadline is None:
+        deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
     controller = await RuntimeOperationController.submit(
         client,
         definition_id=definition_id,
@@ -95,6 +98,7 @@ class RuntimeModeloWorkbenchSource:
         self._client = client
         self._profile_id, self._session_id = client.profile_id, client.session_id
         self._work_unit_id = str(declaration.work_unit_id)
+        self._help_read_lock = Lock()
 
     def _require_session(self) -> None:
         if self._client.session_id != self._session_id or self._client.profile_id != self._profile_id:
@@ -129,32 +133,41 @@ class RuntimeModeloWorkbenchSource:
         language: OutputLanguage,
     ) -> ModeloCasillaHelpCardV1:
         """Assemble one casilla's help in the worker, for the revision and calculation the form showed."""
-        self._require_session()
-        projection = asyncio.run(
-            read_runtime_workbench_operation(
-                self._client,
-                definition_id=MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
-                subject_ref=self._work_unit_id,
-                payload=ModeloCasillaHelpRequest(
-                    profile_id=self._profile_id,
-                    work_unit_id=self._work_unit_id,
-                    casilla_id=casilla_id,
-                    registry_revision_id=registry_revision_id,
-                    calculation_revision_id=calculation_revision_id,
-                    output_language=language,
-                ),
-                result_type=ModeloCasillaHelpProjectionV1,
-                session_id=self._session_id,
+        # Cancellation of the UI observer cannot stop its worker thread.
+        # Serialize until that read returns, sharing one queue/read deadline.
+        deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
+        if not self._help_read_lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        try:
+            self._require_session()
+            projection = asyncio.run(
+                read_runtime_workbench_operation(
+                    self._client,
+                    definition_id=MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
+                    subject_ref=self._work_unit_id,
+                    payload=ModeloCasillaHelpRequest(
+                        profile_id=self._profile_id,
+                        work_unit_id=self._work_unit_id,
+                        casilla_id=casilla_id,
+                        registry_revision_id=registry_revision_id,
+                        calculation_revision_id=calculation_revision_id,
+                        output_language=language,
+                    ),
+                    result_type=ModeloCasillaHelpProjectionV1,
+                    session_id=self._session_id,
+                    deadline=deadline,
+                )
             )
-        )
-        if (
-            projection.profile_id != self._profile_id
-            or projection.work_unit_id != self._work_unit_id
-            or projection.card.casilla_id != casilla_id
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        self._require_session()
-        return projection.card
+            if (
+                projection.profile_id != self._profile_id
+                or projection.work_unit_id != self._work_unit_id
+                or projection.card.casilla_id != casilla_id
+            ):
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            self._require_session()
+            return projection.card
+        finally:
+            self._help_read_lock.release()
 
 
 __all__ = ["RuntimeModeloWorkbenchSource", "read_runtime_workbench_operation"]

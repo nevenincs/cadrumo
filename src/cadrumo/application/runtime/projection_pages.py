@@ -14,7 +14,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
-PROJECTION_PAGE_BYTES = 16_384
+# Base64 leaves room for both runtime and worker authority envelopes within
+# the 64 KiB transport frame, while reducing repeated projection work.
+PROJECTION_PAGE_BYTES = 32_768
 PROJECTION_DOCUMENT_MAX_BYTES = 16_777_216
 
 
