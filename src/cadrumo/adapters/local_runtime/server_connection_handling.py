@@ -50,9 +50,12 @@ from ...application.runtime.profile_access import (
     RuntimeSessionsLocked,
 )
 from ...application.runtime.transport import RuntimeConnectionContext
+from ...core.logging import get_logger
 from .framing import accept_runtime_handshake
 from .runtime_frame_io import read_document, write_document, write_profile_status
 from .runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
+
+_LOGGER = get_logger(__name__)
 
 type _ProfileConnectionRequest = (
     RuntimeProfileLogin
@@ -136,6 +139,11 @@ class RuntimeConnectionHandling:
             if retained is not None:
                 channel_owner = retained
                 cleanup_deferred = not retained.released
+            _LOGGER.error(
+                "runtime connection failed unexpectedly; stopping the runtime error_type=%s",
+                type(error).__name__,
+                exc_info=error,
+            )
             self._failed.set()
             self.stop.set()
             if not isinstance(error, Exception):
@@ -212,7 +220,12 @@ class RuntimeConnectionHandling:
         try:
             if self.profiles is not None and context is not None:
                 self.profiles.disconnect(context)
-        except Exception:
+        except Exception as error:
+            _LOGGER.error(
+                "runtime connection disconnect failed; stopping the runtime error_type=%s",
+                type(error).__name__,
+                exc_info=error,
+            )
             self._failed.set()
             self.stop.set()
         finally:

@@ -447,3 +447,6 @@ modelo:
                   2026)'
           field:
             label: Ejercicio 2026
+        2026-late:
+          field:
+            label: Ejercicio 2026 (revisión 3T/4T)

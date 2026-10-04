@@ -360,6 +360,9 @@ cli:
         year_help: Exercici fiscal
       invoice:
         add_help: Crea una factura de conciliació vinculable al catàleg.
+        arrendamiento_local_negocio_help: Marca que la factura emesa per l'arrendador
+          correspon al lloguer d'un local de negoci. Fes servir les opcions de situació
+          i referència cadastral per registrar les dades de l'immoble.
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
@@ -405,6 +408,8 @@ cli:
         recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
           161). Va inclòs en el total de la factura, a diferència d'una retenció.
         rectifies_help: Número de la factura que corregeix aquesta rectificativa.
+        referencia_catastral_help: Referència cadastral de l'immoble. És pertinent
+          per a les situacions 1 i 2; no la indiquis per a les situacions 3 o 4.
         remove_help: Elimina una factura del catàleg de conciliació.
         retention_amount_help: Import de la retenció d'IRPF retinguda pel pagador,
           en euros. Es pot indicar sol, o juntament amb --retention-rate.
@@ -415,6 +420,10 @@ cli:
         simplificada_tax_id_expected_message: Aquesta factura simplificada no conté
           l'identificador fiscal de la contrapart, tot i que el context legal registrat
           l'exigeix.
+        situacion_inmueble_help: 'Codi de situació de l''immoble: 1 per a Espanya
+          excepte el País Basc i Navarra; 2 per al País Basc o Navarra; 3 per a Espanya
+          sense referència cadastral; 4 per a l''estranger. Deixa''l sense indicar
+          si no consta.'
         update_help: Actualitza les dades d'una factura de negoci
         view_help: Mostra una factura del catàleg de conciliació per identificador
           o prefix no ambigu.

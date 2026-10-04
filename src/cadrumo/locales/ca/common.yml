@@ -861,6 +861,7 @@ sheets:
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
       block: Bloc
+      business_premises_lease_mark: Arrendament de local de negoci
       cadastral_reference: Referència cadastral
       cash_accounting_mark: Criteri de caixa
       clave: Clau
@@ -979,6 +980,7 @@ sheets:
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       portal: Portal
       postal_code: Codi postal
+      premises_address: Adreça de l'immoble
       province_code: Província
       provincia_code: Codi de província
       recipient_province_code: Codi de província del perceptor
@@ -1964,6 +1966,7 @@ tui:
         fins que s'hi afegeixi un tipus.
       failure: La factura no s'ha registrat.
       field:
+        arrendamiento_local_negocio: Arrendament de local de negoci
         counterparty_name: Nom de la contrapart
         counterparty_nif: NIF de la contrapart
         country_code: País de la contrapart (dues lletres)
@@ -1979,13 +1982,18 @@ tui:
         operation_type: Clau d'operació del model 349
         recargo_amount: Import del recàrrec d'equivalència
         rectifies_invoice_number: Número de la factura que rectifica
+        referencia_catastral: Referència cadastral
         retention_amount: Import de la retenció d'IRPF
         retention_rate: Tipus de retenció d'IRPF (%)
         series: Sèrie
+        situacion_inmueble: Situació de l'immoble
         taxable_base: Base imposable
       kind:
         issued: Emesa
         received: Rebuda
+      lease:
+        'no': 'No'
+        'yes': Sí
       line:
         add: Afegeix una línia
         field:
@@ -2020,6 +2028,12 @@ tui:
       prompt: Introdueix la factura tal com està impresa. Es comprova i es registra
         només després de revisar-la.
       review: Revisa
+      situacion:
+        '1': Espanya, excepte el País Basc i Navarra
+        '2': País Basc o Navarra
+        '3': Espanya sense referència cadastral
+        '4': A l'estranger
+      situacion_none: Tria una situació de l'immoble (opcional)
       success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
         {currency}.'
       summary:

@@ -857,6 +857,7 @@ sheets:
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
       block: Tömb
+      business_premises_lease_mark: Üzleti célú helyiség bérlete
       cadastral_reference: Kataszteri azonosító
       cash_accounting_mark: Pénzforgalmi elszámolás
       clave: Kulcs
@@ -973,6 +974,7 @@ sheets:
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       portal: Bejárat
       postal_code: Irányítószám
+      premises_address: Ingatlan címe
       province_code: Tartomány
       provincia_code: Tartomány kódja
       recipient_province_code: Kedvezményezett tartománykódja
@@ -1957,6 +1959,7 @@ tui:
         nem kerül hozzá.
       failure: A számla nem került rögzítésre.
       field:
+        arrendamiento_local_negocio: Üzleti célú helyiség bérlete
         counterparty_name: Partner neve
         counterparty_nif: Partner NIF-száma
         country_code: Partner országa (két betű)
@@ -1972,13 +1975,18 @@ tui:
         operation_type: Modelo 349 szerinti ügyletkód
         recargo_amount: Kiegyenlítő pótlék összege
         rectifies_invoice_number: A helyesbített számla száma
+        referencia_catastral: Kataszteri azonosító
         retention_amount: IRPF-levonás összege
         retention_rate: IRPF-levonás kulcsa (%)
         series: Sorozat
+        situacion_inmueble: Az ingatlan fekvése
         taxable_base: Adóalap
       kind:
         issued: Kiállított
         received: Beérkezett
+      lease:
+        'no': Nem
+        'yes': Igen
       line:
         add: Tétel hozzáadása
         field:
@@ -2010,6 +2018,12 @@ tui:
       prompt: Add meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
         után kerül ellenőrzésre és rögzítésre.
       review: Áttekintés
+      situacion:
+        '1': Spanyolország, Baszkföld és Navarra kivételével
+        '2': Baszkföld vagy Navarra
+        '3': Spanyolország kataszteri azonosító nélkül
+        '4': Külföldön
+      situacion_none: Válaszd ki az ingatlan fekvését (nem kötelező)
       success: 'A(z) {number} számla rögzítve: alap {base}, IVA {iva}, összesen {total}
         {currency}.'
       summary:

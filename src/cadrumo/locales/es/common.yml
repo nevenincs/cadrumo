@@ -871,6 +871,7 @@ sheets:
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
       block: Bloque
+      business_premises_lease_mark: Arrendamiento de local de negocio
       cadastral_reference: Referencia catastral
       cash_accounting_mark: Criterio de caja
       clave: Clave
@@ -989,6 +990,7 @@ sheets:
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
       portal: Portal
       postal_code: Código postal
+      premises_address: Dirección del inmueble
       province_code: Provincia
       provincia_code: Código de provincia
       recipient_province_code: Código de provincia del perceptor
@@ -1976,6 +1978,7 @@ tui:
         hasta que se añada un tipo.
       failure: La factura no se ha registrado.
       field:
+        arrendamiento_local_negocio: Arrendamiento de local de negocio
         counterparty_name: Nombre de la contraparte
         counterparty_nif: NIF de la contraparte
         country_code: País de la contraparte (dos letras)
@@ -1992,13 +1995,18 @@ tui:
         operation_type: Clave de operación del modelo 349
         recargo_amount: Importe del recargo de equivalencia
         rectifies_invoice_number: Número de la factura que rectifica
+        referencia_catastral: Referencia catastral
         retention_amount: Importe de la retención de IRPF
         retention_rate: Tipo de retención de IRPF (%)
         series: Serie
+        situacion_inmueble: Situación del inmueble
         taxable_base: Base imponible
       kind:
         issued: Emitida
         received: Recibida
+      lease:
+        'no': 'No'
+        'yes': Sí
       line:
         add: Añadir línea
         field:
@@ -2032,6 +2040,12 @@ tui:
       prompt: Introduce la factura tal como está impresa. Se comprueba y se registra
         solo después de revisarla.
       review: Revisar
+      situacion:
+        '1': España, excepto País Vasco y Navarra
+        '2': País Vasco o Navarra
+        '3': España sin referencia catastral
+        '4': En el extranjero
+      situacion_none: Selecciona una situación del inmueble (opcional)
       success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
         {currency}.'
       summary:

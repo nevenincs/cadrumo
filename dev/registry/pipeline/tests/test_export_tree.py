@@ -1902,7 +1902,7 @@ def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier
 
 
 def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_representation() -> None:
-    """Read obligatoriness and an admitted blank together for operator-entered text.
+    """Read obligatoriness and an admitted blank together for casilla and computed text.
 
     DR145 row 2 is ``obligatorio`` with contenido ``blanco o "C" (compl.)``: the
     position is always written and blank is one of its two values. A layout
@@ -1910,11 +1910,11 @@ def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_repres
     indicator could not be rendered at all. A contenido that names no blank keeps
     the field required, and a cell that is not obligatorio stays unrequired.
     """
-    from ..export_field_schema import _is_required_casilla_text
+    from ..export_field_schema import _is_required_admitting_blank_text
 
-    assert _is_required_casilla_text("obligatorio", 'blanco o "C" (compl.)') is False
-    assert _is_required_casilla_text("Obligatorio", "C o blanco") is False
-    assert _is_required_casilla_text("obligatorio", None) is True
-    assert _is_required_casilla_text("obligatorio", '"C" (compl.)') is True
-    assert _is_required_casilla_text("obligatorio", "Blanquear") is True
-    assert _is_required_casilla_text(None, 'blanco o "C"') is False
+    assert _is_required_admitting_blank_text("obligatorio", 'blanco o "C" (compl.)') is False
+    assert _is_required_admitting_blank_text("Obligatorio", "C o blanco") is False
+    assert _is_required_admitting_blank_text("obligatorio", None) is True
+    assert _is_required_admitting_blank_text("obligatorio", '"C" (compl.)') is True
+    assert _is_required_admitting_blank_text("obligatorio", "Blanquear") is True
+    assert _is_required_admitting_blank_text(None, 'blanco o "C"') is False

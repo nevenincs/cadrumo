@@ -183,8 +183,8 @@ def _is_required(validation: str | None) -> bool:
 _ADMITTED_BLANK: Final = re.compile(r"\bblancos?\b", re.IGNORECASE)
 
 
-def _is_required_casilla_text(validation: str | None, content: str | None) -> bool:
-    """Read whether an operator-entered text casilla has no blank representation.
+def _is_required_admitting_blank_text(validation: str | None, content: str | None) -> bool:
+    """Read whether a text field whose blank means absence has no blank representation.
 
     A layout field's ``required`` is narrower than AEAT's ``obligatorio``: it
     states that the field has NO blank representation, so the codec refuses an
@@ -195,9 +195,12 @@ def _is_required_casilla_text(validation: str | None, content: str | None) -> bo
     (compl.)``: the principal page's indicator IS blank. Reading the
     obligatoriness alone left that page with no renderable value.
 
-    Only operator-entered casillas are read this way. Leaving such a casilla
-    empty selects the blank the design admits, and the casilla's own
-    declaration constrains every non-blank value. A producer-backed field still
-    states its value explicitly.
+    Only operator-entered casillas and computed markers are read this way.
+    Leaving such a casilla empty selects the blank the design admits, and the
+    casilla's own declaration constrains every non-blank value. A computed
+    marker's producer returns its single official mark or nothing, so its
+    absence is that same admitted blank: DR360 página 2 and DR232 DR23201/DR23202
+    print the page indicator exactly so. A header-producer field still states
+    its value explicitly.
     """
     return _is_required(validation) and not (content is not None and _ADMITTED_BLANK.search(content))

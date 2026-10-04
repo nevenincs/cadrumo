@@ -32,6 +32,7 @@ from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     AutomationSecretStore,
 )
+from ...core.logging import get_logger
 from ...core.time.clock import now
 from ..operation_composition import build_production_operation_registry
 from .access_management import RuntimeAccessManagement
@@ -42,6 +43,8 @@ from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainR
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_sessions import ProfileConnectionSessionMixin
 from .profile_host import ProfileConnection, RuntimeProfileHost
+
+_LOGGER = get_logger(__name__)
 
 
 class RuntimeProfileConnections(
@@ -121,6 +124,7 @@ class RuntimeProfileConnections(
                 # absence is UNKNOWN. This availability choice does not prove
                 # logout or change grants; positive locked witnesses survive.
                 # The existing server owns bounded drain and custody release.
+                _LOGGER.warning("no eligible login witness remains; stopping the runtime")
                 self.stop.set()
         return tuple(logins.values())
 

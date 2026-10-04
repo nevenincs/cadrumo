@@ -44,6 +44,7 @@ def main() -> int:
             log = logs / f"{language}.log"
             environment = {
                 **os.environ,
+                "PYTHONIOENCODING": "utf-8",
                 "CADRUMO_DOCS_BUILD_ROOT": str(build_root),
                 "CADRUMO_DOCS_JOBS": str(jobs),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),

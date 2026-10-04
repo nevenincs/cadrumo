@@ -354,6 +354,9 @@ cli:
         year_help: Adóév.
       invoice:
         add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
+        arrendamiento_local_negocio_help: Jelöld, ha az ingatlan bérbeadója által
+          kibocsátott számla üzleti célú helyiség bérbeadásához kapcsolódik. A fekvés
+          és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
@@ -400,6 +403,8 @@ cli:
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
         rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
+        referencia_catastral_help: Az ingatlan kataszteri azonosítója. Az 1. és 2.
+          fekvési kódnál releváns; a 3. vagy 4. kódhoz ne add meg.
         remove_help: Egy egyeztetési katalógusbeli számla törlése.
         retention_amount_help: A kifizető által levont IRPF visszatartás összege euróban.
           Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
@@ -410,6 +415,9 @@ cli:
         series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
         simplificada_tax_id_expected_message: Ez az egyszerűsített számla nem tartalmazza
           a partner adóazonosítóját, noha a rögzített jogi környezet ezt elvárja.
+        situacion_inmueble_help: 'Az ingatlan fekvésének kódja: 1 Spanyolországban,
+          Baszkföld és Navarra kivételével; 2 Baszkföldön vagy Navarrában; 3 Spanyolországban
+          kataszteri azonosító nélkül; 4 külföldön. Hagyd üresen, ha nincs rögzítve.'
         update_help: Üzleti számla adatainak frissítése.
         view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy
           egyértelmű előtag alapján.

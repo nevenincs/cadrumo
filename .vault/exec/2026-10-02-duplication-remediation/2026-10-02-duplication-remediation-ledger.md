@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff961c4f960d9adc44c472b25a923777941e346d8fa6575478906612c41e36e7'
+body_hash: 'sha256:ec6760c4d11ec4853f662c45fc3ed53bd6f15a01fd188e7fec1996f449b6a5bb'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -2484,6 +2484,20 @@ related:
 - `S21` `verify:` `uv run --no-sync python -m dev.locales set-batch H:/Temp/iv10-20261004-a/receipts/tui-summary-locale-batch-v2.json` -> `pass`
 - `S21` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
 - `S21` `verify:` `uv run --no-sync python H:/Temp/iv10-20261004-a/receipts/tui-summary-one-key-canonical-check-v3.py` -> `pass`
+- `S21` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S21` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S21` `M` `src/cadrumo/locales/en/cli.yml`
+- `S21` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S21` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S21` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S21` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S21` `verify:` `canonical locale set-batch tui-summary-invoice-and-sheets-batch-v1 (PID 68644, 2026-10-04 05:12 UTC)` -> `pass`
+- `S21` `verify:` `common-batch semantic_compare_v1.py (PID 39472, 2026-10-04 05:20 UTC)` -> `pass`
+- `S21` `verify:` `canonical locale set-batch m5-m131-label-batch-candidate (PID 54284, 2026-10-04 05:24 UTC)` -> `pass`
+- `S21` `verify:` `m131_semantic_compare_v1.py (PID 39044, 2026-10-04 05:26 UTC)` -> `pass`
+- `S21` `verify:` `full locale audit (PID 61052, 2026-10-04 05:27-05:28 UTC)` -> `fail`
+- `S07` `verify:` `go-v4.ps1 -CaptureAdmissionBaseline (PID 60828, 2026-10-04 05:29 UTC)` -> `pass`
+- `S07` `verify:` `compare-v4-v3.ps1 post_fresh_baseline (PID 44160, 2026-10-04 05:50 UTC)` -> `fail`
 
 ## Notes
 
@@ -2825,3 +2839,13 @@ related:
 - `S09` ONE actual invoice 10-module run, 94 cases = 51 PASS / 43 FAIL / 0 ERROR / 0 SKIP, 101.97 sec. Exact JUnit/native 94-node join independently verified; runtime post pins stable. Receipt A41F17E3…. Operation graph rejects before validators; distinct TUI summary failure and CLI symptom causal evidence remain under Luna Max diagnosis. No invoice closure or retry.
 - `S09` Corrective six-file wire DTO source applied by Luna Max. Initial format/ty failures and manual-flattening Ruff failures retained. Final Ruff receipt F3CDB21A9F387E1ED67BB33D5D73378F82B571769704390EF228CCA5A931267A; actual Win32 ty PASS occurred before only final assignment-layout change B378B300C20DB9EDF84973F4959203891D4B6D58BF43F49CC2B5D0B55683AA29->27ADDFBC98F1D4A54864819CCADBA1058F0576C7097E8C96775014A371A6A89D and was explicitly reused, not rerun. Applied final patch9F1520DF4AAFAB874C5FE061043B32F1D90653765221979CDE1DC5B9D928D897; source manifest0EA0A3DDF9354867AE2E9D22647D8F232D47B941E25EFFDF405022F9EC8B40EA. Root whole-diff review/current six hash+size verification accepted; shared m5 runtime remains pending own locale completion/admission. No S09 or invoice-family closure.
 - `S21` Summary lease key only. Actual write exit 0; audit exit 1 identifies 16 missing and two extra keys per locale. Canonical data validator v3 actual exit 0 with expected values, exact original preimage roundtrip, and stable dependencies; root independently checked 332-member snapshots/current state. Preparation failures and corrupt original metadata are retained and qualified in audit, not relabeled as passes. Thirteen missing invoice additions remain our responsibility; accepted 15-key common and one-key M131 continuation now serialized separately. No runtime acceptance or S21 closure.
+- `S21` Open S21: final full audit exited 1 with zero missing keys and two retained extras per locale: `adapters.sede.errors.censal_no_dispatch` and `tui.modelo.workbench.grid.row_boxes.` No catalog deletion or detector patch was admitted.
+- `S21` Common/CLI batch changed eight canonical routed shards, exceeding the root's initial four-common-file grant. Root reviewed the actual routing and exact leaf changes, corrected our own completed CLI reservation, and accepted the data without rollback or reapplication. M131 batch then changed exactly its four admitted shards.
+- `S21` CLI preimages were reconstructed by removing only the three admitted leaves and canonical serialization, matching recorded prior SHA256/length; raw CLI preimages were not captured. Common and M131 comparisons used retained raw preimages.
+- `S21` Evidence root H:/Temp/iv10-20261004-a/receipts/invoice-and-sheets-preapply-v1. Accepted common semantic result 373D1D7F0E84629E034635C076DEE9AB2EEE13F81C538D50F7BED88F6C764ECD and final M131 semantic result D3A130808F54EE518A985D866A63928897BF8CD344D505D4EF1B48CCCA2CE324. Root independently matched all 332 final catalog paths, SHA256 and lengths at 05:39:01 UTC. Own twelve shard reservations were released at these final pins; no foreign or source reservation was released.
+- `S07` Capture only: baseline-v4.json SHA256 7B137C6094DF07E16838FD435396C33935DCA4CC40715F13B182417039FDE084, 3107232 bytes, status `CAPTURED_NOT_VALIDATED;` actual receipt 25AFCE0381AACADB901959B1F248880A506C379D11BC51FDAE1A8211F85FB9CB. Parent and child exited 0; no test, compiler execution, publication or adoption occurred.
+- `S07` Nine input populations captured 7494 files. Post-capture zero-drift comparison and the ten-case compiler gate remain pending. The original blocked v4 contract stays immutable; capture success does not authorize the test gate. Earlier failed capture receipts remain retained and qualified.
+- `S07` Capture used current descriptor 0D97D35B119D6F707191EEA66E1988C94D0CF5F42D43665C83BA35858953FD63 and DB 49DD1075ADC570D7C792BAFCD33BEE5F6C1284C905D265C627B95E3A7259CC5E as source identity context, not as publication/adoption authority. Published-runtime invoice gate continues to use its existing separate D92 captured authority.
+- `S07` Actual child exit 93 with DRIFT, wrapper result exit 93, enclosing shell tool exit 1. Receipt CA42DF957BC9465A1B6DED1DDFBA4E5F65B49DD3FBCE27F2F6A1E05B0E2AD9B6; population result 95E816DC51BFAA4CD4CC283E65F876CD49E3FC57EDD6F79DE5F981D35A3477FA; raw stdout 8982797C3EA3F04ABBAD34300094FE031AA0208D7EF87058C061E2290C96E2BB, 250 bytes, stderr empty. Status DRIFT; failure null; no test/compiler/publication/adoption.
+- `S07` Only `compiler_source:dev_registry_pipeline` changed: `export_field_schema.py` C357B6E4EE2431277A9651840FFAAEB1A13B81BA6DDC982487EF43AE59C71D2A (9213 bytes) to E94DA115BA90CAF1D1958769516D532CF5CCA95262496945D024B0975AEABD16 (9457); `export_tree_field_derivation.py` 6DC8E34A6B16BC548C0A6059DEBB05AE0B984209EB33CCF762E3D769522DF198 (23933) to F14623E8CFEB0E25CC9771EE1EFB637D5B8ECED04F2D4ADF9F49DF5DA5F7C812 (23978). All directory/file membership, other groups, explicit rows, tools, packages, external context and gate artifacts matched. All seven wrapper pins and three tool pins stable pre/post; actual result.tmp absent.
+- `S07` Compiler gate remains blocked. Luna `security_drive` owns read-only bounded review of the two exporter deltas and settlement evidence. No recapture, comparison retry or test launch authorized by this drift outcome.
