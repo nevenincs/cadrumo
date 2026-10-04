@@ -12,7 +12,10 @@ from .....application.modelo.action_errors import (
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
 )
-from .....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
+from .....application.modelo.result_disposition_resolution import (
+    require_admissible_charge_account,
+    resolve_modelo_result_disposition,
+)
 from .....core.casilla_id import CasillaId
 from .....core.payment_election import PaymentElection
 from .....core.period import Period
@@ -20,6 +23,7 @@ from .....core.refund_election import RefundElection
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.deadlines.models import (
+    ChargeAccount,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
@@ -324,3 +328,44 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
         )
         == "D"
     )
+
+
+def test_domiciliacion_follows_the_declared_codes_not_the_modelo_name() -> None:
+    """Modelo 130 declares U, so a positive instalment may be domiciliado."""
+    assert (
+        _resolve_result_disposition(
+            modelo="130",
+            casilla_values={_M130_RESULT_CASILLA: Decimal("120.00")},
+            profile=_profile(),
+            period=Period.from_year_and_code(2024, "1T"),
+            payment_election=PaymentElection.DOMICILIACION,
+        )
+        == "U"
+    )
+    with pytest.raises(ModeloPaymentElectionIncompatibleError):
+        _resolve_result_disposition(
+            modelo="130",
+            casilla_values={_M130_RESULT_CASILLA: Decimal("-50.00")},
+            profile=_profile(),
+            period=Period.from_year_and_code(2024, "1T"),
+            payment_election=PaymentElection.DOMICILIACION,
+        )
+
+
+def test_a_charge_account_outside_spain_is_capability_refused_without_account_material() -> None:
+    work_unit = _result_disposition_work_unit(modelo="130", period=Period.from_year_and_code(2024, "1T"))
+    require_admissible_charge_account(
+        work_unit=work_unit, charge_account=ChargeAccount(iban="ES9121000418450200051332")
+    )
+
+    with pytest.raises(ModeloPaymentElectionCapabilityRefusedError) as refused:
+        require_admissible_charge_account(
+            work_unit=work_unit,
+            charge_account=ChargeAccount(iban="DE89370400440532013000"),
+        )
+
+    assert refused.value.context == {
+        "modelo": "130",
+        "payment_election": "domiciliacion",
+        "charge_account_country": "DE",
+    }

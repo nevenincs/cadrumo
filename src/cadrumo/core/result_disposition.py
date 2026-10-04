@@ -118,8 +118,26 @@ class _DispositionSpec:
     result_casilla_ids: tuple[CasillaId, ...]
     negative: ResultDisposition
     zero: ResultDisposition
+    declared: frozenset[ResultDisposition]
+    """The closed code set the diseño's "Tipo de declaración" note declares.
+
+    It decides which operator elections a modelo admits (``U`` is admissible
+    only where it is declared here), and it must contain every code the spec
+    can derive.
+    """
     final_quarter_negative: ResultDisposition | None = None
     """The code for a negative result of the year's last quarter, where it differs from ``negative``."""
+
+    def __post_init__(self) -> None:
+        derivable = {ResultDisposition.INGRESO, self.negative, self.zero}
+        if self.final_quarter_negative is not None:
+            derivable.add(self.final_quarter_negative)
+        undeclared = sorted(code.value for code in derivable - self.declared)
+        if undeclared:
+            raise CoreValidationError(
+                f"result disposition spec derives undeclared codes {', '.join(undeclared)}",
+                context={"undeclared_codes": ", ".join(undeclared)},
+            )
 
 
 _M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
@@ -144,6 +162,59 @@ _M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 
 
+#: Each modelo's closed "Tipo de declaración" code set, verbatim from the
+#: diseño notes quoted in this module's docstring. Modelo 131 shares the 130
+#: set; Modelos 115, 123 and 202 share the 111 set.
+_M303_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.COMPENSACION,
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    },
+)
+_M130_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.RESULTADO_A_DEDUCIR,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+    },
+)
+_M111_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+    },
+)
+_M200_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.RENUNCIA_DEVOLUCION,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    },
+)
+_M210_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+    },
+)
+
+
 #: Per-modelo disposition spec, grounded in each bundled diseño's "Tipo de
 #: declaración" note and the registry's result-casilla ``semantic_role``. Modelos
 #: absent from this table return ``None`` and the caller applies a documented
@@ -154,6 +225,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M303_RESULT_CASILLA,),
         negative=ResultDisposition.COMPENSACION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M303_DECLARED,
     ),
     # IRPF pago fraccionado: a negative result of quarters 1 to 3 is "a deducir"
     # (B), not C; in the 4th quarter it is "negativa" (N). Instructions of
@@ -163,6 +235,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
         final_quarter_negative=ResultDisposition.NEGATIVA,
+        declared=_M130_DECLARED,
     ),
     # Instructions of Modelo 131, sections (5) A deducir and (6) Negativa, on casilla 15.
     Modelo("131"): _DispositionSpec(
@@ -170,22 +243,26 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
         final_quarter_negative=ResultDisposition.NEGATIVA,
+        declared=_M130_DECLARED,
     ),
     # Retenciones: only I/N (no credit code). "Resultado a ingresar" casilla.
     Modelo("111"): _DispositionSpec(
         result_casilla_ids=(_M111_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     Modelo("115"): _DispositionSpec(
         result_casilla_ids=(_M115_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     Modelo("123"): _DispositionSpec(
         result_casilla_ids=(_M123_RESULT_CASILLA, _M123_2019_2023_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     # IS annual: credit is a devolución (D), not C. Result casilla
     # DP200014B:00599 (semantic_role is_resultado_ingresar_o_devolver, Estado),
@@ -195,6 +272,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M200_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M200_DECLARED,
     ),
     # IS pago fraccionado: only I/N. Result is the active modality's "a ingresar"
     # casilla — 40.2 -> 03, 40.3 -> 34; both are >= 0 and exactly one is non-zero.
@@ -202,6 +280,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M202_402_RESULT_CASILLA, _M202_403_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     # IRNR autoliquidación: casilla 31 is signed; a negative result requests
     # devolución and zero is the declared cuota-cero disposition.
@@ -209,6 +288,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M210_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M210_DECLARED,
     ),
 }
 
@@ -285,6 +365,18 @@ def result_disposition_requires_bank_account(disposition: ResultDisposition) -> 
             account is on the wire.
     """
     return disposition in _BANK_ACCOUNT_DISPOSITIONS
+
+
+def result_disposition_declares(modelo: str, disposition: ResultDisposition) -> bool:
+    """Return whether ``modelo``'s diseño declares ``disposition`` as a "Tipo de declaración" code.
+
+    An operator election such as ``U`` (domiciliación) is admissible only for
+    a modelo whose closed code set declares it. A modelo without a codified
+    spec declares nothing, so every election on it is refused rather than
+    guessed.
+    """
+    spec = _DISPOSITION_SPEC.get(modelo)
+    return spec is not None and disposition in spec.declared
 
 
 def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
@@ -383,6 +475,7 @@ __all__ = [
     "canonical_result_amount",
     "derive_result_disposition",
     "result_disposition_casilla_ids",
+    "result_disposition_declares",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
 ]

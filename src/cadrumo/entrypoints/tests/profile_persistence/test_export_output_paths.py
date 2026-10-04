@@ -855,6 +855,53 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
         assert not output_path.exists()
 
 
+def test_public_domiciliacion_with_a_foreign_charge_account_refuses_before_any_byte(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A non-ES charge account is capability-refused until art. 5 bis is grounded."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+            positive_result=True,
+            operation=_authority_operation_for_test,
+        )
+        output_path = tmp_path / "foreign-charge-account.txt"
+
+        with pytest.raises(ModeloPaymentElectionCapabilityRefusedError) as refused:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    payment_election=PaymentElection.DOMICILIACION,
+                ),
+                workflow_profile=_typed_profile_with_charge_account(
+                    taxpayer_nif=taxpayer_nif,
+                    charge_iban="DE89370400440532013000",
+                ),
+                export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
+                    bucket_id=bucket_id,
+                    taxpayer_tax_id=taxpayer_nif,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    bucket_event=event_repo,
+                ),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                operation=_authority_operation_for_test,
+            )
+
+        assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_PAYMENT_ELECTION_CAPABILITY"
+        assert refused.value.context == {
+            "modelo": "303",
+            "payment_election": "domiciliacion",
+            "charge_account_country": "DE",
+        }
+        assert not output_path.exists()
+        assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
+
+
 def test_public_cuenta_corriente_payment_election_is_capability_refused(
     isolated_backend: None,
     tmp_path: Path,

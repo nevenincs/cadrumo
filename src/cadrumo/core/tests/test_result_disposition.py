@@ -29,6 +29,7 @@ from ..result_disposition import (
     canonical_result_amount,
     derive_result_disposition,
     result_disposition_casilla_ids,
+    result_disposition_declares,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -187,3 +188,32 @@ def test_the_fourth_quarter_changes_no_other_modelos_code() -> None:
     assert derive_result_disposition("303", _values(_M303_RESULT_CASILLA, "-210.00"), period=q4) is (
         ResultDisposition.COMPENSACION
     )
+
+
+#: The closed code sets copied from the diseño notes in this module's docstring,
+#: independent of the table under test.
+_DISENO_CODE_SETS: Final[dict[str, str]] = {
+    "303": "CDGINVUX",
+    "130": "IUGNB",
+    "131": "IUGNB",
+    "111": "IUGN",
+    "115": "IUGN",
+    "123": "IUGN",
+    "200": "IUNDRGVX",
+    "202": "IUGN",
+    "210": "IND",
+}
+
+
+@pytest.mark.parametrize("modelo", sorted(_DISENO_CODE_SETS))
+def test_each_modelo_declares_exactly_its_diseno_code_set(modelo: str) -> None:
+    declared = {code.value for code in ResultDisposition if result_disposition_declares(modelo, code)}
+
+    assert declared == set(_DISENO_CODE_SETS[modelo])
+
+
+def test_domiciliacion_is_declared_where_the_diseno_lists_u_and_nowhere_else() -> None:
+    assert result_disposition_declares("130", ResultDisposition.DOMICILIACION)
+    assert result_disposition_declares("111", ResultDisposition.DOMICILIACION)
+    assert not result_disposition_declares("210", ResultDisposition.DOMICILIACION)
+    assert not result_disposition_declares("390", ResultDisposition.DOMICILIACION)

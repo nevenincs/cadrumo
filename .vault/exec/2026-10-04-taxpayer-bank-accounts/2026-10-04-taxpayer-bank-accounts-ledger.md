@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a1f33d135ac7c9ef4a2eeef1417bdd27559b73440aa5153447e1f006debb84b'
+body_hash: 'sha256:c2cda27862fe615ebc3e7fb6a290cadf718151d60b6f908ee7bd3ce145ab4821'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -57,6 +57,16 @@ related:
 - `S01` `verify:` `ty on touched files` -> `pass`
 - `S01` `verify:` `just check-import-boundaries` -> `fail`
 - `S01` `by:` `lane-a`
+- `S10` `M` `src/cadrumo/core/result_disposition.py`
+- `S10` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S10` `M` `src/cadrumo/application/modelo/export.py`
+- `S10` `M` `src/cadrumo/core/tests/test_result_disposition.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S10` `verify:` `pytest core/tests + disposition, producer_snapshot, DID wire, export_projection, export_output_paths, 303 refund e2e (1698 passed; 4 failures in other lanes' files)` -> `pass`
+- `S10` `verify:` `ruff check + ruff format --check on touched files` -> `pass`
+- `S10` `verify:` `ty on touched files` -> `pass`
+- `S10` `by:` `lane-c`
 
 ## Notes
 

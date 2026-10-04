@@ -54,6 +54,7 @@ from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
+    result_disposition_declares,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
@@ -64,7 +65,7 @@ from ...domain.calculations.registry.casilla_membership import (
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.deadlines.models import ChargeAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -258,12 +259,40 @@ def _apply_payment_election(
             translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
-    if work_unit.modelo != Modelo("303").value:
+    if not result_disposition_declares(str(work_unit.modelo), ResultDisposition.DOMICILIACION):
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     return ResultDisposition.DOMICILIACION
+
+
+#: The only country a domiciliación charge account may be held in. Orden
+#: EHA/1658/2009 art. 5 bis admits SEPA accounts at non-collaborating entities
+#: for some modelos since 2024-02-01, but no revision declares that grounding
+#: yet, so a foreign charge account stays capability-refused for every modelo.
+_DOMICILIATION_CHARGE_ACCOUNT_COUNTRY = "ES"
+
+
+def require_admissible_charge_account(*, work_unit: WorkUnit, charge_account: ChargeAccount) -> None:
+    """Refuse a domiciliación whose charge account is not a Spanish IBAN.
+
+    Raises:
+        ModeloPaymentElectionCapabilityRefusedError: When the charge account's
+            IBAN country is not ``ES``. The context names the country only,
+            never account material.
+    """
+    country = charge_account.iban[:2]
+    if country == _DOMICILIATION_CHARGE_ACCOUNT_COUNTRY:
+        return
+    raise ModeloPaymentElectionCapabilityRefusedError(
+        translated_message="errors.error.error_modelos",
+        context={
+            "modelo": str(work_unit.modelo),
+            "payment_election": PaymentElection.DOMICILIACION.value,
+            "charge_account_country": country,
+        },
+    )
 
 
 def _result_disposition_values_for_revision(
@@ -425,5 +454,6 @@ def _apply_modelo_303_refund_election(
 __all__ = [
     "DECLARATION_TYPE_FALLBACK",
     "base_modelo_result_disposition",
+    "require_admissible_charge_account",
     "resolve_modelo_result_disposition",
 ]

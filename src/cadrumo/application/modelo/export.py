@@ -179,7 +179,7 @@ from .profile_export_binding import (
     resolve_export_identity,
     resolve_profile_export_values,
 )
-from .result_disposition_resolution import resolve_modelo_result_disposition
+from .result_disposition_resolution import require_admissible_charge_account, resolve_modelo_result_disposition
 from .revision_persistence import (
     emit_modelo_bucket_event as _emit_bucket_event,
 )
@@ -911,6 +911,7 @@ def _require_export_accounts(
                 "a domiciliacion export requires a charge account on file",
                 context=context,
             )
+        require_admissible_charge_account(work_unit=work_unit, charge_account=charge_account)
         return False
     nota_three = _m303_nota_three_requires_refund_account(
         work_unit, revision, prior_domiciliation_election, amendment_evidence
