@@ -42,6 +42,7 @@ def compose_secure_workbench_generation_provider(
     session check precedes each capture and the repository composition it
     performs; neither this builder nor its readers select an active profile.
     """
+    from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -79,6 +80,7 @@ def compose_secure_workbench_generation_provider(
             bucket_event_repository=ledger_action_ports.bucket_event_repository,
             ledger_action_ports=ledger_action_ports,
             verification_repository=calculation_binding.verification_repository(),
+            reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
             notification_custody_reader=_notification_custody_reader(profile_id),
             census_observation_reader=lambda: asyncio.run(read_stored_censal_observation(UUID(profile_id))),
             result_casilla_reader=_declaration_result_casilla_reader(operation),

@@ -16,13 +16,14 @@ from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAd
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
-from ...core.hex import HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.codes import ModeloCode
+from ..modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationEvidenceKind
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import ActionCatalogue
@@ -101,6 +102,7 @@ class AeatSyncSourceState(StrEnum):
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     CONFLICT = "conflict"
+    INCOMPLETE = "incomplete"
 
 
 class AeatSyncDiscrepancyKind(StrEnum):
@@ -112,6 +114,7 @@ class AeatSyncDiscrepancyKind(StrEnum):
     STATE_MISMATCH = "state_mismatch"
     CONTRADICTORY_SOURCE = "contradictory_source"
     UNOBSERVED = "unobserved"
+    INCOMPLETE = "incomplete"
 
 
 class AeatSyncOverviewArea(StrEnum):
@@ -460,6 +463,13 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
     """One reconciliation item, its two sides and how it was resolved."""
 
     reconciliation_state: AeatSyncReconciliationState
+    evidence_kind: ModeloReconciliationEvidenceKind | None = None
+    diffs: tuple[ModeloReconciliationDiff, ...] = ()
+    advisory_count: NonNegativeInt = 0
+    comparison_id: Hex64Str | None = None
+    work_unit_id: Hex64Str | None = None
+    evidence_id: Hex64Str | None = None
+    historical: bool = False
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -597,6 +607,8 @@ def _compared_values(
 def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: AeatSyncDiscrepancyKind) -> None:
     if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}:
         expected = AeatSyncDiscrepancyKind.UNOBSERVED
+    elif AeatSyncSourceState.INCOMPLETE in {local, aeat}:
+        expected = AeatSyncDiscrepancyKind.INCOMPLETE
     elif local == aeat:
         expected = AeatSyncDiscrepancyKind.NONE
     elif local is AeatSyncSourceState.ABSENT:

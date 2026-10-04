@@ -1141,6 +1141,8 @@ tui:
       unchanged: Változatlan
       unset: Nincs beállítva
     column:
+      compared_at: Összehasonlítás ideje
+      advisories: Figyelmeztetések
       aeat: AEAT
       aeat_value: AEAT érték
       area: Terület
@@ -1160,6 +1162,7 @@ tui:
       sources: Források
       status: Állapot
     discrepancy:
+      incomplete: Hiányos összehasonlítás
       aeat_only: Csak AEAT
       contradictory_source: Ellentmondó forrás
       local_only: Csak helyi
@@ -1207,6 +1210,14 @@ tui:
     overview:
       title: Az AEAT-szinkron áttekintése
     reconciliation:
+      historical: 'Mentett összehasonlítás; az aktuális számítás nincs újra ellenőrizve.'
+      identity: 'Munkaegység: %{work} | Bizonyíték: %{evidence}'
+      incomplete: Nem teljes összehasonlítás
+      matches: Nincs eltérés az összehasonlított mezőkben
+      advisories_withheld: '%{count} figyelmeztetés fordításra vár.'
+      evidence:
+        justificante: AEAT igazolás
+        declaration: Benyújtott bevallás
       title: Az AEAT-szinkron egyeztetése
     reconciliation_state:
       accept_aeat: AEAT elfogadása
@@ -1234,6 +1245,7 @@ tui:
         profile: Helyi profil
         reconciliation: Helyi egyeztetés
     source_state:
+      incomplete: Hiányos összehasonlítás
       absent: Hiányzik
       accepted: Elfogadva
       conflict: Konfliktus

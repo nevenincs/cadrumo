@@ -37,6 +37,10 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceZoneStateV1,
 )
+from cadrumo.application.modelo.reconciliation_records import (
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+)
 from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.overview.calendar_models import (
@@ -163,6 +167,19 @@ class PublicAeatSyncWorkspaceFiledDeclarationRowV1(BaseModel):
     justificante_observed_at: datetime | None
 
 
+class PublicModeloReconciliationDiff(BaseModel):
+    """Historical difference with its stored source and legal references."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    field_name: str
+    work_unit_value: str
+    evidence_value: str
+    kind: str
+    diff_kind: ModeloReconciliationDiffKind
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+
 class PublicAeatSyncWorkspaceReconciliationRowV1(BaseModel):
     """Typed local-human workbench view of AeatSyncWorkspaceReconciliationRowV1."""
 
@@ -181,6 +198,13 @@ class PublicAeatSyncWorkspaceReconciliationRowV1(BaseModel):
     local_value: str | None
     aeat_value: str | None
     reconciliation_state: AeatSyncReconciliationState
+    evidence_kind: ModeloReconciliationEvidenceKind | None
+    diffs: tuple[PublicModeloReconciliationDiff, ...]
+    advisory_count: int
+    comparison_id: str | None
+    work_unit_id: str | None
+    evidence_id: str | None
+    historical: bool
 
 
 class PublicDeclarationsGenerationStateV1(BaseModel):

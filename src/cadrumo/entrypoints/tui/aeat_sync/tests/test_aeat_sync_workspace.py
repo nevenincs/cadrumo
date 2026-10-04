@@ -549,6 +549,22 @@ def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
         resolve_aeat_sync_screen(locked, locked.target(AeatSyncWorkspaceZone.CENSUS))
 
 
+@pytest.mark.parametrize(
+    "availability",
+    (AeatSyncWorkspaceAvailability.NEVER_CAPTURED, AeatSyncWorkspaceAvailability.UNAVAILABLE),
+)
+def test_overview_remains_reachable_when_sources_are_unobservable(
+    availability: AeatSyncWorkspaceAvailability,
+) -> None:
+    controller = _controller(availability)
+    assert isinstance(
+        resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
+        AeatSyncOverviewScreen,
+    )
+    assert controller.state_for(AeatSyncWorkspaceZone.OVERVIEW).availability is availability
+    assert not controller.can_open(AeatSyncWorkspaceZone.CENSUS)
+
+
 @pytest.mark.asyncio
 async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_scope() -> None:
     """Mounting a route is not an operator action, and never prints a coordinate.
@@ -1498,3 +1514,105 @@ async def test_reader_projected_filed_history_door_renders_and_hands_off_before_
         operation="live.filed-history.pull",
     )
     assert calls == [expected, expected]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", (80, 120))
+async def test_persisted_drift_renders_each_diff_values_and_grounding_without_overflow(width: int) -> None:
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
+    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+    from .....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
+
+    diff = ModeloReconciliationDiff(
+        field_name="iva.resultado",
+        work_unit_value="0.00",
+        evidence_value="125.50",
+        kind="value_mismatch",
+        diff_kind=ModeloReconciliationDiffKind.CASILLA,
+        legal_refs=("ley-37-1992:art-99",),
+        source_refs=("aeat-test",),
+    )
+    record = _record().model_copy(update={"diffs": (_record().diffs[0], diff)})
+    projection = AeatSyncWorkspaceProjectionV1.model_validate_json(persisted_projection((record,)).model_dump_json())
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_unrelated_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(width, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            table.move_cursor(row=1)
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert all(
+                value in detail
+                for value in (
+                    "0.00",
+                    "125.50",
+                    "iva.resultado",
+                    "ley-37-1992:art-99",
+                    "aeat-test",
+                    "casilla",
+                    "1 advisories",
+                )
+            )
+            assert not any(table.max_scroll_x for table in screen.query(DataTable))
+
+
+@pytest.mark.asyncio
+async def test_stored_match_with_advisories_shows_incomplete_comparison() -> None:
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
+    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+
+    projection = persisted_projection((_record(mismatches=False),))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_unrelated_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert "Not fully compared" in table.get_row_at(0)
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert "Not fully compared" in detail
+            assert "1 advisories" in detail
+            assert "No differences in compared fields" not in detail
+
+
+@pytest.mark.asyncio
+async def test_distinct_comparisons_at_same_address_have_unique_rows_and_historical_identity() -> None:
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _projection as persisted_projection
+    from .....application.aeat_sync.tests.test_reconciliation_reader import _record
+    from .....application.aeat_sync.tests.test_workspace_reader import _unrelated_contracts
+    from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+
+    first = _record().model_copy(update={"source_kind": ModeloReconciliationEvidenceKind.DECLARATION})
+    second = _record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
+    projection = persisted_projection((first, second))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_unrelated_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            assert len(set(table.rows)) == 2
+            for index in range(2):
+                table.move_cursor(row=index)
+                await pilot.pause()
+                detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+                assert "Stored comparison; current calculation has not been rechecked." in detail
+                assert first.work_unit_id in detail

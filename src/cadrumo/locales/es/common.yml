@@ -1154,6 +1154,8 @@ tui:
       unchanged: Sin cambios
       unset: Sin establecer
     column:
+      compared_at: Comparado el
+      advisories: Avisos
       aeat: AEAT
       aeat_value: Valor AEAT
       area: Área
@@ -1173,6 +1175,7 @@ tui:
       sources: Orígenes
       status: Estado
     discrepancy:
+      incomplete: Comparación incompleta
       aeat_only: Solo AEAT
       contradictory_source: Origen contradictorio
       local_only: Solo datos locales
@@ -1220,6 +1223,14 @@ tui:
     overview:
       title: Resumen de Sincronización AEAT
     reconciliation:
+      historical: 'Comparación guardada; el cálculo actual no se ha vuelto a comprobar.'
+      identity: 'Unidad de trabajo: %{work} | Evidencia: %{evidence}'
+      incomplete: Comparación incompleta
+      matches: Sin diferencias en los campos comparados
+      advisories_withheld: '%{count} avisos pendientes de traducción.'
+      evidence:
+        justificante: Justificante AEAT
+        declaration: Declaración presentada
       title: Conciliación de Sincronización AEAT
     reconciliation_state:
       accept_aeat: Aceptar AEAT
@@ -1249,6 +1260,7 @@ tui:
         profile: Perfil local
         reconciliation: Conciliación local
     source_state:
+      incomplete: Comparación incompleta
       absent: Ausente
       accepted: Aceptado
       conflict: Conflicto

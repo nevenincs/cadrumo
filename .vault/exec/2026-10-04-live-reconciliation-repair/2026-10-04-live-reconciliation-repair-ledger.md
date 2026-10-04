@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a83459c3c875b8b5146be2922d8bc8cba4e8e4485d6246be78116e75e80f0de'
+body_hash: 'sha256:256133c5a4de39e24ea36edbdf39b597b424b1ad312170b1d9d07c5d94b373aa'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -86,6 +86,28 @@ related:
 - `S06` `verify:` `source selection tests 6 tests` -> `pass`
 - `S06` `verify:` `scoped Ruff and ty` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S04` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S04` `A` `src/cadrumo/application/aeat_sync/reconciliation_reader.py`
+- `S04` `A` `src/cadrumo/application/aeat_sync/tests/test_reconciliation_reader.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/test_workspace.py`
+- `S04` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S04` `M` `src/cadrumo/application/workbench_generation_public_contracts.py`
+- `S04` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/aeat_sync/controller.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/aeat_sync/screens.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `verify:` `application AEAT Sync TUI and generation 167 tests` -> `pass`
+- `S04` `verify:` `final preservation and TUI focused 12 tests` -> `pass`
+- `S04` `verify:` `overview unavailable route 3 tests` -> `pass`
+- `S04` `verify:` `scoped Ruff format and ty basedpyright pyrefly` -> `pass`
+- `S04` `verify:` `review known drift preservation incomplete summary historical identity` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 

@@ -278,7 +278,10 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         """State known-empty and unobservable zones in non-colour text."""
         state = self.controller.state_for(self.zone)
         count = state.item_count
-        if count is not None and count != rows.row_count:
+        rendered_count = count
+        if self.zone is AeatSyncWorkspaceZone.RECONCILIATION:
+            rendered_count = sum(max(1, len(row.diffs)) for row in self.controller.projection.reconciliation)
+        if count is not None and rendered_count != rows.row_count:
             raise ValueError("AEAT Sync zone count and rendered rows disagree")
         status = self.query_one("#aeat-sync-status", Static)
         if str(status.render()).strip():
@@ -641,7 +644,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
 
     def _populate_evidence(self) -> None:
         observation = self.controller.projection.census_observation
-        table = self.query_one("#aeat-sync-census-evidence", DataTable)
+        table = cast("DataTable[str]", self.query_one("#aeat-sync-census-evidence", DataTable))
         table.clear(columns=True)
         self.query_one("#aeat-sync-census-value", Static).update("")
         captured = self.query_one("#aeat-sync-census-captured", Static)
@@ -677,10 +680,11 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
 
     @override
     async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        if event.data_table.id == "aeat-sync-census-evidence":
+        table = cast("DataTable[str]", event.data_table)
+        if table.id == "aeat-sync-census-evidence":
             event.stop()
             self.query_one("#aeat-sync-census-value", Static).update(
-                "\n".join(str(value) for value in event.data_table.get_row(event.row_key))
+                "\n".join(str(value) for value in table.get_row(event.row_key))
             )
             return
         await super().on_data_table_row_selected(event)
@@ -852,6 +856,9 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
+        if any(row.evidence_kind is not None for row in self.controller.projection.reconciliation):
+            self._populate_comparisons(table)
+            return
         taken = _fit_columns(
             self.app.size.width,
             (
@@ -884,6 +891,79 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
                 *(cells[name] for name, _, _ in taken),
                 key=_natural_identity(row, prefix="reconciliation"),
             )
+
+    @override
+    def compose_evidence(self) -> ComposeResult:
+        yield Static(id="aeat-sync-reconciliation-detail", markup=False)
+
+    @override
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        super().on_data_table_row_highlighted(event)
+        table = cast("DataTable[str]", event.data_table)
+        if table.id == "aeat-sync-rows" and hasattr(self, "_comparison_details"):
+            self.query_one("#aeat-sync-reconciliation-detail", Static).update(
+                self._comparison_details.get(str(event.row_key.value), "")
+            )
+
+    def _populate_comparisons(self, table: DataTable[str]) -> None:
+        """Show every diff with both values and the selected row's full provenance."""
+        columns = _fit_columns(
+            self.app.size.width,
+            (("declaration", "tui.aeat_sync.column.declaration", 18), ("field", "tui.aeat_sync.column.field", 16)),
+            (
+                ("local_value", "tui.aeat_sync.column.local_value", 14),
+                ("aeat_value", "tui.aeat_sync.column.aeat_value", 14),
+            ),
+        )
+        for name, header, width in columns:
+            table.add_column(header, key=name, width=width)
+        self._comparison_details: dict[str, str] = {}
+        for row in self.controller.projection.reconciliation:
+            evidence = (
+                tr("tui.aeat_sync.reconciliation.evidence.justificante")
+                if row.evidence_kind is not None and row.evidence_kind.value == "justificante"
+                else tr("tui.aeat_sync.reconciliation.evidence.declaration")
+            )
+            advisory = (
+                tr("tui.aeat_sync.reconciliation.advisories_withheld", count=row.advisory_count)
+                if row.advisory_count
+                else "0"
+            )
+            for index, diff in enumerate(row.diffs or (None,)):
+                cells = {
+                    "declaration": _address(row),
+                    "field": (
+                        diff.field_name
+                        if diff is not None
+                        else tr("tui.aeat_sync.reconciliation.incomplete")
+                        if row.advisory_count
+                        else tr("tui.aeat_sync.reconciliation.matches")
+                    ),
+                    "local_value": _census_value(row.local_value if diff is None else diff.work_unit_value),
+                    "aeat_value": _census_value(row.aeat_value if diff is None else diff.evidence_value),
+                }
+                key = f"{_natural_identity(row, prefix='reconciliation')}:{row.comparison_id or 'legacy'}:{index}"
+                table.add_row(*(cells[name] for name, _, _ in columns), key=key)
+                details = [
+                    f"{cells['declaration']} | {evidence} | {row.local_observed_at}",
+                    cells["field"],
+                    f"{tr('tui.aeat_sync.column.local_value')}: {cells['local_value']}",
+                    f"{tr('tui.aeat_sync.column.aeat_value')}: {cells['aeat_value']}",
+                ]
+                if row.historical:
+                    details.insert(0, tr("tui.aeat_sync.reconciliation.historical"))
+                if row.work_unit_id is not None and row.evidence_id is not None:
+                    details.append(
+                        tr("tui.aeat_sync.reconciliation.identity", work=row.work_unit_id, evidence=row.evidence_id)
+                    )
+                if diff is not None:
+                    details.extend((f"{diff.diff_kind.value}: {diff.kind}", *diff.legal_refs, *diff.source_refs))
+                if row.advisory_count:
+                    details.append(advisory)
+                self._comparison_details[key] = "\n".join(details)
+        self.query_one("#aeat-sync-reconciliation-detail", Static).update(
+            next(iter(self._comparison_details.values()), "")
+        )
 
 
 __all__ = [

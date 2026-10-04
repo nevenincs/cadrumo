@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:cf3595fe074ec8844c3444f31d330c5d19af42f3d9600f2989886351e243bda7'
+body_hash: 'sha256:6474313d54d006f07a6f16534bd12ccd5e0c61d9787b64ac4a7914fb3f971282'
 ---
 
 # Live reconciliation repair
@@ -29,7 +29,8 @@ The user explicitly authorized fixing all failures observed during authenticated
 - [x] `S02` - Retrieve exact-period justificantes from authoritative declaration register controls; `src/cadrumo/application/live/justificante.py and receipt ports adapters tests`.
 - [x] `S03` - Restore captured submitted-file parsing against source-grounded framing; `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py and framing owner tests`.
 - [x] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
-- [ ] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
+- [x] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
+- [ ] `S07` - Align official IVA result-disposition enrollment with canonical export headers while preserving declared legacy observations; `src/cadrumo/_data/registry/aeat/facts/2025/mapping carry disposition fact and calculation observation ingress tests`.
 - [ ] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
 
 ## Parallelization
@@ -37,6 +38,8 @@ The user explicitly authorized fixing all failures observed during authenticated
 Delegate S01 public mirror projection and tests to mirror_fix. Delegate S02 justificante selection and adapters/tests to receipt_fix. After S01, mirror_fix owns S03 inbound submitted-file parsing and tests, preserving prior parser edits. Delegate independent S04 AEAT Sync reconciliation reader/projection/tests to drift_surface; final integration follows S01-S03. Lead owns S05 actual runtime acceptance and integrated review. All workers preserve others edits; lead serializes vault metadata and commits.
 
 After S02, receipt_fix owns S06 explicit declaration-source pull and local comparison operation. It may implement independently of S04, which consumes the existing persisted record format. S05 verifies both source paths after integration.
+
+Lead reassigns S04 review corrections to mirror_fix, including public transport schema parity; lead owns the AEAT Sync overview navigation repair. After S06, receipt_fix owns S07 governed disposition-header enrollment repair and compatibility tests. Lead publishes an isolated authority artifact and performs live acceptance.
 
 ## Verification
 

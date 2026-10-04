@@ -114,8 +114,8 @@ _OVERVIEW_SOURCES: Final = {
         AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
     ),
     AeatSyncOverviewArea.RECONCILIATION: (
-        AeatSyncWorkspaceSource.LOCAL_FILINGS,
-        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
     ),
 }
 
@@ -256,7 +256,10 @@ def _duplicates(
         raise AeatSyncWorkspaceProjectionError("notification requires private identity")
     _unique((f.private_identity for f in notifications), "notification identities")
     _unique((_natural(f.row) for f in comparison), "comparison addresses")
-    _unique((_natural(f.row) for f in reconciliation), "reconciliation addresses")
+    _unique(
+        ((_natural(f.row), f.row.work_unit_id, f.row.evidence_kind, f.row.evidence_id) for f in reconciliation),
+        "reconciliation identities",
+    )
 
 
 def _action_row_key(zone: AeatSyncWorkspaceZone, row: BaseModel) -> str:
@@ -388,6 +391,9 @@ def _require_dual_sources(
     row: AeatSyncWorkspaceEvidenceComparisonRowV1 | AeatSyncWorkspaceReconciliationRowV1,
     sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
 ) -> None:
+    if isinstance(row, AeatSyncWorkspaceReconciliationRowV1) and row.evidence_kind is not None:
+        _require(False, sources[AeatSyncWorkspaceSource.LOCAL_RECONCILIATION], "stored comparison")
+        return
     _require(
         row.local_state is AeatSyncSourceState.NOT_OBSERVED,
         sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
@@ -563,6 +569,12 @@ def _unseen_zone_availability(
 
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
+    if observation.zone is AeatSyncWorkspaceZone.RECONCILIATION:
+        states = tuple(
+            item.availability
+            for item in observation.sources
+            if item.source is AeatSyncWorkspaceSource.LOCAL_RECONCILIATION
+        )
     seen = _zone_seen(observation.zone, states)
     availability = _zone_availability(states, seen=seen)
     return AeatSyncWorkspaceZoneStateV1(

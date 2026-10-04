@@ -180,7 +180,9 @@ class AeatSyncWorkspaceController:
         return True
 
     def can_open(self, zone: AeatSyncWorkspaceZone) -> bool:
-        """Allow only observed current or stale projection zones to render bodies."""
+        """Keep the overview reachable to explain unavailable sources."""
+        if zone is AeatSyncWorkspaceZone.OVERVIEW:
+            return self.state_for(zone).availability is not AeatSyncWorkspaceAvailability.LOCKED
         return self.state_for(zone).availability in {
             AeatSyncWorkspaceAvailability.AVAILABLE,
             AeatSyncWorkspaceAvailability.STALE,

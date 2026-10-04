@@ -80,6 +80,7 @@ from .modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
 )
+from .modelo.reconciliation_records import ModeloReconciliationRecord
 from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
@@ -305,6 +306,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    reconciliation_reader: Callable[[], tuple[ModeloReconciliationRecord, ...]] | None = None
     notification_custody_reader: Callable[[], int] | None = None
     """Counts the notification documents this profile already holds locally.
 
@@ -727,6 +729,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
                     census_observation=census_observation,
                     filed_evidence=filed_evidence,
+                    reconciliations=None if self.reconciliation_reader is None else self.reconciliation_reader(),
                 ),
                 _AEAT_SYNC_READER_UNAVAILABLE,
             )

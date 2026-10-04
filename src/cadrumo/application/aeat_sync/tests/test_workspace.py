@@ -698,8 +698,8 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
     }
 
     assert refusals[AeatSyncWorkspaceSource.LOCAL_RECONCILIATION] == (
-        "workbench.aeat_sync.local_row_reader_unavailable"
-    ), "local reconciliation has no authority, so its refusal must say the reader is missing"
+        "workbench.aeat_sync.local_reader_not_composed"
+    ), "persisted reconciliation exists; an unbound reader is a composition gap"
     assert refusals[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY] == (
         "workbench.aeat_sync.local_reader_not_composed"
     ), (

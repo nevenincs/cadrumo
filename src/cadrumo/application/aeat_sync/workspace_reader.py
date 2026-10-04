@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.modelos.codes import ModeloCode
+from ..modelo.reconciliation_records import ModeloReconciliationRecord
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
@@ -32,6 +33,7 @@ from ..overview.calendar_models import OverviewAeatSubmissionState
 from ..overview.home import HomeAvailability
 from ..user_profile.censal_observation import CensalObservation
 from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
+from .reconciliation_reader import reconciliation_rows
 from .workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -73,24 +75,11 @@ _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
 )
 
 _NEVER_PULLED: Final[str] = "workbench.aeat_sync.never_pulled"
-_NO_LOCAL_ROW_READER: Final[str] = "workbench.aeat_sync.local_row_reader_unavailable"
-"""No local authority produces these rows at all.
-
-True of LOCAL_RECONCILIATION: nothing in the codebase records local
-reconciliation decisions, so there is nothing for a session to read.
-"""
-
 _READER_NOT_COMPOSED: Final[str] = "workbench.aeat_sync.local_reader_not_composed"
-"""The authority EXISTS but this session does not read it.
+"""A local authority exists, but this session did not compose its reader.
 
-Distinct from `_NO_LOCAL_ROW_READER`, which claims no reader exists, and from
-`_NEVER_PULLED`, which claims nothing has been captured. Both would be false of
-LOCAL_NOTIFICATION_CUSTODY: `NotificationDocumentService.list_documents` reads
-local custody and answers before any pull -- with an empty tuple when custody
-is empty, which is a proven zero rather than an absence. Naming it a missing
-reader points whoever picks this up at writing one that is already written; the
-gap is composition, and saying so is the difference between a task and a
-wild-goose chase."""
+An unbound reader is distinct from a successfully read empty store.
+"""
 
 _OVERVIEW_ACTIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
     AeatSyncOverviewArea.CENSUS: ("operator.profile.edit",),
@@ -207,7 +196,7 @@ def _local_observation(
     *,
     observed_at: UtcInstant,
     item_count: int | None,
-    refusal: str = _NO_LOCAL_ROW_READER,
+    refusal: str = _READER_NOT_COMPOSED,
 ) -> AeatSyncWorkspaceSourceObservationV1:
     if item_count is None:
         return AeatSyncWorkspaceSourceObservationV1(
@@ -233,6 +222,7 @@ def _observation(
     custody_count: int | None,
     census_observation: CensalObservation | None,
     filed_source: AeatSyncWorkspaceSourceObservationV1,
+    reconciliation_count: int | None,
 ) -> AeatSyncWorkspaceSourceObservationV1:
     if source is AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS:
         if zone is AeatSyncWorkspaceZone.EVIDENCE_COMPARISON and filed_source.observed_at is not None:
@@ -259,13 +249,13 @@ def _observation(
         AeatSyncWorkspaceSource.LOCAL_PROFILE: profile_count,
         AeatSyncWorkspaceSource.LOCAL_FILINGS: filing_count,
         AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: custody_count,
-        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION: None,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION: reconciliation_count,
     }
     return _local_observation(
         source,
         observed_at=observed_at,
         item_count=counts[source],
-        refusal=_LOCAL_REFUSALS.get(source, _NO_LOCAL_ROW_READER),
+        refusal=_LOCAL_REFUSALS.get(source, _READER_NOT_COMPOSED),
     )
 
 
@@ -345,8 +335,7 @@ that catalogue.
 Notifications is NOT here because whether it was read is a fact about this
 session rather than about the area: custody is read when the door composed a
 reader and not read when it did not, and `_locally_read_areas` decides that per
-call. Reconciliation is absent outright -- nothing in the codebase records a
-local reconciliation decision, so there is no authority to read.
+call. Reconciliation is projected separately from its persisted comparison records.
 """
 
 
@@ -399,12 +388,16 @@ def _area_discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState) -> 
     """Name the area-level outcome the two observed sides support."""
     if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}:
         return AeatSyncDiscrepancyKind.UNOBSERVED
+    if AeatSyncSourceState.INCOMPLETE in {local, aeat}:
+        return AeatSyncDiscrepancyKind.INCOMPLETE
     if local is aeat:
         return AeatSyncDiscrepancyKind.NONE
     if local is AeatSyncSourceState.ABSENT:
         return AeatSyncDiscrepancyKind.AEAT_ONLY
     if aeat is AeatSyncSourceState.ABSENT:
         return AeatSyncDiscrepancyKind.LOCAL_ONLY
+    if AeatSyncSourceState.CONFLICT in {local, aeat}:
+        return AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE
     return AeatSyncDiscrepancyKind.STATE_MISMATCH
 
 
@@ -417,6 +410,7 @@ def _overview_row(
     contracts: OperationPublicContractSetV1,
     census_observation: CensalObservation | None = None,
     filed_source: AeatSyncWorkspaceSourceObservationV1,
+    reconciliations: tuple[ModeloReconciliationRecord, ...] | None = None,
 ) -> AeatSyncWorkspaceOverviewRowV1:
     """State only what the local side genuinely observed for this area.
 
@@ -444,6 +438,21 @@ def _overview_row(
         local_observed_at = observed_at
     actions, operations = _admitted_capabilities(area, contracts)
     aeat_state, aeat_observed_at = _aeat_side(area, census_observation=census_observation, filed_source=filed_source)
+    if area is AeatSyncOverviewArea.RECONCILIATION and reconciliations is not None:
+        local_state = AeatSyncSourceState.PRESENT if reconciliations else AeatSyncSourceState.ABSENT
+        local_observed_at = observed_at
+        if reconciliations:
+            rows = reconciliation_rows(
+                bucket_id=str(reconciliations[0].bucket_id), subject_key="overview", records=reconciliations
+            )
+            aeat_state = (
+                AeatSyncSourceState.CONFLICT
+                if any(fact.row.diffs for fact in rows)
+                else AeatSyncSourceState.INCOMPLETE
+                if any(fact.row.advisory_count for fact in rows)
+                else AeatSyncSourceState.PRESENT
+            )
+            aeat_observed_at = max(record.reconciled_at for record in reconciliations)
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
@@ -600,6 +609,7 @@ def read_local_aeat_sync_workspace_projection(
     censo_values: Mapping[str, str] | None = None,
     census_observation: CensalObservation | None = None,
     filed_evidence: CalendarEvidenceProjection | None = None,
+    reconciliations: tuple[ModeloReconciliationRecord, ...] | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project local state and stored AEAT census and filing captures for one authenticated profile.
 
@@ -627,6 +637,9 @@ def read_local_aeat_sync_workspace_projection(
     # otherwise fail as a bare ValueError instead of the projection refusal.
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
+    stored_comparisons = reconciliation_rows(
+        bucket_id=bucket_id, subject_key=subject_key, records=reconciliations or ()
+    )
     observed_filings = _observed_filings(filed_evidence)
     filed_source = _filed_source_observation(filed_evidence, observed_count=len(observed_filings))
     return project_aeat_sync_workspace(
@@ -645,6 +658,7 @@ def read_local_aeat_sync_workspace_projection(
                         custody_count=custody_count,
                         census_observation=census_observation,
                         filed_source=filed_source,
+                        reconciliation_count=None if reconciliations is None else len(reconciliations),
                     )
                     for source in aeat_sync_workspace_sources(zone)
                 ),
@@ -665,6 +679,7 @@ def read_local_aeat_sync_workspace_projection(
                     contracts=operation_contracts,
                     census_observation=census_observation,
                     filed_source=filed_source,
+                    reconciliations=reconciliations,
                 ),
             )
             for area in AeatSyncOverviewArea
@@ -689,6 +704,7 @@ def read_local_aeat_sync_workspace_projection(
                 row=census_observation,
             )
         ),
+        reconciliation=stored_comparisons,
         filed_declarations=_filed_declaration_rows(
             bucket_id=bucket_id,
             subject_key=subject_key,
