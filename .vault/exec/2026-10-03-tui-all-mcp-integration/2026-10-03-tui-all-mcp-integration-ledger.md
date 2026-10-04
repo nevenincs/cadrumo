@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f209a6a76d0b9a7db0daac5500f33b0f2038b0e2a17bf78962f179962f2cd96'
+body_hash: 'sha256:8d5190536090b8942ba89b7130dbc7b7d1f903387ce94c1cc66711259e8c8cb0'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3532,6 +3532,12 @@ related:
 - `S05` `M` `.codex/handoffs/tui-all-mcp-final-m145-premise-repair.json`
 - `S05` `A` `.codex/handoffs/tui-all-mcp-final-m145-replay-nodes.json`
 - `S05` `verify:` `affectedM14526/26PASS/103.29s;independent610byte/hash/event/receipt/refusal proof preserved;scoped Ruff/format/ty` -> `pass`
+- `S05` `M` `dev/acceptance/installed_cli.py`
+- `S05` `M` `dev/acceptance/iva/cli_journey.py`
+- `S05` `M` `dev/acceptance/tests/test_installed_cli.py`
+- `S05` `A` `dev/acceptance/iva/tests/test_cli_argument_prefix.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-installed-cli-prefix.json`
+- `S05` `verify:` `installedCLI adapter15PASS/1.76s;fourpaths Ruff/format/ty/diff` -> `pass`
 
 ## Notes
 
@@ -3555,3 +3561,4 @@ related:
 - `S05` Finalize real source integrationcommit mappings 8be18/74d6/c2a/ca956; preserve everyearlier source disposition and pendinginstalledwithholding execution qualifier. SixoriginalMCPsources freshobservedzero laterdeltas/zerocapturedrift/unchangedindexes. Add boundedindependentcombinedreview withno remaininghigh/criticalstaticfinding, reviewstatusPENDINGforbehavioral/native/landing. Source2literalM145testchanges have applicable scopedRuff/format/ty supplements; rawfailed/unavailablequalityruns preservedbesidefinal12PASS. Portable226execution scripts/collectionreceipt record3238selected; activeSerial/M145replay/Parallelresults are not staged asfinalproof. Actual6configuredWindowsCMakepasses areworker-reported butfinalsourcefingerprintrecheck/nativebundle remainsinflight. OriginalactiveTUIworktree/index untouched; notlanded.
 - `S05` Resolved at source and covering behavior. The defining operator contract retires the stale app.runtime mount already absent from the accepted command graph. A real missing invoice lease summary dropped the supplied premises; canonical locale set-batch adds both placeholders in all four supported languages without changing the caller or assertions. Browser tests now establish the actual controlled-category environment, and the atomic reconciliation test addresses the public PreparedModeloReconciliation.persist owner while retaining actual SQL rollback and grounding assertions. Whole five-owner replay passes46 cases in13.02s, including unchanged refusal-target and leased-premises TUI assertions. Scoped Ruff/format/ty and four YAML/placeholder checks pass. Authority is unchanged. Current installed payload proof must include these real contract and locale changes in the coordinated final rebuild. All original-source dispositions are retained. Final combined quality/native/Mac/destination proof remains pending; active original worktrees/indexes remain untouched.
 - `S05` Resolved. The supplementary independent oracle accepts the defining physical decimal type instead of the retired money label; it still independently fills absent numeric slots and never calls the shared codec. The whole adapter14, primary5, supplementary5 and completeness/duplicate2 replay passes all26 in103.29s. Its actual passed-node union covers all13 original serial failures; the other424 passing serial cases remain preserved separately, giving scoped coverage of all437 selected serial cases. Raw serial exit1 remains visible. Three unrelated CLI fixture paths changed during replay, so global zero-drift is explicitly not claimed; M145 owners, authority and physical export oracles were unchanged. Later runtime admission changes have a separate owning replay and this receipt does not establish combined native or destination acceptance. All original-source dispositions are retained. Final combined quality/native/Mac/destination proof remains pending; active original worktrees/indexes remain untouched.
+- `S05` Resolved acceptance runner wiring. The optional immutable `cli_argument_prefix` precedes CLI options and is preserved by both IVA reopen adapters and sanitized receipts. The actual console entry is cadrumo.entrypoints.cli.bootstrap:main via the existing interpreter -c invocation; the package has no `__main__,` and the earlier -m attempt is recorded as a runner error. Profile creation and authenticated secrets remain stdin-only with the existing custom-stdin conflict guard. Fifteen scoped adapter tests pass in1.76s, preserving incomplete-verification refusal and both fresh adapter boundaries; Ruff/format/ty pass on all four paths. These mocked adapter tests do not prove product calculation, export or native custody. The dev acceptance helpers are outside actual native action and wheel membership; installed native journey replay remains required. All original-source dispositions are retained. Final combined quality/native/Mac/destination proof remains pending; active original worktrees/indexes remain untouched.

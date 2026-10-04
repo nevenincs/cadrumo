@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d04e075069d46880fa699cae83538765c78f2df87f4a540dc07e032193405de'
+body_hash: 'sha256:eebdf25a5a4f273c405bc2336736031e83870cee392f89fbfa09aa64c5c64899'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -154,6 +154,10 @@ Resolved at source and covering behavior. The defining operator contract retires
 ### m145-complete-affected-replay | low | Independent DR145 oracle retains exact wire proof using the current typed decimal slot
 
 Resolved. The supplementary independent oracle accepts the defining physical decimal type instead of the retired money label; it still independently fills absent numeric slots and never calls the shared codec. The whole adapter14, primary5, supplementary5 and completeness/duplicate2 replay passes all26 in103.29s. Its actual passed-node union covers all13 original serial failures; the other424 passing serial cases remain preserved separately, giving scoped coverage of all437 selected serial cases. Raw serial exit1 remains visible. Three unrelated CLI fixture paths changed during replay, so global zero-drift is explicitly not claimed; M145 owners, authority and physical export oracles were unchanged. Later runtime admission changes have a separate owning replay and this receipt does not establish combined native or destination acceptance.
+
+### installed-cli-bootstrap-adapter | low | Native acceptance uses the existing console bootstrap through every fresh CLI child
+
+Resolved acceptance runner wiring. The optional immutable cli_argument_prefix precedes CLI options and is preserved by both IVA reopen adapters and sanitized receipts. The actual console entry is cadrumo.entrypoints.cli.bootstrap:main via the existing interpreter -c invocation; the package has no __main__, and the earlier -m attempt is recorded as a runner error. Profile creation and authenticated secrets remain stdin-only with the existing custom-stdin conflict guard. Fifteen scoped adapter tests pass in1.76s, preserving incomplete-verification refusal and both fresh adapter boundaries; Ruff/format/ty pass on all four paths. These mocked adapter tests do not prove product calculation, export or native custody. The dev acceptance helpers are outside actual native action and wheel membership; installed native journey replay remains required.
 
 ## Recommendations
 

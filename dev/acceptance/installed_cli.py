@@ -88,6 +88,7 @@ class InstalledCli:
         authority_root: Path,
         passphrase: str,
         runtime_socket_dir: Path | None = None,
+        cli_argument_prefix: tuple[str, ...] = (),
     ) -> None:
         """Bind the executable to one isolated store and authority tree."""
         self.executable = executable.resolve(strict=True)
@@ -95,7 +96,13 @@ class InstalledCli:
         self.authority_root = authority_root.resolve(strict=True)
         self.passphrase = passphrase
         self.runtime_socket_dir = runtime_socket_dir
+        self._cli_argument_prefix = tuple(cli_argument_prefix)
         self.commands: list[CommandEvidence] = []
+
+    @property
+    def cli_argument_prefix(self) -> tuple[str, ...]:
+        """Immutable interpreter arguments before the public CLI's own options."""
+        return self._cli_argument_prefix
 
     def run(
         self,
@@ -185,7 +192,7 @@ class InstalledCli:
         """Run one fresh child with the isolated environment and stdin-only credential."""
         if authenticated and stdin_payload is not None:
             raise ValueError("authenticated command cannot also supply a custom stdin payload")
-        argv = [str(self.executable), *global_options]
+        argv = [str(self.executable), *self.cli_argument_prefix, *global_options]
         input_text = stdin_payload
         if authenticated:
             argv.append("--profile-secrets-stdin")

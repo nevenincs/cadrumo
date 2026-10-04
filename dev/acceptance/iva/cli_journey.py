@@ -144,6 +144,7 @@ def run_iva_m303_cli_journey(
     storage_root: Path,
     artifact_root: Path,
     year: int,
+    cli_argument_prefix: tuple[str, ...] = (),
 ) -> IvaM303CliJourneyReceipt:
     """Capture and calculate the smallest truthful ordinary ``year``/1T IVA case.
 
@@ -166,6 +167,7 @@ def run_iva_m303_cli_journey(
         storage_root=storage_root,
         authority_root=authority_root,
         passphrase=secrets.token_urlsafe(32),
+        cli_argument_prefix=cli_argument_prefix,
     )
     receipts: list[SanitizedCommandReceipt] = []
     profile_start = len(cli.commands)
@@ -183,12 +185,14 @@ def run_iva_m303_cli_journey(
                 evidence=profile_commands[0],
                 artifact=artifact,
                 result_ids=(),
+                cli_argument_prefix=cli.cli_argument_prefix,
             ),
             _command_receipt(
                 args=("config", "profile", "complete-setup"),
                 evidence=profile_commands[1],
                 artifact=artifact,
                 result_ids=(),
+                cli_argument_prefix=cli.cli_argument_prefix,
             ),
         )
     )
@@ -356,6 +360,7 @@ def run_iva_m303_cli_journey(
         storage_root=storage_root,
         authority_root=authority_root,
         passphrase=cli.passphrase,
+        cli_argument_prefix=cli.cli_argument_prefix,
     )
     _assert_reopened_identities(
         cli=reopened,
@@ -402,6 +407,7 @@ def run_iva_m303_cli_journey(
         storage_root=storage_root,
         authority_root=authority_root,
         passphrase=cli.passphrase,
+        cli_argument_prefix=cli.cli_argument_prefix,
     )
     verification = _result(
         _run(
@@ -596,6 +602,7 @@ def _run(
             artifact=artifact,
             result_ids=result_ids,
             redacted_paths=redacted_paths,
+            cli_argument_prefix=cli.cli_argument_prefix,
         )
     )
     if evidence.returncode != 0:
@@ -633,9 +640,10 @@ def _command_receipt(
     artifact: Path,
     result_ids: tuple[str, ...],
     redacted_paths: Mapping[Path, str] | None = None,
+    cli_argument_prefix: tuple[str, ...] = (),
 ) -> SanitizedCommandReceipt:
     return SanitizedCommandReceipt(
-        argv=("--format", "json", *_sanitize_argv(args, artifact, redacted_paths)),
+        argv=(*cli_argument_prefix, "--format", "json", *_sanitize_argv(args, artifact, redacted_paths)),
         returncode=int(evidence.returncode),
         status=str(evidence.status),
         notice_codes=tuple(evidence.notice_codes),
