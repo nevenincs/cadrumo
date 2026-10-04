@@ -446,6 +446,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             ),
             _expected_option("period", "--period", "cli.ledger.import.period_help"),
             _expected_option("year", "--year", "cli.ledger.import.year_help", annotation="builtins:int"),
+            _expected_option("account", "--account", "cli.ledger.import.account_help"),
         ),
     ),
     _expected_command(

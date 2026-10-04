@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,6 +16,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.models import OperationRequest
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
@@ -77,6 +78,16 @@ class _Location:
         return f"fake://{bucket_id}"
 
 
+class _NoOwnAccounts:
+    """A profile that has registered no own bank account."""
+
+    def load(self) -> OwnAccountRegister:
+        return OwnAccountRegister()
+
+    def mutate(self, change: Callable[[OwnAccountRegister], OwnAccountRegister]) -> OwnAccountRegister:
+        raise AssertionError("ledger import never writes the own-account register")
+
+
 class _PortsFactory:
     def __init__(
         self,
@@ -95,6 +106,7 @@ class _PortsFactory:
             bucket_event_repository=UnusedBucketEventRepository(),
             currency_normalizer=CurrencyNormalizationService(),
             operation=operation,
+            own_accounts=_NoOwnAccounts(),
         )
 
 
@@ -135,8 +147,8 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
     stored: list[LedgerImportExecutionResult] = []
     repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
-    def prepare(command, *, ports):
-        del ports
+    def prepare(command, *, ports, own_accounts):
+        del ports, own_accounts
         assert not cancellation.active
         name = command.path.name
         prepared_paths.append(name)

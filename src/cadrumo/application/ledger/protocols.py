@@ -36,6 +36,11 @@ class ParsedLedgerRowProtocol(Protocol):
         """Return the authoritative flow direction for this row."""
         ...
 
+    @property
+    def own_account_id(self) -> str | None:
+        """Return the own bank account the row is bound to, if any."""
+        ...
+
 
 @runtime_checkable
 class ProviderValidationProtocol(Protocol):

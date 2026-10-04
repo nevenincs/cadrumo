@@ -735,12 +735,15 @@ class ParsedLedgerRow(BaseModel):
             non-negative magnitude amount.
         direction: The authoritative flow direction derived from the source
             sign at the parse boundary.
+        own_account_id: Always ``None`` from a provider: a statement row is
+            bound to the taxpayer's own account by the import, not the parser.
     """
 
     model_config = _STRICT_FROZEN
 
     raw: RawTransaction
     direction: TransactionDirection
+    own_account_id: None = None
 
 
 def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:

@@ -62,6 +62,7 @@ from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
 )
+from ...domain.transactions.own_accounts import OwnAccountId
 from ...domain.transactions.repository import ImportSummary
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
@@ -608,6 +609,7 @@ class LedgerSourceImportCommand(BaseModel):
     verify: bool = False
     source: Path | None = None
     period: Period | None = None
+    own_account_id: OwnAccountId | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger import", min_length=1, max_length=128)
 

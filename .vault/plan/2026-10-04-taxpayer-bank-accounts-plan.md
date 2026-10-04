@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:0fa197106ccc364cba439ba1802787cd64892cd450562b3ff0660fd6b44fa95b'
+body_hash: 'sha256:7d574d435b883fefe7abea52a5cdc35fce9e83c95fb8b5a3108378ef75659de1'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -47,7 +47,7 @@ Delivers the ledger-owned own bank account entity, its encrypted register with r
 Links transactions to own accounts at import and manual entry, removes cross-account false duplicates, and repairs the import defects found in the ledger health check.
 
 - [x] `P02.S05` - add optional own_account_id to Transaction and fold it into derive_transaction_id and the import duplicate fingerprint only when present, with id-stability tests for unbound rows; `src/cadrumo/domain/transactions/models.py`.
-- [ ] `P02.S06` - bind ledger import to an own account with an account option, OFX ACCTID match or mismatch refusal and unique IBAN auto-binding, through CLI and the TUI request model; `src/cadrumo/application/ledger/actions_import.py, import_operation.py, src/cadrumo/adapters/inbound/financial/providers/ofx.py, src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`.
+- [x] `P02.S06` - bind ledger import to an own account with an account option, OFX ACCTID match or mismatch refusal and unique IBAN auto-binding, through CLI and the TUI request model; `src/cadrumo/application/ledger/actions_import.py, import_operation.py, src/cadrumo/adapters/inbound/financial/providers/ofx.py, src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`.
 - [ ] `P02.S07` - let manual add and update set the own account and let ledger list filter by it; `src/cadrumo/application/ledger/add_operation.py, src/cadrumo/entrypoints/cli/_ledger_list.py`.
 - [x] `P02.S08` - repair import defects: size guard before detection reads, single read for hash and parse, honest provider tokens, period and year options that filter or are removed, basename-only log; `src/cadrumo/adapters/inbound/financial/, src/cadrumo/application/ledger/actions_import.py`.
 

@@ -24,10 +24,15 @@ from .protocols import FinancialProviderProtocol
 
 @dataclass(frozen=True, slots=True)
 class LedgerParsedRow:
-    """Application view of one parsed source row."""
+    """Application view of one parsed source row.
+
+    ``own_account_id`` is the taxpayer's own account the row is bound to at
+    import, or ``None`` while the row is account-unassigned.
+    """
 
     raw: RawTransaction
     direction: TransactionDirection
+    own_account_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -1441,6 +1441,10 @@ errors:
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
+    ledger_import_own_account_mismatch: El extracto indica una cuenta distinta de
+      la cuenta propia {own_account_id}, así que no se ha importado en ella.
+    ledger_import_own_account_unknown: La cuenta propia {own_account_id} no está entre
+      tus cuentas bancarias propias registradas.
     ledger_import_period_without_span: El periodo {period} no abarca fechas del calendario,
       así que no puede filtrar las filas importadas. Usa un trimestre, un mes o 0A.
     ledger_import_requires_bucket: La importación de un extracto bancario requiere

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4738563477ab992a2173e303c1127e7d6206385674030601e43f22df01f2f119'
+body_hash: 'sha256:03d7be70525457d9bab9be1741b3ed7da10939aa8408ae0f528b6a3ea7c0c3e8'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -184,6 +184,41 @@ related:
 - `S12` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, core/tests/test_result_disposition.py (no new failures vs baseline)` -> `pass`
 - `S12` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
 - `S12` `by:` `lane-d`
+- `S06` `M` `src/cadrumo/adapters/inbound/financial/providers/ofx.py`
+- `S06` `M` `src/cadrumo/adapters/inbound/financial/providers/base.py`
+- `S06` `A` `src/cadrumo/adapters/inbound/financial/tests/test_own_account_binding.py`
+- `S06` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S06` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S06` `M` `src/cadrumo/application/ledger/import_ports.py`
+- `S06` `M` `src/cadrumo/application/ledger/models.py`
+- `S06` `M` `src/cadrumo/application/ledger/protocols.py`
+- `S06` `M` `src/cadrumo/application/ledger/tests/test_import_operation.py`
+- `S06` `M` `src/cadrumo/application/ledger/tests/test_import_path_diagnostic_parity.py`
+- `S06` `M` `src/cadrumo/application/tests/test_import_dedup_path_parity.py`
+- `S06` `M` `src/cadrumo/application/transactions/import_diagnostics.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_import.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_ux.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `M` `src/cadrumo/locales/en/errors.yml`
+- `S06` `M` `src/cadrumo/locales/es/errors.yml`
+- `S06` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S06` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S06` `M` `docs/_sequences/how-to/first-quarterly-filing/import-provider-list.json`
+- `S06` `verify:` `pytest src/cadrumo/adapters/inbound/financial` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo/application/ledger/tests src/cadrumo/application/transactions` -> `pass`
+- `S06` `verify:` `pytest test_ledger_import_ux.py -k account-period-relative native runtime` -> `pass`
+- `S06` `verify:` `pytest test_app_ledger_operations_management_command_specs.py` -> `pass`
+- `S06` `verify:` `ty on touched files` -> `pass`
+- `S06` `verify:` `ruff check and format on touched files` -> `pass`
+- `S06` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -197,3 +232,4 @@ related:
 - `S09` per-filing --charge-account/--refund-account CLI options are left to P06a.S23 (Lane F owns entrypoints/cli); the request, command and operation models carry the overrides
 - `S12` the byte proofs live in `entrypoints/tests/profile_persistence` and adapters/persistence/profile/tests because they need the real encrypted register; application/modelo/tests holds no adapter-backed export tests
 - `S12` the filing transition still resolves its disposition without the refund account, so a local filing records D where the export of a foreign refund writes X; carry is unaffected (both refunds)
+- `S06` TUI import door has no production implementation yet; LedgerImportRequestV1 carries `own_account_id` for Lane E S20 to thread

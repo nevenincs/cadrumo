@@ -48,6 +48,13 @@ def _validate_import_provider(provider: str) -> LedgerProviderID:
     return LedgerProviderID(normalised)
 
 
+def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
+    """Explain one refused statement; an own-account mismatch names its cause."""
+    if refusal.reason_code == "own_account_mismatch":
+        return tr("cli.ledger.import.file_refused_account_mismatch", file=refusal.file_name)
+    return tr("cli.ledger.import.file_refused", file=refusal.file_name)
+
+
 class _ImportReport:
     """The text projection and canonical non-blocking notices."""
 
@@ -66,7 +73,7 @@ def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _Import
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.import.file_refused",
-                message=tr("cli.ledger.import.file_refused", file=refusal.file_name),
+                message=_refusal_message(refusal),
                 context={"file": refusal.file_name, "reason_code": refusal.reason_code},
             ),
         )
@@ -124,6 +131,7 @@ def ledger_import(
     verbose: bool = False,
     period: str | None = None,
     year: int | None = None,
+    account: str | None = None,
 ) -> None:
     """Import statement files through the exact-profile operation registry."""
     normalised_provider = _validate_import_provider(provider)
@@ -144,10 +152,11 @@ def ledger_import(
         verify=verify,
         verify_source=verify_source,
         period=canonical_period,
+        own_account_id=account,
     )
     result = completed.projection
     if not result.validations and result.refused_files:
-        raise bad(tr("cli.ledger.import.file_refused", file=result.refused_files[0].file_name))
+        raise bad(_refusal_message(result.refused_files[0]))
     report = _import_report(result, verbose=verbose, verify=verify)
     refused = _refused_file_report(result.refused_files)
     report.lines.extend(refused.lines)

@@ -321,6 +321,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("verbose", ("--verbose",), "cli.ledger.import.verbose_help"),
             replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help")),
             replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help")),
+            _optional_text_option("account", ("--account",), "cli.ledger.import.account_help"),
         ),
         policy=_POLICY_2,
         handler=LazyBinding.available(DeferredTarget("._ledger_import_cli", "ledger_import", __package__)),

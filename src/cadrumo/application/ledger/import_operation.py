@@ -22,6 +22,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef
+from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -34,6 +35,7 @@ from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_import import (
+    OWN_ACCOUNT_MISMATCH_MESSAGE,
     LedgerProviderID,
     PreparedLedgerSourceImport,
     aggregate_ledger_import_results,
@@ -42,6 +44,7 @@ from .actions_import import (
 )
 from .import_ports import LedgerImportPorts
 from .models import LedgerSourceImportCommand, LedgerSourceImportResult
+from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
@@ -80,6 +83,7 @@ class LedgerImportOperationPorts:
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol
     currency_normalizer: CurrencyNormalizationService
     operation: PinnedAuthorityOperation
+    own_accounts: OwnAccountRepositoryProtocol
 
 
 class LedgerImportOperationPortsFactory(Protocol):
@@ -102,6 +106,7 @@ class LedgerImportRequest(BaseModel):
     verify: bool = False
     verify_source: Path | None = None
     period: PublicPeriod | None = None
+    own_account_id: OwnAccountId | None = None
 
 
 class LedgerImportFileRefusal(BaseModel):
@@ -110,7 +115,7 @@ class LedgerImportFileRefusal(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     file_name: str = Field(min_length=1, max_length=255)
-    reason_code: Literal["transaction_validation", "result_limit"]
+    reason_code: Literal["transaction_validation", "own_account_mismatch", "result_limit"]
 
 
 class LedgerImportValidationProjection(BaseModel):
@@ -390,6 +395,7 @@ def _prepare_import_file(
     bucket_id: str,
     payload: LedgerImportRequest,
     ports: LedgerImportOperationPorts,
+    own_accounts: OwnAccountRegister,
     remaining_row_capacity: int,
 ) -> PreparedLedgerSourceImport | LedgerImportFileRefusal:
     """Stage one source, or return its safe refusal before persistence."""
@@ -401,15 +407,20 @@ def _prepare_import_file(
         verify=payload.verify,
         source=payload.verify_source,
         period=payload.period.to_period() if payload.period is not None else None,
+        own_account_id=payload.own_account_id,
         actor=bucket_id,
         source_command="aeat app ledger import",
     )
     try:
-        prepared = prepare_ledger_source_import(command, ports=ports.import_ports)
-    except TransactionValidationError:
+        prepared = prepare_ledger_source_import(command, ports=ports.import_ports, own_accounts=own_accounts)
+    except TransactionValidationError as exc:
         return LedgerImportFileRefusal(
             file_name=_safe_file_name(path),
-            reason_code="transaction_validation",
+            reason_code=(
+                "own_account_mismatch"
+                if exc.translated_message == OWN_ACCOUNT_MISMATCH_MESSAGE
+                else "transaction_validation"
+            ),
         )
     if len(prepared.source.parsed_rows) > remaining_row_capacity:
         return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="result_limit")
@@ -431,6 +442,14 @@ def _compose_staged_imports(
     ports = ports_factory(bucket_id=bucket_id, operation=operation)
     if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    own_accounts = ports.own_accounts.load()
+    if payload.own_account_id is not None and payload.own_account_id not in {
+        account.own_account_id for account in own_accounts.accounts
+    }:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_own_account_unknown",
+            context={"own_account_id": payload.own_account_id},
+        )
     staged: list[tuple[Path, PreparedLedgerSourceImport]] = []
     refusals: list[LedgerImportFileRefusal] = []
     staged_rows = 0
@@ -440,6 +459,7 @@ def _compose_staged_imports(
             bucket_id=bucket_id,
             payload=payload,
             ports=ports,
+            own_accounts=own_accounts,
             remaining_row_capacity=MAX_LEDGER_IMPORT_ROWS - staged_rows,
         )
         if isinstance(outcome, LedgerImportFileRefusal):

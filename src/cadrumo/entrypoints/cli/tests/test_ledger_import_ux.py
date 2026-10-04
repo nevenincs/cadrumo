@@ -334,6 +334,37 @@ def test_import_period_matching_no_rows_explains_the_zero_import(tmp_path: Path)
     }
 
 
+def test_import_into_an_unregistered_own_account_is_refused(tmp_path: Path) -> None:
+    """`--account` names a register entry; an id the profile never registered refuses the import."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="account-ledger-import", facts={})
+        refused = _invoke_exact_profile(
+            profile,
+            [
+                "--format",
+                "json",
+                "app",
+                "ledger",
+                "import",
+                "--file",
+                str(statement),
+                "--provider",
+                "csv",
+                "--account",
+                "acc-01",
+            ],
+        )
+        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+
+    assert refused.exit_code != 0
+    error = _json_object(_json_document(refused.output)["error"])
+    assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
+    assert _json_object(error["context"])["effect"] == "none"
+    readback = _json_object(_json_document(listed.output)["result"])
+    assert readback["rows"] == []
+
+
 def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> None:
     """Re-importing only-duplicate rows reports why nothing was added."""
     statement = tmp_path / "statement.csv"

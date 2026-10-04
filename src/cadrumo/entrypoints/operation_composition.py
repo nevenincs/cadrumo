@@ -1389,6 +1389,11 @@ def build_production_operation_registry(
     ledger_export_definition = build_ledger_export_definition(build_ledger_export_link_operation_ports)
     ledger_link_definition = build_ledger_link_definition(build_ledger_export_link_operation_ports)
 
+    if own_account_repository_factory is None:
+        from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
+
+        own_account_repository_factory = OwnAccountRepository
+
     def ledger_import_ports_factory(
         *, bucket_id: str, operation: PinnedAuthorityOperation
     ) -> LedgerImportOperationPorts:
@@ -1399,6 +1404,7 @@ def build_production_operation_registry(
             bucket_event_repository=ledger_ports.bucket_event_repository,
             currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
             operation=operation,
+            own_accounts=own_account_repository_factory(bucket_id=bucket_id),
         )
 
     ledger_import_definition = build_ledger_import_definition(ledger_import_ports_factory)
@@ -1463,10 +1469,6 @@ def build_production_operation_registry(
 
         counterparty_repository_factory = build_counterparty_establishment_repository
     ledger_counterparty_definition = build_ledger_counterparty_definition(counterparty_repository_factory)
-    if own_account_repository_factory is None:
-        from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
-
-        own_account_repository_factory = OwnAccountRepository
     ledger_own_account_definition = build_ledger_own_account_definition(own_account_repository_factory)
     ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
     ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)

@@ -55,6 +55,7 @@ def import_ledger_sources_for_cli(
     verify: bool,
     verify_source: Path | None,
     period: Period | None,
+    own_account_id: str | None = None,
 ) -> RegisteredOperationCompletion[LedgerImportResultProjection]:
     """Submit staged source paths to the exact profile and correlate the result."""
     if not files or len(files) > MAX_LEDGER_IMPORT_FILES:
@@ -72,6 +73,7 @@ def import_ledger_sources_for_cli(
             verify=verify,
             verify_source=verify_source.absolute() if verify_source is not None else None,
             period=PublicPeriod.from_period(period) if period is not None else None,
+            own_account_id=own_account_id,
         ),
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),

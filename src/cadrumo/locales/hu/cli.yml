@@ -3337,6 +3337,8 @@ cli:
       include_split_siblings_help: A lánc kibővítése minden olyan felosztási testvér
         eseményeivel, amely ugyanazzal a split_group_id-val rendelkezik.
     import:
+      account_help: A saját bankszámla, amelyhez a kivonat tartozik (azonosítója,
+        pl. acc-01). A más számlát megnevező kivonatot elutasítja.
       all_rows_skipped: 'Nem importáltunk új tételt: mind a(z) {skipped} elemzett
         sor már szerepel a nyilvántartásban (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba módban (mentés nélkül).
@@ -3346,6 +3348,8 @@ cli:
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
+      file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}
+        más saját számlát nevez meg, mint amelyet választottál.'
       help: Bankszámlakivonatok vagy könyvelési fájlok importálása a nyilvántartásba.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy,
         a nyilvántartásban már szereplő vagy ebben a fájlban korábbi tranzakcióéval,

@@ -38,6 +38,7 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.models import Transaction
+from ....domain.transactions.own_accounts import OwnAccountId
 from ..destination_alias import closed_destination_ids
 
 type LedgerDestinationIdV1 = Literal[
@@ -206,8 +207,11 @@ class LedgerImportSourceKind(StrEnum):
 class LedgerImportRequestV1(BaseModel):
     """One operator-chosen file or folder and how to read it.
 
-    ``provider`` applies to a bank statement and ``country`` to an invoice
-    book; each is ignored by the other kind rather than guessed for it.
+    ``provider`` and ``own_account_id`` apply to a bank statement and
+    ``country`` to an invoice book; each is ignored by the other kind rather
+    than guessed for it. ``own_account_id`` names the own bank account the
+    statement belongs to, or ``None`` to bind only rows whose statement names
+    a registered account.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -216,6 +220,7 @@ class LedgerImportRequestV1(BaseModel):
     source_kind: LedgerImportSourceKind
     provider: LedgerProviderID = LedgerProviderID.AUTO
     country: str | None = Field(default=None, min_length=2, max_length=2)
+    own_account_id: OwnAccountId | None = None
 
 
 class LedgerImportFileRefusalV1(BaseModel):

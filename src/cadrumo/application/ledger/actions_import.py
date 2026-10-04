@@ -26,6 +26,7 @@ from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXT
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable
+from ...core.iban import normalise_iban
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
@@ -40,6 +41,11 @@ from ...domain.transactions.models import (
     derive_movement_day_key,
     derive_transaction_id,
     existing_transaction_import_fingerprints,
+)
+from ...domain.transactions.own_accounts import (
+    OwnAccountRegister,
+    OwnAccountRegisterError,
+    OwnBankAccount,
 )
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
@@ -57,7 +63,7 @@ from .actions_common import (
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
-from .import_ports import LedgerImportPorts
+from .import_ports import LedgerImportPorts, LedgerParsedRow
 from .models import (
     LedgerImportDiagnosticReport,
     LedgerImportOperationResult,
@@ -73,6 +79,9 @@ from .protocols import (
     ProviderValidationProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+
+#: Refusal message of a statement that names another own account than the chosen one.
+OWN_ACCOUNT_MISMATCH_MESSAGE: Final[str] = "errors.transaction.ledger_import_own_account_mismatch"
 
 
 class LedgerProviderID(StrEnum):
@@ -208,8 +217,12 @@ def evaluate_import_rows(
     batch_day_keys: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
-        fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
-        transaction_id = derive_transaction_id(raw)
+        fingerprint = derive_import_fingerprint(
+            raw,
+            direction=parsed.direction,
+            own_account_id=parsed.own_account_id,
+        )
+        transaction_id = derive_transaction_id(raw, own_account_id=parsed.own_account_id)
         # Re-import dedup keys on the persisted catalogue only: a fingerprint
         # already stored is the same movement seen before (re-importing the same
         # statement, or the same movement re-exported in another file format), so
@@ -241,6 +254,7 @@ def evaluate_import_rows(
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
+                "own_account_id": parsed.own_account_id,
                 "direction": parsed.direction,
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
@@ -276,18 +290,85 @@ def _prepare_source_import(
     command: LedgerSourceImportCommand,
     *,
     ports: LedgerImportPorts,
+    own_accounts: OwnAccountRegister,
 ) -> _PreparedSourceImport:
     """Validate, resolve, and ingest one source before touching a repository."""
     _require_readable_source(command.path)
     provider = _resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    parsed_rows = _rows_in_period(tuple(provider.ingest(command.path)), command.period)
+    parsed_rows = _bind_own_accounts(
+        _rows_in_period(tuple(provider.ingest(command.path)), command.period),
+        own_accounts=own_accounts,
+        own_account_id=command.own_account_id,
+    )
     return _PreparedSourceImport(
         parsed_rows=parsed_rows,
         validation=validation,
         source_verification=source_verification,
     )
+
+
+#: Raw field in which a provider records the statement's own account identifier.
+#: OFX ``ACCTID`` is the only identifier a supported format carries today.
+_ACCOUNT_IDENTIFIER_FIELD: Final[str] = "ACCTID"
+
+
+def _account_matches(account: OwnBankAccount, identifier: str) -> bool:
+    """Whether a statement's account identifier names ``account``.
+
+    The identifier matches the full IBAN, or the domestic account number an
+    IBAN carries after its country code and check digits.
+    """
+    canonical = normalise_iban(identifier)
+    return canonical in {account.iban, account.iban[4:]}
+
+
+def _bind_own_accounts(
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
+    *,
+    own_accounts: OwnAccountRegister,
+    own_account_id: str | None,
+) -> tuple[ParsedLedgerRowProtocol, ...]:
+    """Bind each row to the operator's chosen own account, or to the one its statement names.
+
+    With a chosen account, a row whose statement carries an account identifier
+    must name that account. Without one, a row binds only when its identifier
+    names exactly one registered account; every other row stays unassigned.
+
+    Raises:
+        TransactionValidationError: When the chosen account is not registered,
+            or a statement names a different account than the chosen one.
+    """
+    chosen = None if own_account_id is None else _registered_account(own_accounts, own_account_id)
+    bound: list[ParsedLedgerRowProtocol] = []
+    for parsed in parsed_rows:
+        identifier = parsed.raw.raw_fields.get(_ACCOUNT_IDENTIFIER_FIELD, "").strip()
+        if chosen is not None:
+            if identifier and not _account_matches(chosen, identifier):
+                raise TransactionValidationError(
+                    translated_message=OWN_ACCOUNT_MISMATCH_MESSAGE,
+                    context={"own_account_id": chosen.own_account_id},
+                )
+            account_id: str | None = chosen.own_account_id
+        else:
+            matches = [
+                account for account in own_accounts.accounts if identifier and _account_matches(account, identifier)
+            ]
+            account_id = matches[0].own_account_id if len(matches) == 1 else None
+        bound.append(LedgerParsedRow(raw=parsed.raw, direction=parsed.direction, own_account_id=account_id))
+    return tuple(bound)
+
+
+def _registered_account(own_accounts: OwnAccountRegister, own_account_id: str) -> OwnBankAccount:
+    """Return the registered account ``own_account_id`` or refuse the import."""
+    try:
+        return own_accounts.account(own_account_id)
+    except OwnAccountRegisterError as exc:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_own_account_unknown",
+            context={"own_account_id": own_account_id},
+        ) from exc
 
 
 def _rows_in_period(
@@ -345,8 +426,10 @@ def _source_import_diagnostics(
         # repeat that read inside the commit fence.
         original_source_path=None,
         import_fingerprints=tuple(
-            derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
+            derive_import_fingerprint(parsed.raw, direction=parsed.direction, own_account_id=parsed.own_account_id)
+            for parsed in parsed_rows
         ),
+        own_account_ids=tuple(parsed.own_account_id for parsed in parsed_rows),
     )
     raw_diagnostics = list(result.diagnostics)
     if source_verification.path is not None and source_verification.sha256 is not None:
@@ -427,7 +510,9 @@ def _persist_source_import(
         bucket_id=bucket_id,
         import_batch_id=result.import_batch_id,
         diagnostics=raw_diagnostics,
-        transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in parsed_rows),
+        transaction_ids=tuple(
+            derive_transaction_id(parsed.raw, own_account_id=parsed.own_account_id) for parsed in parsed_rows
+        ),
         actor=command.actor,
         source_command=command.source_command,
     )
@@ -507,7 +592,9 @@ def import_ledger_transactions(
     import_batch_id = _import_batch_id(
         bucket_id=bucket_id,
         source_command=source_command,
-        imported_transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in rows),
+        imported_transaction_ids=tuple(
+            derive_transaction_id(parsed.raw, own_account_id=parsed.own_account_id) for parsed in rows
+        ),
     )
     summary = ImportSummary(
         imported=len(imported_refs),
@@ -557,6 +644,7 @@ def prepare_ledger_source_import(
     command: LedgerSourceImportCommand,
     *,
     ports: LedgerImportPorts,
+    own_accounts: OwnAccountRegister | None = None,
 ) -> PreparedLedgerSourceImport:
     """Read, validate, and parse one source without loading or changing a ledger.
 
@@ -564,11 +652,13 @@ def prepare_ledger_source_import(
     then pass each returned value to :func:`persist_prepared_ledger_source_import`
     inside a fresh fence. The immutable parsed rows remain pinned to these exact
     source bytes, so persistence never has to reopen an untrusted path.
+    ``own_accounts`` is the profile's own-account register the rows bind
+    against; without one every row stays account-unassigned.
     """
     return PreparedLedgerSourceImport(
         command=command,
         ports=ports,
-        source=_prepare_source_import(command, ports=ports),
+        source=_prepare_source_import(command, ports=ports, own_accounts=own_accounts or OwnAccountRegister()),
     )
 
 

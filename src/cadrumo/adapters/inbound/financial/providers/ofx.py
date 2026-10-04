@@ -65,6 +65,9 @@ from .base import (
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
+#: Account segment of a synthesized transaction id when a statement names no
+#: ``ACCTID``; kept so ids synthesized before the identifier was recorded stay put.
+_UNNAMED_ACCOUNT = "account"
 
 
 def _looks_like_ofx(path: Path) -> bool:
@@ -135,6 +138,10 @@ def _normalise_text_value(value: object, *, default: str = "") -> str:
 def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
     """Return the ``(currency, account_id)`` context for one OFX statement block.
 
+    ``account_id`` is the statement's declared ``ACCTID``, or empty when the
+    statement names no account, so a missing identifier is never mistaken for
+    one.
+
     The statement's ``CURDEF`` is validated against the same ISO 4217 shape
     policy the CSV column and the persisted
     :class:`~domain.transactions.raw_transaction.RawTransaction` use
@@ -154,10 +161,7 @@ def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
             f"OFX statement CURDEF must be a three-letter ISO 4217 code; got {raw_currency!r}",
         ) from exc
     account = statement.account
-    account_id = _normalise_text_value(
-        getattr(account, "acctid", None) if account is not None else None,
-        default="account",
-    )
+    account_id = _normalise_text_value(getattr(account, "acctid", None) if account is not None else None)
     return currency, account_id
 
 
@@ -304,7 +308,7 @@ class OfxProvider(FinancialProvider):
             transaction_id = _stripped_attr(transaction, "fitid")
             if not transaction_id:
                 transaction_id = synthesize_transaction_id(
-                    provider_name=f"{self.name}-{account_id}",
+                    provider_name=f"{self.name}-{account_id or _UNNAMED_ACCOUNT}",
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
                 )
