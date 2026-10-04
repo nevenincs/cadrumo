@@ -78,7 +78,7 @@ def hold_permits_local_deletion(
     """
     if assessment.legal_hold:
         return False
-    return not assessment.filing_hold or retention_override is not None
+    return assessment.permits_local_deletion or retention_override is not None
 
 
 class ProfileCustodyHoldAssessment(BaseModel):

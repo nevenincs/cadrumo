@@ -13,6 +13,7 @@ from dev.quality.source_import_analysis import (
     resolve_relative_import,
 )
 
+from .unreachable_dataclasses import dataclass_member_uses
 from .unreachable_definitions import _collection_uses, _definitions
 from .unreachable_frameworks import framework_contracts
 from .unreachable_graph import _collapse_packages, _importers_of_span, resolved_symbol_uses
@@ -33,6 +34,7 @@ from .unreachable_models import (
     _OutsideUse,
 )
 from .unreachable_policy import _DEV_LABEL
+from .unreachable_receiver_types import receiver_types
 from .unreachable_references import _references, _string_tokens, assembled_reference_names
 from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
@@ -102,17 +104,18 @@ def _symbol_findings(
     resolved_uses: set[tuple[str, str]] = {(entry.module, entry.attribute) for entry in entries}
     self_uses: dict[str, set[str]] = {}
     whole_use: set[str] = set()
+    receivers = receiver_types(modules)
     for name in full_reach:
         tree = modules[name].tree
         member_names |= _references(tree)
         literal_tokens |= _string_tokens(tree)
         literal_tokens |= set(assembled_reference_names(tree))
-        resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules))
+        resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules), receivers)
         self_uses[name] = _references(tree)
         whole_use |= _collection_uses(tree)
 
     contracts = framework_contracts(modules)
-    schema_uses = schema_member_uses(modules, full_reach, contracts)
+    schema_uses = schema_member_uses(modules, full_reach, contracts) | dataclass_member_uses(modules, full_reach)
     usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use, schema_uses)
     findings: list[SymbolFinding] = []
     data_cleared = 0

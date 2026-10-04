@@ -23,7 +23,6 @@ from .temporal import select_revision
 
 CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
-CENSO_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
 
 
 class CensoModeloRole(StrEnum):
@@ -243,7 +242,6 @@ def _historical_037_ownership_from_registry(
 
 
 __all__ = [
-    "CENSO_MODELO_ERROR_CODES",
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
     "CensoModeloEventKind",

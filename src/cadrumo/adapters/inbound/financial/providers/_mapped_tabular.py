@@ -41,7 +41,6 @@ from .....core.logging import get_logger
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._constants import CSV_EXTENSIONS
 from ._tabular_projection import ColumnRoleMapping, ProjectedRow, ProjectedTable, project_table
 from .base import (
     FinancialProvider,
@@ -61,7 +60,6 @@ _logger = get_logger(__name__)
 
 #: Extensions this lane will consider. A delimited text export can arrive under
 #: any of them; content normalization decides whether it is really tabular.
-MAPPED_TABULAR_EXTENSIONS: frozenset[str] = CSV_EXTENSIONS | frozenset({".tsv", ".txt"})
 
 #: Roles a bank-movement row cannot do without. ``FieldRole`` is shared with
 #: the invoice-book lane and carries no statement-specific date or movement

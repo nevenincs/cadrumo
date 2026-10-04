@@ -15,6 +15,7 @@ from .unreachable_memo import shared_scan_memo
 from .unreachable_models import Confidence, ShippedModule, UnreachableCodeOutcome, UnreachableCodeResult
 from .unreachable_outside import _outside_use
 from .unreachable_policy import _EXIT_ERROR, _EXIT_FINDINGS
+from .unreachable_receiver_types import receiver_types
 from .unreachable_references import _data_tokens, _declared_data_values
 from .unreachable_reporting import filter_by_confidence, render_console_report, result_as_json
 from .unreachable_tree import EntryPoint, ShippedTreeSpec, shipped_modules
@@ -93,7 +94,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
 
     audited_names = _audited_module_names(spec, modules)
     audited_total = len(audited_names)
-    outside = _outside_use(spec, known)
+    outside = _outside_use(spec, known, receiver_types(modules))
     data_tokens = _data_tokens(spec)
     declared_values = _declared_data_values(spec)
     shipped_importers = _shipped_importers(full_edges)

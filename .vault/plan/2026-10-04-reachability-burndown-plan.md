@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:4c1b6ce88b31530732c7ca2303f5b05ececa58052117d6704992d0be2b905f74'
+body_hash: 'sha256:bec822ebc9aeb0909db1137f5558c009770077fa723d6955a60d16be80371f14'
 ---
 
 # `reachability-burndown` plan
@@ -34,7 +34,8 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S02` - Remove or relocate unused core and persistence helpers with all callers updated; `src/cadrumo/core and src/cadrumo/adapters/persistence and their tests`.
 - [x] `S03` - Remove unused application and command helpers and verify real operator paths; `src/cadrumo/application and src/cadrumo/entrypoints and their tests`.
 - [x] `S04` - Retire unused domain and adapter doors, activate the declared expense validator, and resolve schema and qualified member consumers; `dev/audit, source owners and focused tests`.
-- [ ] `S08` - Resolve the remaining live method and data candidates through their owning contracts; `src/cadrumo, dev/audit and owning tests`.
+- [x] `S08` - Resolve typed receiver and dataclass serialization visibility, distinguish development tests, retire uncalled wrappers and relocate remaining core and profile test helpers; `dev/audit, core observability and logging, profile snapshots, Modelo 036, withholding and Renta predicates with owning tests`.
+- [ ] `S09` - Resolve the remaining method and data candidates through their live owners, including candidates exposed by corrected development-test labels; `src/cadrumo, dev/audit and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
 - [ ] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.

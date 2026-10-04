@@ -245,8 +245,9 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
-        from ...logging import SecretScrubbingFilter, attach_run_sink
+        from ...logging import SecretScrubbingFilter
         from .sink import JsonlRunSink
+        from .sink_scope import attach_run_sink
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)

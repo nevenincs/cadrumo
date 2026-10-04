@@ -111,10 +111,6 @@ class M036DeclarationSnapshot(M036DeclarationResult):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    def to_declaration(self) -> M036DeclarationResult:
-        """Restore the canonical service record for existing human presenters."""
-        return M036DeclarationResult.model_validate(self.model_dump())
-
 
 class M036QueryDeclaration(BaseModel):
     """Closed lifecycle facts; no taxpayer NIF, receipt text or arbitrary note."""

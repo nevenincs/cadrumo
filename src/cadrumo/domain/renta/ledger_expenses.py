@@ -715,7 +715,7 @@ def _resolve_statutory_cap(
     rule: ProportionalityRule,
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
-    if rule.statutory_cap_eur is not None:
+    if rule.statutory_cap_eur is not None or rule.statutory_cap_schedule:
         return _resolve_fixed_statutory_cap(rule, context=context)
     if rule.statutory_cap_eur_per_day is not None:
         return _resolve_daily_statutory_cap(rule, context=context)
@@ -729,7 +729,7 @@ def _resolve_fixed_statutory_cap(
     *,
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
-    amount = rule.statutory_cap_eur
+    amount = rule.cap_amount_for_year(context.profile_year)
     if amount is None:
         return None
     if rule.statutory_cap_period is not None and rule.statutory_cap_period.is_per_person:

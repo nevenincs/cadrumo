@@ -10,6 +10,7 @@ from dev.quality.source_import_analysis import resolve_relative_import
 
 from .unreachable_frameworks import _import_bindings
 from .unreachable_models import ShippedModule
+from .unreachable_receiver_types import ReceiverTypes
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,11 @@ def _expression_nodes(node: ast.AST) -> Iterator[ast.AST]:
 
 
 def resolved_member_uses(
-    module: ShippedModule, known: frozenset[str], *, calls: list[ResolvedCall] | None = None
+    module: ShippedModule,
+    known: frozenset[str],
+    *,
+    calls: list[ResolvedCall] | None = None,
+    receivers: ReceiverTypes | None = None,
 ) -> set[tuple[str, str]]:
     """Keep member identities qualified; a same-named attribute cannot clear one.
 
@@ -41,10 +46,15 @@ def resolved_member_uses(
 
     def expression(node: ast.expr, bindings: dict[str, str]) -> str:
         if isinstance(node, ast.Name):
-            return bindings.get(node.id, "")
+            target = bindings.get(node.id, "")
+            return receivers.values.get(target, target) if receivers is not None else target
         if isinstance(node, ast.Attribute):
             owner = expression(node.value, bindings)
+            if receivers is not None:
+                owner = receivers.fields.get(owner, owner)
             return f"{owner}.{node.attr}" if owner else ""
+        if isinstance(node, ast.Call) and receivers is not None:
+            return receivers.returns.get(expression(node.func, bindings), "")
         if isinstance(node, ast.Subscript):
             return expression(node.value, bindings)
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -55,7 +65,7 @@ def resolved_member_uses(
             return expression(parsed, bindings)
         return ""
 
-    def walk(nodes: list[ast.stmt], inherited: dict[str, str]) -> None:
+    def walk(nodes: list[ast.stmt], inherited: dict[str, str], class_owner: str = "") -> None:
         bindings = dict(inherited)
         for node in nodes:
             if isinstance(node, ast.ImportFrom):
@@ -72,6 +82,8 @@ def resolved_member_uses(
                 arguments = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
                 for argument in arguments:
                     local.pop(argument.arg, None)
+                    if argument.arg in {"self", "cls"} and class_owner:
+                        local[argument.arg] = class_owner
                     if argument.annotation is not None:
                         owner = expression(argument.annotation, bindings)
                         if owner:
@@ -80,7 +92,7 @@ def resolved_member_uses(
                 continue
             elif isinstance(node, ast.ClassDef):
                 bindings[node.name] = f"{module.name}.{node.name}"
-                walk(node.body, bindings)
+                walk(node.body, bindings, f"{module.name}.{node.name}")
                 continue
             elif isinstance(node, ast.Assign | ast.AnnAssign):
                 value = node.value
@@ -89,6 +101,8 @@ def resolved_member_uses(
                     owner = expression(node.annotation, bindings)
                 if not owner and isinstance(value, ast.Call):
                     owner = expression(value.func, bindings)
+                    if receivers is not None:
+                        owner = receivers.returns.get(owner, owner)
                 if not owner and isinstance(value, ast.Name):
                     owner = expression(value, bindings)
                 targets = node.targets if isinstance(node, ast.Assign) else [node.target]
@@ -97,6 +111,13 @@ def resolved_member_uses(
                         bindings.pop(target.id, None)
                         if owner:
                             bindings[target.id] = owner
+            elif isinstance(node, ast.With | ast.AsyncWith) and receivers is not None:
+                for item in node.items:
+                    if isinstance(item.context_expr, ast.Call) and isinstance(item.optional_vars, ast.Name):
+                        bindings.pop(item.optional_vars.id, None)
+                        owner = receivers.contexts.get(expression(item.context_expr.func, bindings))
+                        if owner:
+                            bindings[item.optional_vars.id] = owner
             for part in _expression_nodes(node):
                 if isinstance(part, ast.Attribute):
                     target = expression(part, bindings)
@@ -114,8 +135,8 @@ def resolved_member_uses(
                             frozenset(
                                 expression(item, bindings)
                                 for argument in part.args
-                                for item in ast.walk(argument)
-                                if isinstance(item, ast.Name | ast.Attribute)
+                                for item in (argument, *ast.walk(argument))
+                                if isinstance(item, ast.Name | ast.Attribute | ast.Call)
                             ),
                         )
                     )
@@ -126,14 +147,18 @@ def resolved_member_uses(
 
     initial = _import_bindings(module)
     initial.update(
-        (node.name, f"{module.name}.{node.name}") for node in module.tree.body if isinstance(node, ast.ClassDef)
+        (node.name, f"{module.name}.{node.name}")
+        for node in module.tree.body
+        if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
     )
     walk(module.tree.body, initial)
     return uses
 
 
-def resolved_calls(module: ShippedModule, known: frozenset[str]) -> tuple[ResolvedCall, ...]:
+def resolved_calls(
+    module: ShippedModule, known: frozenset[str], receivers: ReceiverTypes | None = None
+) -> tuple[ResolvedCall, ...]:
     """Resolve callable and argument identities using the same lexical scope walk."""
     calls: list[ResolvedCall] = []
-    resolved_member_uses(module, known, calls=calls)
+    resolved_member_uses(module, known, calls=calls, receivers=receivers)
     return tuple(calls)

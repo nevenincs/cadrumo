@@ -682,6 +682,25 @@ def test_clean_tree_is_green(tmp_path: Path) -> None:
     assert "no reachability findings" in outcome.headline()
 
 
+def test_development_tests_cannot_clear_a_product_member(tmp_path: Path) -> None:
+    _write(tmp_path, "src/pkg/__init__.py")
+    _write(tmp_path, "src/pkg/cli.py", "class Record:\n    def orphan(self): ...\n\ndef main(): ...\n")
+    _write(tmp_path, "dev/tests/test_record.py", "from pkg.cli import Record\nRecord().orphan()\n")
+    spec = ShippedTreeSpec(
+        repo_root=tmp_path,
+        src_root=tmp_path / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        outside=(OutsideCorpus(label="dev", root=tmp_path / "dev"),),
+    )
+
+    result = scan_unreachable_code(spec)
+
+    orphan = next(finding for finding in result.symbols if finding.qualname == "Record.orphan")
+    assert orphan.used_by == ("tests",)
+    assert result.dev_cleared == 0
+
+
 def test_outside_relative_import_is_credited_at_every_nesting_depth(tmp_path: Path) -> None:
     """An outside file's relative import resolves from its own position, not a fake name.
 

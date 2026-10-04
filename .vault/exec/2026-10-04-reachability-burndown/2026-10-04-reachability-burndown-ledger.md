@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:da5c051a9900e8ad5ba8d74cb50e24b606ee5f78da375f996f3b07141e26d8e0'
+body_hash: 'sha256:bdb8292eda2e99786952b7fa522f57360a7cd7bfab17c80f092900e488e7c120'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -191,6 +191,47 @@ related:
 - `S04` `verify:` `owned source Ruff check and format` -> `pass`
 - `S04` `verify:` `owned source and scanner ty check` -> `pass`
 - `S04` `verify:` `broader sede unit run (708 passed, 33 failures)` -> `fail`
+- `S08` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S08` `A` `dev/audit/tests/test_unreachable_dataclasses.py`
+- `S08` `M` `dev/audit/tests/test_unreachable_members.py`
+- `S08` `M` `dev/audit/unreachable_code.py`
+- `S08` `A` `dev/audit/unreachable_dataclasses.py`
+- `S08` `M` `dev/audit/unreachable_findings.py`
+- `S08` `M` `dev/audit/unreachable_graph.py`
+- `S08` `M` `dev/audit/unreachable_members.py`
+- `S08` `M` `dev/audit/unreachable_outside.py`
+- `S08` `A` `dev/audit/unreachable_receiver_types.py`
+- `S08` `M` `dev/ci/tests/test_core_logging.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`
+- `S08` `M` `src/cadrumo/application/modelo/m036_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_m036_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/withholding_detail_gate.py`
+- `S08` `M` `src/cadrumo/application/user_profile/custody_hold_models.py`
+- `S08` `M` `src/cadrumo/core/logging.py`
+- `S08` `M` `src/cadrumo/core/observability/context.py`
+- `S08` `M` `src/cadrumo/core/observability/tests/run_scope.py`
+- `S08` `A` `src/cadrumo/core/observability/tests/sink_scope.py`
+- `S08` `M` `src/cadrumo/core/observability/tests/test_context_propagation.py`
+- `S08` `M` `src/cadrumo/core/observability/tests/test_models.py`
+- `S08` `M` `src/cadrumo/core/observability/tests/test_sink_redaction.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/censo_modelos.py`
+- `S08` `M` `src/cadrumo/domain/contribuyente/descendant_maternity.py`
+- `S08` `M` `src/cadrumo/domain/contribuyente/tests/test_deduccion_maternidad_0611.py`
+- `S08` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S08` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S08` `A` `src/cadrumo/domain/user_profile/tests/snapshot_factory.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/tests/test_contextful_values.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/tests/test_lifecycle_transitions.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/tests/test_profile_lifecycle_instant_contract.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/tests/test_values.py`
+- `S08` `M` `src/cadrumo/domain/user_profile/values.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/conformance_m036_support.py`
+- `S08` `verify:` `focused audit controls (68 passed)` -> `pass`
+- `S08` `verify:` `recording, snapshots, Modelo 036, maternity and cap behavior (432 passed)` -> `pass`
+- `S08` `verify:` `custody and withholding predicates plus audit controls (77 passed)` -> `pass`
+- `S08` `verify:` `owned Ruff check and format plus ty` -> `pass`
+- `S08` `verify:` `reachability audit (103 candidates, 19 exact)` -> `fail`
 
 ## Notes
 
@@ -199,3 +240,4 @@ related:
 - `S03` 91 integration/platform cases remain for S07. Removed test-only convenience doors and updated test consumers; real operator implementations unchanged.
 - `S03` 21 integration failures require an unavailable runtime endpoint or Windows Credential Manager synthetic probe. Native credential error 1312 reports no logon session; no persistent-service bridge or security bypass is authorized. Host-dependent verification remains pending S07.
 - `S04` The broader adapter failures include missing Chromium under isolated test roots and concurrent filing-layout changes. Pinning the provisioned component directory makes all 152 affected focused browser contracts pass. Final tree import/type checks and remaining findings stay open in S07 and S08.
+- `S08` Correct development-test labels expose previously hidden candidates. Whole-record dataclass serialization and typed factories now have qualified structural evidence. All remaining live candidates, including the 19 newly visible exact findings, remain open under S09. A concurrent new credential exception temporarily caused setup errors; its owner added the registry declarations and the same 68 audit controls then passed. Shared logging formatter changes are excluded from this commit. Final metadata generation and integrated gates remain S07.

@@ -13,6 +13,7 @@ from dev.quality.unread_inputs import format_unread_notice
 from .unreachable_graph import module_edges, resolved_symbol_uses
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule, _OutsideUse
+from .unreachable_receiver_types import ReceiverTypes, receiver_types
 from .unreachable_references import _references
 from .unreachable_tree import ShippedTreeSpec, iter_python_files
 
@@ -30,8 +31,9 @@ def _outside_module_name(path: Path, spec: ShippedTreeSpec) -> str:
     return module_name_for(path, src_root=root)
 
 
-def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
+def _outside_use(spec: ShippedTreeSpec, known: frozenset[str], receivers: ReceiverTypes | None = None) -> _OutsideUse:
     use = _OutsideUse()
+    probes: list[tuple[ShippedModule, str]] = []
     for corpus in spec.outside:
         for path in iter_python_files(corpus.root):
             if corpus.test_modules_only and not is_test_source(path, root=spec.src_root):
@@ -43,19 +45,33 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
                 # complete set of references the walk could not consult.
                 use.unreadable.append(f"{path}: {type(error).__name__}: {error}")
                 continue
+            label = "tests" if is_test_source(path, root=spec.repo_root) else corpus.label
             for name in _references(tree):
-                use.names.setdefault(name, set()).add(corpus.label)
+                use.names.setdefault(name, set()).add(label)
             probe = ShippedModule(
                 name=_outside_module_name(path, spec),
                 path=path,
                 is_package=path.name == "__init__.py",
                 tree=tree,
             )
-            runtime, type_only = module_edges(probe, known)
-            for target in runtime | type_only:
-                use.modules.setdefault(target, set()).add(corpus.label)
-            for pair in resolved_symbol_uses(probe, known):
-                use.resolved.setdefault(pair, set()).add(corpus.label)
+            probes.append((probe, label))
+    outside_receivers = receiver_types(
+        {probe.name: probe for probe, _ in probes}, known_classes=receivers.classes if receivers else frozenset()
+    )
+    if receivers is not None:
+        receivers = ReceiverTypes(
+            {**receivers.values, **outside_receivers.values},
+            {**receivers.returns, **outside_receivers.returns},
+            receivers.classes | outside_receivers.classes,
+            {**receivers.fields, **outside_receivers.fields},
+            {**receivers.contexts, **outside_receivers.contexts},
+        )
+    for probe, label in probes:
+        runtime, type_only = module_edges(probe, known)
+        for target in runtime | type_only:
+            use.modules.setdefault(target, set()).add(label)
+        for pair in resolved_symbol_uses(probe, known, receivers):
+            use.resolved.setdefault(pair, set()).add(label)
     if use.unreadable:
         raise OSError(
             format_unread_notice(

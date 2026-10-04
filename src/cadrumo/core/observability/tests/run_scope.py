@@ -6,9 +6,11 @@ import uuid
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from contextvars import Token
+from datetime import datetime
 
 from ...config import load_settings
-from ...logging import attach_run_sink, detach_run_sink, get_logger
+from ...identity.digest import ContentDigest, ContentDigestOrAbsent
+from ...logging import get_logger
 from ...time.clock import now
 from ..capture import CAPTURE_SINK
 from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR, RunContextInfo
@@ -16,6 +18,20 @@ from ..models import ArgumentRecord, RunEventKind, RunEventPayload, RunOutcome, 
 from ..store import EVENTS_FILENAME, run_dir, save_envelope, save_trace, validate_run_id
 from .fingerprint import compute_corpus_sha256, compute_data_root_sha256, read_cert_fingerprint
 from .sink import JsonlRunSink
+from .sink_scope import attach_run_sink, detach_run_sink
+
+
+class RecordedRunContextInfo(RunContextInfo):
+    """Recording metadata carried only by the scoped event-recording helper."""
+
+    entrypoint: str
+    started_at: datetime
+    arguments: tuple[ArgumentRecord, ...]
+    corpus_sha256: ContentDigest
+    db_sha256: ContentDigest
+    cert_fingerprint: ContentDigestOrAbsent
+    initial_step_id: str
+
 
 _log = get_logger(__name__)
 
@@ -34,8 +50,8 @@ def _build_initial_context(
     arguments: Sequence[ArgumentRecord],
     run_id: str | None,
     step_id: str | None,
-) -> RunContextInfo:
-    """Construct the :class:`RunContextInfo` for an outermost enter.
+) -> RecordedRunContextInfo:
+    """Construct the :class:`RecordedRunContextInfo` for an outermost enter.
 
     A caller-supplied ``run_id`` is validated against the canonical
     shape (16 lowercase hex) by
@@ -50,7 +66,7 @@ def _build_initial_context(
     # propagate to the run-context fingerprint.
     settings = load_settings()
     started_at = now()
-    return RunContextInfo(
+    return RecordedRunContextInfo(
         run_id=effective_run_id,
         entrypoint=entrypoint,
         started_at=started_at,
@@ -70,7 +86,7 @@ def _step_payload(step_id: str, label: str) -> RunEventPayload:
 def _emit_nested_step_end(
     record_event: Callable[..., object],
     *,
-    outer: RunContextInfo,
+    outer: RecordedRunContextInfo,
     nested_step: str,
     entrypoint: str,
 ) -> None:
@@ -96,12 +112,12 @@ def _emit_nested_step_end(
 
 @contextmanager
 def _nested_run_context(
-    outer: RunContextInfo,
+    outer: RecordedRunContextInfo,
     *,
     entrypoint: str,
     step_id: str | None,
     record_event: Callable[..., object],
-) -> Generator[RunContextInfo]:
+) -> Generator[RecordedRunContextInfo]:
     """Push and pop one nested step while reusing the outer run metadata."""
     nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
     step_token = STEP_CONTEXT_VAR.set(nested_step)
@@ -126,7 +142,7 @@ def _nested_run_context(
 
 @contextmanager
 def _outer_step_context(
-    info: RunContextInfo,
+    info: RecordedRunContextInfo,
     *,
     record_event: Callable[..., object],
     outcome: list[RunOutcome],
@@ -153,7 +169,7 @@ def _outer_step_context(
             _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
 
 
-def _persist_outer_trace(info: RunContextInfo, outcome: RunOutcome) -> Exception | None:
+def _persist_outer_trace(info: RecordedRunContextInfo, outcome: RunOutcome) -> Exception | None:
     """Persist the final trace and return a failure for post-cleanup handling."""
     try:
         trace = RunTrace(
@@ -175,7 +191,7 @@ def _persist_outer_trace(info: RunContextInfo, outcome: RunOutcome) -> Exception
 
 
 def _persist_outer_envelope(
-    info: RunContextInfo,
+    info: RecordedRunContextInfo,
     *,
     owns_capture: bool,
     envelope_sink: list[dict[str, object]],
@@ -223,7 +239,7 @@ def _close_outer_sink(sink: JsonlRunSink, *, run_id: str) -> None:
 
 
 def _finalize_outer_context(
-    info: RunContextInfo,
+    info: RecordedRunContextInfo,
     *,
     sink: JsonlRunSink,
     owns_capture: bool,
@@ -248,7 +264,9 @@ def _finalize_outer_context(
 
 
 @contextmanager
-def _outer_run_context(info: RunContextInfo, record_event: Callable[..., object]) -> Generator[RunContextInfo]:
+def _outer_run_context(
+    info: RecordedRunContextInfo, record_event: Callable[..., object]
+) -> Generator[RecordedRunContextInfo]:
     """Own the outer sink, context variables, boundary events, and teardown."""
     target = run_dir(info.run_id)
     sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
@@ -290,7 +308,7 @@ def run_context(
     arguments: Sequence[ArgumentRecord] = (),
     run_id: str | None = None,
     step_id: str | None = None,
-) -> Generator[RunContextInfo]:
+) -> Generator[RecordedRunContextInfo]:
     """Enter a run context, emitting ``STEP_START`` / ``STEP_END`` boundary events.
 
     The outermost enter mints a ``run_id``, fingerprints the corpus /
@@ -316,7 +334,7 @@ def run_context(
             id for inner enters.
 
     Yields:
-        The active :class:`RunContextInfo` for the block.
+        The active :class:`RecordedRunContextInfo` for the block.
 
     Raises:
         Exception: The error captured during the ``save_trace`` call, re-raised
@@ -327,7 +345,7 @@ def run_context(
     from .recorder import record_event
 
     outer = RUN_CONTEXT_VAR.get(None)
-    if outer is not None:
+    if isinstance(outer, RecordedRunContextInfo):
         with _nested_run_context(
             outer,
             entrypoint=entrypoint,

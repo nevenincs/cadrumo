@@ -233,7 +233,7 @@ def _retained_m036_prepare(context: ConformanceFamilyContext) -> ConformancePrep
         def verify(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(M036RecordProjection)
             persisted = list_m036_declarations(bucket_id=profile, ports=ports)
-            assert len(persisted) == 1 and persisted[0] == result.declaration.to_declaration()
+            assert len(persisted) == 1 and persisted[0].model_dump() == result.declaration.model_dump()
             assert persisted[0].event_kind is CensoModeloEventKind.ALTA
             assert persisted[0].declared_on == declared_on and persisted[0].sede_justificante == "synthetic-receipt"
             assert persisted[0].note == "synthetic local declaration"

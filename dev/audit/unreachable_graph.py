@@ -15,6 +15,7 @@ from .unreachable_members import resolved_member_uses
 from .unreachable_memo import _walked
 from .unreachable_models import ShippedModule
 from .unreachable_policy import _DOTTED_SPEC, _MODULE_EXEC_FLAG
+from .unreachable_receiver_types import ReceiverTypes
 
 # ---------------------------------------------------------------------------
 # Module layer: import-graph reachability from the entry points
@@ -146,7 +147,9 @@ def _import_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, s
     return aliases
 
 
-def resolved_symbol_uses(module: ShippedModule, known: frozenset[str]) -> set[tuple[str, str]]:
+def resolved_symbol_uses(
+    module: ShippedModule, known: frozenset[str], receivers: ReceiverTypes | None = None
+) -> set[tuple[str, str]]:
     """Return every ``(defining module, symbol)`` pair this module actually reaches.
 
     Only two syntaxes can reach a top-level symbol across a module boundary:
@@ -154,7 +157,7 @@ def resolved_symbol_uses(module: ShippedModule, known: frozenset[str]) -> set[tu
     Both are resolved here; a bare identifier load is deliberately not, because
     it says nothing about which module defined the name.
     """
-    uses: set[tuple[str, str]] = resolved_member_uses(module, known)
+    uses: set[tuple[str, str]] = resolved_member_uses(module, known, receivers=receivers)
     for node in _walked(module.tree):
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module.name, module.is_package, node.level, node.module)

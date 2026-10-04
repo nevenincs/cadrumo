@@ -157,7 +157,7 @@ async def test_canonical_alta_modificacion_baja_reuses_atomic_record_and_event_s
         request = _record_request(kind, day=4 + index)
         await module.M036RecordExecutor(subject.compose).execute(request, subject.context(request.definition_id))
         result = cast(module.M036RecordExecutionResult, subject.operands.values[-1]).projection
-        canonical = result.declaration.to_declaration()
+        canonical = result.declaration
         expected_id = derive_m036_declaration_id(
             profile_id=str(PROFILE_ID),
             event_kind=kind,
@@ -165,7 +165,7 @@ async def test_canonical_alta_modificacion_baja_reuses_atomic_record_and_event_s
             sede_justificante=_RECEIPT,
         )
         assert canonical.declaration_id == expected_id
-        assert canonical == subject.repository.load(expected_id)
+        assert canonical.model_dump() == subject.repository.load(expected_id).model_dump()
         assert canonical.note == _NOTE and canonical.sede_justificante == _RECEIPT
         assert subject.events.effects[-1] is OperationEffect.UPDATED
     assert subject.repository.writes == subject.fence.entries == 3
@@ -233,7 +233,7 @@ async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_fac
         )
     human = cast(module.M036ReadExecutionResult, subject.operands.values[-2]).projection
     agent = cast(module.M036QueryExecutionResult, subject.operands.values[-1]).projection
-    assert human.declarations[0].to_declaration() == record.to_declaration()
+    assert human.declarations[0].model_dump() == record.model_dump()
     row = agent.declarations[0]
     assert row.profile_id == PROFILE_ID and row.declaration_id == record.declaration_id
     assert (

@@ -148,7 +148,8 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
     """
     import logging
 
-    from ...logging import SecretScrubbingFilter, attach_run_sink
+    from ...logging import SecretScrubbingFilter
+    from .sink_scope import attach_run_sink
 
     target = tmp_path / "run_events.jsonl"
     sink = JsonlRunSink(target, run_id=_RUN_ID)
