@@ -15,9 +15,11 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice, update_catalogue_invoice
@@ -30,6 +32,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
 _COUNTERPARTY_CIF = "A58818501"
+
+
+class _FailOnUseTransactionCatalogueReader:
+    def load(self) -> TransactionCatalogue:
+        raise AssertionError("this invoice-only correction must not read transactions")
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        del start, end
+        raise AssertionError("this invoice-only correction must not partition transactions")
 
 
 def _build(invoice_number: str) -> Invoice:
@@ -124,6 +135,51 @@ def test_the_patch_model_cannot_express_an_identity_change() -> None:
     }
 
     assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))
+
+
+def test_unrelated_invoice_update_preserves_the_nested_lease_and_stable_identity() -> None:
+    lease = BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral="9872023VH5797S0001WX",
+    )
+    built = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Inquilino local SL",
+        counterparty_tax_id=_COUNTERPARTY_CIF,
+        counterparty_country="ES",
+        invoice_number="LEASE-001",
+        issued_at=date(2026, 3, 10),
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+        business_premises_lease=lease,
+        rate_provider=exchange_rate_provider(),
+    )
+    original = Invoice.model_validate({**built.model_dump(), "linked_transaction_ids": ("a" * 64,)})
+    creation_ports = in_memory_catalogue_creation_ports()
+    create_catalogue_invoice(invoice=original, ports=creation_ports)
+    lifecycle_ports = CatalogueLifecyclePorts(
+        read_ports=InvoiceCatalogueReadPorts(
+            invoice_reader=creation_ports.invoice_repository,
+            transaction_reader=_FailOnUseTransactionCatalogueReader(),
+        ),
+        invoice_repository=creation_ports.invoice_repository,
+        event_repository=creation_ports.event_repository,
+        audit_commit=creation_ports.audit_commit,
+    )
+
+    updated = update_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_id=original.invoice_id,
+        patch=CatalogueInvoicePatch(notes="accounting note"),
+        ports=lifecycle_ports,
+        expected_invoice=original,
+    ).invoice
+
+    assert updated.invoice_id == original.invoice_id
+    assert updated.business_premises_lease == lease
+    assert updated.linked_transaction_ids == original.linked_transaction_ids
 
 
 def test_stale_invoice_baseline_refuses_before_catalogue_and_audit_mutation() -> None:

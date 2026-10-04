@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c210b643ce39644b64a5ad6a51284eb0a0ed2cd50ce8301c73e7ba271598156'
+body_hash: 'sha256:7e536b231b3ba61bcd377460b914b5e4bce2a095c9e220aa651d0c7f29ff4375'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3627,6 +3627,144 @@ related:
 - `S03` `verify:` `affected genuine CLI Modelo133,capability142,runtime62,typed selectors29,durable detail7 and privacy4;12configured gates;independent source review` -> `pass`
 - `S04` `M` `.vault/plan/2026-10-03-tui-all-mcp-integration-plan.md`
 - `S04` `verify:` `3069original dispositions0unresolved,119later live explicit dispositions,6original zero-delta index-preserving observations,coherent ancestor maps and JSON validation` -> `pass`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/_generation.provenance.json`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S03` `M` `src/cadrumo/application/filing/draft_construction.py`
+- `S03` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S03` `A` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S03` `M` `src/cadrumo/application/invoices/catalogue_add_contracts.py`
+- `S03` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S03` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S03` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S03` `M` `src/cadrumo/application/invoices/tests/test_lifecycle.py`
+- `S03` `M` `src/cadrumo/application/invoices/tests/test_source_resolver.py`
+- `S03` `M` `src/cadrumo/application/ledger/evidence_followup_contracts.py`
+- `S03` `M` `src/cadrumo/application/modelo/export.py`
+- `S03` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S03` `A` `src/cadrumo/domain/calculations/registry/formula_input_keys.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/formula_runtime_ops.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/formula_text_inputs.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/tests/test_formula_runtime_validation.py`
+- `S03` `A` `src/cadrumo/domain/invoices/business_premises.py`
+- `S03` `M` `src/cadrumo/domain/invoices/models.py`
+- `S03` `M` `src/cadrumo/domain/invoices/tests/test_business_premises_lease.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/conformance_m145_support.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py`
+- `S03` `verify:` `coordinated scoped lease/runtime/IVA/M360/M303/M347 tests and source-owner Ruff/format/ty` -> `pass`
+- `S04` `M` `.codex/handoffs/tui-all-mcp-final-live-tui-dispositions.json`
+- `S04` `A` `.vault/adr/2026-10-04-modelo-360-solicitud-custody-adr.md`
+- `S04` `M` `.vault/audit/2026-10-03-tui-all-mcp-integration-audit.md`
+- `S04` `A` `dev/docs/serve_languages.py`
+- `S04` `M` `dev/docs/tests/test_docs_serve.py`
+- `S04` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S04` `D` `dev/registry/pipeline/m232_form_bridge.py`
+- `S04` `M` `dev/registry/pipeline/tests/test_m232_form_bridge.py`
+- `S04` `A` `dev/registry/pipeline/tests/test_m347_row_transport.py`
+- `S04` `M` `dev/registry/tests/test_modelo_303_binding_source_repair.py`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/155-entrypoint-operation-and-read-composition.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/156-cli-command-contracts-and-operator-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/164-work-inspection-overview-verification-and-profile-authentication.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/165-prorrata-review-root-cli-and-command-authority.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/167-profile-maintenance-repair-and-google-operations.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/172-ledger-and-modelo-cli-operations.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/174-installed-runtime-profile-host-and-worker-authority.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/175-profile-worker-request-staging.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/176-textual-terminal-workbench-and-declarations-calendar.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/182-supervised-operation-modal-and-profile-manager.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/183-runtime-tui-access-workbench-and-secret-entry-flows.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/184-profile-registration-recovery-and-runtime-login.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/187-filing-skills-and-the-mcp-operator-harness.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/194-facturae-3-2-2-enumerations-and-total-composition.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/catalogue.po`
+- `S04` `M` `docs/locales/ca/LC_MESSAGES/technical/evidence/review-questions.po`
+- `S04` `M` `docs/locales/es/LC_MESSAGES/technical/articles/165-prorrata-review-root-cli-and-command-authority.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/011-iva-wallet-notifications-vies-checks-and-expediente-reads.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/102-encrypted-profile-custody-and-censal-workflows.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/128-governed-facts-and-export-conversion.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/138-spending-categories-proportionality-and-census-projections.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/143-iva-classification-and-evidence-substrate.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/148-portal-catalogue-and-annual-prorrata-register.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/149-renta-expense-rules-and-activity-asset-amortization.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/153-usage-ratios-and-user-profile-domain.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/catalogue.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/evidence/review-questions.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/technical/topics/operator-interfaces-part-2.po`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-after-78-dispositions.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-lease-manifest.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-lease-proof.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-locale-resolution.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-record-resolution.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-registry-resolution.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-review.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-finished-tui-runtime-iva-m145-m360.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-forbidden-task-cleanup.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-quality-finished-tui-800b-corrected.json`
+- `S04` `A` `.codex/handoffs/tui-all-mcp-quality-finished-tui-800b.json`
+- `S04` `verify:` `complete392-source disposition census, canonical9PO/Hu catalogue and owning Vaultspec historical repair` -> `pass`
 
 ## Notes
 
@@ -3664,3 +3802,5 @@ related:
 - `S05` All3069 original source/path deltas are reconciled:263incorporated,814superseded with actual replacements and rationale,1992already present,0unresolved. The original six worktrees were read-preserved03:48:47–03:49:11 with0newdelta,0capture drift, unchanged HEADs and original indexes; all preservation refs remain. Coherent corrective source checkpoints through5b8458 retain exact committed blobs and explicitly qualified tested CRLF/LF relations. Original raw226module batches remain exit1 (Parallel2664PASS136FAIL1SKIP;Serial424PASS13FAIL); exact affected-node proof resolves135same-node Parallel failures, one explicitly supported NIFguard/no-contact replacement and13same-node Serial failures. No fresh whole-suite pass is claimed. The current frozen-source configured12 aggregate actually passes with0source drift; one later native-verifier Python change has scoped style/format/type/AST proof and genuine owning artifact execution underway, while all other checker inputs remain byte-current. Independent corrective review closes the17private-import high and finds no additional high/critical source issue; root separately reviewed the independent pinned3line M347 oracle. Fresh liveTUI78d675 relative to66b785 has119explicit dispositions:one incorporated7d249,seven already present,111independent active-writer landing dependencies unresolved with reasons and immutable preservation. They are not missing original MCP intents. The source reconciliation/accounting responsibilities S03/S04 are complete; S05 remains open for actual rebuilt native Windows/privatefinancial, current nativeMac/Keychain/privateCLI-TUI-MCP/withholding, safe writer handoff/merge and destination E2E. Review remainsPENDING; no landed or finalgreen claim.
 - `S03` S03 source reconciliation is complete through5b8458; exact qualified receipts recorded, native/private combinedE2E remains open underS05.
 - `S04` S04 accounting complete;111independent activeTUI writer deltas preserved with concrete landing dependencies, separate from missingMCP intents. S05 native/privateE2E and safe merge/destination verification staysopen.
+- `S03` User explicitly requested commit after finished TUI writer checkpoint800b. Actual coherent reconciliation checkpoint; all392 deltas disposed, owner scoped tests/static checks pass. S03/S04 remain open for configured aggregate completion; S05 full authority/native/private/financial/destination E2E remains pending. No live landing claim.
+- `S04` User explicitly requested commit after finished TUI writer checkpoint800b. Actual coherent reconciliation checkpoint; all392 deltas disposed, owner scoped tests/static checks pass. S03/S04 remain open for configured aggregate completion; S05 full authority/native/private/financial/destination E2E remains pending. No live landing claim.

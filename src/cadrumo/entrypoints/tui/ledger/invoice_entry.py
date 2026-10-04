@@ -15,7 +15,8 @@ from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
-from ....domain.invoices.models import InvoiceLine, SituacionInmueble, require_situacion_inmueble
+from ....domain.invoices.business_premises import SituacionInmueble, require_situacion_inmueble
+from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..account import AccountSessionExpiredError
@@ -107,10 +108,10 @@ _LEASE_CHOICES: Final[tuple[tuple[str, bool], ...]] = (
 )
 #: The record design's SITUACIÓN DEL INMUEBLE codes, each offered with its meaning.
 _SITUACION_LOCALE_KEYS: Final[dict[SituacionInmueble, str]] = {
-    "1": "tui.ledger.invoice.situacion.1",
-    "2": "tui.ledger.invoice.situacion.2",
-    "3": "tui.ledger.invoice.situacion.3",
-    "4": "tui.ledger.invoice.situacion.4",
+    SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE: "tui.ledger.invoice.situacion.1",
+    SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE: "tui.ledger.invoice.situacion.2",
+    SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE: "tui.ledger.invoice.situacion.3",
+    SituacionInmueble.ABROAD: "tui.ledger.invoice.situacion.4",
 }
 _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
     LedgerInvoiceClassChoice.ORDINARIA: "tui.ledger.invoice.class.ordinaria",
@@ -399,7 +400,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             )
             yield Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False)
             yield Select[str](
-                tuple((tr(key), code) for code, key in _SITUACION_LOCALE_KEYS.items()),
+                tuple((tr(key), code.value) for code, key in _SITUACION_LOCALE_KEYS.items()),
                 prompt=tr("tui.ledger.invoice.situacion_none"),
                 allow_blank=True,
                 id="ledger-invoice-situacion-inmueble",

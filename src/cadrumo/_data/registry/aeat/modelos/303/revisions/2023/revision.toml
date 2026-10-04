@@ -146,6 +146,14 @@ selector = { revision = "2022", id = "09" }
 fields = { formula = "modelo-303-dr303-09-projection", input_kind = "computed" }
 removed_fields = []
 
+# The 2023 design (aeat-dr-303-2023, campo 50) is the first to enumerate the
+# recargo tiers of Tipo % [17]; the 2022 design leaves [17] a free field, so the
+# 2022 baseline keeps [18] manual and the rate-specific binding starts here.
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "18" }
+fields = { binding = "modelo-303-recargo-equivalencia-super-reducido-cuota", input_kind = "bound" }
+removed_fields = []
+
 
 [[revisions.2023.casilla_positions]]
 id = "109"

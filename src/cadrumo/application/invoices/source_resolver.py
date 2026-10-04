@@ -60,9 +60,10 @@ from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.business_premises import SITUACIONES_CON_REFERENCIA_CATASTRAL
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
-from ...domain.invoices.models import SITUACIONES_CON_REFERENCIA_CATASTRAL, Invoice
+from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
@@ -1100,14 +1101,22 @@ def _m347_inmueble_record_advisories(
       and municipality fields no invoice records, so it is left without content
       on every inmueble record.
     """
-    leases = [invoice for invoice, observation in m347_items if observation.arrendamiento_local_negocio]
+    leases = [invoice for invoice, _observation in m347_items if invoice.business_premises_lease is not None]
     if not leases:
         return ()
-    without_situacion = sorted(invoice.invoice_number for invoice in leases if invoice.situacion_inmueble is None)
+    without_situacion = sorted(
+        invoice.invoice_number
+        for invoice in leases
+        if invoice.business_premises_lease is not None and invoice.business_premises_lease.situacion_inmueble is None
+    )
     without_referencia = sorted(
         invoice.invoice_number
         for invoice in leases
-        if invoice.situacion_inmueble in SITUACIONES_CON_REFERENCIA_CATASTRAL and invoice.referencia_catastral is None
+        if (
+            invoice.business_premises_lease is not None
+            and invoice.business_premises_lease.situacion_inmueble in SITUACIONES_CON_REFERENCIA_CATASTRAL
+            and invoice.business_premises_lease.referencia_catastral is None
+        )
     )
     diagnostics: list[CalculationSourceDiagnostic] = []
     if without_situacion:
@@ -1183,7 +1192,7 @@ def _m347_withheld_issued_invoice_numbers(declared: Sequence[Invoice]) -> list[s
         for invoice in declared
         if invoice.kind is InvoiceKind.ISSUED
         and _carries_withholding(invoice)
-        and not invoice.arrendamiento_local_negocio
+        and invoice.business_premises_lease is None
     )
 
 
@@ -1658,9 +1667,15 @@ def _m347_invoice_observation(
         cash_accounting_operation=cash_accounting_operation,
         reverse_charge_recipient=_m347_reverse_charge_recipient(invoice),
         annual_computation_basis=m347_filer.annual_computation_basis or cash_accounting_operation,
-        arrendamiento_local_negocio=invoice.arrendamiento_local_negocio,
-        situacion_inmueble=invoice.situacion_inmueble,
-        referencia_catastral=invoice.referencia_catastral,
+        arrendamiento_local_negocio=invoice.business_premises_lease is not None,
+        situacion_inmueble=(
+            None
+            if invoice.business_premises_lease is None or invoice.business_premises_lease.situacion_inmueble is None
+            else invoice.business_premises_lease.situacion_inmueble.value
+        ),
+        referencia_catastral=(
+            None if invoice.business_premises_lease is None else invoice.business_premises_lease.referencia_catastral
+        ),
     )
 
 

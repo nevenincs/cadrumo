@@ -139,6 +139,7 @@ from ..filing.producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ..filing.producer_snapshot_m360 import Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
@@ -799,6 +800,7 @@ def _build_export_producer_snapshot(
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
+        m360_solicitud = _require_m360_solicitud(modelo=modelo, work_unit=work_unit, export_ports=export_ports)
         model_profile, m303_filing_facts = _resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
@@ -807,7 +809,17 @@ def _build_export_producer_snapshot(
             iva_profile=iva_profile,
             export_ports=export_ports,
             operation=operation,
+            m360_solicitud=m360_solicitud,
         )
+        if m360_solicitud is not None:
+            # The solicitud's own account, never the profile's IVA refund account:
+            # DR360 campo 114 lets it be the representante's. Undeclared, it selects
+            # nothing and the snapshot refuses the solicitud.
+            refund_account = m360_solicitud.refund_account
+            account_page_refund_account = refund_account is not None
+        else:
+            refund_account = iva_profile.refund_account if iva_profile is not None else None
+            account_page_refund_account = nota_three_refund_account
         return build_filing_producer_snapshot(
             modelo=modelo,
             taxpayer_tax_id=workflow_profile.tax_id,
@@ -821,9 +833,9 @@ def _build_export_producer_snapshot(
                 prior_domiciliation=prior_domiciliation_election.election,
             ),
             amendment_evidence=amendment_evidence,
-            refund_account=iva_profile.refund_account if iva_profile is not None else None,
+            refund_account=refund_account,
             charge_account=iva_profile.charge_account if iva_profile is not None else None,
-            nota_three_refund_account=nota_three_refund_account,
+            account_page_refund_account=account_page_refund_account,
             m303_filing_facts=m303_filing_facts,
             # Read separately from the identity pair: AEAT's "persona con quien
             # relacionarse" is a third party, and under a gestor it is routinely
@@ -952,6 +964,33 @@ def _require_export_identity(
     return presenter, taxpayer_identity
 
 
+def _require_m360_solicitud(
+    *,
+    modelo: Modelo,
+    work_unit: WorkUnit,
+    export_ports: ModeloExportPorts,
+) -> Modelo360SolicitudEntry | None:
+    """Return the modelo 360 solicitud the operator declared for the work unit's period.
+
+    ``None`` for every other modelo. For modelo 360 an undeclared solicitud is refused
+    here: its header, parties and account holder exist nowhere else, and a solicitud
+    rendered without them would be a blank page 1, not a smaller one.
+    """
+    if modelo != Modelo("360"):
+        return None
+    entry = export_ports.m360_solicitud.load().entry_for(work_unit.period)
+    if entry is None:
+        raise FilingProducerSnapshotError(
+            "modelo 360 requires the solicitud facts declared for its period",
+            context={
+                "reason": "m360_solicitud_undeclared",
+                "filing_year": work_unit.period.filing_year,
+                "period": work_unit.period.registry_token,
+            },
+        )
+    return entry
+
+
 def _resolve_export_model_profile(
     *,
     modelo: Modelo,
@@ -961,7 +1000,10 @@ def _resolve_export_model_profile(
     iva_profile: ModeloIVAProfile | None,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
+    m360_solicitud: Modelo360SolicitudEntry | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
+    if m360_solicitud is not None:
+        return m360_solicitud.facts, None
     if modelo == Modelo("303"):
         if iva_profile is None:
             raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")

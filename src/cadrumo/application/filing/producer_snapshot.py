@@ -1214,9 +1214,19 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
         if not isinstance(snapshot.selected_account, RefundAccountSelection):
             raise ValueError("refund disposition requires a selected refund account")
     elif snapshot.selected_account is not None and not (
-        _m303_nota_three_shape(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
+        _account_page_carries_refund_account(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
     ):
         raise ValueError("a result disposition without an account must not retain one")
+
+
+def _account_page_carries_refund_account(snapshot: FilingProducerSnapshot) -> bool:
+    """Whether the record design carries the refund account whatever the disposition says.
+
+    Modelo 303 Nota 3 does so for a rectificativa keeping its prior domiciliation, and
+    modelo 360 always does: a solicitud de devolución has no result casilla to derive a
+    refund disposition from, yet DR360 campos 113-117 are its obligatorio datos bancarios.
+    """
+    return _m303_nota_three_shape(snapshot) or snapshot.modelo == Modelo("360")
 
 
 def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
@@ -1276,20 +1286,23 @@ def build_filing_producer_snapshot(
     charge_account: ChargeAccount | None,
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
-    nota_three_refund_account: bool = False,
+    account_page_refund_account: bool = False,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
     ``declaration_contact`` is optional so every caller that predates the
     informativa contact fact keeps working unchanged; an absent contact renders
     as blancos, which is what AEAT's own header rule prescribes.
+
+    ``account_page_refund_account`` selects the refund account although the
+    disposition is not a refund: Modelo 303 Nota 3, and every modelo 360 solicitud.
     """
     safe_model_profile = _without_embedded_accounts(model_profile)
     selected_account = _select_filing_account(
         elections,
         refund_account=refund_account,
         charge_account=charge_account,
-        nota_three_refund_account=nota_three_refund_account,
+        account_page_refund_account=account_page_refund_account,
     )
     try:
         return FilingProducerSnapshot(
@@ -1314,7 +1327,7 @@ def _select_filing_account(
     *,
     refund_account: RefundAccount | None,
     charge_account: ChargeAccount | None,
-    nota_three_refund_account: bool,
+    account_page_refund_account: bool,
 ) -> SelectedFilingAccount | None:
     if elections.result_disposition is ResultDisposition.DOMICILIACION:
         if charge_account is None:
@@ -1324,11 +1337,11 @@ def _select_filing_account(
         if refund_account is None or refund_account.iban is None:
             raise FilingProducerSnapshotError("refund disposition requires a refund account")
         return RefundAccountSelection(role="refund", account=refund_account)
-    if nota_three_refund_account:
-        # Modelo 303 Nota 3: the account page carries the refund account even
-        # though the disposition itself is not a refund.
+    if account_page_refund_account:
+        # Modelo 303 Nota 3 and modelo 360: the account page carries the refund
+        # account even though the disposition itself is not a refund.
         if refund_account is None:
-            raise FilingProducerSnapshotError("Nota 3 account page requires a refund account")
+            raise FilingProducerSnapshotError("the account page requires a refund account")
         return RefundAccountSelection(role="refund", account=refund_account)
     return None
 

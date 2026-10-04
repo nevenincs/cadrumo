@@ -1,0 +1,189 @@
+{
+  "ours": "25146c134a9a57f7b519784f6e4e0e37d1a435db",
+  "incoming": "800b2668832f61da780f607283af4e48a75d605f",
+  "original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+  "rows": [
+    {
+      "path": "dev/registry/filing_export_conformance.py",
+      "stage2_sha256": "dc7429b031876a981ce5be50de4fa41110bcd4faec475805b2d3055a37367278",
+      "stage3_sha256": "12c7532743a6a09f7ce8e6a3f36b6ce0dd82b4dfe4ba7a9408a44e12b009fd9b",
+      "rationale": "Defining temporary-directory helper is core.storage_environment; preserve canonical defining import over incoming dev._paths reexport.",
+      "result_sha256": "dc7429b031876a981ce5be50de4fa41110bcd4faec475805b2d3055a37367278"
+    },
+    {
+      "path": "dev/registry/mappings/modelo_347/2011/0001-records.toml",
+      "stage2_sha256": "8a43efb7048756289e53ecd35b2fb1ad353402bdf1a5ad8179157985ddcc11cc",
+      "stage3_sha256": "d4856e65f9a0fde887b69202606d7fe055f61014e1c6a6148c31a779b266585d",
+      "rationale": "Typed TOML maps identical: all province/lease flags and optional repeated inmueble six-field row contracts already retained; preserve canonical order and remove auto-merge duplicate keys.",
+      "result_sha256": "8a43efb7048756289e53ecd35b2fb1ad353402bdf1a5ad8179157985ddcc11cc"
+    },
+    {
+      "path": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
+      "stage2_sha256": "806127818f59509156ca19b06cbd249156bce97f94283fe0507c468e7b6af981",
+      "stage3_sha256": "22a4a3c9eb3ed8b3538ce65c717259803619ecabfeb28486ef198ffc262e36cf",
+      "rationale": "Typed TOML maps identical: all province/lease flags and optional repeated inmueble six-field row contracts already retained; preserve canonical order and remove auto-merge duplicate keys.",
+      "result_sha256": "806127818f59509156ca19b06cbd249156bce97f94283fe0507c468e7b6af981"
+    },
+    {
+      "path": "dev/registry/pipeline/generated_tree_dispositions.toml",
+      "stage2_sha256": "69b805789eee1a63289d5ba930b1b438273bb470156d47cdea693704fdab4e0c",
+      "stage3_sha256": "4e4413b45463b110366f9db357a85a7c92488241679f4adbe23f686a260edd2b",
+      "rationale": "Both semantic ledgers empty; previous actual M232 guarded export/form closure and floor proof justify retired two historical drifts; no resurrected or silently retired new disposition.",
+      "result_sha256": "69b805789eee1a63289d5ba930b1b438273bb470156d47cdea693704fdab4e0c"
+    },
+    {
+      "path": "dev/registry/pipeline/tests/test_m232_form_bridge.py",
+      "stage2_sha256": "c3ccdd6c65f33029c712a8feeb1ca6e8d8df6e3c01f9e32676158afef7c01eda",
+      "stage3_sha256": "76386566beba0d16fdfde8b11b42ad7859316fe3d717de6d6361caef363588a5",
+      "ours_tests": [
+        "test_historical_repair_refuses_another_target_or_old_manifest",
+        "test_bridge_refuses_unreviewed_old_manifest_before_any_file_access",
+        "test_detached_candidate_form_reproduces_generator_without_the_live_fragment_name",
+        "test_same_size_restored_time_corpus_edit_refuses_cutover",
+        "test_form_owner_failure_after_export_commit_reports_incomplete",
+        "test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census"
+      ],
+      "incoming_tests": [
+        "test_historical_repair_refuses_another_target_or_old_manifest",
+        "test_bridge_refuses_unreviewed_old_manifest_before_any_file_access",
+        "test_detached_candidate_form_reproduces_generator_without_the_live_fragment_name",
+        "test_same_size_restored_time_corpus_edit_refuses_cutover",
+        "test_form_owner_failure_after_export_commit_reports_incomplete",
+        "test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census"
+      ],
+      "rationale": "Incoming detached canonical-form reproduction and corrupt/extra-fragment guards already adapted to unified GeneratedFormBridge; retain M190/M232 shared owner and additional journal-backup regression.",
+      "result_sha256": "c3ccdd6c65f33029c712a8feeb1ca6e8d8df6e3c01f9e32676158afef7c01eda"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
+      "stage2_sha256": "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1",
+      "stage3_sha256": "bb0ed814308b3afddf63895fa43ca9d264db94317e5a817587f1b4af98e32a9b",
+      "changed_keys": [
+        "field_derivations",
+        "loader_semantic_sha256",
+        "output_files",
+        "semantic_map_sha256"
+      ],
+      "rationale": "Retain committed current owner-generated package manifest as conflict bootstrap (current manifest matches all actual package files; retain current casilla projection instead of incoming older binding-kind package), pending actual final canonical currentness/regeneration; no manual generated fields.",
+      "result_sha256": "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "stage2_sha256": "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da",
+      "stage3_sha256": "abc8dbbaa027564f1e1f7dc145e2eaba769aea1e461230758caf5d9c47ac0715",
+      "changed_keys": [
+        "field_derivations",
+        "loader_semantic_sha256",
+        "output_files",
+        "semantic_map_sha256"
+      ],
+      "rationale": "Retain committed current owner-generated package manifest as conflict bootstrap (current manifest matches all actual package files; retain current casilla projection instead of incoming older binding-kind package), pending actual final canonical currentness/regeneration; no manual generated fields.",
+      "result_sha256": "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da"
+    },
+    {
+      "path": "dev/registry/pipeline/m232_form_bridge.py",
+      "result": "deleted",
+      "replacement": "dev/registry/pipeline/generated_form_bridge.py",
+      "rationale": "Incoming detached-fragment generator proof already present under parameterized canonical M190/M232 owner; do not restore obsolete forwarding/single-model owner."
+    },
+    {
+      "path": "dev/deploy/docs_delivery_activation.py",
+      "stage2_sha256": "dacb9d0afaf0b2ae603e78aa4591d29797da336cc853b7c1ac1add6a4ef590ce",
+      "stage3_sha256": "fc85ca2e1cd8071354a4fbc25a8160867057415f9836aa198c4d8c1f23193eef",
+      "result_sha256": "dacb9d0afaf0b2ae603e78aa4591d29797da336cc853b7c1ac1add6a4ef590ce",
+      "rationale": "Preserve canonical defining core.storage_environment temporary helper; all class/function ASTs equal both parents, incoming context-manager formatting retained; complete native import graph/custody owner contracts unchanged."
+    },
+    {
+      "path": "dev/quality/import_gate.py",
+      "stage2_sha256": "4e09e374f291132ef58ccbe67492cc915167903283b826bc106c09ef405e3008",
+      "stage3_sha256": "1352d81e21d53e200f4f41f8695c839cf8d1f03e886ad9835147884b50d06a8f",
+      "result_sha256": "4e09e374f291132ef58ccbe67492cc915167903283b826bc106c09ef405e3008",
+      "rationale": "Preserve canonical defining core.storage_environment temporary helper; all class/function ASTs equal both parents, incoming context-manager formatting retained; complete native import graph/custody owner contracts unchanged."
+    },
+    {
+      "path": "dev/registry/parity/workbook_parity_libreoffice.py",
+      "merged_before_sha256": "b4576ed1afce22841ab7ca259f72cd9b0d86e8b9e7262903b74860d885f8c940",
+      "result_sha256": "da16cf3996f295291f47801c991ecef031f121292ab817591f3044499385d16f",
+      "rationale": "Remove clean-auto-merge duplicate/nondefining temporary helper import; retain actual core defining helper and all workbook behavior."
+    }
+  ],
+  "additional_read_only_dispositions": [
+    {
+      "path": "dev/registry/compiler/verdict_cache.py",
+      "status": "superseded",
+      "sha256": {
+        "ours": "6aa38dc6d57d5d4b3ec6b48355a0ef740195b7c7c02e4d723e8704c99630e6be",
+        "incoming": "16450283fc875cf38640f8e026ca707ff82e83ff711e7dc0087f2c7bd97b76b5",
+        "original_base": "585819d240e6f8f12314d95403f94c3762bb6e16c4c8d5830d0a98e4b68797c4",
+        "current": "6aa38dc6d57d5d4b3ec6b48355a0ef740195b7c7c02e4d723e8704c99630e6be"
+      },
+      "rationale": "Incoming stale cache docstring superseded by current normalized storage-root development/cache default. Current full bytes equal ours; executable default function remains explicit override then dev_cache_dir(registry-verdict)."
+    },
+    {
+      "path": "dev/docs/serve.py",
+      "status": "incorporated",
+      "sha256": {
+        "ours": "3c217a35315c9d5b6754159a33b2b381d801cfa4f3d37464a046403a03790ccd",
+        "incoming": "a6da6e3ee43b44dfe4a3ce7adad9762fcb7b3f67d203099834f82fc5ae32b820",
+        "original_base": "643f062a333fe1e00d7ce10ca04d2a51d2991a9983f2b516b3ca1456fe10f44b",
+        "current": "aa1857704bf13b9b29d97cbecb5dcb4f88adab82b7c79aacf95b0f386a69d255"
+      },
+      "rationale": "All current class/function ASTs equal incoming: translated language post-build hook, shlex-safe actual executable command, and English docs language environment retained. Current canonical core temporary-directory defining import preserved."
+    },
+    {
+      "path": "dev/tui/harness/sequences.py",
+      "status": "superseded",
+      "sha256": {
+        "ours": "1da1bce3fdb042b1e16c37c93ca350a5203a22fba56933d1b6b92102db7d7adb",
+        "incoming": "dfc7c3b7d68df95b9f1c10f8d005aa31fb3b1b3ba5bec233e2c9d06128f3ea6f",
+        "original_base": "a55b70337fcfc13d0f7d703c81158b442ed18161ff294b7cf70eea6e80158b41",
+        "current": "1da1bce3fdb042b1e16c37c93ca350a5203a22fba56933d1b6b92102db7d7adb"
+      },
+      "rationale": "Incoming original-base delta only relocates a stale dev._paths helper import. Root-authorized exact one-line duplicate removal preserves defining core.storage_environment helper, all function/class bodies, and final full bytes equal ours. Scoped Ruff, format and ty passed; source frozen.",
+      "merged_before_sha256": "fc4caeed8c6af846a984ea4685e5ed5b9709010df40132efe9babde2daedbcb6"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml",
+      "status": "incorporated",
+      "sha256": {
+        "ours": "31c7cb79de654567802274c0479e4302ed3c6eade8f351e5c040f57aa7820960",
+        "incoming": "2d6edd17a26b3e65975cfcf3bffba7f8baddf7622c78cf7adf5833279feebff8",
+        "original_base": "f87c835491346e984be1fbe85cfb23d7cb5105aad7176d766b3be58006d327ef",
+        "current": "ad60c3bf05fc556ca29970605ca351658b0b9a1e619f8040be864d468db39ae0"
+      },
+      "rationale": "Incoming new casilla18 override starts bound super-reduced recargo in2023; current2022 casilla18 remains manual. Original-base incoming construct sequence is unchanged; preserve current minimized sequence additions/removals/order, since inherited2022 already carries source-grounded binding. Actual source-owner tests prove binding appears once, all three recargo quotas ordered and retired59/60 absent."
+    }
+  ],
+  "focused_checks": {
+    "ruff": "passed all6 owned Python files",
+    "format": "passed all6 owned Python files",
+    "ty": "passed all6 owned Python files",
+    "new_registry_source_tests": {
+      "passed": 9,
+      "failed": 0,
+      "exit_code": 0,
+      "seconds": 59.99,
+      "run_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T052444.638976Z-pytest-31608-84a3014d/run.log"
+    },
+    "m303_form_generator_check": {
+      "exit_code": 0,
+      "stale_fragments": 0,
+      "missing_layout_revisions": 0,
+      "command": "uv run --no-sync python -m dev.registry.form_layout generate --modelo 303 --check"
+    },
+    "sequences_duplicate_repair": {
+      "ruff": "passed",
+      "format": "passed",
+      "ty": "passed",
+      "changed_lines": 1,
+      "source_frozen": true
+    }
+  },
+  "authority_currency_read_only": {
+    "descriptor_path": ".authority\\authority.current.json",
+    "status": "stale",
+    "candidate_identity_digest": "96870a52991c3915f59fb9a0bb833002df1a0f068127710448aa2db89869167d",
+    "recorded_identity_digest": "1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b",
+    "detail": "the legal sources changed since the indexed generation was published"
+  }
+}

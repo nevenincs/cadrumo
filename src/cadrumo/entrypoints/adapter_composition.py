@@ -403,6 +403,7 @@ def build_modelo_export_ports(
         IvaWalletDecisionRepository,
     )
     from ..adapters.persistence.profile.justificante import JustificanteRepository
+    from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -440,6 +441,10 @@ def build_modelo_export_ports(
             objects=objects,
         ),
         bienes_inversion=BienesInversionIvaRegisterRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
+        m360_solicitud=Modelo360SolicitudRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),

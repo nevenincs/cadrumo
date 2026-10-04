@@ -2016,8 +2016,8 @@ tui:
         amounts: Adóalap {base} {currency} · IVA-kulcs {rate}
         counterparty: 'Partner: {name} · NIF {nif} · {country}'
         identity: '{kind} számla: {number}, kelte {date}'
-        lease: Üzlethelyiség bérbeadása · ingatlanhelyzet {situacion} · kataszteri
-          hivatkozás {referencia}
+        lease: 'Üzleti célú helyiség bérlete · ingatlan fekvése: {situacion} · kataszteri
+          azonosító: {referencia}'
         operation: '349-es ügyletkód: {code} · teljesítés dátuma: {date}'
         recargo: 'Kiegyenlítő pótlék: {amount} {currency}'
         rectifies: Helyesbíti a(z) {number} számlát

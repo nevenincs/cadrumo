@@ -10,6 +10,7 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddLine,
     InvoiceAddRequest,
     InvoiceAddResult,
@@ -21,6 +22,7 @@ from ....core.operations import (
     OperationEffect,
     OperationTerminalCondition,
 )
+from ....domain.invoices.business_premises import business_premises_lease_from_inputs
 from ....domain.invoices.errors import InvoiceValidationError
 from ....entrypoints.tui.ledger.models import (
     LedgerInvoiceAddResultV1,
@@ -199,9 +201,13 @@ def _request_from_entry(profile_id: UUID, entry: LedgerInvoiceEntryV1) -> Invoic
         series=entry.series,
         rectifies_invoice_number=entry.rectifies_invoice_number,
         recargo_amount=_public_decimal(entry.recargo_amount),
-        arrendamiento_local_negocio=entry.arrendamiento_local_negocio,
-        situacion_inmueble=entry.situacion_inmueble,
-        referencia_catastral=entry.referencia_catastral,
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+            business_premises_lease_from_inputs(
+                lease_selected=entry.arrendamiento_local_negocio,
+                situacion_inmueble=entry.situacion_inmueble,
+                referencia_catastral=entry.referencia_catastral,
+            )
+        ),
         lines=tuple(
             InvoiceAddLine(
                 description=line.description,

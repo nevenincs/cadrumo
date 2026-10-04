@@ -20,6 +20,7 @@ from ....core.aggregation import BindingSourceKind, IntracomOperationType
 from ....core.period import Period
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.invoices.business_premises import BusinessPremisesLease
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ....domain.iva.classification import InvoiceKind
@@ -464,7 +465,7 @@ def _lease(number: str, tenant_tax_id: str, base: str, **premises: object) -> In
         iva_total=(Decimal(base) * Decimal("0.21")).quantize(Decimal("0.01")),
     )
     return Invoice.model_validate(
-        {**invoice.model_dump(), "arrendamiento_local_negocio": True, **premises},
+        {**invoice.model_dump(), "business_premises_lease": BusinessPremisesLease.model_validate(premises)},
     )
 
 

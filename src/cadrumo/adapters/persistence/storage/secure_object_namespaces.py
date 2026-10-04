@@ -361,6 +361,21 @@ PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# The operator-declared modelo 360 solicitudes, each with the refund account DR360 pays
+# into. FINANCIAL: the payload carries an IBAN and BIC beside the solicitante's and the
+# representante's contact and address facts, so it is ciphertext at rest and never a
+# plaintext side store. The period lives inside the encrypted payload, not in the key.
+PROFILE_MODELO_360_SOLICITUD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_modelo_360_solicitud",
+    namespace="cadrumo.persistence.profile.modelo_360_solicitud",
+    owner="cadrumo.adapters.persistence.profile.modelo_360_solicitud",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 PROFILE_ACTIVIDAD_ASSET_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_actividad_asset_history",
     namespace="cadrumo.persistence.profile.actividad_asset",

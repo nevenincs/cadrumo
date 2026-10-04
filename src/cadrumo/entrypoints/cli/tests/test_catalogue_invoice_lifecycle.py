@@ -397,9 +397,10 @@ def test_catalogue_create_records_a_business_premises_lease(
         invoice_id = _line_value(result.output, "invoice_id")
         stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)
         assert stored is not None
-        assert stored.arrendamiento_local_negocio is True
-        assert stored.situacion_inmueble == "1"
-        assert stored.referencia_catastral == "9872023VH5797S0001WX"
+        lease = stored.business_premises_lease
+        assert lease is not None
+        assert lease.situacion_inmueble == "1"
+        assert lease.referencia_catastral == "9872023VH5797S0001WX"
 
 
 @pytest.mark.windows_only

@@ -168,6 +168,7 @@ def build_draft(
 class _DraftInputChannels(NamedTuple):
     casilla_inputs: dict[_CasillaId, Decimal]
     text_casilla_inputs: dict[_CasillaId, str]
+    date_casilla_inputs: dict[_CasillaId, date]
     binding_inputs: dict[_BindingId, Decimal]
     enum_binding_inputs: dict[_BindingId, str]
     date_binding_inputs: dict[_BindingId, date]
@@ -182,6 +183,7 @@ def _draft_input_channels(
 ) -> _DraftInputChannels:
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
+    date_casilla_ids = _date_casilla_ids(snapshot)
     bindings = revision_bindings_by_id(snapshot.revision)
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -206,8 +208,9 @@ def _draft_input_channels(
     # calculation revision's BindingId and RelationId snapshots into this flat
     # input map; extract them here by their registry id-sets and route them.
     return _DraftInputChannels(
-        casilla_inputs=_decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types)),
+        casilla_inputs=_decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types) - date_casilla_ids),
         text_casilla_inputs=_text_inputs_for_ids(inputs, text_casilla_data_types),
+        date_casilla_inputs=_date_inputs_for_ids(inputs, date_casilla_ids),
         binding_inputs=_decimal_inputs_for_ids(inputs, decimal_binding_ids),
         enum_binding_inputs=_string_inputs_for_ids(inputs, enum_binding_ids),
         date_binding_inputs=_date_inputs_for_ids(inputs, date_binding_ids),
@@ -330,6 +333,13 @@ def _draft_value_for_casilla(
         return _ModeloValue(
             casilla_id=casilla.id,
             value=input_channels.text_casilla_inputs[casilla.id],
+            kind=_ModeloValueKind.LITERAL,
+            source="registry input",
+        )
+    if casilla.id in input_channels.date_casilla_inputs:
+        return _ModeloValue(
+            casilla_id=casilla.id,
+            value=input_channels.date_casilla_inputs[casilla.id],
             kind=_ModeloValueKind.LITERAL,
             source="registry input",
         )
@@ -517,6 +527,17 @@ def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, st
     }
 
 
+def _date_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
+    """Collect casillas assigned to the registry's date channel.
+
+    A date is not a quantity: routed through the Decimal channel an ISO date is
+    refused as malformed, so a required date casilla could never be supplied.
+    """
+    return {
+        casilla.id for casilla in snapshot.revision.casillas if _registry_scalar_value_type(casilla.data_type) == "date"
+    }
+
+
 def _refuse_non_string_input_keys(inputs: _ModeloInputs) -> None:
     non_string = tuple(repr(key) for key in inputs if type(key) is not str)
     if not non_string:
@@ -601,9 +622,9 @@ def _validate_filing_input_keys(
     _refuse_unknown_input_keys(inputs, accepted_ids=accepted_ids, snapshot=snapshot)
 
 
-def _date_inputs_for_ids(inputs: _ModeloInputs, input_ids: set[_BindingId]) -> dict[_BindingId, date]:
+def _date_inputs_for_ids[InputId: str](inputs: _ModeloInputs, input_ids: set[InputId]) -> dict[InputId, date]:
     """Extract ISO-date-shaped inputs for ``input_ids`` as ``date`` values."""
-    date_inputs: dict[_BindingId, date] = {}
+    date_inputs: dict[InputId, date] = {}
     for binding_id in input_ids:
         value = inputs.get(binding_id)
         if value is None:

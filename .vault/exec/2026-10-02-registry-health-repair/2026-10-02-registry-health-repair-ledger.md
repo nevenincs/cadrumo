@@ -5,9 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3d18d1113463ab8107f7e8ee72d95285845457f98296f00553d9bee97f7bd03'
-body_hash: 'sha256:c94b836f12158b378a4fd8e4afbd356c62932dd547431bc780ce827673b78fd4'
-body_hash: 'sha256:8a31e50767f3a21f7c6097898f8df777d62c7196659f27b6fe76bd0cc3f60eb4'
+body_hash: 'sha256:9499321dd3883e165b4829b5111e511cf31a67d6f291f79f144e7ea1dd65c97b'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -508,6 +506,11 @@ related:
 - `S29` `M` `dev/registry/tests/test_modelo_232_registry.py`
 - `S29` `M` `dev/registry/tests/test_render_check.py`
 - `S29` `verify:` `uv run --no-sync pytest -o addopts= -n 0 --strict-markers --strict-config --capture=sys -ra --tb=short --durations=10 --max-worker-restart=0 --basetemp var/storage/tmp/binding-m232-contracts-aace81d7640d414eb6efe393b5701da4/pytest -q dev/registry/tests/test_m232_variable_envelope_map.py src/cadrumo/domain/calculations/registry/tests/test_filing_envelope_declaration.py dev/registry/tests/test_export_parse.py src/cadrumo/application/filing/tests/test_export_envelope_period_token.py dev/registry/tests/test_modelo_232_registry.py dev/registry/tests/test_embedded_envelope_source_authority.py dev/registry/compiler/tests/test_export_layout_source_coverage.py` -> `fail`
+- `S29` `A` `.logs/audit-runs/2026-10-03/registry-health-repair/binding-source-minimality-20261004T001159Z-5d851838.json`
+- `S29` `verify:` `uv run --no-sync python -m dev.test_runs.command --family audit-runs --label binding-source-minimality -- uv run --no-sync python -c "import runpy, sys; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0], run_name='__main__')" .logs/audit-runs/2026-10-03/registry-health-repair/current-field-minimality.py .logs/audit-runs/2026-10-03/registry-health-repair/binding-source-minimality-20261004T001159Z-5d851838.json` -> `fail`
+- `S29` `A` `.logs/audit-runs/2026-10-04/registry-health-repair/m720-authoring-evidence-worklist.md`
+- `S29` `verify:` `just check-registry` -> `fail`
+- `S29` `verify:` `uv run --no-sync pytest -o addopts= -n 0 --strict-markers --strict-config --capture=sys -ra --tb=short --durations=10 --max-worker-restart=0 -q dev/registry/tests/test_variable_envelope.py` -> `pass`
 
 ## Notes
 
@@ -620,3 +623,8 @@ related:
 - `S29` Rows record A's reported historical-target/bridge/inventory integration paths, preserving exact source ownership. Generated2016 export/form were installed by the observed external publisher and are not attributed to A/root.
 - `S29` Full7-file normal host run actual argv/exit receipt var/storage/development/.logs/test-runs/2026-10-04/20261004T000603.109960Z-pytest-41460-61c00fb3/run.json: 8 failed/109passed, all8 independently reviewed as still-old2018AUX target. Do not weaken tests; rerun full lane after target publication.
 - `S29` Read-only Sol review passed complete binding SOURCE boundary on source census20261004T000332Z-5cb0e947, exact58/160 with0advisories and15reviewed infos. S29 stays open for target cutover/final stable acceptance/adoption. A assigned authorized one-shot continuation tied to exact external P1 process completion, using fresh guards and existing separate owners; no finalauthoritypublication.
+- `S29` Post-integration independent assessment accepted all58 individual modelos with0 redundant/unresolved/blocked work and stable per-model inputs. Global source changed ff562172...39b05 to3775333b...286982 during active external publication; `complete_stable_minimality=false` and exit1 are correct. Actual argv/exit receipt var/storage/development/.logs/audit-runs/2026-10-04/20261004T001159.663601Z-binding-source-minimality-81672-9685f081/run.json. Preserve this failure and obtain final stable proof after publishers quiesce; no unchanged retry now.
+- `S29` Actual check-registry `binding_reference_coverage=passed0unused,` `export_placement_coverage=passed0gaps/overlaps.` Aggregateexit1 remains on authority currency and generated-target currentness; partial target coverage remains. Original outer/inner receipts20261004T001349.509544Z-registry-binding-check-77832-08440e61 and20261004T001350.191513Z-check-registry-24500-5fc45fd2.
+- `S29` Full normal `variable_envelope` file32PASS closes previous6M303 compilation failures. Actual argv including fresh basetemp and exit0 in var/storage/development/.logs/test-runs/2026-10-04/20261004T002052.796042Z-pytest-78432-de5d4599/run.json.
+- `S29` A's registered pinned-P1 completion helper is a one-shot target attempt, not final authority publication or stable whole-batch acceptance. Parsed canonical report acceptance with explicit zero redundancy remains required. M347 maps/tests ownership added to S29; current corrupt singleton regeneration is refused, isolated source-backed map repair authorized before serialized live install.
+- `S29` Read-only M720 remaining wire-authoring worklist preserves official artifact SHA/URL/anchors and exact missing map/profile/producer grammar. It is separate from accepted unused-binding SOURCE closure and does not install or publish720. No legal-review stamp, invented scale, lineage or capability change.

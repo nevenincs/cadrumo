@@ -33,6 +33,15 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
+from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
+
+
+class Modelo360SolicitudRegisterReaderProtocol(Protocol):
+    """Read the encrypted register of declared modelo 360 solicitudes."""
+
+    def load(self) -> Modelo360SolicitudRegister:
+        """Return the register, empty when no solicitud was ever declared."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +64,7 @@ class ModeloExportPorts:
     justificante: JustificanteRepositoryProtocol
     prorrata_register: ProrrataRegisterRepositoryProtocol
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
+    m360_solicitud: Modelo360SolicitudRegisterReaderProtocol
     transaction: TransactionCatalogueRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
@@ -81,6 +91,7 @@ class ModeloExportPortsFactory(Protocol):
 
 
 __all__ = [
+    "Modelo360SolicitudRegisterReaderProtocol",
     "ModeloExportPorts",
     "ModeloExportPortsFactory",
 ]

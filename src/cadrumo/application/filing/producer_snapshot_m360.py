@@ -11,6 +11,11 @@ The solicitante's NIF and name are not repeated here: the solicitante is the fil
 taxpayer, whose identity the snapshot already carries. The refund IBAN and BIC are not here
 either: they travel only as the snapshot's encrypted, selected refund account. What remains
 is what no other fact can answer.
+
+The operator declares these facts once per solicitud, and they persist in the encrypted
+:class:`Modelo360SolicitudRegister` beside the refund account DR360 campos 115 and 116 pay
+into. That account is the solicitud's own rather than the profile's IVA refund account,
+because DR360 campo 114 lets it belong to the representante.
 """
 
 from __future__ import annotations
@@ -24,6 +29,8 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.period import Period
+from ...domain.deadlines.models import RefundAccount
 
 
 def _text(max_length: int) -> StringConstraints:
@@ -304,7 +311,62 @@ class Modelo360ProfileFacts(BaseModel):
         return self
 
 
+#: The persisted register's own document version, distinct from the secure-object envelope's.
+MODELO_360_SOLICITUD_REGISTER_SCHEMA_VERSION = "1"
+
+
+class Modelo360SolicitudEntry(BaseModel):
+    """One solicitud's declared facts and the account its refund is paid into.
+
+    ``refund_account`` is ``None`` until the operator declares it. An absent account is not
+    an empty one: the export refuses the solicitud rather than leave DR360 campos 115-116
+    blank, so declaring the facts first and the account later is safe.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    period: Period
+    facts: Modelo360ProfileFacts
+    refund_account: RefundAccount | None = None
+
+
+class Modelo360SolicitudRegister(BaseModel):
+    """Encrypted register document: every declared modelo 360 solicitud, one per period.
+
+    The work unit addresses a solicitud by its filing year and the revision's single
+    ``AD-HOC`` period, so the period is the entry's identity and a second declaration for
+    it replaces the first. A period with no entry has declared nothing, which the export
+    refuses; it never resolves to an empty or default solicitud.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    schema_version: str = MODELO_360_SOLICITUD_REGISTER_SCHEMA_VERSION
+    entries: tuple[Modelo360SolicitudEntry, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _refuse_unsupported_or_repeated(self) -> Modelo360SolicitudRegister:
+        if self.schema_version != MODELO_360_SOLICITUD_REGISTER_SCHEMA_VERSION:
+            raise ValueError(f"unsupported modelo 360 solicitud register schema_version {self.schema_version!r}")
+        periods = [entry.period for entry in self.entries]
+        if len(periods) != len(set(periods)):
+            raise ValueError("the modelo 360 solicitud register carries two entries for one period")
+        return self
+
+    def entry_for(self, period: Period) -> Modelo360SolicitudEntry | None:
+        """Return the solicitud declared for ``period``, or ``None`` when none is."""
+        return next((entry for entry in self.entries if entry.period == period), None)
+
+    def with_entry(self, entry: Modelo360SolicitudEntry) -> Modelo360SolicitudRegister:
+        """Return the register with ``entry`` declared, replacing any entry for its period."""
+        kept = tuple(existing for existing in self.entries if existing.period != entry.period)
+        ordered = sorted((*kept, entry), key=lambda item: (item.period.filing_year, item.period.registry_token))
+        return Modelo360SolicitudRegister(entries=tuple(ordered))
+
+
 __all__ = [
+    "MODELO_360_SOLICITUD_REGISTER_SCHEMA_VERSION",
     "M360AmbitoEstablecimiento",
     "M360CausaPresentacion",
     "M360DelegacionCanariasCeutaMelilla",
@@ -319,5 +381,7 @@ __all__ = [
     "Modelo360ProfileFacts",
     "Modelo360RepresentanteFacts",
     "Modelo360SolicitanteFacts",
+    "Modelo360SolicitudEntry",
     "Modelo360SolicitudFacts",
+    "Modelo360SolicitudRegister",
 ]
