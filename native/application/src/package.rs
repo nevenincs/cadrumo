@@ -13,6 +13,22 @@ pub struct PackageManifest {
     pub python: String,
     pub distributions: BTreeMap<String, String>,
     pub files: BTreeMap<RelativePath, Sha256Digest>,
+    /// Subtrees inventoried by a hashed member manifest instead of listing each file here.
+    #[serde(default)]
+    pub delegated_inventories: BTreeMap<RelativePath, RelativePath>,
+    /// The assembler's statement of whether the user documentation tree ships.
+    pub user_docs: Option<UserDocsStatement>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UserDocsStatement {
+    pub directory: RelativePath,
+    pub bundled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct DelegatedInventory {
+    files: BTreeMap<RelativePath, Sha256Digest>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,21 +81,56 @@ impl PackageManifest {
         if self.files.is_empty() || self.files.contains_key(manifest_path) {
             return Err(Error::Invalid("invalid package file inventory".into()));
         }
+        // Documentation may be absent only because the manifest says so.
+        let Some(docs) = &self.user_docs else {
+            return Err(Error::Invalid(
+                "package manifest does not state whether user documentation is bundled; rebuild the package"
+                    .into(),
+            ));
+        };
+        let prefix = format!("{}/", docs.directory.as_str());
+        if docs.bundled != self.delegated_inventories.contains_key(&docs.directory)
+            || (!docs.bundled
+                && self
+                    .files
+                    .keys()
+                    .any(|name| name.as_str().starts_with(&prefix)))
+        {
+            return Err(Error::Invalid(
+                "package documentation statement disagrees with its inventory".into(),
+            ));
+        }
         for (relative, expected) in &self.files {
-            let path = relative.under(root);
-            filesystem::refuse_links(&path)?;
-            match fs::metadata(&path) {
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                    return Ok(Readiness::Missing(relative.as_str().into()));
-                }
-                Err(e) => return Err(e.into()),
-                Ok(meta) if !meta.is_file() => {
-                    return Ok(Readiness::Incompatible(relative.as_str().into()));
-                }
-                Ok(_) => {}
+            if let Some(readiness) = check_file(root, relative, expected)? {
+                return Ok(readiness);
             }
-            if filesystem::digest(&path)? != *expected {
-                return Ok(Readiness::Incompatible(relative.as_str().into()));
+        }
+        // Each delegated manifest was hash-checked above as a listed file before it is trusted.
+        let mut inventory = self.files.clone();
+        for (prefix, member) in &self.delegated_inventories {
+            if !self.files.contains_key(member)
+                || !member
+                    .as_str()
+                    .starts_with(&format!("{}/", prefix.as_str()))
+            {
+                return Err(Error::Invalid(
+                    "delegated inventory must be a listed file beneath its prefix".into(),
+                ));
+            }
+            let nested: DelegatedInventory = filesystem::json_file(&member.under(root))?;
+            for (relative, expected) in nested.files {
+                let joined =
+                    RelativePath::new(format!("{}/{}", prefix.as_str(), relative.as_str()))?;
+                if inventory.contains_key(&joined) {
+                    return Err(Error::Invalid(format!(
+                        "delegated inventory entry collides with a package file: {}",
+                        joined.as_str()
+                    )));
+                }
+                if let Some(readiness) = check_file(root, &joined, &expected)? {
+                    return Ok(readiness);
+                }
+                inventory.insert(joined, expected);
             }
         }
         let mut pending = vec![root.to_path_buf()];
@@ -95,7 +146,7 @@ impl PackageManifest {
                     .strip_prefix(root)
                     .map_err(|_| Error::Invalid("package path escaped".into()))?;
                 let relative = RelativePath::from_native(relative)?;
-                if relative != *manifest_path && !self.files.contains_key(&relative) {
+                if relative != *manifest_path && !inventory.contains_key(&relative) {
                     return Ok(Readiness::Incompatible(format!(
                         "unexpected file: {}",
                         relative.as_str()
@@ -105,4 +156,27 @@ impl PackageManifest {
         }
         Ok(Readiness::Ready)
     }
+}
+
+fn check_file(
+    root: &Path,
+    relative: &RelativePath,
+    expected: &Sha256Digest,
+) -> Result<Option<Readiness>, Error> {
+    let path = relative.under(root);
+    filesystem::refuse_links(&path)?;
+    match fs::metadata(&path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(Some(Readiness::Missing(relative.as_str().into())));
+        }
+        Err(e) => return Err(e.into()),
+        Ok(meta) if !meta.is_file() => {
+            return Ok(Some(Readiness::Incompatible(relative.as_str().into())));
+        }
+        Ok(_) => {}
+    }
+    if filesystem::digest(&path)? != *expected {
+        return Ok(Some(Readiness::Incompatible(relative.as_str().into())));
+    }
+    Ok(None)
 }

@@ -37,9 +37,19 @@ if(CADRUMO_INCLUDE_DEVELOPMENT_BINARY)
   set(development_args --development)
   set(development_target cadrumo_python_d)
 endif()
+include("${PROJECT_SOURCE_DIR}/native/cmake/Docs.cmake")
+option(CADRUMO_PACKAGE_USER_DOCS "Bundle the user documentation in the assembled package" ON)
+if(CADRUMO_PACKAGE_USER_DOCS)
+  set(user_docs_dependencies user_docs "${CADRUMO_PATH_USER_DOCS_STAGE}/ready")
+  message(STATUS "User documentation: bundled in the package (CADRUMO_PACKAGE_USER_DOCS=ON)")
+else()
+  set(user_docs_args --without-user-docs)
+  message(STATUS "User documentation: absent from the package; desktop payloads refuse it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
+endif()
 add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   COMMAND ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
-  DEPENDS cadrumo_python cadrumo_python_bridge python_product
+    ${user_docs_args}
+  DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} python_product ${user_docs_dependencies}
     ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/build.json"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"
@@ -55,6 +65,13 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
+  foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
+    add_test(NAME bundle.entrypoint.${entrypoint} COMMAND "${CMAKE_COMMAND}" -E env
+      "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+      "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}" --help)
+    set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES
+      PASS_REGULAR_EXPRESSION "usage: ${entrypoint}" RESOURCE_LOCK package_inventory)
+  endforeach()
 endif()
 install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION .)
 set(CPACK_GENERATOR ZIP)

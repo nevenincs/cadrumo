@@ -14,6 +14,7 @@
 
 typedef int (__cdecl *bridge_main)(int, wchar_t **, const wchar_t **, int);
 
+#ifndef CADRUMO_ENTRYPOINT
 static int worker_handle(const wchar_t *text, uintptr_t *out) {
     uintptr_t value = 0;
     /* The supervisor serializes two distinct positive HANDLEs in decimal. */
@@ -40,6 +41,7 @@ static int supervised_kdf_invocation(int argc, wchar_t **argv) {
         && worker_handle(argv[6], &result)
         && request != result;
 }
+#endif
 
 static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
     cadrumo_buffer value = {0};
@@ -53,13 +55,45 @@ static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
     return result;
 }
 
+#ifdef CADRUMO_ENTRYPOINT
+/* A console entrypoint runs one declared console script through the package
+ * interpreter. sys.executable remains that interpreter: runtime workers and the
+ * supervised KDF child relaunch sys.executable with interpreter arguments. */
+static int run_entrypoint(bridge_main run, int argc, wchar_t **argv, wchar_t **paths) {
+    static const wchar_t command[] = L"import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint('"
+        WIDE_LITERAL(CADRUMO_ENTRYPOINT) L"')";
+    size_t size = wcslen(paths[0]) + wcslen(WIDE_LITERAL(CADRUMO_EXECUTABLE)) + 2;
+    wchar_t *interpreter = calloc(size, sizeof(wchar_t));
+    wchar_t **forwarded = calloc((size_t)argc + 2, sizeof(wchar_t *));
+    int result = 123;
+    if (interpreter && forwarded
+        && swprintf_s(interpreter, size, L"%ls\\%ls", paths[0], WIDE_LITERAL(CADRUMO_EXECUTABLE)) >= 0) {
+        free(paths[2]);
+        paths[2] = interpreter;
+        interpreter = NULL;
+        forwarded[0] = paths[2];
+        forwarded[1] = L"-c";
+        forwarded[2] = (wchar_t *)command;
+        for (int i = 1; i < argc; ++i) forwarded[i + 2] = argv[i];
+        result = run(argc + 2, forwarded, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
+    } else {
+        fprintf(stderr, "CADRUMO: cannot prepare the %s entrypoint\n", CADRUMO_ENTRYPOINT);
+    }
+    free(interpreter);
+    free(forwarded);
+    return result;
+}
+#endif
+
 int wmain(int argc, wchar_t **argv) {
+#ifndef CADRUMO_ENTRYPOINT
     if (argc == 2 && (!wcscmp(argv[1], L"--version") || !wcscmp(argv[1], L"-V"))) {
         printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
             CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
             CADRUMO_DEVELOPMENT ? "development" : "production");
         return 0;
     }
+#endif
     cadrumo_context *ctx = NULL;
     cadrumo_buffer error = {0};
     wchar_t *paths[10] = {0};
@@ -84,6 +118,10 @@ int wmain(int argc, wchar_t **argv) {
     if (!bridge) goto failure;
     bridge_main run = (bridge_main)(void *)GetProcAddress(bridge, "cadrumo_python_main");
     if (!run) goto failure;
+#ifdef CADRUMO_ENTRYPOINT
+    if (cadrumo_platform_prepare(ctx, &error)) goto failure;
+    result = run_entrypoint(run, argc, argv, paths);
+#else
     /* The supervised KDF child attests its exact parent-owned neutral environment
      * before receiving any request. Application storage/tool projection would
      * replace that contract. Only its complete fixed invocation avoids projection;
@@ -95,6 +133,7 @@ int wmain(int argc, wchar_t **argv) {
     } else {
         result = run(argc, argv, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
     }
+#endif
     goto done;
 failure:
     if (error.data) fprintf(stderr, "CADRUMO: %.*s\n", (int)error.len, error.data);

@@ -16,13 +16,22 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
 
 from ..uv_constraints import export_runtime_constraints
+from .docs_stage import verified_stage
 from .hashing import digest
-from .layout import backend, load_layout
+from .layout import backend, entrypoint_files, load_layout
+from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .stdlib import bundle as bundle_stdlib
 
 
 def assemble(
-    python: Path, dependencies: Path, build: Path, destination: Path, metadata: Path, *, development: bool = False
+    python: Path,
+    dependencies: Path,
+    build: Path,
+    destination: Path,
+    metadata: Path,
+    user_docs: Path | None,
+    *,
+    development: bool = False,
 ) -> None:
     """Relocate native modules while retaining their qualified import names."""
     root = destination.resolve()
@@ -113,6 +122,10 @@ def assemble(
     executable = root / layout["executable"]
     executable.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(build / executable.name, executable)
+    # The native platform context derives the package root from each executable's directory.
+    entrypoints = sorted(entrypoint_files(contract).values())
+    for name in entrypoints:
+        shutil.copy2(build / name, executable.parent / name)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)
@@ -134,6 +147,11 @@ def assemble(
         authority_destination = root / layout["authority"]
         authority_destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(authority, authority_destination)
+    docs_declaration = contract["user_docs"]
+    docs_prefix = f"{layout['docs']}/{docs_declaration['directory']}"
+    docs_manifest = f"{docs_prefix}/{docs_declaration['manifest']}"
+    if user_docs is not None:
+        shutil.copytree(verified_stage(user_docs, docs_declaration), root / docs_prefix)
     path_file = root / files["path_file"]
     path_file.write_text(
         "# CADRUMO package-relative import paths; executable directives are forbidden.\n"
@@ -147,6 +165,7 @@ def assemble(
     shutil.copy2(metadata, root / files["build_metadata"])
     startup_files = [
         layout["executable"],
+        *((executable.parent / name).relative_to(root).as_posix() for name in entrypoints),
         layout["stdlib"],
         files["path_file"],
         files["build_metadata"],
@@ -156,6 +175,8 @@ def assemble(
     ]
     if development:
         startup_files.append(files["development_executable"])
+    if any(name.startswith(f"{docs_prefix}/") for name in startup_files):
+        raise ValueError("Startup files must not belong to a delegated inventory")
     manifest = {
         "build": build_identity,
         "layout": contract,
@@ -167,8 +188,19 @@ def assemble(
         "relocation": relocation,
         "patches": patches,
         "pruned": pruned,
-        "files": {p.relative_to(root).as_posix(): digest(p) for p in sorted(root.rglob("*")) if p.is_file()},
+        # The documentation tree is inventoried by its own hashed manifest, so interpreter
+        # startup never visits it; full package checks expand that delegated inventory.
+        "files": {
+            relative: digest(root / relative)
+            for relative in (p.relative_to(root).as_posix() for p in sorted(root.rglob("*")) if p.is_file())
+            if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
+        },
+        DELEGATED_INVENTORIES: {docs_prefix: docs_manifest} if user_docs is not None else {},
+        USER_DOCS: {"directory": docs_prefix, "bundled": user_docs is not None},
     }
+    observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    if observed != set(package_inventory(root, manifest)):
+        raise ValueError("Assembled files differ from the package inventory")
     (root / files["package_manifest"]).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"Assembled {root}: {len(modules)} relocated extension modules")
 
@@ -180,6 +212,17 @@ if __name__ == "__main__":
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
+    documentation = parser.add_mutually_exclusive_group(required=True)
+    documentation.add_argument("--user-docs", type=Path)
+    documentation.add_argument("--without-user-docs", action="store_true")
     parser.add_argument("--development", action="store_true")
     args = parser.parse_args()
-    assemble(args.python, args.dependencies, args.build, args.destination, args.metadata, development=args.development)
+    assemble(
+        args.python,
+        args.dependencies,
+        args.build,
+        args.destination,
+        args.metadata,
+        args.user_docs,
+        development=args.development,
+    )

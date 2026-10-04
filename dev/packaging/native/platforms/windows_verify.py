@@ -6,7 +6,9 @@ import argparse
 import json
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from cadrumo.core.storage_environment import storage_directory
 
@@ -124,6 +126,82 @@ print(json.dumps({'ready_environment_keys': expected, 'worker_joined': True,
 """
 
 
+RUNTIME_PROBE = r"""
+import json, os, sys, time
+from contextlib import ExitStack
+from importlib.metadata import version
+from pathlib import Path
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.installation import runtime_installation
+from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+
+runtime = Path(sys.argv[1]).resolve(strict=True)
+storage_root = Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve(strict=True)
+product = version('cadrumo')
+with ExitStack() as cleanup:
+    endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+    cleanup.callback(endpoint.close)
+    scope = WindowsProcessScope()
+    cleanup.callback(scope.terminate, timeout=5)
+    runtime_installation(storage_root=storage_root, os_owner_id=endpoint.os_owner_id,
+                         storage_identity=endpoint.storage_identity)
+    # Hostile interpreter variables must not reach the runtime's own isolated host.
+    environment = dict(os.environ, PYTHONPATH=os.getcwd(), PYTHONHOME=os.getcwd())
+    process = scope.launch(executable=runtime, directory=storage_root, environment=environment, arguments=(
+        '--storage-root', str(storage_root), '--storage-identity', endpoint.storage_identity,
+        '--expected-version', product))
+    expected = RuntimeClientHello(product_version=product, storage_identity=endpoint.storage_identity)
+    deadline = time.monotonic() + 60
+    while True:
+        try:
+            channel = endpoint.connect(timeout=0.2, expected_image=runtime)
+            connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline)
+            break
+        except RuntimeRefusalError as error:
+            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                raise
+            try:
+                code = process.wait(timeout=0)
+            except RuntimeRefusalError:
+                time.sleep(0.05)
+            else:
+                raise AssertionError(f'runtime exited before serving its endpoint: {code}') from error
+    image = str(channel.image_path)
+    connection.close()
+print(json.dumps({'runtime_image': image, 'handshake': 'verified', 'product_version': product}))
+"""
+
+
+def verify_entrypoints(
+    destination: Path,
+    layout: dict[str, Any],
+    cwd: Path,
+    environment: dict[str, str],
+    run: Callable[[list[str]], CommandResult],
+) -> dict[str, Any]:
+    """Pass arguments through each console entrypoint and serve the packaged runtime."""
+    observed: dict[str, Any] = {}
+    for name in layout["entrypoints"]:
+        executable = destination / (name + layout["entrypoint_suffix"])
+        usage = run_command([str(executable), "--help"], cwd=cwd, environment=environment, timeout_seconds=90)
+        if usage.returncode != 0 or f"usage: {name}" not in usage.stdout:
+            raise AssertionError(f"Entrypoint {name} did not run its console script: {usage.stderr}")
+        refused = run_command(
+            [str(executable), "--unrecognized-option"], cwd=cwd, environment=environment, timeout_seconds=90
+        )
+        if refused.returncode != 2:
+            raise AssertionError(f"Entrypoint {name} did not forward its arguments: exit {refused.returncode}")
+        observed[name] = {"usage": True, "argument_refusal_exit": refused.returncode}
+    runtime = (destination / ("cadrumo-runtime" + layout["entrypoint_suffix"])).resolve(strict=True)
+    served = json.loads(run(["-c", RUNTIME_PROBE, str(runtime)]).stdout)
+    if Path(served["runtime_image"]) != runtime:
+        raise AssertionError(f"Runtime endpoint was served by another image: {served['runtime_image']}")
+    observed["cadrumo-runtime"]["served"] = served
+    return observed
+
+
 def verify(
     package: Path, destination: Path | None = None, *, product: bool = False, build_root: Path | None = None
 ) -> None:
@@ -202,6 +280,7 @@ def verify(
         evidence["cli_version"] = cli.stdout.strip()
         kdf_ready = run(["-c", KDF_READY_PROBE])
         evidence["kdf_pre_secret_readiness"] = json.loads(kdf_ready.stdout)
+        evidence["entrypoints"] = verify_entrypoints(destination, layout, cwd, environment, run)
     run(["-m", "json.tool", "--help"])
     script = cwd / "explicit script.py"
     script.write_text("import pikepdf; print('script passed')", encoding="utf-8")

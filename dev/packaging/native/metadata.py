@@ -40,11 +40,12 @@ def generate(destination: Path, number: int, date: str, tools: Path, channel: st
         "VERSION": version,
         "BUILD_NUMBER": str(number),
         "BUILD_DATE": date,
+        "EXECUTABLE": layout["paths"]["executable"],
         **{name.upper(): value for name, value in layout["files"].items()},
     }
     header = "\n".join(f"#define CADRUMO_{name} {json.dumps(value)}" for name, value in values.items())
     (destination / "build_metadata.h").write_text(header + "\n", encoding="utf-8")
-    backend(layout).resources(destination, version, number, date, tools)
+    backend(layout).resources(destination, version, number, date, tools, layout["entrypoints"])
 
 
 if __name__ == "__main__":

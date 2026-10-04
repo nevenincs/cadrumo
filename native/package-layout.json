@@ -27,6 +27,21 @@
   "overrides": [
     "CADRUMO_EXTERNAL_BIN_DIRS"
   ],
+  "entrypoints": {
+    "cadrumo-runtime": "CADRUMO local runtime"
+  },
+  "user_docs": {
+    "directory": "user",
+    "manifest": "manifest.json",
+    "entry": "index.html",
+    "search": "pagefind/pagefind.js",
+    "languages": [
+      "en",
+      "es",
+      "ca",
+      "hu"
+    ]
+  },
   "platforms": {
     "windows-x64": "platforms/windows-x64.json"
   }

@@ -159,12 +159,14 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
     return destination / str(contract["sdk"]["root"])
 
 
-def resources(destination: Path, version: str, number: int, date: str, tools: Path) -> None:
-    """Render the canonical icon and embed Windows PE version resources."""
+def resources(
+    destination: Path, version: str, number: int, date: str, tools: Path, entrypoints: dict[str, str]
+) -> None:
+    """Render the canonical icon and one PE version resource per native executable."""
     if not 0 <= number <= 65535:
         raise ValueError("Windows resource build number must be between 0 and 65535")
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
-    publisher = json.dumps(metadata["publisher"], ensure_ascii=True)[:-1] + '\\0"'
+    publisher = _rc_string(metadata["publisher"])
     sys.path.insert(0, str(tools))
     renderer = importlib.import_module("resvg_py")
     png = renderer.svg_to_bytes(
@@ -173,7 +175,22 @@ def resources(destination: Path, version: str, number: int, date: str, tools: Pa
     with Image.open(io.BytesIO(png)) as icon:
         icon.save(destination / "cadrumo.ico", format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
     numeric = ",".join([*version.split(".")[:3], str(number)])
-    resource = f'''#include <winver.h>
+    descriptions = {"interpreter": "CADRUMO controlled Python interpreter"} | {
+        f"entrypoint-{name}": description for name, description in entrypoints.items()
+    }
+    for stem, description in descriptions.items():
+        resource = _version_resource(destination, numeric, version, number, date, publisher, _rc_string(description))
+        (destination / f"{stem}.rc").write_text(resource, encoding="utf-8")
+
+
+def _rc_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=True)[:-1] + '\\0"'
+
+
+def _version_resource(
+    destination: Path, numeric: str, version: str, number: int, date: str, publisher: str, description: str
+) -> str:
+    return f'''#include <winver.h>
 1 ICON "{(destination / "cadrumo.ico").as_posix()}"
 1 VERSIONINFO
 FILEVERSION {numeric}
@@ -193,7 +210,7 @@ BEGIN
   BEGIN
    VALUE "CompanyName", {publisher}
    VALUE "ProductName", "CADRUMO\\0"
-   VALUE "FileDescription", "CADRUMO controlled Python interpreter\\0"
+   VALUE "FileDescription", {description}
    VALUE "FileVersion", "{version}.{number}\\0"
    VALUE "ProductVersion", "{version}\\0"
    VALUE "BuildDate", "{date}\\0"
@@ -205,7 +222,6 @@ BEGIN
  END
 END
 '''
-    (destination / "interpreter.rc").write_text(resource, encoding="utf-8")
 
 
 def verify(package: Path, *, destination: Path | None, product: bool, build_root: Path | None) -> None:

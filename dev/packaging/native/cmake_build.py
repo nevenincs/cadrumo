@@ -17,6 +17,7 @@ from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .assemble import assemble
 from .build_paths import build_paths
+from .docs_stage import RECONFIGURE
 from .layout import load_layout
 from .product import build_product
 from .provision import provision
@@ -42,6 +43,7 @@ def main() -> None:
     parser.add_argument("--config", choices=("Debug", "Release"))
     parser.add_argument("--env", action="append", default=[])
     parser.add_argument("--development", action="store_true")
+    parser.add_argument("--without-user-docs", action="store_true")
     argv = sys.argv[1:]
     boundary = argv.index("--") if "--" in argv else len(argv)
     arguments = parser.parse_args(argv[:boundary])
@@ -123,6 +125,8 @@ def build_action(build: Path, arguments: argparse.Namespace) -> Path:
     else:
         if arguments.config is None:
             raise ValueError("assemble requires --config")
+        if not arguments.without_user_docs and "user_docs_stage" not in paths:
+            raise SystemExit(RECONFIGURE)
         destination = reset(build, str((paths["stage"] / arguments.config).relative_to(build)))
         assemble(
             sdk,
@@ -130,6 +134,7 @@ def build_action(build: Path, arguments: argparse.Namespace) -> Path:
             paths["bin"] / arguments.config,
             destination / "app",
             paths["generated"] / "build.json",
+            None if arguments.without_user_docs else paths["user_docs_stage"],
             development=arguments.development,
         )
     return destination

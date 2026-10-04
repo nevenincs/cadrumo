@@ -14,6 +14,7 @@
   "paths": {
     "executable": "python.exe"
   },
+  "entrypoint_suffix": ".exe",
   "files": {
     "development_executable": "python_d.exe",
     "bridge": "cadrumo_python.dll",

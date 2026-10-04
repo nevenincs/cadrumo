@@ -53,6 +53,7 @@ fn package(root: &Path) -> RelativePath {
         "layout": {"abi": 1, "platform": "projected-target", "paths": {"stdlib": "python.zip"}},
         "python": "3.13.11", "distributions": {"cadrumo": "0.5.1"},
         "files": {"python.zip": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"},
+        "user_docs": {"directory": "docs/user", "bundled": false},
         "build": {"version": "0.5.1"}
     });
     fs::write(
@@ -96,6 +97,117 @@ fn manifest_inspection_detects_missing_corrupt_extra_and_incompatible_files() {
         inspect("projected-target", 1),
         Readiness::Missing(_)
     ));
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
+}
+
+/// Writes a package whose `docs/user` subtree is inventoried by its own hashed manifest.
+fn delegated_package(root: &Path, nested: serde_json::Value) -> RelativePath {
+    fs::create_dir_all(root.join("docs/user")).unwrap();
+    fs::write(root.join("python.zip"), b"abc").unwrap();
+    fs::write(root.join("docs/user/index.html"), b"apex").unwrap();
+    let docs = serde_json::to_vec(&serde_json::json!({ "files": nested })).unwrap();
+    fs::write(root.join("docs/user/manifest.json"), &docs).unwrap();
+    let manifest = serde_json::json!({
+        "layout": {"abi": 1, "platform": "projected-target"},
+        "python": "3.13.11", "distributions": {"cadrumo": "0.5.1"},
+        "files": {"python.zip": sha256_hex(b"abc"), "docs/user/manifest.json": sha256_hex(&docs)},
+        "delegated_inventories": {"docs/user": "docs/user/manifest.json"},
+        "user_docs": {"directory": "docs/user", "bundled": true}
+    });
+    fs::write(
+        root.join("manifest.json"),
+        serde_json::to_vec(&manifest).unwrap(),
+    )
+    .unwrap();
+    RelativePath::new("manifest.json").unwrap()
+}
+
+fn delegated_readiness(root: &Path, path: &RelativePath) -> Result<Readiness, Error> {
+    Ok(PackageManifest::read(root, path)?
+        .inspect(root, path, "projected-target", 1)?
+        .readiness)
+}
+
+#[test]
+fn delegated_inventory_is_hash_checked_contained_and_complete() {
+    let temp = directory();
+    let listed = serde_json::json!({"index.html": sha256_hex(b"apex")});
+    let path = delegated_package(temp.path(), listed);
+    assert_eq!(
+        delegated_readiness(temp.path(), &path).unwrap(),
+        Readiness::Ready
+    );
+    fs::write(temp.path().join("docs/user/stray.html"), b"unlisted").unwrap();
+    assert!(matches!(
+        delegated_readiness(temp.path(), &path).unwrap(),
+        Readiness::Incompatible(reason) if reason.contains("docs/user/stray.html")
+    ));
+    fs::remove_file(temp.path().join("docs/user/stray.html")).unwrap();
+    fs::write(temp.path().join("docs/user/index.html"), b"changed").unwrap();
+    assert!(matches!(
+        delegated_readiness(temp.path(), &path).unwrap(),
+        Readiness::Incompatible(reason) if reason == "docs/user/index.html"
+    ));
+    fs::write(temp.path().join("docs/user/index.html"), b"apex").unwrap();
+    let tampered = serde_json::json!({"files": {"index.html": sha256_hex(b"changed")}});
+    fs::write(
+        temp.path().join("docs/user/manifest.json"),
+        serde_json::to_vec(&tampered).unwrap(),
+    )
+    .unwrap();
+    assert!(matches!(
+        delegated_readiness(temp.path(), &path).unwrap(),
+        Readiness::Incompatible(reason) if reason == "docs/user/manifest.json"
+    ));
+}
+
+#[test]
+fn delegated_inventory_refuses_escapes_and_collisions() {
+    for nested in [
+        serde_json::json!({"../../python.zip": sha256_hex(b"abc")}),
+        serde_json::json!({"..\\..\\python.zip": sha256_hex(b"abc")}),
+        serde_json::json!({"C:/python.zip": sha256_hex(b"abc")}),
+        serde_json::json!({"manifest.json": sha256_hex(b"abc")}),
+    ] {
+        let temp = directory();
+        let path = delegated_package(temp.path(), nested.clone());
+        assert!(
+            delegated_readiness(temp.path(), &path).is_err(),
+            "accepted {nested}"
+        );
+    }
+}
+
+#[test]
+fn documentation_absence_must_be_stated_and_agree_with_the_inventory() {
+    let temp = directory();
+    let listed = serde_json::json!({"index.html": sha256_hex(b"apex")});
+    let path = delegated_package(temp.path(), listed);
+    let original: serde_json::Value =
+        serde_json::from_slice(&fs::read(temp.path().join("manifest.json")).unwrap()).unwrap();
+    let mut unstated = original.clone();
+    unstated.as_object_mut().unwrap().remove("user_docs");
+    let mut claimed_absent = original.clone();
+    claimed_absent["user_docs"]["bundled"] = serde_json::json!(false);
+    let mut claimed_without_inventory = original.clone();
+    claimed_without_inventory
+        .as_object_mut()
+        .unwrap()
+        .remove("delegated_inventories");
+    for manifest in [unstated, claimed_absent, claimed_without_inventory] {
+        fs::write(
+            temp.path().join("manifest.json"),
+            serde_json::to_vec(&manifest).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            delegated_readiness(temp.path(), &path).is_err(),
+            "accepted {manifest}"
+        );
+    }
 }
 
 #[test]

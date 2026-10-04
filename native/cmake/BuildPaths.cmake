@@ -24,6 +24,9 @@ set(CADRUMO_BUILD_DIRECTORIES
   DESKTOP_CARGO cargo/desktop
   DESKTOP_TESTING desktop/testing
   DESKTOP_RESULTS desktop/test-results
+  USER_DOCS_BUILD user-docs/build
+  USER_DOCS_WORK user-docs/work
+  USER_DOCS_STAGE user-docs/stage
   INSTALLATION_STAGE installation/stage
   INSTALLATION_METADATA installation/metadata
   INSTALLATION_WORK installation/work)
@@ -39,7 +42,8 @@ set(cleanup_groups [=[{
   "packages": ["packages"],
   "dependencies": ["runtime", "tools", "product"],
   "native": ["bin", "lib", "symbols", "cargo"],
-  "desktop": ["desktop_frontend", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"]
+  "desktop": ["desktop_frontend", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
+  "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]
 }]=])
 string(JSON build_paths SET "${build_paths}" cleanup "${cleanup_groups}")
 file(CONFIGURE OUTPUT "${CMAKE_BINARY_DIR}/build-paths.json"

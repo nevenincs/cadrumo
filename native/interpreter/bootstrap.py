@@ -22,6 +22,38 @@ def _inside(root, relative):
     return path
 
 
+def _delegated_inventory(root, manifest):
+    """Merge each hash-checked delegated inventory strictly beneath its prefix; refuse collisions."""
+    inventory = dict(manifest["files"])
+    delegated = manifest.get("delegated_inventories", {})
+    # Documentation may be absent only because the manifest says so; the inventory must agree.
+    statement = manifest.get("user_docs")
+    directory = statement.get("directory") if isinstance(statement, dict) else None
+    if not isinstance(directory, str) or not directory or not isinstance(statement.get("bundled"), bool):
+        raise ImportError("Package manifest does not state whether user documentation is bundled")
+    if statement["bundled"] != (directory in delegated) or (
+        not statement["bundled"] and any(name.startswith(f"{directory}/") for name in inventory)
+    ):
+        raise ImportError(f"Package documentation statement disagrees with its inventory: {directory}")
+    for prefix, member in delegated.items():
+        if member not in manifest["files"] or not member.startswith(f"{prefix}/"):
+            raise ImportError(f"Invalid delegated inventory: {member}")
+        path = _inside(root, member)
+        with path.open("rb") as source:
+            if hashlib.file_digest(source, "sha256").hexdigest() != manifest["files"][member]:
+                raise ImportError(f"Damaged or mixed bundled file: {member}")
+        base = _inside(root, prefix)
+        for relative, digest in json.loads(path.read_text(encoding="utf-8"))["files"].items():
+            if "\\" in relative or ":" in relative or any(part in {"", ".", ".."} for part in relative.split("/")):
+                raise ImportError(f"Invalid delegated package path: {relative}")
+            _inside(base, relative)
+            key = f"{prefix}/{relative}"
+            if key in inventory:
+                raise ImportError(f"Delegated package path collides with a package file: {key}")
+            inventory[key] = digest
+    return inventory
+
+
 def verify(full=False):
     """Refuse mixed builds and missing/damaged runtime inputs; optionally hash every file."""
     root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
@@ -36,19 +68,20 @@ def verify(full=False):
     for relative in manifest["files"]:
         if not _inside(root, relative).is_file():
             raise ImportError(f"Missing bundled file: {relative}")
+    inventory = _delegated_inventory(root, manifest) if full else manifest["files"]
     if full:
         observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
-        expected = set(manifest["files"]) | {files["package_manifest"]}
+        expected = set(inventory) | {files["package_manifest"]}
         if observed != expected:
             raise ImportError(f"Unexpected package files: {observed - expected}")
-    required = manifest["files"] if full else manifest["startup_files"]
+    required = inventory if full else manifest["startup_files"]
     for relative in required:
         path = _inside(root, relative)
         if not path.is_file():
             raise ImportError(f"Missing bundled file: {relative}")
         with path.open("rb") as source:
             actual = hashlib.file_digest(source, "sha256").hexdigest()
-        if actual != manifest["files"][relative]:
+        if actual != inventory[relative]:
             raise ImportError(f"Damaged or mixed bundled file: {relative}")
 
 
@@ -71,6 +104,20 @@ class NativeModules(importlib.abc.MetaPathFinder):
             raise ImportError(f"Missing bundled native module {fullname}: {location}")
         loader = importlib.machinery.ExtensionFileLoader(fullname, str(location))
         return importlib.util.spec_from_file_location(fullname, location, loader=loader)
+
+
+def run_entrypoint(name):
+    """Run one declared console script exactly as its installed wrapper would."""
+    if name not in LAYOUT["entrypoints"]:
+        raise ImportError(f"Undeclared console entrypoint: {name}")
+    # Deferred so ordinary interpreter startup does not load metadata discovery.
+    import importlib.metadata
+
+    matches = importlib.metadata.entry_points(group="console_scripts", name=name)
+    if len(matches) != 1:
+        raise ImportError(f"Console entrypoint must resolve exactly once: {name}")
+    sys.argv[0] = name
+    raise SystemExit(next(iter(matches)).load()())
 
 
 def install():

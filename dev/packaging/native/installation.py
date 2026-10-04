@@ -17,6 +17,7 @@ from dev._paths import REPO_ROOT
 from .build_paths import build_paths
 from .hashing import digest
 from .installation_filesystem import file_identity, remove_owned_file
+from .package_inventory import package_inventory, user_docs_bundled
 
 
 def member(root: Path, relative: str) -> Path:
@@ -43,7 +44,7 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
     for key in ("application_id", "version", "target", "channel"):
         if manifest["build"].get(key) != expected[key]:
             raise ValueError(f"Payload {key} does not match requested distribution")
-    files = manifest["files"]
+    files = package_inventory(root, manifest)
     actual = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
     if actual != set(files) | {"data/package-manifest.json"}:
         raise ValueError("Payload inventory differs from its package manifest")
@@ -51,8 +52,13 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
         file = member(root, name)
         if not file.is_file() or digest(file) != checksum:
             raise ValueError(f"Payload file is missing or modified: {name}")
-    if desktop and desktop not in files:
+    if desktop and desktop not in manifest["files"]:
         raise ValueError("Desktop executable must belong to the verified payload inventory")
+    if desktop and not user_docs_bundled(manifest):
+        raise ValueError(
+            "A desktop payload requires bundled user documentation; this package was assembled without it "
+            "(CADRUMO_PACKAGE_USER_DOCS=OFF)"
+        )
     for path in root.rglob("*"):
         member(root, path.relative_to(root).as_posix())
 

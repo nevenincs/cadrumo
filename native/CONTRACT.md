@@ -22,6 +22,7 @@ behavior. Native code owns bootstrap before Python exists.
 | Exact Python version | `dev/packaging/release-python-version` | Build input |
 | Third-party dependency closure | `pyproject.toml`, `uv.lock`, existing constraint exporter | Installed locked dependencies |
 | Python release cohort | `dev/packaging/python_cohort.py` | Existing three-wheel cohort |
+| Bundled user documentation | `docs/` and its `dev/docs/` build driver; language set in `native/package-layout.json` | `build/windows-x64/user-docs/` |
 
 Shared packaging owns dependency installation, product wheel assembly, standard-library
 ZIP creation, manifests, artifact verification dispatch and cleanup. Physical names
@@ -69,7 +70,7 @@ storage-owner integration obligation; this interpreter does not invent them.
 
 | Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
-| Executables | `P/python.exe`, future `P/cadrumo.exe`; components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
+| Executables | `P/python.exe`, console entrypoints such as `P/cadrumo-runtime.exe`, future `P/cadrumo.exe`; components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
 | Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
@@ -100,6 +101,31 @@ No Rust object, exception or allocator ownership crosses the ABI. Consumers chec
 the ABI before creating a context. Both C linkage consumers passed; delivery uses
 static linkage so platform loading needs no application DLL before main. Static
 copies share code policy, not process state.
+
+### Console entrypoints
+
+`native/package-layout.json` names the console scripts that ship as native
+executables, with their version-resource descriptions. Each name must be a
+`[project.scripts]` entry in `pyproject.toml`; the layout loader refuses any
+other. The platform mapping supplies the executable suffix. CMake compiles
+the same host source once per entrypoint with the script name fixed at
+compile time, so `cadrumo-runtime.exe` cannot be redirected to other code by
+its arguments. Entrypoints sit at the package root beside the interpreter
+because the platform library derives the package root from the executable's
+directory.
+
+An entrypoint host performs the same platform preparation, loader setup and
+isolated initialization as `python.exe`, then runs the installed console
+script through `_cadrumo_bootstrap.run_entrypoint`. All arguments pass to the
+script; the host intercepts none. `sys.executable` remains `python.exe`,
+because runtime workers and the supervised KDF child relaunch it with
+interpreter arguments. Entrypoint executables are startup files, hashed by the
+package bootstrap before application code runs. CTest checks each staged entrypoint's
+usage output. Product ZIP verification forwards help and an unknown option
+through each entrypoint, then starts `cadrumo-runtime.exe` against an isolated
+storage root with hostile Python variables and completes the verified runtime
+handshake with the runtime's exact process image. The probe stops the runtime
+through its process scope; it registers no service and leaves no process.
 
 The interpreter excludes environment-derived Python paths, virtualenv discovery,
 user site, automatic current-directory imports, sitecustomize and executable `.pth`
@@ -188,6 +214,8 @@ to include it alongside production in the same package; shipping it is optional.
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
 | `packages/<Config>/` | ZIP artifacts |
 | `testing/<Config>/`, `verification/<Config>/` | Test state and extracted-artifact evidence |
+| `user-docs/build/`, `user-docs/work/` | Documentation owner build roots per language, with their logs and private storage |
+| `user-docs/stage/` | Shippable documentation subset and its manifest, copied into each staged package |
 
 ZIP names are `CADRUMO-<version>-b<build>-windows-x64-<Config>.zip`, with one
 matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to the Git commit count;
@@ -209,8 +237,10 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build native host, product wheels and complete staged package |
 | `python`, `python_d` | Compile production or development host and bridge |
+| `cadrumo_entrypoint_<name>` | Compile one declared console entrypoint host, such as `cadrumo-runtime.exe` |
 | `python_dependencies` | Provision the pinned runtime and locked binary dependencies |
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
+| `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
 | `verify` | Build bundle/ABI consumers, run CTest including real dependency imports |
 | `install` / `cmake --install` | Copy staged package to the chosen prefix |
 | `package` / `zip` | CPack ZIP delivery; no native installer yet |
@@ -221,6 +251,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-dependencies` | Remove downloaded SDK/dependencies and product wheel staging |
 | `clean-native` | Remove bin, lib, symbols and Cargo outputs; retain configure metadata |
 | `clean-desktop` | Remove declared desktop build outputs and test state |
+| `clean-docs` | Remove documentation build roots, work state and the staged subset |
 | `clean-all` | Apply the declared bounded cleanup groups; retain CMake configuration |
 
 Explicit cleanup never removes source files, the installed application or an
@@ -258,7 +289,8 @@ in the package manifest. Every retained native module is imported by the smoke t
 `cadrumo/python.pth` is generated data: only reviewed package-relative directories
 are allowed, matching the native manifest. `site` does not execute arbitrary `.pth`
 files. Startup checks build identity, file presence and essential file hashes;
-`python.exe --check-package` hashes the whole package and rejects extra files.
+`python.exe --check-package` hashes the whole package, including delegated
+inventories, and rejects extra files.
 This detects missing, damaged or mixed artifacts; it is not an authenticated
 signature or a sandbox for Python code.
 
@@ -289,6 +321,74 @@ Windows PE import tables identify extensions used as transitive libraries, such 
 unambiguous. Ordinary package-qualified extensions load by absolute path and may
 share a basename, as SQLAlchemy's two `_util_cy` extensions do. Smoke tests import
 both the CPython SDK extensions and every retained third-party extension identity.
+
+### Bundled user documentation
+
+`native/package-layout.json` declares the bundled user documentation under
+`user_docs`: its directory beneath `paths.docs`, the manifest name, the entry and
+search files of each language, and the language set. Each language must be one of
+the product's output languages, and English must be declared. `native/cmake/Docs.cmake`
+defines the `user_docs` target for the source build and the standalone desktop
+project; `bundle` and `desktop-host-build` depend on it.
+
+`dev/packaging/native/docs_build.py` runs the documentation owner's build command
+once per declared language, in parallel, as a user-scope build from a private source
+copy. `CADRUMO_DOCS_BUILD_ROOT` points the owner's path API at `user-docs/build/`,
+so each root lands in `user-docs/build/html/<lang>/`. Ambient `CADRUMO_DOCS_*`
+settings are dropped, each root gets its own storage root, and the Pagefind contract
+is pinned to `full`. The cli-sequence golden check runs on exactly the first declared
+root; the other roots use the owner's documented opt-out. The step fingerprints the
+contents of `inputs-user-docs.txt`: documentation sources, documentation tooling,
+`src/`, the layout and the selected published authority. Unchanged inputs reuse the
+previous roots. A stale published authority fails the target, and the owner's refusal
+is printed as the `cause:` line. Each root's previous search index is removed before
+its build, so staging can never accept an older root after a failed build.
+
+`dev/packaging/native/docs_stage.py` stages the published site layout: English at
+`P/docs/user/` and every other language at `P/docs/user/<lang>/`, where the owner's
+language switcher links. Sphinx build state (`.doctrees`, `.buildinfo`, `_sources`)
+and site-language directories nested in a source root are not copied. Staging refuses
+a language without its entry page or Pagefind module, a linked source entry, a
+non-portable path, a `script`, `link`, `img`, `source`, `iframe`, `embed`, `object`,
+`audio`, `video` or `track` resource that names an `http:`, `https:` or
+protocol-relative URL, an inline event-handler attribute and a `javascript:` URL.
+Each refusal names the reference, its page count and the first page.
+
+`P/docs/user/manifest.json` is the documentation handler's input:
+
+| Field | Meaning |
+| --- | --- |
+| `schema` | Manifest schema, currently `1` |
+| `languages` | Declared languages, in declared order |
+| `apex_language` | Language served at the documentation root, `en` |
+| `entries` | Entry page per language relative to `P/docs/user/`, such as `index.html` and `es/index.html` |
+| `search` | Pagefind module per language, such as `pagefind/pagefind.js` and `es/pagefind/pagefind.js` |
+| `script_hashes` | CSP `sha256-<base64>` values of every executing inline `<script>`, hashed after HTML newline normalization; inert types such as `application/json` are omitted |
+| `files` | Every servable file relative to `P/docs/user/`, with its SHA-256; the manifest does not list itself |
+
+The handler is to serve only `files` members, check their digests and derive the
+documentation origin's CSP from `script_hashes`. It is not implemented yet. The
+desktop shell CSP in `src-tauri/tauri.conf.json.in` does not govern the documentation.
+
+The package manifest does not list each documentation file. It lists
+`docs/user/manifest.json` with its hash and declares
+`delegated_inventories: {"docs/user": "docs/user/manifest.json"}`, so interpreter
+startup checks only the package's own files. `python.exe --check-package`, payload
+validation and the Rust package inspection hash the delegated manifest before using
+it, merge its entries strictly beneath `docs/user/`, refuse an entry that escapes the
+prefix or collides with a listed package file, hash every merged file and reject
+unlisted files. Startup files never belong to a delegated inventory. Assembly in a
+binary directory configured before this dependency existed stops with a reconfigure
+instruction.
+
+The package manifest also states `user_docs: {"directory": "docs/user", "bundled": ...}`.
+`CADRUMO_PACKAGE_USER_DOCS` (default `ON`) selects whether `bundle` depends on
+`user_docs`, and configure prints the active mode. With `OFF` the package has no
+`docs/user/` tree and no documentation inventory, and states `"bundled": false`.
+Full checks accept the missing tree only because of that statement and refuse a
+statement that disagrees with the inventory or is absent. Payload validation refuses
+a desktop executable from a package without bundled documentation. The desktop
+project always depends on `user_docs`.
 
 ## Native distribution definitions
 

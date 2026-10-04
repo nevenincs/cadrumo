@@ -45,7 +45,20 @@ def payload_fixture(tmp_path: Path, target: str) -> tuple[Path, Path]:
     root = tmp_path / "payload"
     (root / "data").mkdir(parents=True)
     (root / "cadrumo").write_text("synthetic test executable", encoding="utf-8")
-    manifest = {"build": value, "files": {"cadrumo": digest(root / "cadrumo")}}
+    # Desktop payloads require bundled documentation, inventoried by its own hashed manifest.
+    (root / "docs/user").mkdir(parents=True)
+    (root / "docs/user/index.html").write_text("synthetic documentation", encoding="utf-8")
+    docs = {"files": {"index.html": digest(root / "docs/user/index.html")}}
+    (root / "docs/user/manifest.json").write_text(json.dumps(docs), encoding="utf-8")
+    manifest = {
+        "build": value,
+        "files": {
+            "cadrumo": digest(root / "cadrumo"),
+            "docs/user/manifest.json": digest(root / "docs/user/manifest.json"),
+        },
+        "delegated_inventories": {"docs/user": "docs/user/manifest.json"},
+        "user_docs": {"directory": "docs/user", "bundled": True},
+    }
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return root, identity_file
 

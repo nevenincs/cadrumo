@@ -1,5 +1,21 @@
+# Console entrypoints share the interpreter host and live beside it at the package root.
+string(JSON entrypoint_suffix GET "${package_layout}" entrypoint_suffix)
+if(NOT entrypoint_suffix STREQUAL CMAKE_EXECUTABLE_SUFFIX)
+  message(FATAL_ERROR "The platform entrypoint suffix does not match the selected toolchain")
+endif()
+set(CADRUMO_ENTRYPOINTS)
+set(entrypoint_resources)
+string(JSON entrypoint_count LENGTH "${package_layout}" entrypoints)
+if(entrypoint_count GREATER 0)
+  math(EXPR entrypoint_last "${entrypoint_count} - 1")
+  foreach(index RANGE ${entrypoint_last})
+    string(JSON entrypoint MEMBER "${package_layout}" entrypoints ${index})
+    list(APPEND CADRUMO_ENTRYPOINTS "${entrypoint}")
+    list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
+  endforeach()
+endif()
 add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico"
+    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources}
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}"
@@ -9,7 +25,7 @@ add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/bu
     "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(native_metadata DEPENDS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-  "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico")
+  "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources})
 add_dependencies(native_metadata native_build_tools)
 
 set(CADRUMO_RUST_ROOT "$ENV{USERPROFILE}/.rustup/toolchains/${CADRUMO_PIN_rust}-${CADRUMO_PIN_rust_target}"
@@ -56,9 +72,19 @@ add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/hos
 set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME "${production_name}")
 add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
 set_target_properties(cadrumo_python_d PROPERTIES OUTPUT_NAME "${development_name}")
+set(CADRUMO_ENTRYPOINT_TARGETS)
+foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
+  string(MAKE_C_IDENTIFIER "cadrumo_entrypoint_${entrypoint}" target)
+  add_executable(${target} interpreter/windows/host.c interpreter/windows/host.rc
+    "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME "${entrypoint}")
+  target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_ENTRYPOINT=\"${entrypoint}\">")
+  list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
+endforeach()
+set(host_targets cadrumo_python cadrumo_python_d ${CADRUMO_ENTRYPOINT_TARGETS})
 set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY OBJECT_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest")
-foreach(target cadrumo_python cadrumo_python_d)
+foreach(target IN LISTS host_targets)
   target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows")
   target_link_options(${target} PRIVATE /MANIFEST:NO)
   add_custom_command(TARGET ${target} POST_BUILD
@@ -79,16 +105,16 @@ add_dependencies(cadrumo_python_bridge python_dependencies)
 add_executable(platform_static_consumer platform/tests/consumer.c)
 add_executable(platform_dll_consumer platform/tests/consumer.c)
 include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
-foreach(target cadrumo_python cadrumo_python_d cadrumo_python_bridge platform_static_consumer platform_dll_consumer)
+foreach(target ${host_targets} cadrumo_python_bridge platform_static_consumer platform_dll_consumer)
   cadrumo_compile_policy(${target})
   target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
   add_dependencies(${target} native_contract)
 endforeach()
-foreach(target cadrumo_python cadrumo_python_d platform_static_consumer)
+foreach(target ${host_targets} platform_static_consumer)
   target_link_libraries(${target} PRIVATE "${platform_static}" userenv ws2_32 ntdll bcrypt shell32 ole32 advapi32)
   add_dependencies(${target} rust_platform)
 endforeach()
-foreach(target cadrumo_python cadrumo_python_d cadrumo_python_bridge)
+foreach(target ${host_targets} cadrumo_python_bridge)
   add_dependencies(${target} native_metadata)
 endforeach()
 add_custom_target(python DEPENDS cadrumo_python cadrumo_python_bridge)

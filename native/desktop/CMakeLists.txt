@@ -39,6 +39,7 @@ foreach(action IN ITEMS build check test)
     WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
 endforeach()
 
+include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Docs.cmake")
 find_program(CADRUMO_NODE NAMES node REQUIRED)
 add_custom_target(desktop-paths-test
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
@@ -52,7 +53,7 @@ add_custom_target(desktop-host-build
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
-  DEPENDS desktop-frontend-build
+  DEPENDS desktop-frontend-build user_docs
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 
 foreach(action IN ITEMS test clippy)
