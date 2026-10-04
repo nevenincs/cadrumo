@@ -473,20 +473,6 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
     return ProfileMutationOperationProjection(profile_id=result.profile_id, record_revision=result.record_revision)
 
 
-class ProfileLogoutOperationResult(BaseModel):
-    """Declared result shape for a strong-close operation.
-
-    The executor returns its profile subject reference instead of persisting this
-    result after the strong close, because the active profile's encrypted
-    operand store is deliberately no longer available at that point.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    logged_out: bool
-
-
 class ProfileLogoutOperationRequest(BaseModel):
     """One strong-close request for the exact active profile subject."""
 

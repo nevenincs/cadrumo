@@ -35,12 +35,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import typer
 
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
-from ....core.json_contract import ResolvedPreconditionAction
+from ....core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ....core.model_catalogue import ModelRole
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .provision_payloads import (
@@ -93,6 +94,13 @@ __all__ = [
     "provision_status",
     "provision_verify",
 ]
+
+
+def _licence_notices(advisories: Iterable[str]) -> tuple[Notice, ...]:
+    return tuple(
+        Notice(severity=NoticeSeverity.WARNING, code="provisioning.model.licence.non_commercial", message=message)
+        for message in dict.fromkeys(advisories)
+    )
 
 
 def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload | None:
@@ -257,7 +265,13 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
         for item in outcome.models
     ]
     result = ProvisionLoadResult(loaded=outcome.succeeded, models=items)
-    emit_envelope(ctx, command="config.provision.load", result=result, lines=_provision_result_lines(result))
+    emit_envelope(
+        ctx,
+        command="config.provision.load",
+        result=result,
+        lines=_provision_result_lines(result),
+        notices=_licence_notices(message for item in outcome.models for message in item.licence_advisories),
+    )
     if not result.loaded:
         raise typer.Exit(code=2)
 
@@ -300,7 +314,13 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
         facts=outcome.facts,
         precondition_action=_action(outcome.precondition_verdict),
     )
-    emit_envelope(ctx, command="config.provision.setup", result=result, lines=_provision_result_lines(result))
+    emit_envelope(
+        ctx,
+        command="config.provision.setup",
+        result=result,
+        lines=_provision_result_lines(result),
+        notices=_licence_notices(message for item in outcome.models for message in item.licence_advisories),
+    )
     if not result.succeeded:
         raise typer.Exit(code=2)
 
@@ -420,7 +440,8 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
     from ....application.provisioning_runtime import pull_runtime_model
 
     items: list[ProvisionPullItemPayload] = []
-    for target in _targets(role, model):
+    targets = _targets(role, model)
+    for target in targets:
         roles = [served.value for served in target.roles]
         if target.model is None or target.requirement_bytes is None:
             items.append(
@@ -446,7 +467,13 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
             )
         )
     result = ProvisionPullResult(pulled=bool(items) and all(item.pulled for item in items), models=items)
-    emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
+    emit_envelope(
+        ctx,
+        command="config.provision.pull",
+        result=result,
+        lines=_provision_result_lines(result),
+        notices=_licence_notices(message for target in targets for message in target.licence_advisories),
+    )
     if not result.pulled:
         raise typer.Exit(code=2)
 
@@ -461,7 +488,8 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
     from ....application.local_reader import verify_role_target
 
     items: list[ProvisionVerifyItemPayload] = []
-    for target in _targets(role, model):
+    targets = _targets(role, model)
+    for target in targets:
         roles = [served.value for served in target.roles]
         if target.model is None:
             items.append(
@@ -487,7 +515,13 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
             )
         )
     result = ProvisionVerifyResult(ready=bool(items) and all(item.ready for item in items), models=items)
-    emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+    emit_envelope(
+        ctx,
+        command="config.provision.verify",
+        result=result,
+        lines=_provision_result_lines(result),
+        notices=_licence_notices(message for target in targets for message in target.licence_advisories),
+    )
     if not result.ready:
         raise typer.Exit(code=2)
 

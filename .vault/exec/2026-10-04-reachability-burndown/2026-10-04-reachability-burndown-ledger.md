@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1dab9163def5d068e836a78903bfd5b22c69be8363bd56c225806d8fcfb0306f'
+body_hash: 'sha256:6aa9512800e56eef8c2d14166b8688d5533a2256e716fff1835ca5dff25ae43b'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -608,6 +608,16 @@ related:
 - `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py`
 - `S20` `verify:` `Storage and custody behavior corpus: 163 passed` -> `pass`
 - `S20` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S21` `M` `src/cadrumo/application/local_reader.py`
+- `S21` `M` `src/cadrumo/application/local_reader_contracts.py`
+- `S21` `M` `src/cadrumo/application/local_reader_provisioning.py`
+- `S21` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S21` `M` `src/cadrumo/application/user_profile/profile_operation_contracts.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S21` `A` `src/cadrumo/entrypoints/cli/tests/test_provision_licence_notice.py`
+- `S21` `verify:` `Model selection, local reader and profile operation corpus: 151 passed` -> `pass`
+- `S21` `verify:` `Real closed-endpoint pull and verify JSON and text, all locales: 4 passed` -> `pass`
+- `S21` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -630,3 +640,4 @@ related:
 - `S18` Uncalled JSON schema and source-inventory projections and their unsupported records are retired. Catalogue, family, lineage and old transport construction helpers now belong to finite fixtures over the same canonical kernels. The empty bootstrap family claim is removed while actual exemption membership and citation controls remain. Shared files are staged from owned HEAD transformations to preserve concurrent work.
 - `S19` Typed PEP-695 schema consumers retain exact positional and keyword arguments. Actual schema specialization proves payload consumption; constructed repositories bind their class payload slots and overridden payload getters through the inherited schema factory. Imported-only models, unused repository classes, rebound parameters and shadowed getattr remain candidates. Module-level shadow facts are cached per pass to avoid repeating whole-module walks.
 - `S20` Relocated raw corruption, digest inventories, per-row failure inspection, passphrase decryption and retained custody probes into finite owning fixtures. Existing encryption, UTC, KDF, revision and authenticated-session kernels and refusal behavior remain exercised; fixture functions refuse unsupported adapter identities.
+- `S21` Retain the existing localized restricted-licence advisory on deduplicated role targets, every provisioning outcome and its public projection. The CLI publishes warning notices for pull, verify, load and setup. Remove the fictional strong-logout DTO and declare the actual request-only result capability.

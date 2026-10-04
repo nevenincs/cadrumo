@@ -61,6 +61,7 @@ _PROGRESS_POLL_S = 0.5
 def _refused_target(target: RoleModelTarget, step: LocalReaderSetupStep | None) -> LocalReaderModelOutcome:
     return LocalReaderModelOutcome(
         roles=target.roles,
+        licence_advisories=target.licence_advisories,
         succeeded=False,
         step=step,
         facts=dict(target.selection_facts),
@@ -290,6 +291,7 @@ class _LocalReaderProvisioner:
                     LocalReaderModelOutcome(
                         model=target.model,
                         roles=target.roles,
+                        licence_advisories=target.licence_advisories,
                         succeeded=True,
                         already_satisfied=True,
                         step=step,
@@ -309,6 +311,7 @@ class _LocalReaderProvisioner:
                 LocalReaderModelOutcome(
                     model=pulled.model,
                     roles=target.roles,
+                    licence_advisories=target.licence_advisories,
                     succeeded=pulled.pulled,
                     step=step,
                     bytes_fetched=pulled.bytes_fetched,
@@ -331,6 +334,7 @@ class _LocalReaderProvisioner:
                 LocalReaderModelOutcome(
                     model=loaded.model,
                     roles=target.roles,
+                    licence_advisories=target.licence_advisories,
                     succeeded=loaded.loaded,
                     already_satisfied=loaded.already_loaded,
                     step=step,
@@ -358,6 +362,7 @@ class _LocalReaderProvisioner:
                 LocalReaderModelOutcome(
                     model=ready.model,
                     roles=target.roles,
+                    licence_advisories=target.licence_advisories,
                     succeeded=ready.ready,
                     step=step,
                     resident=ready.resident,
@@ -380,6 +385,7 @@ class _LocalReaderProvisioner:
                 LocalReaderModelOutcome(
                     model=removed.model,
                     roles=target.roles,
+                    licence_advisories=target.licence_advisories,
                     succeeded=removed.removed,
                     freed_bytes=removed.freed_bytes,
                     was_installed=removed.was_installed,

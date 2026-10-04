@@ -195,6 +195,7 @@ class LocalReaderModelOutcome(BaseModel):
 
     model: str | None = None
     roles: tuple[ModelRole, ...]
+    licence_advisories: tuple[str, ...] = ()
     succeeded: bool
     already_satisfied: bool = False
     step: LocalReaderSetupStep | None = None
@@ -329,6 +330,7 @@ class LocalReaderModelOutcomeV1(BaseModel):
 
     model: str | None = Field(default=None, min_length=1, max_length=256)
     roles: tuple[ModelRole, ...]
+    licence_advisories: tuple[str, ...] = ()
     succeeded: bool
     already_satisfied: bool
     step: LocalReaderSetupStep | None = None
@@ -390,6 +392,7 @@ def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV1:
     return LocalReaderModelOutcomeV1(
         model=item.model,
         roles=item.roles,
+        licence_advisories=item.licence_advisories,
         succeeded=item.succeeded,
         already_satisfied=item.already_satisfied,
         step=item.step,

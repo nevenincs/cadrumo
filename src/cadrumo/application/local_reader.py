@@ -315,6 +315,7 @@ class RoleModelTarget(BaseModel):
     requirement_bytes: int | None = Field(default=None, ge=0)
     selection_facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
     selection_verdict: PreconditionVerdict | None = None
+    licence_advisories: tuple[str, ...] = ()
 
 
 def _requirement_for(role: ModelRole, model: str, settings: Settings) -> int | None:
@@ -350,6 +351,7 @@ def _role_selection_target(
     served: dict[str, list[ModelRole]],
     requirements: dict[str, int | None],
     refusals: list[RoleModelTarget],
+    advisories: dict[str, list[str]],
 ) -> None:
     model = selection.runtime_id
     if not selection.selected or model is None:
@@ -363,6 +365,9 @@ def _role_selection_target(
         return
     key = next((known for known in served if runtime_model_names_match(known, model)), model)
     served.setdefault(key, []).append(role)
+    advisory = selection.licence_advisory
+    if advisory and advisory not in advisories.setdefault(key, []):
+        advisories[key].append(advisory)
     if requirements.get(key) is None:
         assessable = selection.assessable_load
         requirements[key] = assessable[1] if assessable is not None else _requirement_for(role, model, settings)
@@ -388,11 +393,17 @@ def role_model_targets(
     served: dict[str, list[ModelRole]] = {}
     requirements: dict[str, int | None] = {}
     refusals: list[RoleModelTarget] = []
+    advisories: dict[str, list[str]] = {}
     for role in _selected_roles(roles):
         selection = select_role_model(role, resolved, explicit=explicit_model)
-        _role_selection_target(role, selection, resolved, served, requirements, refusals)
+        _role_selection_target(role, selection, resolved, served, requirements, refusals, advisories)
     targets = tuple(
-        RoleModelTarget(model=model, roles=tuple(roles_served), requirement_bytes=requirements.get(model))
+        RoleModelTarget(
+            model=model,
+            roles=tuple(roles_served),
+            requirement_bytes=requirements.get(model),
+            licence_advisories=tuple(advisories.get(model, ())),
+        )
         for model, roles_served in served.items()
     )
     return (*refusals, *targets)
