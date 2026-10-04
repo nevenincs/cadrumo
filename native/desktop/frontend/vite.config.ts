@@ -1,13 +1,12 @@
 import { buildPath } from "../scripts/build-paths.mjs";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
-const root = fileURLToPath(new URL("../../../", import.meta.url));
 export default defineConfig(({ mode }) => {
+  const identity = readIdentity();
+  const ports = server();
   const environment = loadEnv(
     mode,
     fileURLToPath(new URL(".", import.meta.url)),
@@ -28,51 +27,36 @@ export default defineConfig(({ mode }) => {
       outDir: buildPath("desktop_frontend"),
       emptyOutDir: false,
     },
-    server: { host: "0.0.0.0", allowedHosts, port: 1420, strictPort: true },
-    preview: { host: "0.0.0.0", allowedHosts, port: 1421, strictPort: true },
+    server: {
+      host: ports.host,
+      allowedHosts,
+      port: ports.devPort,
+      strictPort: true,
+    },
+    preview: {
+      host: ports.host,
+      allowedHosts,
+      port: ports.previewPort,
+      strictPort: true,
+    },
     plugins: [
       react(),
       {
         name: "canonical-desktop-content",
+        transformIndexHtml() {
+          return [{ tag: "title", children: identity.name, injectTo: "head" }];
+        },
         resolveId(id) {
           if (id === "virtual:desktop-content") return "\0desktop-content";
         },
         load(id) {
           if (id !== "\0desktop-content") return;
-          const identityPath = resolve(
-            root,
-            "src/cadrumo/core/product_identity.py",
-          );
-          this.addWatchFile(identityPath);
-          const python =
-            process.env.CADRUMO_DEV_PYTHON ??
-            resolve(
-              root,
-              process.platform === "win32"
-                ? ".venv/Scripts/python.exe"
-                : ".venv/bin/python",
-            );
-          const identity = JSON.parse(
-            execFileSync(
-              python,
-              [
-                "-B",
-                "-c",
-                'import json,runpy,sys; print(json.dumps(runpy.run_path(sys.argv[1])["PRODUCT_IDENTITY"]._asdict()))',
-                identityPath,
-              ],
-              { encoding: "utf8" },
-            ),
-          );
-          const markPath = resolve(root, "docs/_static/cadrumo-favicon.svg");
-          this.addWatchFile(markPath);
-          const mark = `data:image/svg+xml;base64,${readFileSync(markPath).toString("base64")}`;
           this.emitFile({
             type: "asset",
             fileName: "identity.json",
             source: JSON.stringify(identity),
           });
-          return `export const identity = ${JSON.stringify(identity)}; export const mark = ${JSON.stringify(mark)};`;
+          return `export const identity = ${JSON.stringify(identity)};`;
         },
       },
     ],

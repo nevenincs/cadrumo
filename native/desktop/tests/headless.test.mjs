@@ -1,4 +1,5 @@
 import { buildPath } from "../scripts/build-paths.mjs";
+import { executable } from "../scripts/configuration.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync, mkdirSync } from "node:fs";
@@ -10,11 +11,7 @@ const contractPath = process.env.CADRUMO_NATIVE_CONTRACT;
 assert(build && isAbsolute(build) && root && isAbsolute(root) && contractPath);
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 const interpreter = resolve(root, contract.layout.paths.executable);
-const host = resolve(
-  buildPath("desktop_cargo"),
-  "debug",
-  process.platform === "win32" ? "cadrumo.exe" : "cadrumo",
-);
+const host = executable();
 const cwd = resolve(buildPath("desktop_testing"), "headless");
 mkdirSync(cwd, { recursive: true });
 const env = {
@@ -25,9 +22,9 @@ const env = {
   PYTHONPATH: "Z:/hostile-imports",
 };
 const script = readFileSync(
-  new URL("../src-tauri/src/main.rs", import.meta.url),
+  new URL("../src-tauri/src/python/cli.py", import.meta.url),
   "utf8",
-).match(/const CLI_ENTRYPOINT: &str = r#"([\s\S]*?)"#;/)?.[1];
+);
 assert(script, "Use the host's exact installed entrypoint bootstrap");
 function run(file, args) {
   const result = spawnSync(file, args, {

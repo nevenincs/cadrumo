@@ -122,22 +122,19 @@ pub fn run(launch: Launch) -> Result<i32> {
             diagnostics_snapshot
         ])
         .setup(move |app| {
-            let title = app.config().product_name.as_deref().unwrap_or("CADRUMO");
-            if let Err(error) = tauri::WebviewWindowBuilder::new(
-                app,
-                "main",
-                tauri::WebviewUrl::App("index.html".into()),
-            )
-            .title(title)
-            .inner_size(1440.0, 1050.0)
-            .min_inner_size(520.0, 400.0)
-            .data_directory(data_directory)
-            .build()
-            {
-                setup_diagnostics.failure(
-                    ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
-                        .caused_by(error),
-                );
+            let outcome = (|| {
+                let config = app.config().app.windows.first().ok_or_else(|| {
+                    ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
+                })?;
+                tauri::WebviewWindowBuilder::from_config(app.handle(), config)
+                    .and_then(|builder| builder.data_directory(data_directory).build())
+                    .map_err(|error| {
+                        ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
+                            .caused_by(error)
+                    })
+            })();
+            if let Err(error) = outcome {
+                setup_diagnostics.failure(error);
                 app.handle().exit(1);
             }
             Ok(())

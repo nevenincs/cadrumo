@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { identity } from "../../scripts/configuration.mjs";
 
 test("terminal fills the window without fabricated browser output", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page).toHaveTitle(identity().name);
   await expect(page.locator(".xterm")).toHaveCount(1);
   await expect(page.getByRole("button")).toHaveCount(0);
   await expect(page.locator(".xterm-rows")).toHaveText("");

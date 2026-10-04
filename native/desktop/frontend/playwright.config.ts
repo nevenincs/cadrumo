@@ -1,6 +1,9 @@
+import { server } from "../scripts/configuration.mjs";
 import { buildPath } from "../scripts/build-paths.mjs";
 import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
+
+const baseURL = `http://127.0.0.1:${server().previewPort}`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -13,13 +16,13 @@ export default defineConfig({
     ],
   ],
   use: {
-    baseURL: "http://127.0.0.1:1421",
+    baseURL,
     viewport: { width: 1440, height: 1050 },
     trace: "retain-on-failure",
   },
   webServer: {
     command: "npm run preview",
-    url: "http://127.0.0.1:1421",
+    url: baseURL,
     reuseExistingServer: false,
   },
 });
