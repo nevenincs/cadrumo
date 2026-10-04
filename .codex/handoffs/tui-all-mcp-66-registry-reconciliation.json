@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "source_closure_and_registry_gates_passed; final M190 copied-registry cleanup-budget proof pending",
+  "status": "complete source reconciliation, canonical registry gates and scoped verification; shipping/native/E2E acceptance remains root-owned",
   "original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
   "source_snapshot": "66b785a1418ef48cb2f56711c83933c0828c46f8",
   "ours": "f39a5d517590508909a873033eb1833917d12b48",
@@ -24,7 +24,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/compiler/tests/test_export_layout_source_coverage.py",
@@ -44,7 +44,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/generated_tree_dispositions.toml",
@@ -64,7 +64,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/generated_tree_inventory.py",
@@ -84,7 +84,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/m232_form_bridge.py",
@@ -104,7 +104,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_below_floor_dispositions.py",
@@ -124,7 +124,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_export_tree.py",
@@ -144,7 +144,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_generated_export_trees.py",
@@ -164,7 +164,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_m232_form_bridge.py",
@@ -184,7 +184,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_declaration_invariant_gates.py",
@@ -204,7 +204,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_embedded_envelope_source_authority.py",
@@ -224,7 +224,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_export_layout_join_ratchet.py",
@@ -244,7 +244,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_export_parse.py",
@@ -264,7 +264,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_modelo_145_registry_foundation.py",
@@ -284,7 +284,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_modelo_232_registry.py",
@@ -304,7 +304,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/tests/test_render_check.py",
@@ -324,7 +324,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/export/_generation.provenance.json",
@@ -344,7 +344,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/export/_generation.provenance.json",
@@ -364,7 +364,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/0001-declarations.toml",
@@ -384,7 +384,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/0001-record-modelo-145-dr-v20-record.toml",
@@ -404,7 +404,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export/_generation.provenance.json",
@@ -424,7 +424,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json",
@@ -444,7 +444,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -464,7 +464,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/_generation.provenance.json",
@@ -484,7 +484,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -504,7 +504,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/export/_generation.provenance.json",
@@ -524,7 +524,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/export/_generation.provenance.json",
@@ -544,7 +544,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -564,7 +564,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0000-export-layout.toml",
@@ -584,7 +584,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0001-record-m232-operaciones-vinculadas.toml",
@@ -604,7 +604,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0002-record-m232-paraisos-fiscales.toml",
@@ -624,7 +624,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0003-record-m232-paraisos-fiscales.toml",
@@ -644,7 +644,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/_generation.provenance.json",
@@ -664,7 +664,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml",
@@ -684,7 +684,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0001-record-modelo-490-490-01.toml",
@@ -704,7 +704,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/0002-record-modelo-490-490-02.toml",
@@ -724,7 +724,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export/_generation.provenance.json",
@@ -744,7 +744,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0001-record-modelo-490-490-01.toml",
@@ -764,7 +764,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0002-record-modelo-490-490-02.toml",
@@ -784,7 +784,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/0005-record-modelo-490-490-03.toml",
@@ -804,7 +804,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export/_generation.provenance.json",
@@ -824,7 +824,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0001-record-modelo-490-490-01.toml",
@@ -844,7 +844,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0002-record-modelo-490-490-02.toml",
@@ -864,7 +864,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/0005-record-modelo-490-490-03.toml",
@@ -884,7 +884,7 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export/_generation.provenance.json",
@@ -904,13 +904,13 @@
         "66-registry-runtime-load.txt",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     }
   ],
   "verification": {
     "M232_floor_and_helper_tests": "4PASS45.46s",
     "M232_bridge_tests": "6PASS51.61s",
-    "M190_bridge_tests": "6PASS258.63s; historical disposition fixture isolation final replay pending",
+    "M190_bridge_tests": "Five exact source/target/manifest refusals + genuine copied-registry joint owner case6PASS258.63s; final isolated retired-ledger fixture positive1PASS274.47s with explicit runner --timeout=600, including successful required cleanup, exit0.",
     "M190_live_republication": "passed digest-bound canonical owner, complete final-live validation",
     "M232_2018_live_republication": "passed",
     "authority_publication": "passed; actual source/evidence complete owner validation",
@@ -918,10 +918,16 @@
     "canonical_registry_runtime_load": "passed58modelos160revisions",
     "canonical_registry_integrity": "passed current source+artifact identity1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b",
     "form_checks": "M190/M369+M232/M390 both0stale0missing",
-    "retirement_schema_correction": "Missing explicit emptydispositions array was detected by strict real validator; fixed authored ledger and affected positive replay pending",
+    "retirement_schema_correction": "Explicit dispositions=[] restored after strict real validator detected omitted required emptyarray; final actual source+publication+gates+affected positive replay allpassed.",
     "final_target_currentness": "20/20CURRENT; exact fresh owner renders+isolated validation+committed bytes/provenance equality, exit0",
     "M232_2018_final_currentness": "passed inside successful guarded publisher complete final-live validation; additional adjacent target beyond20sweep",
-    "retired_ledger_M190_fixture_replay": "All actual final-source test-body assertions passed; exit1 at300s only inside pytest passed-fixture cleanup unlinking whole copied registry. Budget/cleanup decision and whole-process green replay pending; no success-exit claim.",
+    "retired_ledger_M190_fixture_replay": {
+      "command": "uv run --no-sync pytest -o addopts='' -n0 --timeout=600 dev/registry/pipeline/tests/test_generated_form_bridge.py::test_m190_republication_preserves_other_authority_and_closes_the_generated_form",
+      "result": "1passed274.47s;exit0",
+      "log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T014125.470748Z-pytest-78340-52aeadb7/run.log",
+      "qualification": "Per-run600s verification override authorized by root; source/decorators/configuration unchanged. Earlier ordinary300s replay passed test-body assertions, then exit1 solely during pytest passed-fixture deletion; not claimed ordinary-timeout green.",
+      "ordinary_300s_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T013041.946909Z-pytest-72168-02460c3c/run.log"
+    },
     "scoped_static": "8PythonRuff/formatPASS; ownedtypesPASS; scopedtrackedgitdiffcheckPASS"
   },
   "nine_bootstrap_artifacts": [
@@ -935,7 +941,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
@@ -947,7 +953,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -959,7 +965,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
@@ -971,7 +977,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
@@ -983,7 +989,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -995,7 +1001,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
@@ -1007,7 +1013,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
@@ -1019,7 +1025,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
@@ -1031,7 +1037,7 @@
         "66-registry-target-currentness-final.json",
         "66-registry-integrity.txt"
       ],
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     }
   ],
   "shipping_acceptance": "Not claimed. Root owns current installed/native/product verification and landing.",
@@ -1044,7 +1050,7 @@
       "replacement": "dev/registry/mappings/modelo_347/2011/0001-records.toml",
       "reason": "Restore required=false/binding_rows and all six existing typed inmueble projections in the defining maps; both actual canonical candidates then reproduce the preserved stronger output/provenance exactly. Existing declared province/lease/cash-accounting/reverse-charge metadata remains.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
@@ -1054,7 +1060,7 @@
       "replacement": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
       "reason": "Restore required=false/binding_rows and all six existing typed inmueble projections in the defining maps; both actual canonical candidates then reproduce the preserved stronger output/provenance exactly. Existing declared province/lease/cash-accounting/reverse-charge metadata remains.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/cli.py",
@@ -1064,7 +1070,7 @@
       "replacement": "dev/registry/pipeline/cli.py",
       "reason": "Coordinate changed generated companions through the canonical bridge; provenance-only repairs with unchanged forms retain ordinary complete final-live validation without obsolete historical pins.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/generated_form_bridge.py",
@@ -1074,7 +1080,7 @@
       "replacement": "dev/registry/pipeline/generated_form_bridge.py",
       "reason": "Atomic defining-owner generalization preserves exactM232 historical repair pins and lifecycle; adds exact reviewedM1902025 old source/manifest/form pins, complete overlay validation, unchanged input census and canonical selected-form completion. Postcommit incomplete interval is explicit.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/historical_static_repair.py",
@@ -1084,7 +1090,7 @@
       "replacement": "dev/registry/pipeline/historical_static_repair.py",
       "reason": "Migrate direct calls to generic defining evidence/interpreter helpers while preserving exactM2322016 historical-source eligibility and no filing admission.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0002-record-modelo-190-perceptor.toml",
@@ -1094,7 +1100,7 @@
       "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0002-record-modelo-190-perceptor.toml",
       "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0003-record-modelo-190-perceptor.toml",
@@ -1104,7 +1110,7 @@
       "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0003-record-modelo-190-perceptor.toml",
       "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/_generation.provenance.json",
@@ -1114,7 +1120,7 @@
       "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/_generation.provenance.json",
       "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/form_layouts/0001-form-layout.toml",
@@ -1124,7 +1130,7 @@
       "replacement": "dev/registry/pipeline/tests/fixtures/m190-pre-repeat/form_layouts/0001-form-layout.toml",
       "reason": "Retain byte-exact f39M190 historical pre-repeat export/form package so the real joint-owner regression cannot derive its old oracle from the implementation being tested.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_generated_export_tree_validation.py",
@@ -1134,7 +1140,7 @@
       "replacement": "dev/registry/pipeline/tests/test_generated_export_tree_validation.py",
       "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_generated_form_bridge.py",
@@ -1144,7 +1150,7 @@
       "replacement": "dev/registry/pipeline/tests/test_generated_form_bridge.py",
       "reason": "Atomic defining-owner generalization preserves exactM232 historical repair pins and lifecycle; adds exact reviewedM1902025 old source/manifest/form pins, complete overlay validation, unchanged input census and canonical selected-form completion. Postcommit incomplete interval is explicit.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_generated_tree_check.py",
@@ -1154,7 +1160,7 @@
       "replacement": "dev/registry/pipeline/tests/test_generated_tree_check.py",
       "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "dev/registry/pipeline/tests/test_generated_tree_publication.py",
@@ -1164,7 +1170,7 @@
       "replacement": "dev/registry/pipeline/tests/test_generated_tree_publication.py",
       "reason": "Assert actual supported filing-result class before claiming a runtime snapshot; historical static results stay a distinct typed authority with no snapshot. No cast, suppression or boundary relaxation.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml",
@@ -1174,7 +1180,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0002-record-modelo-190-perceptor.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
@@ -1184,7 +1190,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0003-record-modelo-190-perceptor.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -1194,7 +1200,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/_generation.provenance.json",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
@@ -1204,7 +1210,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml",
@@ -1214,7 +1220,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json",
@@ -1224,7 +1230,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
@@ -1234,7 +1240,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/form_layouts/0001-form-layout.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
@@ -1244,7 +1250,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/form_layouts/0001-form-layout.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
@@ -1254,7 +1260,7 @@
       "replacement": "src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/form_layouts/0001-form-layout.toml",
       "reason": "Canonical owner-generated adjacent output closure; exact old/new bytes are included and generated source was never hand edited.",
       "owner": "history: registry coupled closure",
-      "integration_commit": "pending_root_66_checkpoint"
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19"
     }
   ],
   "adjacent_mutation_count": 22,
@@ -1265,11 +1271,17 @@
     "format": "cadrumo-authority-descriptor-v1",
     "logical_generation": "1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b"
   },
-  "unresolved": [
-    {
-      "scope": "verification_only",
-      "path": "dev/registry/pipeline/tests/test_generated_form_bridge.py",
-      "reason": "Whole-authority positive case assertions passed, but final-source replay process hit default300s only during required fixture deletion; bounded cleanup-budget proof pending root direction."
-    }
-  ]
+  "unresolved": [],
+  "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19",
+  "coverage": {
+    "captured_paths": 45,
+    "incorporated": 44,
+    "superseded_by_defining_owner_move": 1,
+    "adjacent_actual_mutations": 22,
+    "bootstrap_artifacts": 9,
+    "fresh_sweep_targets": 20,
+    "additional_guarded_current_target": "232/2018-y-siguientes",
+    "scoped_unresolved": 0
+  },
+  "source_freeze": "All recorded source bytes match actual8be18a88abc1a4d9ee0ea61a1df498287a9f3d19 ancestor tree; no Git/index/vault writes by this worker."
 }

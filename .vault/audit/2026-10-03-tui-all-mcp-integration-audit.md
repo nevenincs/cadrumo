@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:41b91566b0cd2046e29d665f727f4478a70b9ab34b90966dcb024070854a52c8'
+body_hash: 'sha256:86aef48f4e716ef8d62d5a4d4a8dead4c337b82f9d42948434645b9ae7e380a1'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -110,6 +110,42 @@ The incoming Desktop preview spawned reader, writer and ConPTY closer threads wi
 ### live-destination-preservation | low | Later active writer state captured independently without changing its checkout
 
 The live destination advanced to efb85a8a5b and remains dirty. Immutable snapshot66b785a1418 preserves248 later working paths against that original head. Original index SHA256 is unchanged at61e6120a68ab41d15a102258e02866e73de78c924bcddc3958a67d265f88ebc4. Two capture trees differ only at the registry-health audit, so the preservation is explicitly a time window. Six active source/catalogue lock paths have named transient dispositions and are not transplanted. Native layout/uninstall changes and captured M232 form/static interpretation changes require their own semantic reconciliation before a single final generation pass. The live worktree has not been updated or landed.
+
+### native-stage-ownership | high | Existing installer staging could be erased without an owning unchanged receipt
+
+Resolved source defect. Native preparation preserves every preexisting stage, validates its exact owning receipt, and builds a fresh candidate before reusing only byte-identical input. A missing receipt, modified stage or different candidate refuses with a fresh-build-directory action. It never recursively erases existing staging. Real filesystem regression tests cover unrelated files, modified receipts and changed payloads.
+
+### native-uninstall-identity | high | Path-based deletion could remove a replacement after preflight
+
+Resolved per-file identity and namespace defect. Windows retains no-reparse ancestry and a read/delete handle that denies write/delete sharing, hashes that handle and deletes that exact identity. POSIX retains directory descriptors, claims into its own private no-replace namespace, verifies inode and digest there, and restores a changed claim without replacing newly appeared names. The manifest anchor is removed last; modified/unowned state and directories remain. This does not promise byte compare-and-delete against arbitrary previously opened POSIX writers or an atomic multi-file uninstall. Fresh configured Windows filesystem tests pass39 with2 POSIX-host skips; actual WSL tests pass33 with no skips. Source proof is in .codex/handoffs/tui-all-mcp-native-installation-ownership-repairs.json. Actual shipping installer/Desktop acceptance remains pending.
+
+### latest-tui-product-and-catalogues | low | Captured later intent is reconciled with current public defining owners
+
+All248 captured66 source paths have dispositions against originalbaseefb85 and currentf39. Twelve product paths preserve current IVA public projection helpers while sharing StrictRegistryToken, add typed M360 producer/header facts and source-independent tests, and retain actual profile verification workflows. The physical DR145 page slot is optional; the obsolete missing-page export refusal is superseded by the independently constructed full610-byte export/event oracle and genuine absent/blank/C success plus invalid-enum refusal cases. The family matrix retains272 primary identities and54 supplementary variants. Product126 pure cases and scoped AST/Ruff/format/type checks pass. The186 catalogue application preserves all current message identities and metadata while carrying2395 completed translations; no existing nonempty translations are replaced. Both catalogue batches have zero incoming message-level fuzzy-clear deltas.
+
+### current-integrated-static-review | low | New ownership and producer interactions have no remaining high static finding
+
+Independent bounded review finds no concrete critical/high defect in changed native ownership, M145 physical-slot rules, typed M360 producer facts or finite public Home diagnostics. Unchanged retained Desktop worker sources reuse their prior exact-hash review. This is static evidence. Generated authority/layout closure and the current configured12 gates are running; fresh affected behavior, final installed artifacts/Desktop, offline Mac lifecycle/reopen and safe live-writer landing remain unresolved verification dependencies. Existing pending review status remains PENDING.
+
+### current-invoice-request | high | Automatic merge removed leased-premises request fields still consumed by the current TUI
+
+Resolved in c2a6199fd3. The request restores the three original M347 fields, defaults, defining enum and cadastral length constraints used by unchanged operation and TUI consumers. Four actual DTO/schema/invalid-enum/secure TUI relay cases pass, with scoped Ruff/format/ty/pyrefly/basedpyright passing. No caller or failure expectation was rewritten to hide the missing fields.
+
+### joint-registry-publication | low | Source-pinned companion forms and retained authoring metadata close all generated targets
+
+Resolved in8be18a88ab. The defining generated-form bridge preserves every original M232 pin and adds reviewed M190 source/manifest/form pins. Wrong identity, old form drift and publication failure refuse; joint success requires canonical form regeneration, complete authority validation and final target currentness. M347 optional/repeat metadata is restored at its authored owner without replacing already-current generated records. All20 affected targets are exactlyCURRENT and allnine earlier bootstrap artifacts have individual owner proof. Canonical validity/runtime-load/integrity pass58modelos/160revisions; logical authority1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b. M190 final-source positive replay passes274.47s including cleanup with explicit runner --timeout=600; the ordinary300s teardown timeout remains recorded separately.
+
+### final-configured-quality | low | All twelve configured gates pass on frozen source and checked data
+
+Resolved configured verification. The actual owning dev.quality.suite runs all12 configured gates and returns0 from01:34:46 to01:46:04UTC with zero before/after source, checker-metadata or checked-data drift. This suite is intentionally quiet on success. Actual current files are committed in8be18/74d6/c2a; Git commits did not change the checked bytes. The prior9PASS/3FAIL and11PASS/1unavailable changed-source runs remain preserved with their real diagnostics. Later literal-only M145 test-premise repairs need their scoped supplements. Behavioral acceptance, current installed Windows/Desktop, offline Mac withholding/reopen and safe live-writer landing remain pending; review status staysPENDING.
+
+### independent-final66-review | low | Combined authority and ownership boundaries retain their intended behavior
+
+Independent final66 integrated static review found no remaining high or critical defect in the reviewed authority, consumer and native ownership boundaries. CLI/TUI/MCP retain connection-bound admission and frontend permissions; corpus citations retain one authority pin. M347 request facts reach domain validation and current inmueble observations. M145 absence renders the principal blank wire byte while explicit markers retain the declared C constraint. Joint generated repairs keep exact historical pins and require final live validation; failed companion repair discloses the incomplete interval. Retained Desktop bounded workers and native exact-file ownership match reviewed source hashes. Actual installed Mac execution, protected Windows context, complete behavioral/E2E and destination landing remain pending. Static and packaging evidence does not establish those outcomes.
+
+### m145-fixture-premise | medium | Old explicit-space semantic seeds conflict with the retained source-backed optional C indicator
+
+Resolved fixture premise at source; affected behavioral replay pending. The real minimal adapter reproducer returns invalid_value because the captured66 casilla explicitly allows declared C and uses an absent optional value for principal. Official DR145 row2 still requires byte10blank or C. Two test-only preparation files omit the marker instead of submitting literalspace; every610byte/hash/receipt and invalidX/c/CC oracle remains. Scoped Ruff/format/ty pass; production code and authority are unchanged. The in-flight Serial interpreter retains old seeds, so its affected failures and source drift will remain visible. Final M145 owner/family cases replay separately; unchanged family results are reusable only within that stated scope.
 
 ## Recommendations
 

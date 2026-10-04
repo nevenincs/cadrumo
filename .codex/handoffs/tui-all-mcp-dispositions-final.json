@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "feature": "tui-all-mcp-integration",
-  "status": "code baseline committed through4d3455f47d; authorized E2E verification resumed; current source corrections and final quality/native/landing proof pending",
+  "status": "all original MCP work and captured later TUI53f/efb/66 source reconciled and coherently committed; configured12pass; behavioral/native verification and safe destination landing pending",
   "original_inventory": ".codex/handoffs/tui-all-mcp-20261003.json",
   "source_delta_hash_encoding": "SHA256 of exact per-path git diff --binary --no-ext-diff --no-renames --no-color --no-textconv --full-index original_base source_snapshot output; modes and immutable source/base blob OIDs retained separately.",
   "sources": [
@@ -65,7 +65,9 @@
       "already present": 1997,
       "unresolved": 1
     },
-    "selected_committed_clave_paths": 2
+    "selected_committed_clave_paths": 2,
+    "subsequent_linked_source_path_records": 5122,
+    "all_linked_source_path_records": 11229
   },
   "original_source_dispositions": [
     {
@@ -37081,7 +37083,7 @@
           "later_path_history": [
             "1d0a89b91fc2cfcfaf5f1e9fc46ac0b883aeb698 Checkpoint in-flight tui work for isolated TUI integration",
             "f4729489f9181e6f7fd5d15c6e002b3d812a5128 Snapshot the in-progress worktree across source, registry, governance and vault",
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui"
           ],
           "source_contains_conflict_markers": false,
@@ -42026,7 +42028,7 @@
           "later_path_history": [
             "1d0a89b91fc2cfcfaf5f1e9fc46ac0b883aeb698 Checkpoint in-flight tui work for isolated TUI integration",
             "f4729489f9181e6f7fd5d15c6e002b3d812a5128 Snapshot the in-progress worktree across source, registry, governance and vault",
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "1e909a09e8b68fd2ca258756d792bb0cee2eb3ee Join Modelo 720 lots to the foreign-asset register before rows are numbered"
           ],
           "source_contains_conflict_markers": true,
@@ -51236,7 +51238,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -51647,7 +51649,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -51707,7 +51709,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -51767,7 +51769,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -90573,7 +90575,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -90629,7 +90631,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui"
           ],
           "source_contains_conflict_markers": false,
@@ -90810,7 +90812,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -91345,7 +91347,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -137742,7 +137744,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui"
           ],
           "source_contains_conflict_markers": false,
@@ -137968,7 +137970,7 @@
           "checkpoint_blob": "18e24c7f716696737b65e301ab08d8262d43e8d6",
           "matching_history_and_trial_refs": [],
           "later_path_history": [
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "d6826dd6e8dba432659ce580097dc058b50bfe14 Checkpoint the registry lane's export-tree migration and its publication",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui",
             "c7ce3265b191e4d3cbf3f472d089047c140a0fef Snapshot in-flight feature/tui work on top of the mcp merge"
@@ -138022,7 +138024,7 @@
           "checkpoint_blob": "06c5353d0efac50ca303a8be0f1c69435a1e7df6",
           "matching_history_and_trial_refs": [],
           "later_path_history": [
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui",
             "c7ce3265b191e4d3cbf3f472d089047c140a0fef Snapshot in-flight feature/tui work on top of the mcp merge",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
@@ -138136,7 +138138,7 @@
           "checkpoint_blob": "1f35befead590a9378271edc012648fd3c466657",
           "matching_history_and_trial_refs": [],
           "later_path_history": [
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui",
             "c7ce3265b191e4d3cbf3f472d089047c140a0fef Snapshot in-flight feature/tui work on top of the mcp merge",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
@@ -138377,7 +138379,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimaci\u00f3n objetiva filers",
+            "c5546a23a52b0aa9905f3c3dc5b96a56152a38f7 Scope Modelo 347 operations for estimación objetiva filers",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui"
           ],
           "source_contains_conflict_markers": false,
@@ -150365,7 +150367,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150425,7 +150427,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150485,7 +150487,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150545,7 +150547,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150845,7 +150847,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150905,7 +150907,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -150965,7 +150967,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -151025,7 +151027,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -151625,7 +151627,7 @@
             "847b5205d9"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
           "source_contains_conflict_markers": false,
@@ -154988,7 +154990,7 @@
             "a46c462529"
           ],
           "later_path_history": [
-            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guarder\u00eda inputs the 0613 formula no longer reads",
+            "49feac35c051914104dfb4d562ac5204f2c60fff Retire the modelo 100 guardería inputs the 0613 formula no longer reads",
             "8d0eb5cdeb53bc7a0045dbe697b6144680c61f08 Merge branch 'feature/mcp' into feature/tui",
             "6ed12be34804083684092ba44ec6862916b58dae Merge branch 'main' into feature/mcp"
           ],
@@ -308893,5 +308895,100 @@
     "baseline_first_priority": "fulfilled by committed coherent reconciliation checkpoints",
     "final_verification_passed": false,
     "landing": "not landed; preserve active destination worktree/index"
+  },
+  "subsequent_reconciliations": [
+    {
+      "original_base": "a8a7fb7d26",
+      "source_snapshot": "53f01bc87bb080a043dc871f7972da925efe5814",
+      "integration_commit": "74b5ea56d6c92790b0b55d42bc934ddf03978212",
+      "source_path_count": 4858,
+      "dispositions": ".codex/handoffs/tui-all-mcp-53f-dispositions.json",
+      "owner_reviews": [
+        ".codex/handoffs/tui-all-mcp-53f-product-reconciliation.json",
+        ".codex/handoffs/tui-all-mcp-53f-dev-registry-native-reconciliation.json"
+      ],
+      "qualification": "Recorded original-base paths and semantic current replacements;9 generated artifacts originally bootstrapped pending canonical closure under66."
+    },
+    {
+      "original_base": "53f01bc87bb080a043dc871f7972da925efe5814",
+      "source_snapshot": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+      "integration_commit": "f39a5d517590508909a873033eb1833917d12b48",
+      "source_path_count": 16,
+      "dispositions": ".codex/handoffs/tui-all-mcp-efb-dispositions.json",
+      "qualification": "Exact native distribution baselinef39; follow-up nativeownership74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6 passes39Windows/33WSL cases; actualfinalinstalled artifact validation ongoing."
+    },
+    {
+      "original_base": "efb85a8a5bd7fb1b0104bb37ab887f339617a731",
+      "source_snapshot": "66b785a1418ef48cb2f56711c83933c0828c46f8",
+      "integration_commit": "8be18a88abc1a4d9ee0ea61a1df498287a9f3d19",
+      "source_path_count": 248,
+      "dispositions": ".codex/handoffs/tui-all-mcp-66-dispositions.json",
+      "capture": ".codex/handoffs/tui-all-mcp-live-tui-20261004.json",
+      "owner_reviews": [
+        ".codex/handoffs/tui-all-mcp-66-product-reconciliation.json",
+        ".codex/handoffs/tui-all-mcp-66-registry-reconciliation.json"
+      ],
+      "qualification": "All248 paths and22 adjacent owner repairs accounted;6transient locks explicitly superseded.20/20canonical targetsCURRENT, all58modelos/160revisions validation+runtime-load+source/artifactintegrityPASS. All9earlierbootstraps source-owner reproduced. M190 full-positive replay PASS274.47s with explicit600s runner budget; ordinary300s teardown-only result retained. Acceptance/landing separately pending."
+    }
+  ],
+  "current_implementation_amendments": [
+    {
+      "integration_commit": "44ba3caee73d4dcf87079f41448446df07a02267",
+      "reason": "Current domain public-owner export/module moves preserve typed constructor/projection intent;299 focused cases pass."
+    },
+    {
+      "integration_commit": "ecdff75ecbdd02e7bb64e4e16b78594a480049f8",
+      "reason": "Actual public callers, dead helper removal, GNOME reply lifetime and dev-only nonactivating setup; current canonical defining modules replace obsolete forwarding/helper locations; Linux47 native cases pass."
+    },
+    {
+      "integration_commit": "683df20ffc",
+      "reason": "Ordinary blank M145 physical page producer fix and independent fixture-premise repairs; original missing-page refusal is later superseded by official source evidence under66."
+    },
+    {
+      "integration_commit": "dd69ed8c349cfed7bfc84dfbec63ab6a9a2dff14",
+      "reason": "Finite public Home/account refusal diagnostics and explicit run-log root forwarding for actual installed continuation; native installed lifecycle/reopen acceptance remains pending."
+    },
+    {
+      "integration_commit": "74b5ea56d6c92790b0b55d42bc934ddf03978212",
+      "reason": "Current receipt/runtime/API ownership, migrated272primary+54supplementary family coverage, restored M347 fields/closed UTC DTO startup, retained bounded Desktop workers; per-path original-base replacement proofs in53f corpus."
+    },
+    {
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6",
+      "reason": "Native stage preservation and exact-file uninstall ownership repairs; configured inventories regenerated through owners.39Windows/33WSL cases pass."
+    },
+    {
+      "integration_commit": "c2a6199fd30e2af5b8c93f289511f32261edf240",
+      "reason": "M347currentinvoice requestfields restored;14 canonical imports repaired; cache-location independent-settings test and documentation repaired.4invoice/schema/TUI+14cache+27importowner cases pass; configured12pass onexactworkingbytes."
+    },
+    {
+      "integration_commit": "ca956c57b6919f10412833e68412178af0f46527",
+      "reason": "Only2M145test-only preparation seeds omit optional principal marker to match captureddeclaredC semantics; unchangedindependent610byte/hash/receipt/event andX/c/CC refusals. ScopedRuff/format/tyPASS; affectedcompletebehavioralreplay queued; rawinitialsource-drift/failuresretained."
+    }
+  ],
+  "implementation_vs_execution_limits": {
+    "original_source_delta_implementation": "All3069 original source/path pairs have recorded dispositions and coherent implementation/provenance checkpoints. The historical withholding journey implementation is incorporated; its existing unresolved record denotes installed execution evidence, not missing source.",
+    "original_unresolved_record_kind": "Actual installed-runtime withholding lifecycle/oracle/local-record/fresh-reopen verification; preserve failed/unavailable run evidence.",
+    "live_destination": "No branch/worktree landing has occurred. Active dirty destination writer remains untouched; fresh drift reconciliation and coordinated checkout handoff are required before actual update.",
+    "final_quality": "All12configured gates PASS exit0/frozen source+data0drift; receipt .codex/handoffs/tui-all-mcp-quality-frozen66.json. Fresh behavioral/native/installed/Desktop acceptance remains pending."
+  },
+  "latest_original_source_observation": {
+    "manifest": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\final-source-observation-20261004T011904Z\\manifest.json",
+    "manifest_sha256": "914e1c8a122c709632461bbdf7d2c7dd6ff4a19befda881602c3521e7fc552b8",
+    "scope": "all six original MCP worktrees, current tracked+untracked source against preserved snapshots",
+    "window_utc": "2026-10-04T01:19:04.591901Z/2026-10-04T01:20:13.143222Z",
+    "later_deltas": 0,
+    "capture_drift": 0,
+    "original_head_branch_status_indexes_unchanged": true,
+    "write_scope": "external evidence alternate indexes/objects only; no source worktree/index/refs touched",
+    "qualification": "source-completeness observation, not native/E2E verification or destination landing"
+  },
+  "current_checkpoint": "ca956c57b6919f10412833e68412178af0f46527",
+  "updated_utc": "2026-10-04T01:50:26.847376+00:00",
+  "latest_independent_static_review": {
+    "checkpoint": "c2a6199fd30e2af5b8c93f289511f32261edf240",
+    "owner": "history Sol6.1high",
+    "remaining_critical_or_high": 0,
+    "verification_status": "PENDING for actualnative/behavioral/E2E/landing",
+    "audit": ".vault/audit/2026-10-03-tui-all-mcp-integration-audit.md"
   }
 }

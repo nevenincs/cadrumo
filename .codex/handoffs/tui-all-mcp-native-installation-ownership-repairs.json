@@ -18,35 +18,40 @@
       "current_sha256": "748da5364b996d32faf8afcf9407cbefe748cf497a49e60d12c90aaab15530c6",
       "incoming_sha256": "1a11456644a9d1ffd63b7659988f55a0525b03b120bbc51e985a76aa0db8c061",
       "owner": "history",
-      "status": "implemented and focused source tests passed; integration commit assigned by root later"
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
     },
     {
       "path": "dev/packaging/native/installation_filesystem.py",
       "current_sha256": "eb29bf0d63ca04a474bb18b7e6265babf7100ce27004d0b4a113b293303d643d",
       "incoming_sha256": null,
       "owner": "history",
-      "status": "implemented and focused source tests passed; integration commit assigned by root later"
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
     },
     {
       "path": "dev/packaging/native/installation_windows.py",
       "current_sha256": "ad72651376f0403d0887b759656680166c0c7213d80c0047040a3b25c736c4c3",
       "incoming_sha256": null,
       "owner": "baseline_merge",
-      "status": "implemented and focused source tests passed; integration commit assigned by root later"
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
     },
     {
       "path": "dev/packaging/tests/test_native_installation.py",
       "current_sha256": "1e4ed68d4749c2ab9c1ddbf415e62474449f6636017cc76d0d4dc8027360f08c",
       "incoming_sha256": "295dd78a7bb91cd24754de537ae42ca1637e2ce94d18f7be284be9ac6b780b13",
       "owner": "history",
-      "status": "implemented and focused source tests passed; integration commit assigned by root later"
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
     },
     {
       "path": "dev/packaging/tests/test_native_installation_windows.py",
       "current_sha256": "fce49335764e6b8031631b9f1bc61248cf3d6337f736888efc08f5c0f8534314",
       "incoming_sha256": null,
       "owner": "baseline_merge",
-      "status": "implemented and focused source tests passed; integration commit assigned by root later"
+      "status": "incorporated",
+      "integration_commit": "74d6f3d8b0c2c6a135d25214866dcd5c3aefd1e6"
     }
   ],
   "checks": {
