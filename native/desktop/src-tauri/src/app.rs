@@ -9,10 +9,7 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
-use std::{
-    collections::BTreeSet,
-    sync::{Arc, Mutex},
-};
+use std::{collections::BTreeSet, sync::Arc};
 use tauri::{
     Manager, Runtime,
     http::HeaderMap,
@@ -47,12 +44,16 @@ pub(crate) use commands;
 const TOKEN_ARGUMENT: &str = "token";
 const TOKEN_HEADER: &str = "x-cadrumo-token";
 
-/// The token an invocation presents: the `token` argument of a JSON call, or
-/// the token header of a raw-body call.
+/// The token an invocation presents: the `token` argument of a JSON object
+/// call, or the token header of any other body. A raw body becomes a JSON
+/// byte array when Tauri falls back to its postMessage transport, and keeps
+/// its headers.
 fn presented_token<'a>(body: &'a InvokeBody, headers: &'a HeaderMap) -> &'a str {
     match body {
-        InvokeBody::Json(arguments) => arguments.get(TOKEN_ARGUMENT).and_then(|v| v.as_str()),
-        InvokeBody::Raw(_) => headers.get(TOKEN_HEADER).and_then(|v| v.to_str().ok()),
+        InvokeBody::Json(arguments) if arguments.is_object() => {
+            arguments.get(TOKEN_ARGUMENT).and_then(|v| v.as_str())
+        }
+        _ => headers.get(TOKEN_HEADER).and_then(|v| v.to_str().ok()),
     }
     .unwrap_or_default()
 }
@@ -130,13 +131,11 @@ pub fn run(launch: Launch) -> Result<i32> {
     )?;
     let builder = tauri::Builder::default()
         .plugin(terminal::plugin(&launch))
-        .plugin(docs::plugin(&launch))
+        .plugin(docs::plugin(&launch)?)
         .plugin(logs::plugin(&launch))
-        .plugin(shell::plugin(&launch));
-    let state = Arc::new(TerminalState {
-        launch,
-        session: Mutex::new(None),
-    });
+        .plugin(shell::plugin(&launch))
+        .plugin(shell::clipboard_plugin());
+    let state = Arc::new(TerminalState::new(launch));
     let setup_diagnostics = diagnostics.clone();
     let app = builder
         .manage(state.clone())
@@ -213,7 +212,7 @@ mod tests {
             .iter()
             .flat_map(|m| m.names.iter().copied())
             .collect();
-        assert!(names.contains(&"diagnostics_snapshot") && names.contains(&"terminal_start"));
+        assert!(names.contains(&"diagnostics_snapshot") && names.contains(&"terminal_open"));
         let diagnostics = Arc::new(Diagnostics::default());
         let app = mock_builder()
             .invoke_handler(dispatch(modules, token, diagnostics).unwrap())
@@ -264,6 +263,12 @@ mod tests {
                 ),
                 (InvokeBody::Raw(b"input".to_vec()), None),
                 (InvokeBody::Raw(b"input".to_vec()), Some(wrong.as_str())),
+                (InvokeBody::Json(serde_json::json!([105, 110])), None),
+                (
+                    InvokeBody::Json(serde_json::json!([105, 110])),
+                    Some(wrong.as_str()),
+                ),
+                (InvokeBody::Json(serde_json::json!([105, 110])), Some("")),
             ] {
                 assert_eq!(call(name, body, header).unwrap_err(), refused, "{name}");
             }
@@ -275,6 +280,13 @@ mod tests {
                 None,
             );
             assert_ne!(admitted.err(), Some(refused.clone()), "{name}");
+            // A byte array from the postMessage fallback presents the header.
+            let fallback = call(
+                name,
+                InvokeBody::Json(serde_json::json!([105, 110])),
+                Some(exact.as_str()),
+            );
+            assert_ne!(fallback.err(), Some(refused.clone()), "{name}");
         }
     }
 
@@ -288,13 +300,14 @@ mod tests {
         assert_eq!(presented_token(&raw, &headers), "from-header");
         let empty = HeaderMap::new();
         assert_eq!(presented_token(&raw, &empty), "");
-        for missing in [
-            serde_json::json!({}),
-            serde_json::json!({"token": 7}),
-            serde_json::Value::Null,
-        ] {
+        let fallback = InvokeBody::Json(serde_json::json!([105, 110]));
+        assert_eq!(presented_token(&fallback, &headers), "from-header");
+        assert_eq!(presented_token(&fallback, &empty), "");
+        for missing in [serde_json::json!({}), serde_json::json!({"token": 7})] {
             assert_eq!(presented_token(&InvokeBody::Json(missing), &headers), "");
         }
+        let null = InvokeBody::Json(serde_json::Value::Null);
+        assert_eq!(presented_token(&null, &headers), "from-header");
     }
 
     #[test]

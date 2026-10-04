@@ -29,10 +29,17 @@ struct Layout {
     platform: String,
     paths: Paths,
     files: Files,
+    user_docs: UserDocs,
 }
 #[derive(Deserialize)]
 struct Paths {
     executable: RelativePath,
+    docs: RelativePath,
+}
+#[derive(Deserialize)]
+struct UserDocs {
+    directory: RelativePath,
+    manifest: RelativePath,
 }
 #[derive(Deserialize)]
 struct Files {
@@ -59,6 +66,17 @@ pub struct Launch {
     pub working_directory: PathBuf,
     pub webview: PathBuf,
     pub diagnostics: Arc<Diagnostics>,
+    /// The user's home directory, where interactive shells start.
+    pub home: PathBuf,
+    pub package_root: PathBuf,
+    /// The packaged user documentation and its manifest inside the package.
+    pub docs_root: PathBuf,
+    pub docs_manifest: PathBuf,
+    /// The Python log file and the line format Python writes it with.
+    pub log_file: PathBuf,
+    pub log_format: String,
+    /// The output language Settings resolved, for the shell chrome.
+    pub output_language: String,
 }
 
 /// The environment and working directory the host was started with.
@@ -90,7 +108,12 @@ pub async fn resolve(
     parent: &Parent,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Launch> {
-    let (executable, projection) = project(&root, parent, &diagnostics).await?;
+    let (executable, projection, layout) = project(&root, parent, &diagnostics).await?;
+    let docs_root = layout
+        .user_docs
+        .directory
+        .under(&layout.paths.docs.under(&root));
+    let docs_manifest = layout.user_docs.manifest.under(&docs_root);
     if let Err(error) = diagnostics.configure(
         &projection.logs,
         projection.log_max_bytes,
@@ -113,6 +136,13 @@ pub async fn resolve(
         working_directory: projection.storage,
         webview: projection.cache.join("desktop-webview"),
         diagnostics,
+        home: projection.home,
+        package_root: root,
+        docs_root,
+        docs_manifest,
+        log_file: projection.log_file,
+        log_format: projection.log_format,
+        output_language: projection.output_language,
     })
 }
 
@@ -122,7 +152,7 @@ async fn project(
     root: &Path,
     parent: &Parent,
     diagnostics: &Diagnostics,
-) -> Result<(PathBuf, Projection)> {
+) -> Result<(PathBuf, Projection, Layout)> {
     let invalid = || ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Package);
     let contract: Contract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
@@ -234,7 +264,7 @@ async fn project(
     {
         return Err(failure(ErrorCode::EnvironmentFailed));
     }
-    Ok((executable, projection))
+    Ok((executable, projection, layout))
 }
 
 /// Every child must carry the resolved root under the Settings-owned name, or
@@ -321,7 +351,7 @@ mod tests {
         let contract: serde_json::Value =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
         let parent = Parent::current().unwrap();
-        let (_, projection) = project(&root, &parent, &Diagnostics::default())
+        let (_, projection, _) = project(&root, &parent, &Diagnostics::default())
             .await
             .unwrap();
         assert!(projection.home.is_absolute() && projection.home.is_dir());

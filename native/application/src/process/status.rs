@@ -11,6 +11,10 @@ pub enum ProcessRole {
     Environment,
     Cli,
     Tui,
+    /// The packaged interpreter as an interactive REPL.
+    Repl,
+    /// The platform's interactive system shell.
+    Console,
 }
 #[derive(Clone, Copy, Debug, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]

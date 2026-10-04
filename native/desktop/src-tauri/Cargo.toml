@@ -23,12 +23,16 @@ serde_json = "1"
 ctrlc = "3"
 getrandom = "0.3"
 tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
+# Rust APIs only: the shell reaches them through token-checked app commands
+# and grants the webview no plugin command.
+tauri-plugin-clipboard-manager = "2.4.1"
+opener = "0.9"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
 
 [target.'cfg(windows)'.dependencies]
-cadrumo-platform = { path = "../../platform" }
+cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 
 [lints.rust]
 unsafe_code = "forbid"

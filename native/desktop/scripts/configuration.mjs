@@ -81,7 +81,43 @@ export function executable() {
   return artifact.executable;
 }
 
-export function tauriConfig(template, product, frontend, icons) {
+const DOCS_SCHEME = "cadrumo-docs";
+
+// The origin the webview serves the documentation scheme from. The desktop
+// host applies the same rule at runtime and refuses a shell policy that does
+// not frame exactly this origin.
+export function docsOrigin(window, platform = process.platform) {
+  if (platform === "win32")
+    return `${window.useHttpsScheme ? "https" : "http"}://${DOCS_SCHEME}.localhost`;
+  return `${DOCS_SCHEME}://localhost`;
+}
+
+// The template frames nothing; the build lets the shell frame the
+// documentation origin of the platform it targets.
+function shellPolicy(policy, origin) {
+  if (typeof policy !== "string")
+    throw new Error("The shell policy template must be one policy string.");
+  const directives = policy.split(";").map((directive) => directive.trim());
+  const frames = directives.filter((directive) =>
+    /^frame-src(\s|$)/.test(directive),
+  );
+  if (frames.length !== 1 || frames[0] !== "frame-src 'none'")
+    throw new Error("The shell policy template must frame nothing.");
+  return directives
+    .map((directive) =>
+      directive === frames[0] ? `frame-src ${origin}` : directive,
+    )
+    .join("; ");
+}
+
+export function tauriConfig(
+  template,
+  product,
+  frontend,
+  icons,
+  platform = process.platform,
+) {
+  const [main] = template.app.windows;
   return {
     ...template,
     productName: product.name,
@@ -94,6 +130,10 @@ export function tauriConfig(template, product, frontend, icons) {
         ...window,
         title: product.name,
       })),
+      security: {
+        ...template.app.security,
+        csp: shellPolicy(template.app.security.csp, docsOrigin(main, platform)),
+      },
     },
     bundle: {
       ...template.bundle,

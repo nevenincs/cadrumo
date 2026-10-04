@@ -1,397 +1,278 @@
+//! Live PTY sessions, at most one per kind, streamed over one channel each.
+mod console;
+mod credit;
+mod frame;
 mod ipc;
+mod session;
 
 use crate::{app::Commands, environment::Launch};
 use cadrumo_application::{
-    diagnostics::Diagnostics,
-    error::application::{ApplicationError, ErrorCode, Operation, Result},
-    process::status::{ProcessPhase, ProcessRole, Stream},
+    error::application::{ApplicationError, ErrorCode, Result},
+    process::status::ProcessRole,
 };
-use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
-use serde::Serialize;
+use serde::Deserialize;
+use session::{Program, SETTLE_TIMEOUT, Session, Sink, failure};
 use std::{
-    io::{Read, Write},
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
-        mpsc::{self, Receiver, RecvTimeoutError, SyncSender, TryRecvError, TrySendError},
-    },
-    thread::{self, JoinHandle},
-    time::{Duration, Instant},
+    ffi::OsString,
+    sync::{Arc, Mutex, MutexGuard},
+    time::Instant,
 };
-use tauri::{Runtime, plugin::TauriPlugin};
+use tauri::{Manager, Runtime, plugin::TauriPlugin, webview::PageLoadEvent};
 
 pub fn plugin<R: Runtime>(_launch: &Launch) -> TauriPlugin<R> {
-    tauri::plugin::Builder::new("cadrumo-terminal").build()
+    tauri::plugin::Builder::new("cadrumo-terminal")
+        .on_page_load(|webview, payload| {
+            if let Some(state) = webview.try_state::<Arc<TerminalState>>() {
+                state.page_load(payload.event());
+            }
+        })
+        .build()
 }
 
 pub fn commands<R: Runtime>() -> Commands<R> {
     ipc::commands()
 }
 
-const CHUNK: usize = 8192;
-const QUEUE: usize = 8;
-fn failure(code: ErrorCode) -> ApplicationError {
-    ApplicationError::new(code, Operation::Terminal)
-}
-const STOP_TIMEOUT: Duration = Duration::from_secs(3);
-
-#[derive(Default)]
-struct Workers {
-    reader: Option<JoinHandle<()>>,
-    writer: Option<JoinHandle<()>>,
-    closer: Option<JoinHandle<()>>,
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum Kind {
+    Console,
+    Python,
+    Tui,
 }
 
-impl Workers {
-    fn reap_finished(&mut self) -> Result<bool> {
-        for worker in [&mut self.reader, &mut self.writer, &mut self.closer] {
-            if worker.as_ref().is_some_and(JoinHandle::is_finished) {
-                worker
-                    .take()
-                    .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
-                    .join()
-                    .map_err(|_| failure(ErrorCode::Panic))?;
-            }
+impl Kind {
+    #[cfg(test)]
+    const ALL: [Self; 3] = [Self::Console, Self::Python, Self::Tui];
+
+    fn slot(self) -> usize {
+        self as usize
+    }
+}
+
+impl Program {
+    /// The launch of one terminal kind. Every kind receives the same pinned
+    /// child environment. Interactive shells start in the user's home and
+    /// never inside the storage root, so a relative write cannot land a
+    /// plaintext file in custody; the TUI starts in the storage root.
+    fn for_kind(launch: &Launch, kind: Kind) -> Result<Self> {
+        let environment = launch.child.environment().clone();
+        let interpreter = launch.child.executable().to_owned();
+        if matches!(kind, Kind::Console | Kind::Python)
+            && (!launch.home.is_absolute()
+                || !launch.home.is_dir()
+                || launch.home.starts_with(&launch.working_directory))
+        {
+            return Err(failure(ErrorCode::EnvironmentFailed));
         }
-        Ok(self.reader.is_none() && self.writer.is_none() && self.closer.is_none())
-    }
-
-    fn join_until(&mut self, deadline: Instant) -> Result<()> {
-        loop {
-            if self.reap_finished()? {
-                return Ok(());
-            }
-            if Instant::now() >= deadline {
-                return Err(failure(ErrorCode::CleanupFailed));
-            }
-            thread::sleep(Duration::from_millis(5));
-        }
-    }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Output {
-    pub bytes: Vec<u8>,
-    pub exit_code: Option<u32>,
-    pub error: Option<ApplicationError>,
-}
-
-enum ReadEvent {
-    Bytes(Vec<u8>),
-    Error(ApplicationError),
-}
-
-pub struct Session {
-    master: Option<Box<dyn MasterPty + Send>>,
-    writer: SyncSender<Vec<u8>>,
-    write_error: Arc<Mutex<Option<ApplicationError>>>,
-    child: Box<dyn Child + Send + Sync>,
-    output: Receiver<ReadEvent>,
-    stopped: Arc<AtomicBool>,
-    writer_stopped: Arc<AtomicBool>,
-    workers: Workers,
-    cleanup_error: Option<ApplicationError>,
-    exit_code: Option<u32>,
-    diagnostics: Arc<Diagnostics>,
-    process: u64,
-    tracked_exit: bool,
-}
-
-pub fn size(cols: u16, rows: u16) -> Result<PtySize> {
-    if !(2..=1000).contains(&cols) || !(2..=1000).contains(&rows) {
-        return Err(failure(ErrorCode::InvalidArguments));
-    }
-    Ok(PtySize {
-        rows,
-        cols,
-        pixel_width: 0,
-        pixel_height: 0,
-    })
-}
-
-impl Session {
-    pub fn start(launch: &Launch, cols: u16, rows: u16, args: &[&str]) -> Result<Self> {
-        let pair = native_pty_system()
-            .openpty(size(cols, rows)?)
-            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
-        let mut command = CommandBuilder::new(launch.child.executable());
-        command.env_clear();
-        for (key, value) in launch.child.environment() {
-            command.env(key, value);
-        }
-        command.env("TERM", "xterm-256color");
-        command.env("COLORTERM", "truecolor");
-        command.cwd(&launch.working_directory);
-        command.args(args);
-        let mut reader = pair
-            .master
-            .try_clone_reader()
-            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
-        let mut writer = pair
-            .master
-            .take_writer()
-            .map_err(|e| failure(ErrorCode::WriteFailed).caused_by(std::io::Error::other(e)))?;
-        let child = pair
-            .slave
-            .spawn_command(command)
-            .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
-        drop(pair.slave);
-        let diagnostics = launch.diagnostics.clone();
-        let process = diagnostics.start(child.process_id().unwrap_or(0), ProcessRole::Tui);
-        let (sender, output) = mpsc::sync_channel(QUEUE);
-        let stopped = Arc::new(AtomicBool::new(false));
-        let (input_sender, input_receiver) = mpsc::sync_channel::<Vec<u8>>(QUEUE);
-        let write_error = Arc::new(Mutex::new(None));
-        let write_failure = write_error.clone();
-        let writer_stopped = Arc::new(AtomicBool::new(false));
-        let writer_stop = writer_stopped.clone();
-        // Establish cleanup ownership before worker creation can fail or unwind.
-        let mut session = Self {
-            master: Some(pair.master),
-            writer: input_sender,
-            write_error,
-            child,
-            output,
-            stopped: stopped.clone(),
-            writer_stopped,
-            workers: Workers::default(),
-            cleanup_error: None,
-            exit_code: None,
-            diagnostics: diagnostics.clone(),
-            process,
-            tracked_exit: false,
-        };
-        session.workers.writer = Some(
-            thread::Builder::new()
-                .name("terminal-input".into())
-                .spawn(move || {
-                    while !writer_stop.load(Ordering::Acquire) {
-                        match input_receiver.recv_timeout(Duration::from_millis(50)) {
-                            Ok(bytes) => {
-                                if let Err(error) =
-                                    writer.write_all(&bytes).and_then(|()| writer.flush())
-                                {
-                                    if let Ok(mut failure) = write_failure.lock() {
-                                        *failure = Some(
-                                            ApplicationError::new(
-                                                ErrorCode::WriteFailed,
-                                                Operation::Terminal,
-                                            )
-                                            .caused_by(error),
-                                        );
-                                    }
-                                    break;
-                                }
-                            }
-                            Err(RecvTimeoutError::Timeout) => continue,
-                            Err(RecvTimeoutError::Disconnected) => break,
-                        }
-                    }
-                })
-                .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?,
-        );
-        let stop = stopped.clone();
-        let captured = diagnostics.clone();
-        session.workers.reader = Some(
-            thread::Builder::new()
-                .name("terminal-output".into())
-                .spawn(move || {
-                    let mut buffer = [0; CHUNK];
-                    loop {
-                        let mut event = match reader.read(&mut buffer) {
-                            Ok(0) => break,
-                            Ok(count) => {
-                                captured.capture(process, Stream::Terminal, &buffer[..count]);
-                                ReadEvent::Bytes(buffer[..count].to_vec())
-                            }
-                            Err(error) => {
-                                ReadEvent::Error(failure(ErrorCode::ReadFailed).caused_by(error))
-                            }
-                        };
-                        let failed = matches!(event, ReadEvent::Error(_));
-                        loop {
-                            if stop.load(Ordering::Acquire) {
-                                break;
-                            }
-                            match sender.try_send(event) {
-                                Ok(()) => break,
-                                Err(TrySendError::Disconnected(_)) => return,
-                                Err(TrySendError::Full(pending)) => {
-                                    event = pending;
-                                    thread::sleep(Duration::from_millis(5));
-                                }
-                            }
-                        }
-                        if failed {
-                            break;
-                        }
-                    }
-                })
-                .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?,
-        );
-        Ok(session)
-    }
-
-    pub fn input(&mut self, data: &[u8]) -> Result<()> {
-        if data.len() > 65536 {
-            return Err(failure(ErrorCode::OutputLimit));
-        }
-        self.writer
-            .try_send(data.to_vec())
-            .map_err(|_| failure(ErrorCode::QueueFull))
-    }
-
-    pub fn resize(&self, cols: u16, rows: u16) -> Result<()> {
-        self.master
-            .as_ref()
-            .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
-            .resize(size(cols, rows)?)
-            .map_err(|e| failure(ErrorCode::ResizeFailed).caused_by(std::io::Error::other(e)))
-    }
-
-    pub fn read(&mut self) -> Result<Output> {
-        let mut bytes = Vec::new();
-        let mut error = self
-            .write_error
-            .lock()
-            .map_err(|_| failure(ErrorCode::LockPoisoned))?
-            .take();
-        let mut eof = false;
-        for _ in 0..QUEUE {
-            match self.output.try_recv() {
-                Ok(ReadEvent::Bytes(chunk)) => bytes.extend(chunk),
-                Ok(ReadEvent::Error(message)) => {
-                    error = Some(message);
-                    break;
-                }
-                Err(TryRecvError::Empty) => break,
-                Err(TryRecvError::Disconnected) => {
-                    eof = true;
-                    break;
+        Ok(match kind {
+            Kind::Console => {
+                let (executable, arguments) = console::shell(&environment)?;
+                Self {
+                    executable,
+                    arguments,
+                    directory: launch.home.clone(),
+                    environment: console::with_bin_first(
+                        environment,
+                        &console::package_bin(&interpreter)?,
+                    )?,
+                    role: ProcessRole::Console,
                 }
             }
-        }
-        if self.exit_code.is_none() {
-            self.exit_code = self
-                .child
-                .try_wait()
-                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
-                .map(|status| status.exit_code());
-            if self.exit_code.is_some() {
-                // ConPTY signals EOF only after its master closes. Close on a separate
-                // thread while polling drains the bounded output queue.
-                self.close_master();
-            }
-        }
-        let joined = self.workers.reap_finished()?;
-        if self.exit_code.is_some() && eof && joined && !self.tracked_exit {
-            self.diagnostics.finish(
-                self.process,
-                self.exit_code.map(|c| c as i32),
-                ProcessPhase::Exited,
-            );
-            self.tracked_exit = true;
-        }
-        if let Some(failure) = &error {
-            self.diagnostics.failure(failure.clone());
-        }
-        // Drain the PTY before reporting exit so the final screen is preserved.
-        Ok(Output {
-            bytes,
-            exit_code: if eof && joined { self.exit_code } else { None },
-            error,
+            Kind::Python => Self {
+                executable: interpreter,
+                arguments: Vec::new(),
+                directory: launch.home.clone(),
+                environment,
+                role: ProcessRole::Repl,
+            },
+            Kind::Tui => Self {
+                executable: interpreter,
+                arguments: ["-m", "cadrumo.entrypoints.tui"]
+                    .into_iter()
+                    .map(OsString::from)
+                    .collect(),
+                directory: launch.working_directory.clone(),
+                environment,
+                role: ProcessRole::Tui,
+            },
         })
     }
+}
 
-    fn close_master(&mut self) {
-        self.writer_stopped.store(true, Ordering::Release);
-        if let Some(master) = self.master.take() {
-            self.workers.closer = Some(thread::spawn(move || drop(master)));
-        }
+/// What the registry needs from a session to replace and settle it.
+pub trait Settle {
+    fn live(&self) -> bool;
+    fn request_stop(&mut self);
+    fn await_stop(&mut self, deadline: Instant) -> Result<()>;
+}
+
+impl Settle for Session {
+    fn live(&self) -> bool {
+        Session::live(self)
     }
-
-    fn settle(&mut self, deadline: Instant) -> Result<()> {
-        self.stopped.store(true, Ordering::Release);
-        self.writer_stopped.store(true, Ordering::Release);
-        if self.exit_code.is_none() {
-            self.exit_code = self
-                .child
-                .try_wait()
-                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
-                .map(|status| status.exit_code());
-        }
-        if self.exit_code.is_none() {
-            self.child.kill().map_err(|e| {
-                failure(ErrorCode::CleanupFailed).caused_by(std::io::Error::other(e))
-            })?;
-        }
-        // The reader keeps draining (discarding after cancellation) while ConPTY closes.
-        self.close_master();
-        while self.exit_code.is_none() {
-            self.exit_code = self
-                .child
-                .try_wait()
-                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
-                .map(|status| status.exit_code());
-            if self.exit_code.is_none() {
-                if Instant::now() >= deadline {
-                    return Err(failure(ErrorCode::CleanupFailed));
-                }
-                thread::sleep(Duration::from_millis(5));
-            }
-        }
-        self.workers.join_until(deadline)
+    fn request_stop(&mut self) {
+        Session::request_stop(self);
     }
+    fn await_stop(&mut self, deadline: Instant) -> Result<()> {
+        Session::await_stop(self, deadline)
+    }
+}
 
-    pub fn stop(&mut self) -> Result<()> {
-        match self.settle(Instant::now() + STOP_TIMEOUT) {
-            Ok(()) => {
-                if !self.tracked_exit {
-                    self.diagnostics.finish(
-                        self.process,
-                        self.exit_code.map(|c| c as i32),
-                        ProcessPhase::Terminated,
-                    );
-                    self.tracked_exit = true;
-                }
-                Ok(())
-            }
-            Err(error) => {
-                let primary = self.cleanup_error.get_or_insert_with(|| error.clone());
-                self.diagnostics.failure(error);
-                Err(primary.clone())
-            }
+struct Entry<S> {
+    id: u64,
+    session: S,
+}
+
+/// At most one session per kind. A session that failed to settle stays owned
+/// in its slot until a later settlement succeeds.
+pub struct Registry<S> {
+    next: u64,
+    slots: [Option<Entry<S>>; 3],
+}
+
+impl<S> Default for Registry<S> {
+    fn default() -> Self {
+        Self {
+            next: 0,
+            slots: [None, None, None],
         }
     }
 }
 
-impl Drop for Session {
-    fn drop(&mut self) {
-        if let Err(error) = self.stop() {
-            // Normal window closure retains the Session on failure. Unexpected host
-            // destruction cannot establish joined cleanup; do not report it as success.
-            self.diagnostics.failure(error);
+impl<S: Settle> Registry<S> {
+    /// Starts `kind`, replacing a session that exited or was stopped. A live
+    /// session of the same kind is refused.
+    pub fn open(&mut self, kind: Kind, start: impl FnOnce() -> Result<S>) -> Result<u64> {
+        let slot = &mut self.slots[kind.slot()];
+        if let Some(entry) = slot {
+            if entry.session.live() {
+                return Err(failure(ErrorCode::SessionUnavailable));
+            }
+            entry.session.request_stop();
+            entry.session.await_stop(Instant::now() + SETTLE_TIMEOUT)?;
+            *slot = None;
         }
+        let session = start()?;
+        self.next += 1;
+        *slot = Some(Entry {
+            id: self.next,
+            session,
+        });
+        Ok(self.next)
+    }
+
+    /// The current session `id`; a replaced or closed id is unavailable.
+    pub fn session(&mut self, id: u64) -> Result<&mut S> {
+        self.slots
+            .iter_mut()
+            .flatten()
+            .find(|entry| entry.id == id)
+            .map(|entry| &mut entry.session)
+            .ok_or_else(|| failure(ErrorCode::SessionUnavailable))
+    }
+
+    /// Settles session `id` and forgets it; it stays owned if settlement fails.
+    pub fn close(&mut self, id: u64) -> Result<()> {
+        let slot = self
+            .slots
+            .iter_mut()
+            .find(|slot| slot.as_ref().is_some_and(|entry| entry.id == id))
+            .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?;
+        if let Some(entry) = slot {
+            entry.session.request_stop();
+            entry.session.await_stop(Instant::now() + SETTLE_TIMEOUT)?;
+        }
+        *slot = None;
+        Ok(())
+    }
+
+    /// Settles every kind under one shared deadline. Every kind is attempted
+    /// even when another fails; failed sessions stay owned and their failures
+    /// are returned in kind order.
+    pub fn close_all(&mut self) -> Vec<ApplicationError> {
+        for entry in self.slots.iter_mut().flatten() {
+            entry.session.request_stop();
+        }
+        let deadline = Instant::now() + SETTLE_TIMEOUT;
+        let mut failures = Vec::new();
+        for slot in &mut self.slots {
+            if let Some(entry) = slot {
+                match entry.session.await_stop(deadline) {
+                    Ok(()) => *slot = None,
+                    Err(error) => failures.push(error),
+                }
+            }
+        }
+        failures
+    }
+
+    #[cfg(test)]
+    fn occupied(&self) -> Vec<Kind> {
+        Kind::ALL
+            .into_iter()
+            .filter(|kind| self.slots[kind.slot()].is_some())
+            .collect()
     }
 }
 
 pub struct TerminalState {
     pub launch: Launch,
-    pub session: Mutex<Option<Session>>,
+    registry: Mutex<Registry<Session>>,
 }
 
 impl TerminalState {
-    pub fn stop(&self) -> Result<()> {
-        let mut owned = self
-            .session
-            .lock()
-            .map_err(|_| failure(ErrorCode::LockPoisoned))?;
-        if let Some(session) = owned.as_mut() {
-            session.stop()?;
+    pub fn new(launch: Launch) -> Self {
+        Self {
+            launch,
+            registry: Mutex::new(Registry::default()),
         }
-        owned.take();
-        Ok(())
+    }
+
+    fn registry(&self) -> Result<MutexGuard<'_, Registry<Session>>> {
+        self.registry
+            .lock()
+            .map_err(|_| failure(ErrorCode::LockPoisoned))
+    }
+
+    pub fn open(&self, kind: Kind, cols: u16, rows: u16, sink: Sink) -> Result<u64> {
+        let program = Program::for_kind(&self.launch, kind)?;
+        self.registry()?.open(kind, || {
+            Session::start(program, cols, rows, sink, self.launch.diagnostics.clone())
+        })
+    }
+
+    pub fn with_session<T>(
+        &self,
+        id: u64,
+        action: impl FnOnce(&mut Session) -> Result<T>,
+    ) -> Result<T> {
+        action(self.registry()?.session(id)?)
+    }
+
+    pub fn close(&self, id: u64) -> Result<()> {
+        self.registry()?.close(id)
+    }
+
+    /// Settles every session; used on window close, page load and host exit.
+    /// Returns the first failure; later ones go to diagnostics directly.
+    pub fn stop(&self) -> Result<()> {
+        let mut failures = self.registry()?.close_all().into_iter();
+        let first = failures.next();
+        for error in failures {
+            self.launch.diagnostics.failure(error);
+        }
+        first.map_or(Ok(()), Err)
+    }
+
+    /// A new top-frame document cannot reach the previous document's
+    /// channels, so its sessions are settled; the shell opens new ones.
+    pub fn page_load(&self, event: PageLoadEvent) {
+        if event == PageLoadEvent::Started
+            && let Err(error) = self.stop()
+        {
+            self.launch.diagnostics.failure(error);
+        }
     }
 }
 

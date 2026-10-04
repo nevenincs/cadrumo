@@ -10,6 +10,7 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { buildPath } from "../scripts/build-paths.mjs";
 import {
+  docsOrigin,
   identity,
   profile,
   server,
@@ -105,5 +106,71 @@ test("generated identity, server settings and artifact paths have no product fal
     if (originalConfig === undefined) delete process.env.CADRUMO_BUILD_CONFIG;
     else process.env.CADRUMO_BUILD_CONFIG = originalConfig;
     rmSync(root, { recursive: true });
+  }
+});
+
+test("the shell policy frames only the documentation origin of the target platform", () => {
+  const template = JSON.parse(
+    readFileSync(
+      new URL("../src-tauri/tauri.conf.json.in", import.meta.url),
+      "utf8",
+    ),
+  );
+  const product = {
+    name: "Configured application",
+    application_id: "org.example.configured",
+    version: "3.2.1",
+  };
+  const frames = (config) =>
+    config.app.security.csp
+      .split(";")
+      .map((directive) => directive.trim())
+      .filter((directive) => directive.startsWith("frame-src"));
+  assert.deepEqual(frames({ app: template.app }), ["frame-src 'none'"]);
+  for (const [platform, https, origin] of [
+    ["win32", false, "http://cadrumo-docs.localhost"],
+    ["win32", true, "https://cadrumo-docs.localhost"],
+    ["linux", false, "cadrumo-docs://localhost"],
+    ["linux", true, "cadrumo-docs://localhost"],
+  ]) {
+    const configured = {
+      ...template,
+      app: {
+        ...template.app,
+        windows: [{ ...template.app.windows[0], useHttpsScheme: https }],
+      },
+    };
+    assert.equal(docsOrigin(configured.app.windows[0], platform), origin);
+    const config = tauriConfig(
+      configured,
+      product,
+      "assets",
+      "icons",
+      platform,
+    );
+    assert.deepEqual(frames(config), [`frame-src ${origin}`]);
+    const rest = (policy) =>
+      policy
+        .split(";")
+        .map((d) => d.trim())
+        .filter((d) => !d.startsWith("frame-src"));
+    assert.deepEqual(
+      rest(config.app.security.csp),
+      rest(template.app.security.csp),
+    );
+  }
+  for (const csp of [
+    "default-src 'self'",
+    "default-src 'self'; frame-src *",
+    "frame-src 'none'; frame-src 'none'",
+  ]) {
+    const broken = {
+      ...template,
+      app: { ...template.app, security: { ...template.app.security, csp } },
+    };
+    assert.throws(
+      () => tauriConfig(broken, product, "assets", "icons", "win32"),
+      /must frame nothing/,
+    );
   }
 });

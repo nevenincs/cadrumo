@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a315071b9b0ff625907703312805c028a317f3c4ddef90da424f85f751f7d892'
+body_hash: 'sha256:f531df0a7d07396219e4d7131760cd2f4426d8bf8a8ea92e6870fd54362619d7'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -263,6 +263,37 @@ related:
 - `S09` `verify:` `npm run check` -> `pass`
 - `S09` `verify:` `npx playwright test` -> `pass`
 - `S09` `verify:` `mutation: terminal_open argument renamed back to output -> tsc rejects` -> `pass`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/credit.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/session.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S04` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S04` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S04` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S04` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S04` `verify:` `groupb integrated cargo test native/application` -> `pass`
+- `S04` `verify:` `groupb integrated relocated storage-root test with explicit root override, and pin-kept mutant fails` -> `pass`
+- `S04` `by:` `groupb-integration`
+- `S05` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S05` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S05` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S05` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S05` `verify:` `groupb integrated node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `groupb integrated docs staged test with CADRUMO_DESKTOP_DOCS_ROOT` -> `pass`
+- `S05` `by:` `groupb-integration`
+- `S06` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S06` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S06` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S06` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S06` `verify:` `groupb integrated logs live rotation and lines tests in isolation` -> `pass`
+- `S06` `by:` `groupb-integration`
+- `S07` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S07` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S07` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S07` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S07` `verify:` `groupb integrated platform cargo test --locked with and without webview2` -> `pass`
+- `S07` `verify:` `groupb integrated platform C consumers static and dll linked against the snapshot crate built --locked without webview2` -> `pass`
+- `S07` `verify:` `groupb integrated platform cargo clippy -D warnings: 5 missing_safety_doc in HEAD lib.rs, identical on pure HEAD` -> `fail`
+- `S07` `by:` `groupb-integration`
 
 ## Notes
 
@@ -296,3 +327,4 @@ related:
 - `S09` Independent review findings fixed: critical bridge shortcut allow-list, ack accounting from the first frame and on refusal, close ordering, slice writes, no silent paste drop, separator/menu/settings accessibility, bounded selection and link schemes, rail roving state, palette grouping. Keyboard-opened docs menus need the bridge to report pointer origin (S14).
 - `S14` A fresh desktop build is blocked: the casilla reference hook fails registry validation (modelo 720 unknown bindings, stale form layout); the first attempt failed on another session's in-progress OsLockState import. Real-build verification used the S03 scratch build with the two changed scripts overlaid; `CADRUMO_DOCS_SKIP_SEQUENCE_CHECK=1` in scratch only.
 - `S14` Chromium reports a keyboard-opened contextmenu with pointerType mouse and detail 0, like a right-click; only button differs (-1 vs 2), so pointer is derived from pointerType empty or button -1.
+- `S04` groupb integration: live-only Credit::sent, Session::delivered and Session::paused gated on live-package-tests (clippy without the feature failed on dead code); relocated test rewritten to an explicit canonical root override with a pin-removal falsifier

@@ -16,3 +16,7 @@ export function profile(configuration?: string): {
 };
 export function artifactFile(): string;
 export function executable(): string;
+export function docsOrigin(
+  window: { useHttpsScheme?: boolean },
+  platform?: string,
+): string;
