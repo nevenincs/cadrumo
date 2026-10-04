@@ -13,7 +13,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:636b015500b37eb22b6aaf74be4300018226e8283a4775be5bd3909c9af6d4bc'
+body_hash: 'sha256:73223067fba8795140d1b10629548a381c1433da73a8ecd53c53e9276b921e61'
 ---
 
 # `desktop-shell` plan
@@ -128,6 +128,8 @@ Questions for the user and the RUNTIME-MANAGEMENT session: which process owns th
 - [ ] `S11` - Record the desktop shell in the native contract: URI scheme and runtime-computed origins per platform, docs apex layout and docs manifest membership in the package manifest, CSP pair, launch token and channel interceptor, minimum WebView2 runtime (ICoreWebView2_22 and ICoreWebView2Settings3), pinned storage root projection, session and transport bounds and frame encoding, log aggregation sources and limits, the held runtime-management dependency, the open per-user storage default, the multi-webview contingency, and the packaged test procedure; `native/CONTRACT.md desktop section`.
 - [ ] `S12` - HELD pending the user's ruling on runtime management, a required dependency owned by the CADRUMO-RUNTIME-MANAGEMENT workstream: integrate the TUI tab with the chosen runtime manager (availability presentation beyond the TUI's own exit line, start or attach, retry policy, and relay of runtime authentication prompts and timeouts); no executor starts this Step before the ruling and the owning record is linked; `to be assigned after the ruling`.
 - [ ] `S13` - Stage the Tauri cadrumo.exe into the native package root beside python.exe through a separate desktop declaration in the platform mapping fed by the desktop artifact locator (never the entrypoints map, which is reserved for C-host console scripts), copied in assemble.py before manifest hashing at the same spot as the entrypoint copy and listed in startup_files, with a build dependency on desktop-host-build and the CADRUMO_DESKTOP_EXECUTABLE registration rule reconciled; re-read the shared packaging files before every patch and preserve the CADRUMO-BUILD-RUNTIME entrypoint lines; `native/platforms/windows-x64.json desktop entry, dev/packaging/native/layout.py, dev/packaging/native/assemble.py, native/cmake/Packaging.cmake, native/CONTRACT.md registration rule, dev/packaging/tests`.
+- [ ] `S14` - Extend the desktop docs bridge for the accepted v2 layout: shell to docs search with a bounded query and limit answered by docs to shell search-results carrying plain-text excerpts with match ranges and same-origin docs URLs only, reusing the cadrumo-docs.js controller tiering; command navigate refused for anything outside the docs origin and command home resolved to the active language entry from the docs manifest; relay Ctrl or Cmd+K and the sidebar Search docs trigger as shortcut palette.open in the capture phase; no token ever reaches the bridge; `docs/_static/cadrumo-desktop-bridge.js, docs/_static/cadrumo-docs.js, dev/docs/tests/test_docs_desktop_flavor.py`.
+- [ ] `S15` - Enforce one desktop GUI instance per user across versions, keyed by the identity family and channel and never by install path or version, handing a second launch activation to the running window and exiting 0, with the headless CLI passthrough exempt and never contending for the lock, per the accepted runtime-manager and desktop-shell decisions; `native/desktop/src-tauri/src/shell/, native/desktop/src-tauri/src/main.rs, native/desktop/src-tauri/Cargo.toml`.
 
 ## Parallelization
 
