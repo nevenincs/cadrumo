@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:265645b8121c1543c74cc0375ceb573bfdae48f1ae2d7db7fb4decdb8c958e70'
+body_hash: 'sha256:06872ca141420e1b81dd5ff79846e557ccd805355a7ab78bf645cea78f6375b2'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -182,6 +182,10 @@ Resolved fixture premises. Five test-only paths establish registered credential 
 ### modelo-cli-owned-premises | medium | Real admitted scenarios retain financial and safe refusal oracles
 
 Resolved fixture premises on13 test-only paths. The shared seeder registers genuine password custody and retains its exact encrypted setup oracle separately from joined human frontend admission. Public calls keep the existing no-seed path; native helper callers retain their actual native path. Private Modelo, M303 secure evidence, amendment, period and invoice direction scenarios now invoke the seeded registered runtime. Unknown selections assert the deliberate safe operation-denied refusal without exposing candidate IDs. Reciprocal capital-goods cases assert the independent registered catalogue message and declared identity context. All four locale action assertions retain the defining current wording. The controlled note-bearing calculation remains BORRADOR with no copied verification grant; genuine verify returns its note-specific refusal, default/explicit export and file retain their earlier state guards, no artifact or filed pointer appears, and clearing/recalculation/verification/export succeeds. All16 owned paths including the separately committed3 public-detail paths pass scoped Ruff/format/ty and are frozen. Canonical latest per-node union is133PASS/0FAIL/0SKIP with qualified reuse across recorded runs, rather than a relabeled whole-suite pass. Original failed receipts and call-order diagnoses remain preserved. Six owning import inventories regenerate/check with zero byte changes; no checker policy or exemptions change. Native installed/provider/desktop/destination proof remains separate.
+
+### portable-kdf-defining-owner | high | Cross-package private fixture imports removed without changing the behavior under test
+
+Resolved source ownership defect. The first frozen configured aggregate passed11 gates and failed import authority with17 private custody module/symbol accesses in the CLI fixture. The joined KDF worker and public test context manager now live as defining implementations in the narrow custody test package; all three consumers import that public manager directly, and no CLI facade, forwarding alias, suppression or checker exemption remains. Parser/crypto/frame/join/context-manager bodies have identical AST to the original5737 fixture. Four files pass scoped Ruff/format/ty and eight actual human/API/AEAT/guard/detector/offline-seal cases pass47.49s. The supported configured UV import gate passes authoritatively with15/15 contracts,4368/4368 production modules loaded and zero hard findings; source snapshots match. The earlier plain-Python retry is retained as unavailable because its tool PATH omitted lint-imports, despite zero hard findings. Original142-case proof remains qualified by behavior-preserving ownership relocation; current native action fingerprint refresh is still required because its declared input scope includes tests, although shipping bytes are unchanged. Final whole configured aggregate and native/provider/landing obligations remain separate.
 
 ## Recommendations
 

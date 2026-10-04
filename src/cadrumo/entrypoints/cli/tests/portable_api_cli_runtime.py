@@ -17,11 +17,12 @@ from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.persistence.storage.custody.automation_retirement import retire_profile_automation
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject, changed
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
+from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentProposal, EnrollmentStage
 
 from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
-from .portable_human_cli_runtime import portable_human_cli_runtime, portable_password_custody
+from .portable_human_cli_runtime import portable_human_cli_runtime
 
 
 @dataclass(frozen=True)

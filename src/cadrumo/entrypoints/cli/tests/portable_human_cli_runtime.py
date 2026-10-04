@@ -15,7 +15,7 @@ import sys
 import time
 import traceback
 from collections.abc import AsyncIterator, Callable, Iterator, Sequence
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import Context, copy_context
 from dataclasses import dataclass
@@ -27,9 +27,7 @@ from typing import Unpack, cast, override
 from uuid import UUID, uuid4
 
 import pytest
-from argon2.exceptions import Argon2Error
 from click.testing import Result
-from cryptography.exceptions import InvalidTag
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
@@ -42,21 +40,8 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from cadrumo.adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo.adapters.local_runtime.worker_transport import WorkerChannel
-from cadrumo.adapters.persistence.storage.custody import kdf_supervision
-from cadrumo.adapters.persistence.storage.custody._kdf_codec import (
-    KDF_FAILED_FRAME,
-    KDF_FRAME_CONTROL,
-    KDF_FRAME_DEK,
-    canonical_frame_bytes,
-)
-from cadrumo.adapters.persistence.storage.custody._kdf_operations import (
-    UNWRAP_OPERATIONS,
-    WRAP_OPERATIONS,
-    KdfOperation,
-)
-from cadrumo.adapters.persistence.storage.custody._kdf_worker import _derive_calibration, _parse_request, _unwrap, _wrap
-from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     activate_session,
     current_active_bucket_session,
@@ -102,78 +87,6 @@ from .._profile_authentication_contract import profile_authentication_posture
 from ..command_specs import COMMAND_GRAPH
 from ..config import runtime_automation_request
 from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
-
-
-class _JoinedKdfWorker(_SupervisedKdfWorker):
-    """Synthetic process custody, exact password codec/Argon2id/AEAD and wire checks."""
-
-    pool: ThreadPoolExecutor
-    response: Future[tuple[int, bytes]] | None = None
-
-    @override
-    def __enter__(self) -> _JoinedKdfWorker:
-        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="portable-password-custody")
-        return self
-
-    @override
-    def __exit__(self, exc_type: object, _exc_value: object, _traceback: object) -> None:
-        try:
-            self.settle()
-        except BaseException as error:
-            if self.response is not None and not self.response.done():
-                error.__dict__["portable_kdf_cleanup_owner"] = self
-                error.add_note("Joined test KDF cleanup remains owned; retry through portable_kdf_cleanup_owner.settle")
-            raise
-
-    def settle(self) -> None:
-        """Retain the exact computation until a finite join succeeds, including failures."""
-        try:
-            if self.response is not None:
-                self.response.result(timeout=20)
-        finally:
-            if self.response is None or self.response.done():
-                self.pool.shutdown(wait=True)
-
-    @override
-    def _write_request(self, payload: dict[str, object]) -> None:
-        if self.response is not None:
-            raise AssertionError("one joined KDF owner performs only one computation")
-        encoded = canonical_frame_bytes(payload)
-
-        def compute() -> tuple[int, bytes]:
-            request = _parse_request(encoded)
-            operation = request["operation"]
-            try:
-                if operation in WRAP_OPERATIONS:
-                    return KDF_FRAME_CONTROL, _wrap(request, recovery=str(operation).startswith("recovery-"))
-                if operation in UNWRAP_OPERATIONS:
-                    return KDF_FRAME_DEK, _unwrap(request, recovery=str(operation).startswith("recovery-"))
-                if operation == KdfOperation.CALIBRATE:
-                    return KDF_FRAME_CONTROL, _derive_calibration(request)
-                raise AssertionError("the owning KDF parser accepted an unknown operation")
-            except (Argon2Error, InvalidTag, ValueError, TypeError, UnicodeError):
-                return KDF_FRAME_CONTROL, KDF_FAILED_FRAME
-
-        self.response = self.pool.submit(compute)
-
-    @override
-    def _read_response_frame(self) -> tuple[int, bytes]:
-        if self.response is None:
-            raise AssertionError("the joined KDF owner requires its request first")
-        return self.response.result(timeout=max(0, self._deadline - time.monotonic()))
-
-    @override
-    def _require_clean_worker_exit(self) -> None:
-        if self.response is None or not self.response.done():
-            raise AssertionError("the joined KDF computation has not settled")
-
-
-@contextmanager
-def portable_password_custody() -> Iterator[None]:
-    """Keep real password cryptography observable without starting an OS child."""
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(kdf_supervision, "_SupervisedKdfWorker", _JoinedKdfWorker)
-        yield
 
 
 class _Buffer:

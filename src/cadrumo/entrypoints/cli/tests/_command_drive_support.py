@@ -22,6 +22,7 @@ from uuid import UUID
 
 from pydantic import SecretStr
 
+from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
@@ -39,7 +40,7 @@ from ..command_graph import CommandSpecGraph
 from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..command_shared_contracts import DefaultKind, DeferredTarget
 from ..command_spec import CommandSpec
-from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime, portable_password_custody
+from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
 
 PROBE_PROFILE_LABEL: Final = "Governed fact declaration probe"
 PROBE_PROFILE_TAX_ID: Final = "12345678Z"
