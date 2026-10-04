@@ -267,6 +267,7 @@ def _aeat_sync_documents(
                             row.work_unit_id or "",
                             row.evidence_kind.value if row.evidence_kind is not None else "",
                             row.evidence_id or "",
+                            row.calculation_revision_id or row.comparison_id or "",
                         )
                     )
                 ),

@@ -467,6 +467,7 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisory_count: NonNegativeInt = 0
     comparison_id: Hex64Str | None = None
+    calculation_revision_id: Hex64Str | None = None
     work_unit_id: Hex64Str | None = None
     evidence_id: Hex64Str | None = None
     historical: bool = False

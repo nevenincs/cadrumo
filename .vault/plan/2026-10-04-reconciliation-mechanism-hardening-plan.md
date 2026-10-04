@@ -16,7 +16,7 @@ related:
   - '[[2026-10-04-live-reconciliation-repair-audit]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:08cdf7f753c863558293d298412bae6380faab827a63fc95d88efa96b32b818d'
+body_hash: 'sha256:619b34f0ebd8809ca7b9f830502fc5488e9df8ce0eb7390d872e68f3ee59ba12'
 ---
 
 # Reconciliation mechanism hardening
@@ -34,7 +34,7 @@ The user explicitly directed iterating through justificante, declaration, workin
 - [x] `S02` - Verify and repair filing-chain confirmation contradiction replay and evidence-enrichment transitions; `src/cadrumo/application/modelo/filing_chain_reconciliation.py live persistence integration and chain tests`.
 - [x] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
 - [x] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
-- [ ] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
+- [x] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
 
 ## Parallelization
 

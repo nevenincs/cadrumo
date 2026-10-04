@@ -257,7 +257,16 @@ def _duplicates(
     _unique((f.private_identity for f in notifications), "notification identities")
     _unique((_natural(f.row) for f in comparison), "comparison addresses")
     _unique(
-        ((_natural(f.row), f.row.work_unit_id, f.row.evidence_kind, f.row.evidence_id) for f in reconciliation),
+        (
+            (
+                _natural(f.row),
+                f.row.work_unit_id,
+                f.row.evidence_kind,
+                f.row.evidence_id,
+                f.row.calculation_revision_id or f.row.comparison_id,
+            )
+            for f in reconciliation
+        ),
         "reconciliation identities",
     )
 

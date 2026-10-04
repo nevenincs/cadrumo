@@ -78,10 +78,27 @@ def test_distinct_evidence_and_work_units_cannot_hide_existing_drift() -> None:
 
 
 def test_repeat_comparison_supersedes_only_same_work_and_evidence() -> None:
-    earlier = _record()
+    earlier = _record().model_copy(update={"calculation_revision_id": "a" * 64})
     later = earlier.model_copy(update={"bucket_event_id": "c" * 64, "reconciled_at": _NOW + timedelta(seconds=1)})
     (row,) = _projection((later, earlier)).reconciliation
     assert row.comparison_id == later.bucket_event_id
+    assert row.calculation_revision_id == earlier.calculation_revision_id
+
+
+@pytest.mark.parametrize("revision", [None, "d" * 64])
+def test_different_or_unknown_calculation_cannot_hide_prior_drift(revision: str | None) -> None:
+    earlier = _record().model_copy(update={"calculation_revision_id": "a" * 64 if revision else None})
+    later = earlier.model_copy(
+        update={
+            "calculation_revision_id": revision,
+            "bucket_event_id": "c" * 64,
+            "diffs": (),
+            "reconciled_at": _NOW + timedelta(seconds=1),
+        }
+    )
+    rows = _projection((earlier, later)).reconciliation
+    assert len(rows) == 2
+    assert any(row.diffs for row in rows)
 
 
 def test_history_without_source_identity_does_not_assume_the_same_evidence() -> None:

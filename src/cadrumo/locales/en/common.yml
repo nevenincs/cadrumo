@@ -1185,6 +1185,8 @@ tui:
     reconciliation:
       historical: 'Stored comparison; current calculation has not been rechecked.'
       identity: 'Work unit: %{work} | Evidence: %{evidence}'
+      calculation_revision: 'Compared calculation: %{revision}'
+      calculation_revision_unknown: 'Compared calculation revision was not recorded.'
       incomplete: Not fully compared
       matches: No differences in compared fields
       advisories_withheld: '%{count} advisories withheld pending localization.'

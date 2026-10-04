@@ -1212,6 +1212,8 @@ tui:
     reconciliation:
       historical: 'Mentett összehasonlítás; az aktuális számítás nincs újra ellenőrizve.'
       identity: 'Munkaegység: %{work} | Bizonyíték: %{evidence}'
+      calculation_revision: 'Összehasonlított számítás: %{revision}'
+      calculation_revision_unknown: 'Az összehasonlított számítás verzióját nem rögzítették.'
       incomplete: Nem teljes összehasonlítás
       matches: Nincs eltérés az összehasonlított mezőkben
       advisories_withheld: '%{count} figyelmeztetés fordításra vár.'

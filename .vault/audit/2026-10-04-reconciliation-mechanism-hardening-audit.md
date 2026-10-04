@@ -5,48 +5,24 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac5637a6bf763f98f6df9d0fbc0c7c7807b4720afda1a709032b6b9c4eb6f171'
+body_hash: 'sha256:ffdc2fdb06e2d3d427f89cd9d613c6a6d1471e850e7744d4e8ecb333100fcece'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace reconciliation-mechanism-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
-# `reconciliation-mechanism-hardening` audit: `{title}`
+# Reconciliation mechanism hardening audit
 
 ## Scope
+
+## Scope
+
+Corrective implementation under the approved six-Step reconciliation plan, reviewed independently by review_repairs. Scope covers justificante/declaration revision provenance, working-calculation official evidence, filing-chain replay, cross-model completeness and operator rendering, IVA lifecycle freshness, and installed CLI/TUI readback. Existing accepted reconciliation, filing-chain, immutable-history and IVA authority decisions govern the repairs. Unrelated concurrent registry/export/quality changes are outside this audit.
 
 ## Scope
 
 Corrective implementation under the approved six-Step reconciliation plan. Independent review by review_repairs covers working-calculation official evidence, cross-model operand completeness and filing-chain replay. Remaining receipt/declaration provenance, IVA lifecycle and integrated installed-runtime acceptance remain pending. Changes are evaluated against existing accepted reconciliation, filing-chain, immutable-history and IVA authority decisions. Unrelated concurrent registry/export changes are outside this audit.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### {topic} | {level} | {summary}
-
-     followed by a paragraph carrying the detail. {topic} is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### official-evidence | low | S01 reviewed and passed
 
@@ -80,8 +56,28 @@ Wallet evidence retains its capture timestamp and is reconciled against current 
 
 The manually started runtime served all three retained historical records via the actual CLI. Importing the retained real 2024 Q1 receipt with an explicit saved revision persisted a fourth comparison with the exact ID; CLI disclosed identity-only coverage because no Modelo 303 receipt-total mapping exists. Encrypted readback confirms unchanged local calculation, no local filing creation, two identical grounded 14-difference declaration comparisons, one exact-ID record and three older records whose missing IDs remain unknown. The first installed TUI pilot exceeded its 90-second root-composition budget; a direct root probe subsequently passed. The longer pilot is still running, so final integrated acceptance remains pending.
 
+### strict-checks | low | All assigned production scopes passed
+
+Worker S04/S05 final evidence: Ruff and formatting, ty, basedpyright (zero errors/warnings), pyrefly (zero errors) and canonical/private/static imports over 31 owned files passed. Root production scopes passed the same applicable type/style checks and canonical private imports; S01/S03 and the subsequent shared formatter scope also passed. These are scoped results, not a repository-wide green claim. The earlier global import gate was unavailable or affected by unrelated generated metadata and concurrent work.
+
+### installed-tui | low | Two subsequent complete runs passed after earlier startup timeouts
+
+A diagnostic-wrapper run and a subsequent uninstrumented installed TUI run both authenticated, constructed the destination catalogue, opened the filed declaration and four reconciliation records, displayed 30 rows, preserved the contradictory-source overview, and verified both local and AEAT values for all 28 historical difference rows. Each declaration comparison contains the same 14 differences; they remain separate because the old records do not identify their local calculation revision. Receipt comparisons correctly remain incomplete for amount comparison. The separate evidence-comparison zone remains unavailable without a local filing/verification source.
+
+The earlier 90-second and 300-second startup timeouts were not explained by a deterministic code failure. No startup reliability fix is claimed; later fresh-runtime acceptance is positive evidence only for the completed runs. Manual-runtime ownership was separately rechecked after an automatic owner won one startup race. CLI readback on the manually launched owner succeeded; its final TUI check is pending.
+
+### integrated-review | low | Reconciliation behavior and contracts passed independent review
+
+Review reused 78 unit and 106 integration cases for AEAT Sync/search, 11 persisted comparison projection cases, the focused exact-revision TUI detail case, the per-mechanism suites and installed acceptance. Review found no unresolved source defect in the assigned correction scope. Final checkpoint awaits the manual-owner TUI result and teardown.
+
+### final-acceptance | low | PASS for all six scopes and manual runtime acceptance
+
+The manual-owner check completed successfully: an explicitly launched runtime remained active while the actual CLI read four records and the uninstrumented installed TUI opened all six zones, the filed declaration and four comparisons, rendered 30 rows and checked all 28 differing local/AEAT values. All three owned runtime processes were then stopped; the temporary PDF was absent. Final root canonical private-import checking covered 11 files, including the TUI regression, with zero findings. Independent final review reports PASS with no unresolved code finding.
+
+All six corrective Steps now have applicable verification. Redacted acceptance lives in `var/reconciliation-check-20261004/verification.txt`, `mechanism-verification.json`, `history-check.json` and `tui-check.json`; exact-ID CLI evidence is `cli-1791131155162873800.txt` and final manual-owner history is `cli-1791131826487806300.txt`. The two earlier startup timeouts remain a disclosed reliability caveat, not a claimed fixed defect. No repository-wide green verdict is made.
+
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+## Recommendations
+
+Keep the existing compensation history and decision stores as the authority; no additional offset ledger was needed. Preserve receipt identity-only advisories where registry totals are unmapped, and unknown operand provenance in older records. Track startup latency/timeouts separately if they recur; do not infer a startup reliability fix from successful comparison runs. Preserve unrelated workspace changes and avoid claiming repository-wide checks passed.

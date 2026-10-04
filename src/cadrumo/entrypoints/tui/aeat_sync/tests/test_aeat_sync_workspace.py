@@ -1598,7 +1598,12 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
     from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
     from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 
-    first = _record().model_copy(update={"source_kind": ModeloReconciliationEvidenceKind.DECLARATION})
+    first = _record().model_copy(
+        update={
+            "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+            "calculation_revision_id": "d" * 64,
+        }
+    )
     second = _record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
     projection = persisted_projection((first, second))
     controller = AeatSyncWorkspaceController(
@@ -1619,3 +1624,10 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
                 detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
                 assert "Stored comparison; current calculation has not been rechecked." in detail
                 assert first.work_unit_id in detail
+                row_key = str(table.ordered_rows[index].key.value)
+                if first.bucket_event_id in row_key:
+                    assert "Compared calculation:" in detail
+                    assert first.calculation_revision_id is not None
+                    assert first.calculation_revision_id in detail
+                else:
+                    assert "Compared calculation revision was not recorded." in detail

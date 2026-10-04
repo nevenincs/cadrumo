@@ -1225,6 +1225,8 @@ tui:
     reconciliation:
       historical: 'Comparación guardada; el cálculo actual no se ha vuelto a comprobar.'
       identity: 'Unidad de trabajo: %{work} | Evidencia: %{evidence}'
+      calculation_revision: 'Cálculo comparado: %{revision}'
+      calculation_revision_unknown: 'No se registró la revisión del cálculo comparado.'
       incomplete: Comparación incompleta
       matches: Sin diferencias en los campos comparados
       advisories_withheld: '%{count} avisos pendientes de traducción.'

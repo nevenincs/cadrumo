@@ -202,6 +202,7 @@ class PublicAeatSyncWorkspaceReconciliationRowV1(BaseModel):
     diffs: tuple[PublicModeloReconciliationDiff, ...]
     advisory_count: int
     comparison_id: str | None
+    calculation_revision_id: str | None
     work_unit_id: str | None
     evidence_id: str | None
     historical: bool

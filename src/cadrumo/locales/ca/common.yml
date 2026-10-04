@@ -1214,6 +1214,8 @@ tui:
     reconciliation:
       historical: 'Comparació desada; el càlcul actual no s’ha tornat a comprovar.'
       identity: 'Unitat de treball: %{work} | Evidència: %{evidence}'
+      calculation_revision: 'Càlcul comparat: %{revision}'
+      calculation_revision_unknown: 'No es va registrar la revisió del càlcul comparat.'
       incomplete: Comparació incompleta
       matches: Sense diferències en els camps comparats
       advisories_withheld: '%{count} avisos pendents de traducció.'

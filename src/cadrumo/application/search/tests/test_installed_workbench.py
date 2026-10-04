@@ -318,7 +318,10 @@ def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identi
         }
     )
     other_work = declaration.model_copy(update={"work_unit_id": "d" * 64, "bucket_event_id": "e" * 64})
-    projection = _projection((receipt, declaration, other_work))
+    other_calculation = declaration.model_copy(
+        update={"calculation_revision_id": "f" * 64, "bucket_event_id": "1" * 64}
+    )
+    projection = _projection((receipt, declaration, other_work, other_calculation))
     snapshot = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
@@ -329,8 +332,8 @@ def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identi
         aeat_sync_admission=_admission("workbench.aeat_sync"),
     )
     response = snapshot.service().search(WorkbenchSearchRequest(query="reconciliation"))
-    assert response.total_matches == 3
-    assert len({result.stable_id for result in response.results}) == 3
+    assert response.total_matches == 4
+    assert len({result.stable_id for result in response.results}) == 4
 
 
 def test_snapshot_projects_modelo_availability_from_the_existing_capability_answer() -> None:

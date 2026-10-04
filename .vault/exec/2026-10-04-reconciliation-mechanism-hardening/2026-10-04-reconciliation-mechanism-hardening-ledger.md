@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:57e912b816e54158115add4ea0500a08fcb0f0ad48ebd148602c37e2641d058f'
+body_hash: 'sha256:e643998e8a3c6424fde530f9aa63cdccce6dc48d6b5e505cea42a37b3d5d4aeb'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `reconciliation-mechanism-hardening` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/application/modelo/pulled_filing_reconcile.py`
 - `S01` `M` `src/cadrumo/application/modelo/verification_model_findings.py`
@@ -120,3 +94,30 @@ related:
 - `S04` `verify:` `Ruff format ty basedpyright pyrefly canonical private static imports` -> `pass`
 - `S04` `verify:` `independent S04 review` -> `pass`
 - `S04` `by:` `receipt_fix`
+- `S06` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/reconciliation_reader.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/tests/test_reconciliation_reader.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S06` `M` `src/cadrumo/application/search/installed_workbench.py`
+- `S06` `M` `src/cadrumo/application/search/tests/test_installed_workbench.py`
+- `S06` `M` `src/cadrumo/application/workbench_generation_public_contracts.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/aeat_sync/screens.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `78 AEAT Sync and search unit tests` -> `pass`
+- `S06` `verify:` `106 AEAT Sync integration tests` -> `pass`
+- `S06` `verify:` `11 persisted comparison readback tests and exact revision TUI detail test` -> `pass`
+- `S06` `verify:` `scoped Ruff format ty basedpyright pyrefly and 11-file canonical private imports` -> `pass`
+- `S06` `verify:` `manual runtime actual CLI exact-ID receipt import and history` -> `pass`
+- `S06` `verify:` `manual runtime installed uninstrumented TUI 4 comparisons 30 rows 28 differences` -> `pass`
+- `S06` `verify:` `encrypted history local calculation unchanged and no local filing created` -> `pass`
+- `S06` `verify:` `independent integrated code and manual-runtime review` -> `pass`
+- `S06` `by:` `root`
+
+## Notes
+
+- `S06` Two earlier TUI startup attempts timed out; later installed runs and final manual-owner acceptance passed. Startup reliability is not claimed fixed.
+- `S06` Repository-wide import gate not green; unrelated generated metadata and concurrent changes excluded.

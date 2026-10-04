@@ -952,6 +952,11 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
                 ]
                 if row.historical:
                     details.insert(0, tr("tui.aeat_sync.reconciliation.historical"))
+                details.append(
+                    tr("tui.aeat_sync.reconciliation.calculation_revision", revision=row.calculation_revision_id)
+                    if row.calculation_revision_id is not None
+                    else tr("tui.aeat_sync.reconciliation.calculation_revision_unknown")
+                )
                 if row.work_unit_id is not None and row.evidence_id is not None:
                     details.append(
                         tr("tui.aeat_sync.reconciliation.identity", work=row.work_unit_id, evidence=row.evidence_id)
