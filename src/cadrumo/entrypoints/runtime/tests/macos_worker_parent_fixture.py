@@ -15,8 +15,8 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime import macos_worker_process
+from cadrumo.adapters.local_runtime.containment_commands import ContainmentCommand, ContainmentCommandResult
 from cadrumo.adapters.local_runtime.macos_worker_process import MacosProcessScope
-from cadrumo.adapters.local_runtime.manager_commands import ManagerCommandResult, NativeManagerCommand
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
 from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
@@ -343,10 +343,10 @@ def _publish_scope(directory: Path, worker: ProfileWorkerProcess) -> dict[str, i
 @contextmanager
 def _registration_barrier(directory: Path) -> Generator[None]:
     """Hold the real launchd acknowledgement before guardian ownership transfers."""
-    original = macos_worker_process.run_manager_command_sync
+    original = macos_worker_process.run_containment_command_sync
 
-    def register(tool: NativeManagerCommand, arguments: tuple[str, ...]) -> ManagerCommandResult:
-        if tool is not NativeManagerCommand.LAUNCHCTL or arguments[:1] != ("bootstrap",):
+    def register(tool: ContainmentCommand, arguments: tuple[str, ...]) -> ContainmentCommandResult:
+        if tool is not ContainmentCommand.LAUNCHCTL or arguments[:1] != ("bootstrap",):
             return original(tool, arguments)
         label = Path(arguments[-1]).name.removesuffix(".plist")
         # Publish the reservation before asking launchd: a lost acknowledgement
@@ -364,7 +364,7 @@ def _registration_barrier(directory: Path) -> Generator[None]:
         return result
 
     with pytest.MonkeyPatch.context() as scheduling:
-        scheduling.setattr(macos_worker_process, "run_manager_command_sync", register)
+        scheduling.setattr(macos_worker_process, "run_containment_command_sync", register)
         yield
 
 

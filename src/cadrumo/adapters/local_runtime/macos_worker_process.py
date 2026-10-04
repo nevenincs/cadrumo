@@ -30,6 +30,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.descriptor_write import write_all
+from .containment_commands import ContainmentCommand, ContainmentCommandResult, run_containment_command_sync
 from .macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
 from .macos_process import (
     MacosProcessIncarnation,
@@ -38,7 +39,6 @@ from .macos_process import (
     read_macos_incarnation,
     read_macos_process,
 )
-from .manager_commands import ManagerCommandResult, NativeManagerCommand, run_manager_command_sync
 from .posix import open_private_namespace, posix_owner_uid
 from .posix_channel import PosixRuntimeChannel
 from .worker_arguments import validated_worker_arguments
@@ -397,7 +397,7 @@ class MacosWorkerHost(Protocol):
         """Return the native owner UID."""
         ...
 
-    def launchctl(self, arguments: tuple[str, ...]) -> ManagerCommandResult:
+    def launchctl(self, arguments: tuple[str, ...]) -> ContainmentCommandResult:
         """Run one bounded launchctl request.
 
         Args:
@@ -405,7 +405,7 @@ class MacosWorkerHost(Protocol):
         """
         ...
 
-    def bootstrap(self, label: str, definition: bytes) -> ManagerCommandResult:
+    def bootstrap(self, label: str, definition: bytes) -> ContainmentCommandResult:
         """Bootstrap a private definition into the GUI domain, deleting it on every path.
 
         Args:
@@ -506,10 +506,10 @@ class _NativeMacosWorkerHost:
     def owner_uid(self) -> int:
         return posix_owner_uid()
 
-    def launchctl(self, arguments: tuple[str, ...]) -> ManagerCommandResult:
-        return run_manager_command_sync(NativeManagerCommand.LAUNCHCTL, arguments)
+    def launchctl(self, arguments: tuple[str, ...]) -> ContainmentCommandResult:
+        return run_containment_command_sync(ContainmentCommand.LAUNCHCTL, arguments)
 
-    def bootstrap(self, label: str, definition: bytes) -> ManagerCommandResult:
+    def bootstrap(self, label: str, definition: bytes) -> ContainmentCommandResult:
         directory, descriptor = self._directory(create=True)
         name = label + _DEFINITION_SUFFIX
         try:
@@ -520,8 +520,8 @@ class _NativeMacosWorkerHost:
                 finally:
                     os.close(file)
                 # launchd keeps the loaded job after its definition file is gone.
-                return run_manager_command_sync(
-                    NativeManagerCommand.LAUNCHCTL, ("bootstrap", f"gui/{posix_owner_uid()}", str(directory / name))
+                return run_containment_command_sync(
+                    ContainmentCommand.LAUNCHCTL, ("bootstrap", f"gui/{posix_owner_uid()}", str(directory / name))
                 )
             finally:
                 os.unlink(name, dir_fd=descriptor)

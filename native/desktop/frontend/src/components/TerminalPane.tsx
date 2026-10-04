@@ -9,7 +9,7 @@ import {
   type TerminalSession,
 } from "../shell/host";
 import { useStrings } from "../shell/strings";
-import { failureMessage } from "../errors";
+import { failureCode } from "../errors";
 
 export type TerminalStatus =
   | { phase: "starting" }
@@ -27,7 +27,6 @@ export type TerminalApi = {
   paste(text: string): void;
 };
 
-const INPUT_LIMIT = 262144;
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 
@@ -108,25 +107,21 @@ export function TerminalPane({
     let session: TerminalSession | null = null;
     let exited = false;
     let mouseTracking = false;
-    let pending = 0;
     let queue = Promise.resolve();
     const status = (next: TerminalStatus) => {
       if (!disposed) live.current.onStatus(kind, next);
     };
 
+    // Input is queued in order and never dropped: the host's write queue
+    // applies backpressure, so even a very large paste arrives whole.
     const send = (bytes: Uint8Array) => {
       const target = session;
       if (!target || disposed) return;
-      if (pending + bytes.length > INPUT_LIMIT) return;
-      pending += bytes.length;
       queue = queue
         .then(() => target.write(bytes))
         .catch((error: unknown) =>
-          status({ phase: "failed", message: failureMessage(error) }),
-        )
-        .finally(() => {
-          pending -= bytes.length;
-        });
+          status({ phase: "failed", message: failureCode(error) }),
+        );
     };
 
     const start = () => {
@@ -139,7 +134,7 @@ export function TerminalPane({
           if (event.type === "data") {
             // Acknowledge only what xterm has drawn: the host pauses the PTY
             // instead of dropping output when the view falls behind.
-            term.write(event.bytes, () => session?.ack(event.bytes.length));
+            term.write(event.bytes, event.drawn);
           } else if (event.type === "started") {
             status({ phase: "running" });
           } else if (event.type === "exited") {
@@ -173,7 +168,7 @@ export function TerminalPane({
             status({ phase: "unavailable" });
           } else {
             exited = true;
-            status({ phase: "failed", message: failureMessage(error) });
+            status({ phase: "failed", message: failureCode(error) });
           }
         });
     };
@@ -244,7 +239,9 @@ export function TerminalPane({
       modes.dispose();
       modesOff.dispose();
       resized.dispose();
-      void queue.then(() => session?.close());
+      // Close at once: closing stops any write still waiting on the host's
+      // queue, so it cannot hold the session open.
+      void session?.close().catch(() => undefined);
       term.dispose();
       terminal.current = null;
     };

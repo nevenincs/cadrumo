@@ -22,6 +22,7 @@ from cadrumo.application.runtime.contracts import RuntimePeer, RuntimeRefusalCod
 from cadrumo.core import descriptor_write
 
 from .. import macos_worker_process
+from ..containment_commands import ContainmentCommandResult
 from ..macos_login import MacosPeerAuditToken
 from ..macos_process import MacosProcessIncarnation, MacosProcessObservation
 from ..macos_worker_process import (
@@ -36,7 +37,6 @@ from ..macos_worker_process import (
     parse_macos_job_print,
     stale_macos_worker_markers,
 )
-from ..manager_commands import ManagerCommandResult
 from ..posix_channel import PosixRuntimeChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -361,29 +361,29 @@ class _Host:
     def owner_uid(self) -> int:
         return _UID
 
-    def launchctl(self, arguments: tuple[str, ...]) -> ManagerCommandResult:
+    def launchctl(self, arguments: tuple[str, ...]) -> ContainmentCommandResult:
         self.events.append(("launchctl", *arguments))
         action, target = arguments
         label = target.rsplit("/", 1)[1]
         job = self.jobs.get(label)
         if action == "print":
             if job is None:
-                return ManagerCommandResult(113, "")
+                return ContainmentCommandResult(113, "")
             pid = job.pid if job.pid is not None and not self.processes[job.pid].exited.is_set() else None
-            return ManagerCommandResult(0, _printed(target, label, pid=pid, coalition=job.coalition))
+            return ContainmentCommandResult(0, _printed(target, label, pid=pid, coalition=job.coalition))
         assert action == "bootout"
         code = self.bootout_codes.pop(0) if self.bootout_codes else (0 if job is not None else 3)
         if code == 0:
             self.jobs.pop(label, None)
-        return ManagerCommandResult(code, "")
+        return ContainmentCommandResult(code, "")
 
-    def bootstrap(self, label: str, definition: bytes) -> ManagerCommandResult:
+    def bootstrap(self, label: str, definition: bytes) -> ContainmentCommandResult:
         self.events.append(("bootstrap", label))
         self.definition = plistlib.loads(definition)
         if self.bootstrap_code == 0:
             self.processes[_GUARDIAN.pid] = _Process(_GUARDIAN, self.job_coalition, self.guardian_parent)
             self.jobs[label] = _Job(pid=_GUARDIAN.pid, coalition=self.job_coalition)
-        return ManagerCommandResult(self.bootstrap_code, "")
+        return ContainmentCommandResult(self.bootstrap_code, "")
 
     def _live(self, pid: int) -> _Process | None:
         process = self.processes.get(pid)
@@ -819,7 +819,7 @@ def test_native_host_translates_nonpositive_writes_before_publication(
     monkeypatch.setattr(macos_worker_process, "posix_owner_uid", lambda: _UID)
     monkeypatch.setattr(
         macos_worker_process,
-        "run_manager_command_sync",
+        "run_containment_command_sync",
         lambda *args, **kwargs: pytest.fail("launchctl must not run after a failed definition write"),
     )
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
+import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import { Icon } from "./Icon";
 
@@ -54,6 +55,8 @@ export function RecordList({
   shown: boolean;
 }) {
   const t = useStrings();
+  // How close to the end still counts as following the newest record.
+  const followSlack = useMetric("--space-24", 24);
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
   const [follow, setFollow] = useState(true);
@@ -226,7 +229,8 @@ export function RecordList({
         onScroll={() => {
           const el = list.current;
           if (!el) return;
-          const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+          const atEnd =
+            el.scrollHeight - el.scrollTop - el.clientHeight < followSlack;
           if (atEnd !== follow) setFollow(atEnd);
         }}
       >
@@ -265,7 +269,9 @@ export function RecordList({
                   {record.timestamp.slice(11, 23) || record.timestamp}
                 </time>
                 <span className="level">
-                  {record.source === "host" ? "HOST" : (record.level ?? "—")}
+                  {record.source === "host"
+                    ? sourceLabel("host")
+                    : (record.level ?? "—")}
                 </span>
                 <span className="logger" title={record.logger ?? ""}>
                   {record.logger

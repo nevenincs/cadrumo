@@ -62,20 +62,43 @@ export async function openTauriTerminal(
   listener: (event: TerminalEvent) => void,
 ): Promise<TerminalSession> {
   let session: number | null = null;
+  let closing = false;
   let rendered = 0;
   let acknowledged = 0;
+  let inFlight = false;
   let ackTimer = 0;
 
-  // Acknowledge the cumulative offset of rendered data; never more often than
-  // needed, never so rarely that the host pauses a live session.
-  const flushAck = () => {
+  // The host pauses a session at 512 KiB unacknowledged and resumes below
+  // 128 KiB, so an acknowledgement that never lands would wedge it for good.
+  // Counting starts with the first frame, even before `terminal_open`
+  // resolves, and an offset counts as acknowledged only once the host has
+  // accepted it; a refused one is retried.
+  const scheduleAck = () => {
+    if (!ackTimer) ackTimer = window.setTimeout(flushAck, ACK_IDLE_MS);
+  };
+  function flushAck() {
     window.clearTimeout(ackTimer);
     ackTimer = 0;
-    if (session === null || rendered === acknowledged) return;
-    acknowledged = rendered;
-    void invoke("terminal_ack", { token, session, offset: rendered }).catch(
-      () => undefined,
+    if (closing || session === null || inFlight || rendered === acknowledged)
+      return;
+    const offset = rendered;
+    inFlight = true;
+    invoke("terminal_ack", { token, session, offset }).then(
+      () => {
+        inFlight = false;
+        acknowledged = Math.max(acknowledged, offset);
+        if (rendered > acknowledged) scheduleAck();
+      },
+      () => {
+        inFlight = false;
+        scheduleAck();
+      },
     );
+  }
+  const drawn = (bytes: number) => {
+    rendered += bytes;
+    if (rendered - acknowledged >= ACK_EVERY) flushAck();
+    else scheduleAck();
   };
 
   const output = new Channel<unknown>();
@@ -84,15 +107,16 @@ export async function openTauriTerminal(
     if (!frame || frame.length === 0) return;
     const payload = frame.subarray(1);
     switch (frame[0]) {
-      case TAG_DATA:
-        listener({ type: "data", bytes: payload });
+      case TAG_DATA: {
+        const length = payload.length;
+        listener({ type: "data", bytes: payload, drawn: () => drawn(length) });
         break;
+      }
       case TAG_STARTED:
         listener({ type: "started" });
         break;
       case TAG_EXITED: {
         const code = readJson(payload).code;
-        flushAck();
         listener({
           type: "exited",
           code: typeof code === "number" ? code : null,
@@ -122,13 +146,16 @@ export async function openTauriTerminal(
   });
   session = opened.session;
   const id = opened.session;
+  // Frames drawn while the open was in flight are acknowledged now.
+  flushAck();
   const headers = { "x-cadrumo-token": token, "x-cadrumo-session": String(id) };
 
   const writeChunk = async (chunk: Uint8Array) => {
-    // A full queue is backpressure, not loss: wait and send the same bytes.
+    // A full queue is backpressure, not loss: wait and send the same bytes,
+    // until the session is being closed.
     for (
       let delay = RETRY_FIRST_MS;
-      ;
+      !closing;
       delay = Math.min(RETRY_MAX_MS, delay * 2)
     ) {
       try {
@@ -143,14 +170,14 @@ export async function openTauriTerminal(
 
   return {
     async write(bytes) {
-      for (let offset = 0; offset < bytes.length; offset += WRITE_CHUNK) {
-        await writeChunk(bytes.subarray(offset, offset + WRITE_CHUNK));
+      for (
+        let offset = 0;
+        offset < bytes.length && !closing;
+        offset += WRITE_CHUNK
+      ) {
+        // A copy, not a view: every transport then sends exactly these bytes.
+        await writeChunk(bytes.slice(offset, offset + WRITE_CHUNK));
       }
-    },
-    ack(bytes) {
-      rendered += bytes;
-      if (rendered - acknowledged >= ACK_EVERY) flushAck();
-      else if (!ackTimer) ackTimer = window.setTimeout(flushAck, ACK_IDLE_MS);
     },
     async resize(cols, rows) {
       await invoke("terminal_resize", {
@@ -161,6 +188,7 @@ export async function openTauriTerminal(
       });
     },
     async close() {
+      closing = true;
       window.clearTimeout(ackTimer);
       await invoke("terminal_close", { token, session: id });
     },

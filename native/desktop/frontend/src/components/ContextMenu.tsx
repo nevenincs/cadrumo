@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ContextMenuItem } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 
@@ -14,6 +14,14 @@ export function ContextMenu({
   choose: (id: string | null) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const idPrefix = useId();
+  // Focus goes back where the menu came from when the person settles it with
+  // the keyboard or a click; a click elsewhere keeps the focus it moved to.
+  const [returnTo] = useState(() => document.activeElement);
+  const settle = (id: string | null) => {
+    if (returnTo instanceof HTMLElement) returnTo.focus();
+    choose(id);
+  };
   const [active, setActive] = useState(-1);
   const enabled = items.flatMap((item, index) =>
     "separator" in item || !item.enabled ? [] : [index],
@@ -67,16 +75,17 @@ export function ContextMenu({
       className="native-menu"
       role="menu"
       tabIndex={-1}
+      aria-activedescendant={active >= 0 ? `${idPrefix}-${active}` : undefined}
       style={{ left, top }}
       onKeyDown={(event) => {
         event.stopPropagation();
         event.preventDefault();
-        if (event.key === "Escape") choose(null);
+        if (event.key === "Escape") settle(null);
         else if (event.key === "ArrowDown") step(1);
         else if (event.key === "ArrowUp") step(-1);
         else if (event.key === "Enter") {
           const item = items[active];
-          if (item && !("separator" in item)) choose(item.id);
+          if (item && !("separator" in item)) settle(item.id);
         }
       }}
     >
@@ -90,11 +99,12 @@ export function ContextMenu({
         ) : (
           <button
             key={item.id}
+            id={`${idPrefix}-${index}`}
             role="menuitem"
             className={index === active ? "is-active" : ""}
             disabled={!item.enabled}
             onMouseEnter={() => setActive(index)}
-            onClick={() => choose(item.id)}
+            onClick={() => settle(item.id)}
           >
             <span>{item.label}</span>
             {item.shortcut && <kbd aria-hidden="true">{item.shortcut}</kbd>}

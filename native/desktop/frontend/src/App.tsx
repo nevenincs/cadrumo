@@ -341,12 +341,15 @@ export function App({ host }: { host: Host }) {
     (url: string) => {
       if (docs.current?.navigate(url)) return;
       const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
-      if (
-        frame &&
-        environment.state === "ready" &&
-        new URL(url).origin === environment.value.docs.origin
-      )
-        frame.src = url;
+      if (!frame || environment.state !== "ready") return;
+      // Only a documentation-origin address ever becomes the frame's source.
+      let origin: string;
+      try {
+        origin = new URL(url).origin;
+      } catch {
+        return;
+      }
+      if (origin === environment.value.docs.origin) frame.src = url;
     },
     [environment],
   );
@@ -597,8 +600,11 @@ export function App({ host }: { host: Host }) {
         chords: [
           { mod: true, shift: true, code: "KeyC", key: "C", scope: "terminal" },
         ],
-        run: () =>
-          copy(terminals.current[activeTerminal() ?? "tui"]?.selection() ?? ""),
+        // Only the focused terminal's selection; without one, nothing.
+        run: () => {
+          const kind = activeTerminal();
+          if (kind) copy(terminals.current[kind]?.selection() ?? "");
+        },
       },
       {
         id: "terminal.paste",
@@ -753,7 +759,7 @@ export function App({ host }: { host: Host }) {
           },
         ],
         { x: request.x, y: request.y },
-        true,
+        request.pointer,
       );
     },
     [openMenu, t, copy, runAction],
@@ -799,7 +805,10 @@ export function App({ host }: { host: Host }) {
             run: () => api.clear(),
           },
         );
-      openMenu(items, { x: event.clientX, y: event.clientY }, true);
+      // The menu key fires contextmenu with no pointer type; that menu
+      // belongs at the event's position rather than at the cursor.
+      const pointer = (event as PointerEvent).pointerType !== "";
+      openMenu(items, { x: event.clientX, y: event.clientY }, pointer);
     },
     [openMenu, t, copy, paste],
   );
@@ -1120,21 +1129,24 @@ export function App({ host }: { host: Host }) {
               role="separator"
               aria-orientation="horizontal"
               aria-label={t("desktop.panel.resize")}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round((panelHeight / viewportHeight) * 100)}
               tabIndex={0}
               onPointerDown={dragPanel}
               onKeyDown={(event) => {
-                if (event.key === "ArrowUp")
-                  patch({
-                    panelRatio:
-                      clampPanel(panelHeight + panelResizeStep) /
-                      viewportHeight,
-                  });
-                if (event.key === "ArrowDown")
-                  patch({
-                    panelRatio:
-                      clampPanel(panelHeight - panelResizeStep) /
-                      viewportHeight,
-                  });
+                // The window-splitter pattern: arrows step, Home and End go
+                // to the panel's smallest and largest size.
+                const sizes: Record<string, number> = {
+                  ArrowUp: panelHeight + panelResizeStep,
+                  ArrowDown: panelHeight - panelResizeStep,
+                  Home: panelMin,
+                  End: viewportHeight - docsMin,
+                };
+                const next = sizes[event.key];
+                if (next === undefined) return;
+                event.preventDefault();
+                patch({ panelRatio: clampPanel(next) / viewportHeight });
               }}
             />
           )}

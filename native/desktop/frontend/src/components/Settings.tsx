@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
@@ -14,15 +14,39 @@ function Choice<T extends string | number>({
   options: readonly (readonly [T, string])[];
   onChange: (value: T) => void;
 }) {
+  // A radio group is one tab stop; the arrow keys choose within it.
+  const step = (event: KeyboardEvent<HTMLDivElement>) => {
+    const delta =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
+    if (!delta) return;
+    event.preventDefault();
+    const at = options.findIndex(([key]) => key === value);
+    const next = options[(at + delta + options.length) % options.length];
+    if (!next) return;
+    onChange(next[0]);
+    const buttons =
+      event.currentTarget.querySelectorAll<HTMLElement>("[role=radio]");
+    buttons[options.indexOf(next)]?.focus();
+  };
   return (
     <div className="setting">
       <span className="setting-label">{label}</span>
-      <div className="segmented" role="radiogroup" aria-label={label}>
+      <div
+        className="segmented"
+        role="radiogroup"
+        aria-label={label}
+        onKeyDown={step}
+      >
         {options.map(([key, text]) => (
           <button
             key={String(key)}
             role="radio"
             aria-checked={value === key}
+            tabIndex={value === key ? 0 : -1}
             onClick={() => onChange(key)}
           >
             {text}
@@ -48,6 +72,8 @@ export function Settings({
 }) {
   const t = useStrings();
   const ref = useRef<HTMLDivElement>(null);
+  // Escape returns focus to where Settings was opened from.
+  const [returnTo] = useState(() => document.activeElement);
 
   useEffect(() => {
     ref.current?.querySelector<HTMLElement>("[aria-checked='true']")?.focus();
@@ -73,6 +99,7 @@ export function Settings({
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
+          if (returnTo instanceof HTMLElement) returnTo.focus();
           close();
         }
       }}

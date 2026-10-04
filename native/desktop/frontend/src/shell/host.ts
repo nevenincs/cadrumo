@@ -15,16 +15,17 @@ import type {
 export type TerminalKind = "console" | "python" | "tui";
 
 export type TerminalEvent =
-  | { type: "data"; bytes: Uint8Array }
+  /** `drawn` reports that the terminal has rendered these bytes; the host
+   * withholds further output until rendered bytes are reported. */
+  | { type: "data"; bytes: Uint8Array; drawn: () => void }
   | { type: "started" }
   | { type: "exited"; code: number | null }
   | { type: "failed"; message: string };
 
 export type TerminalSession = {
   write(bytes: Uint8Array): Promise<void>;
-  /** Credit: bytes the terminal has finished rendering since the last ack. */
-  ack(bytes: number): void;
   resize(cols: number, rows: number): Promise<void>;
+  /** Stops pending writes and settles the session. */
   close(): Promise<void>;
 };
 

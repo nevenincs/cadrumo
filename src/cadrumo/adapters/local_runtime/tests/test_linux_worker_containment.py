@@ -23,6 +23,7 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 from cadrumo.core.async_cleanup import close_async_resources
 
 from .. import linux_worker_process
+from ..containment_commands import ContainmentCommand, run_containment_command_sync
 from ..linux_pidfd import open_linux_pidfd
 from ..linux_worker_process import (
     LinuxProcessScope,
@@ -32,7 +33,6 @@ from ..linux_worker_process import (
     _unit_properties,
     linux_process_start_identity,
 )
-from ..manager_commands import NativeManagerCommand, run_manager_command_sync
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,10 +45,10 @@ pytestmark = [
 def test_unknown_linux_containment_refuses_before_private_worker_launch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def unavailable(_tool: NativeManagerCommand, _arguments: tuple[str, ...]) -> None:
+    def unavailable(_tool: ContainmentCommand, _arguments: tuple[str, ...]) -> None:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
-    monkeypatch.setattr(linux_worker_process, "run_manager_command_sync", unavailable)
+    monkeypatch.setattr(linux_worker_process, "run_containment_command_sync", unavailable)
     scope = LinuxProcessScope(worker_id=uuid4())
     with pytest.raises(RuntimeRefusalError) as refused:
         scope.launch(
@@ -121,8 +121,8 @@ class _ContainmentCleanup:
         assert self.cgroup is not None
         failure: BaseException | None = None
         try:
-            stopped = run_manager_command_sync(
-                NativeManagerCommand.SYSTEMCTL,
+            stopped = run_containment_command_sync(
+                ContainmentCommand.SYSTEMCTL,
                 ("--user", "--no-pager", "--no-ask-password", "stop", self.unit),
             )
             if stopped.returncode != 0:
@@ -406,8 +406,8 @@ def test_linux_worker_service_kills_independent_group_on_owner_loss(
         if failed_owner == "runtime_parent":
             os.kill(parent.pid, signal.SIGKILL)
         elif failed_owner == "guardian":
-            killed = run_manager_command_sync(
-                NativeManagerCommand.SYSTEMCTL,
+            killed = run_containment_command_sync(
+                ContainmentCommand.SYSTEMCTL,
                 (
                     "--user",
                     "--no-pager",

@@ -1,4 +1,4 @@
-"""Bounded native manager output and process cleanup through isolated OS ports."""
+"""Bounded native containment command output and process cleanup through isolated OS ports."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 
-from .. import manager_commands
-from ..manager_commands import ManagerCommandResult, NativeManagerCommand, run_manager_command_sync
+from .. import containment_commands
+from ..containment_commands import ContainmentCommand, ContainmentCommandResult, run_containment_command_sync
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -55,7 +55,7 @@ class _Process:
     ],
     ids=["complete", "invalid-utf8", "oversize", "read-timeout", "no-stdout", "wait-timeout"],
 )
-def test_sync_manager_output_refusal_and_owned_cleanup(
+def test_sync_containment_command_output_refusal_and_owned_cleanup(
     monkeypatch: pytest.MonkeyPatch,
     payload: bytes,
     unreadable: bool,
@@ -66,15 +66,15 @@ def test_sync_manager_output_refusal_and_owned_cleanup(
 ) -> None:
     process = _Process(missing_stdout=missing_stdout, wait_timeout=wait_timeout)
     chunks = iter((payload, b""))
-    monkeypatch.setattr(manager_commands, "sys", SimpleNamespace(platform="linux"))
-    monkeypatch.setattr(manager_commands, "os", SimpleNamespace(getuid=lambda: 1000, read=lambda *_: next(chunks)))
+    monkeypatch.setattr(containment_commands, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(containment_commands, "os", SimpleNamespace(getuid=lambda: 1000, read=lambda *_: next(chunks)))
     monkeypatch.setattr(
-        manager_commands,
+        containment_commands,
         "select",
         SimpleNamespace(select=lambda readable, *_: ((), (), ()) if unreadable else (readable, (), ())),
     )
     monkeypatch.setattr(
-        manager_commands,
+        containment_commands,
         "subprocess",
         SimpleNamespace(
             Popen=lambda *_args, **_kwargs: process,
@@ -85,12 +85,12 @@ def test_sync_manager_output_refusal_and_owned_cleanup(
     )
 
     if expected is None:
-        assert run_manager_command_sync(
-            NativeManagerCommand.SYSTEMCTL, ("show", "synthetic.service")
-        ) == ManagerCommandResult(returncode=0, output=payload.decode("utf-8"))
+        assert run_containment_command_sync(
+            ContainmentCommand.SYSTEMCTL, ("show", "synthetic.service")
+        ) == ContainmentCommandResult(returncode=0, output=payload.decode("utf-8"))
     else:
         with pytest.raises(RuntimeRefusalError) as raised:
-            run_manager_command_sync(NativeManagerCommand.SYSTEMCTL, ("show", "synthetic.service"))
+            run_containment_command_sync(ContainmentCommand.SYSTEMCTL, ("show", "synthetic.service"))
         assert raised.value.reason is expected
 
     assert process.killed is killed

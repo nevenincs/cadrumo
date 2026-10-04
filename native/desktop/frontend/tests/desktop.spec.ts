@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Frame, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { identity } from "../../scripts/configuration.mjs";
@@ -55,6 +55,13 @@ async function openWithDocs(target: Page) {
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
   );
+}
+
+/** The documentation frame's own execution context, on the stand-in origin. */
+function docsFrame(target: Page): Frame {
+  const frame = target.frames().find((f) => f.url().startsWith(DOCS));
+  if (!frame) throw new Error("The documentation frame is not loaded.");
+  return frame;
 }
 
 test.beforeEach(async ({ page: target }) => {
@@ -119,29 +126,91 @@ test("the rail opens and closes the panel tabs and the TUI pane", async ({
   await expect(target.locator(".pane-tui")).toBeVisible();
 });
 
-test("maximizing and restoring keeps the documentation frame mounted", async ({
+test("maximize, swap, orientation and hide never reload the documentation", async ({
+  page: target,
+}) => {
+  await openWithDocs(target);
+  // A marker in the page's own window survives only if the frame never
+  // remounts or reloads.
+  const docs = docsFrame(target);
+  await docs.evaluate(() => {
+    (window as unknown as { kept: boolean }).kept = true;
+  });
+  const docsHead = target.locator(".pane-docs .pane-head");
+  await docsHead.getByRole("button").first().click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await expect(target.locator("section.panel")).toBeHidden();
+  await docsHead.getByRole("button").first().click();
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  await docsHead
+    .getByRole("button", { name: label("desktop.split.swap") })
+    .click();
+  await docsHead
+    .getByRole("button", { name: label("desktop.split.stack") })
+    .click();
+  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  const rail = target.getByRole("navigation", {
+    name: label("desktop.rail.label"),
+  });
+  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
+  const kept = await docs.evaluate(
+    () => (window as unknown as { kept?: boolean }).kept === true,
+  );
+  expect(kept).toBe(true);
+});
+
+test("the documentation can relay only the chords the shell published to it", async ({
+  page: target,
+}) => {
+  await openWithDocs(target);
+  const docs = docsFrame(target);
+  const post = (id: string) =>
+    docs.evaluate((shortcut) => {
+      parent.postMessage(
+        {
+          channel: "cadrumo-desktop",
+          version: 1,
+          type: "shortcut",
+          id: shortcut,
+        },
+        "*",
+      );
+    }, id);
+  // An action the shell never published to the frame is refused.
+  await post("view.maximizeTui");
+  await post("terminal.paste");
+  await target.waitForTimeout(300);
+  await expect(target.locator(".pane-docs")).toBeVisible();
+  // A published chord is honoured, so the refusal above is not silence.
+  await expect(async () => {
+    await post("panel.logs");
+    await expect(
+      target.getByRole("tab", { name: label("desktop.rail.logs") }),
+    ).toHaveAttribute("aria-selected", "true", { timeout: 500 });
+  }).toPass();
+});
+
+test("bridge messages from any window but the documentation frame are ignored", async ({
   page: target,
 }) => {
   await openWithDocs(target);
   await target.evaluate(() => {
-    (window as unknown as { frameBefore: Element | null }).frameBefore =
-      document.querySelector(".docs-frame");
+    window.postMessage(
+      {
+        channel: "cadrumo-desktop",
+        version: 1,
+        type: "shortcut",
+        id: "panel.logs",
+      },
+      "*",
+    );
   });
-  await target.locator(".pane-docs .pane-head button").first().click();
-  await expect(target.locator(".pane-tui")).toBeHidden();
-  await expect(target.locator("section.panel")).toBeHidden();
-  await target.locator(".pane-docs .pane-head button").first().click();
-  await expect(target.locator(".pane-tui")).toBeVisible();
-  await expect(target.locator("section.panel")).toBeVisible();
-  const same = await target.evaluate(
-    () =>
-      (window as unknown as { frameBefore: Element | null }).frameBefore ===
-      document.querySelector(".docs-frame"),
-  );
-  expect(same).toBe(true);
-  await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
-    "Stand-in documentation",
-  );
+  await target.waitForTimeout(300);
+  await expect(
+    target.getByRole("tab", { name: label("desktop.rail.console") }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("the remembered layout survives a reload", async ({ page: target }) => {
@@ -157,8 +226,16 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .getByRole("radio", { name: label("desktop.settings.stacked") })
     .click();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.python") })
+    .click();
   await target.reload();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect(
+    target.getByRole("tab", { name: label("desktop.rail.python") }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("shell chords pressed inside the documentation reach the shell", async ({

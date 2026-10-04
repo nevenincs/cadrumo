@@ -15,6 +15,14 @@ const KIND_LABELS: Record<string, string> = {
   cli: "desktop.palette.kind_cli",
 };
 
+// Documentation results are grouped by kind, terms first and pages last; the
+// docs search's own ranking holds within each group.
+const KIND_ORDER = ["concept", "casilla", "cli", "page"];
+const kindOrder = (kind: DocsResultKind) => {
+  const at = KIND_ORDER.indexOf(kind);
+  return at === -1 ? KIND_ORDER.length : at;
+};
+
 type Row =
   | { type: "doc"; result: DocsSearchResult }
   | { type: "action"; action: Action };
@@ -105,7 +113,14 @@ export function CommandPalette({
       .map(([action]): Row => ({ type: "action", action }));
     const docRows: Row[] =
       searching && searchDocs
-        ? docs.results.map((result) => ({ type: "doc", result }))
+        ? docs.results
+            .map((result, rank) => ({ result, rank }))
+            .sort(
+              (x, y) =>
+                kindOrder(x.result.kind) - kindOrder(y.result.kind) ||
+                x.rank - y.rank,
+            )
+            .map(({ result }) => ({ type: "doc", result }))
         : [];
     return [...docRows, ...matched];
   }, [actions, query, trimmed, searching, searchDocs, docs.results]);

@@ -3,9 +3,14 @@
 
 import type { BridgeChord } from "../ipc/contract";
 
-export const IS_MAC =
-  typeof navigator !== "undefined" &&
-  /Mac|iPhone|iPad/.test(navigator.platform);
+// User-agent client hints where the engine has them (WebView2); the older
+// platform string elsewhere (WebKit), which still reports macOS correctly.
+const platform =
+  typeof navigator === "undefined"
+    ? ""
+    : ((navigator as Navigator & { userAgentData?: { platform?: string } })
+        .userAgentData?.platform ?? navigator.platform);
+export const IS_MAC = /mac|iphone|ipad/i.test(platform);
 
 /** Where a chord fires. "global": everywhere, focused terminals included.
  * "app": everywhere except a focused terminal, which keeps the key. "docs": the

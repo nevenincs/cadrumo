@@ -12,8 +12,8 @@ from threading import Lock
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from .containment_commands import ContainmentCommand, run_containment_command_sync
 from .linux_pidfd import open_linux_pidfd
-from .manager_commands import NativeManagerCommand, run_manager_command_sync
 from .posix import posix_owner_uid
 from .posix_channel import PosixRuntimeChannel
 from .worker_arguments import validated_worker_arguments
@@ -50,8 +50,8 @@ def linux_process_start_identity(pid: int) -> str:
 
 
 def _unit_properties(unit: str) -> dict[str, str]:
-    result = run_manager_command_sync(
-        NativeManagerCommand.SYSTEMCTL,
+    result = run_containment_command_sync(
+        ContainmentCommand.SYSTEMCTL,
         ("--user", "--no-pager", "--no-ask-password", "show", unit, "--property=" + ",".join(sorted(_PROPERTIES))),
     )
     if result.returncode != 0:
@@ -68,8 +68,8 @@ def _unit_properties(unit: str) -> dict[str, str]:
 
 
 def _unit_absent(unit: str) -> bool:
-    result = run_manager_command_sync(
-        NativeManagerCommand.SYSTEMCTL,
+    result = run_containment_command_sync(
+        ContainmentCommand.SYSTEMCTL,
         (
             "--user",
             "--no-pager",
@@ -187,7 +187,7 @@ class LinuxProcessScope:
         # A lost manager acknowledgement may still have started this exact
         # unit. Retain the stop obligation before asking the manager.
         self._started = True
-        result = run_manager_command_sync(NativeManagerCommand.SYSTEMD_RUN, command)
+        result = run_containment_command_sync(ContainmentCommand.SYSTEMD_RUN, command)
         if result.returncode != 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         return _wait_for_guardian(self)
@@ -226,8 +226,8 @@ class LinuxProcessScope:
         """Stop the verified unit and observe worker/guardian death, retaining failure."""
         if not self._started:
             return
-        response = run_manager_command_sync(
-            NativeManagerCommand.SYSTEMCTL,
+        response = run_containment_command_sync(
+            ContainmentCommand.SYSTEMCTL,
             ("--user", "--no-pager", "--no-ask-password", "stop", self._unit),
         )
         if response.returncode != 0 and not _failed_stop_is_settled(self):

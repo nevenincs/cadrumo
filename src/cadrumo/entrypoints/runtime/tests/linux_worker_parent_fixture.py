@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.local_runtime import linux_worker_process
+from cadrumo.adapters.local_runtime.containment_commands import ContainmentCommand, ContainmentCommandResult
 from cadrumo.adapters.local_runtime.linux_worker_process import LinuxProcessScope
-from cadrumo.adapters.local_runtime.manager_commands import ManagerCommandResult, NativeManagerCommand
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
 from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
@@ -272,10 +272,10 @@ raise SystemExit(asyncio.run(serve()))
 @contextmanager
 def _registration_barrier(directory: Path) -> Generator[None]:
     """Hold real registration acknowledgment before guardian ownership transfers."""
-    original = linux_worker_process.run_manager_command_sync
+    original = linux_worker_process.run_containment_command_sync
 
-    def register(tool: NativeManagerCommand, arguments: tuple[str, ...]) -> ManagerCommandResult:
-        if tool is not NativeManagerCommand.SYSTEMD_RUN:
+    def register(tool: ContainmentCommand, arguments: tuple[str, ...]) -> ContainmentCommandResult:
+        if tool is not ContainmentCommand.SYSTEMD_RUN:
             return original(tool, arguments)
         units = [argument.removeprefix("--unit=") for argument in arguments if argument.startswith("--unit=")]
         assert len(units) == 1
@@ -298,7 +298,7 @@ def _registration_barrier(directory: Path) -> Generator[None]:
         return result
 
     with pytest.MonkeyPatch.context() as scheduling:
-        scheduling.setattr(linux_worker_process, "run_manager_command_sync", register)
+        scheduling.setattr(linux_worker_process, "run_containment_command_sync", register)
         yield
 
 

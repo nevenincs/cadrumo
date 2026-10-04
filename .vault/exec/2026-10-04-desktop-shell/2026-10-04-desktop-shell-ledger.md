@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9bf93b9cef919929e99c9c6a3b105e725d785cf64ed2fbad7ca32b51bbcd4f3e'
+body_hash: 'sha256:9e8c7ad42bce7bcbd371f57a1f50ca6d9a1e8644ed7069bf9c930367b14e004c'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -229,6 +229,18 @@ related:
 - `S09` `verify:` `npm run check` -> `pass`
 - `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 passed) with desktop.toast.copy_failed named by App.tsx` -> `pass`
 - `S18` `by:` `orchestrator`
+- `S09` `M` `native/desktop/frontend/src/errors.ts`
+- `S09` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S09` `M` `native/desktop/frontend/src/shell/actions.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/tauriTerminal.ts`
+- `S09` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `verify:` `mutation: bridge shortcut allow-list removed -> new security test fails` -> `pass`
 
 ## Notes
 
@@ -259,3 +271,4 @@ related:
 - `S07` Console Ctrl+C attribute cleared in the shell plugin setup (GUI only, no main.rs change), added on the orchestrator's request from S04 findings
 - `S07` Window state resolved by orchestrator ruling B: host module `shell/window_state.rs` writes `<Launch.webview>/window-state.json` atomically (temp file then rename); tauri-plugin-window-state not used; ADR wording amendment requested from the designer by the orchestrator
 - `S07` Final checks built against HEAD native/platform/src/lib.rs because the runtime owner's in-flight lib.rs needs a newer generated contract
+- `S09` Independent review findings fixed: critical bridge shortcut allow-list, ack accounting from the first frame and on refusal, close ordering, slice writes, no silent paste drop, separator/menu/settings accessibility, bounded selection and link schemes, rail roving state, palette grouping. Keyboard-opened docs menus need the bridge to report pointer origin (S14).

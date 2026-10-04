@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "./Icon";
 
 export type RailItem = {
@@ -22,37 +22,32 @@ export function Rail({
   bottom: RailItem[];
 }) {
   const bar = useRef<HTMLElement>(null);
+  const items = [...top, ...bottom];
+  const [stop, setStop] = useState(0);
+  // The tab stop is kept in state, so it survives the item list changing.
+  const current = Math.min(stop, items.length - 1);
 
   const move = (event: KeyboardEvent) => {
-    if (
-      !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) ||
-      !bar.current
-    )
-      return;
-    event.preventDefault();
-    const buttons = [
-      ...bar.current.querySelectorAll<HTMLButtonElement>("button"),
-    ];
-    const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    let next = at;
-    if (event.key === "ArrowDown") next = (at + 1) % buttons.length;
-    if (event.key === "ArrowUp")
-      next = (at - 1 + buttons.length) % buttons.length;
+    const count = items.length;
+    let next: number | null = null;
+    if (event.key === "ArrowDown") next = (current + 1) % count;
+    if (event.key === "ArrowUp") next = (current - 1 + count) % count;
     if (event.key === "Home") next = 0;
-    if (event.key === "End") next = buttons.length - 1;
-    buttons.forEach(
-      (button, index) => (button.tabIndex = index === next ? 0 : -1),
-    );
-    buttons[next]?.focus();
+    if (event.key === "End") next = count - 1;
+    if (next === null || !bar.current) return;
+    event.preventDefault();
+    setStop(next);
+    bar.current.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
   };
 
-  const render = (item: RailItem, first: boolean) => (
+  const render = (item: RailItem, index: number) => (
     <button
       key={item.id}
       className={`rail-button ${item.pressed ? "is-pressed" : ""}`}
       aria-label={item.label}
       aria-pressed={item.pressed}
-      tabIndex={first ? 0 : -1}
+      tabIndex={index === current ? 0 : -1}
+      onFocus={() => setStop(index)}
       onClick={item.onClick}
       data-tip={item.shortcut ? `${item.label}  ${item.shortcut}` : item.label}
     >
@@ -68,10 +63,10 @@ export function Rail({
   return (
     <nav className="rail" aria-label={label} ref={bar} onKeyDown={move}>
       <div className="rail-group">
-        {top.map((item, index) => render(item, index === 0))}
+        {top.map((item, index) => render(item, index))}
       </div>
       <div className="rail-group">
-        {bottom.map((item) => render(item, false))}
+        {bottom.map((item, index) => render(item, top.length + index))}
       </div>
     </nav>
   );

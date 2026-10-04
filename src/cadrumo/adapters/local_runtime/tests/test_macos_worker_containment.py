@@ -25,6 +25,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import storage_directory
 from cadrumo.tests.audited_process import run_audited_process
 
+from ..containment_commands import ContainmentCommand, run_containment_command_sync
 from ..macos_coalition import (
     NativeMacosCoalitionPort,
     macos_coalition_members,
@@ -44,7 +45,6 @@ from ..macos_worker_process import (
     decode_macos_worker_marker,
     parse_macos_job_print,
 )
-from ..manager_commands import NativeManagerCommand, run_manager_command_sync
 from .macos_test_process import MacosTestProcess
 
 pytestmark = [
@@ -76,7 +76,7 @@ def _uid() -> int:
 
 def _require_gui_domain() -> None:
     """Fail with the remedy when the user's Aqua launchd domain is unavailable."""
-    probe = run_manager_command_sync(NativeManagerCommand.LAUNCHCTL, ("print-disabled", f"gui/{_uid()}"))
+    probe = run_containment_command_sync(ContainmentCommand.LAUNCHCTL, ("print-disabled", f"gui/{_uid()}"))
     if probe.returncode != 0:
         pytest.fail(
             f"macOS containment acceptance needs the launchd GUI domain gui/{_uid()}: log this user in at the "
@@ -135,7 +135,7 @@ def _target(label: str) -> str:
 
 
 def _job(label: str) -> MacosJobPrint | None:
-    printed = run_manager_command_sync(NativeManagerCommand.LAUNCHCTL, ("print", _target(label)))
+    printed = run_containment_command_sync(ContainmentCommand.LAUNCHCTL, ("print", _target(label)))
     if printed.returncode == _SERVICE_ABSENT:
         return None
     assert printed.returncode == 0, "launchctl print failed for the owned job"
@@ -194,7 +194,7 @@ class _ContainmentCleanup:
             assert coalition != own, "fixture cleanup must never target the test's own coalition"
             terminate_macos_coalition(coalition, deadline=time.monotonic() + 10)
         if job is not None:
-            run_manager_command_sync(NativeManagerCommand.LAUNCHCTL, ("bootout", _target(label)))
+            run_containment_command_sync(ContainmentCommand.LAUNCHCTL, ("bootout", _target(label)))
             deadline = time.monotonic() + 10
             while _job(label) is not None:
                 if time.monotonic() >= deadline:

@@ -19,11 +19,23 @@ const SEARCH_LIMIT = 8;
 const SEARCH_TIMEOUT_MS = 4000;
 const EXTERNAL_BURST = 3;
 const EXTERNAL_WINDOW_MS = 10000;
+const MAX_SELECTION = 65536;
+const LINK_SCHEMES = new Set(["http:", "https:", "mailto:"]);
+
+function hasLinkScheme(href: string): boolean {
+  try {
+    return LINK_SCHEMES.has(new URL(href).protocol);
+  } catch {
+    return false;
+  }
+}
 
 export type DocsMenuRequest = {
   /** Shell viewport coordinates. */
   x: number;
   y: number;
+  /** False when the menu key opened it, so it belongs at x, y. */
+  pointer: boolean;
   selection: string;
   link: DocsLink | null;
 };
@@ -177,7 +189,15 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             p.onTheme(readTheme(data.theme));
             break;
           case "shortcut":
-            if (typeof data.id === "string") p.onShortcut(data.id);
+            // A page may only hand back a chord this shell published to it.
+            // Any other id is refused: the documentation runs third-party
+            // script and must not reach terminal or host actions by naming
+            // them.
+            if (
+              typeof data.id === "string" &&
+              p.chords.some((chord) => chord.id === data.id)
+            )
+              p.onShortcut(data.id);
             break;
           case "open-external": {
             // Only a link the person has just activated, and never a burst.
@@ -206,12 +226,19 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             p.onMenu({
               x: rect.left + element.clientLeft + data.x,
               y: rect.top + element.clientTop + data.y,
+              // Pages built before the bridge reported it were pointer-opened.
+              pointer: data.pointer !== false,
+              // Bounded here as well as in the bridge: a hostile script can
+              // post without the bridge.
               selection:
-                typeof data.selection === "string" ? data.selection : "",
+                typeof data.selection === "string"
+                  ? data.selection.slice(0, MAX_SELECTION)
+                  : "",
               link:
                 link &&
                 typeof link.href === "string" &&
-                typeof link.external === "boolean"
+                typeof link.external === "boolean" &&
+                hasLinkScheme(link.href)
                   ? { href: link.href, external: link.external }
                   : null,
             });

@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime import linux_worker_process
-from cadrumo.adapters.local_runtime.manager_commands import NativeManagerCommand
+from cadrumo.adapters.local_runtime.containment_commands import ContainmentCommand
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.config import Settings
 from cadrumo.entrypoints.runtime import linux_worker_guardian
@@ -56,7 +56,7 @@ def test_scope_rejects_worker_substitution_before_manager_access(
     def forbidden(*_args: object) -> None:
         pytest.fail("an untrusted worker command reached the native manager")
 
-    monkeypatch.setattr(linux_worker_process, "run_manager_command_sync", forbidden)
+    monkeypatch.setattr(linux_worker_process, "run_containment_command_sync", forbidden)
     with pytest.raises(RuntimeRefusalError) as refused:
         scope.launch(executable=Path(sys.executable), arguments=command, directory=tmp_path, environment=_ENVIRONMENT)
     assert refused.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
@@ -81,12 +81,12 @@ def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
     recorded: list[tuple[str, ...]] = []
     unavailable = RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
-    def manager(tool: NativeManagerCommand, arguments: tuple[str, ...]) -> None:
-        assert tool is NativeManagerCommand.SYSTEMD_RUN
+    def manager(tool: ContainmentCommand, arguments: tuple[str, ...]) -> None:
+        assert tool is ContainmentCommand.SYSTEMD_RUN
         recorded.append(arguments)
         raise unavailable
 
-    monkeypatch.setattr(linux_worker_process, "run_manager_command_sync", manager)
+    monkeypatch.setattr(linux_worker_process, "run_containment_command_sync", manager)
     with pytest.raises(RuntimeRefusalError) as refused:
         scope.launch(executable=executable, arguments=command, directory=tmp_path, environment=_ENVIRONMENT)
     assert refused.value is unavailable
