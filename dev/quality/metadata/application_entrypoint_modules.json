@@ -384,8 +384,6 @@
         "cadrumo.application.ledger.evidence_read_operation",
         "cadrumo.application.ledger.evidence_reference",
         "cadrumo.application.ledger.evidence_split",
-        "cadrumo.application.ledger.evidence_sweep",
-        "cadrumo.application.ledger.evidence_sweep_ports",
         "cadrumo.application.ledger.evidence_textlayer",
         "cadrumo.application.ledger.evidence_textlayer_ports",
         "cadrumo.application.ledger.export_link_operation_ports",

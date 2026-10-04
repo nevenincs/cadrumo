@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:b29df0080a01bf8d04cdb3b0728b1b00da416a46649258a869f7d01900b3fd18'
+body_hash: 'sha256:8176908503782e37ba5836dc394674d43babef8d1f1c7519e8543f5ad60ef418'
 ---
 
 # `google-app-identity` plan
@@ -84,7 +84,7 @@ proposed to the product owner at plan close.
 ## Steps
 
 - [x] `S01` - Remove the service-account impersonation credential source, its taxonomy, dispatch, adapter, error types, stored selection namespace, credential-source commands, locale keys and tests; `src/cadrumo/adapters/outbound/google/impersonation.py`.
-- [ ] `S02` - Remove Google evidence acquisition, the evidence pull and pull-all commands and the document-link CLI choice, keeping the stored attachment source vocabulary; `src/cadrumo/adapters/outbound/google/document_link_resolver.py`.
+- [x] `S02` - Remove Google evidence acquisition, the evidence pull and pull-all commands and the document-link CLI choice, keeping the stored attachment source vocabulary; `src/cadrumo/adapters/outbound/google/document_link_resolver.py`.
 - [ ] `S03` - Drop the spreadsheets scope from the bundled scope constants and the required scope set so sign-in requests exactly openid, userinfo.email and drive.file; `src/cadrumo/core/external_constants.toml`.
 - [ ] `S04` - Refuse unmarked Drive entries in the Sheets adapter and the mirror provider, and create workbooks through Drive with the ownership marker in one call; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
 - [ ] `S05` - Create and store a marker-stamped root folder per profile, trust a stored ID only when marker-owned, type the non-Cadrumo workbook refusal, and remove the folder-set command, the root folder setting and its environment example and reference; `src/cadrumo/adapters/outbound/storage/factory.py`.

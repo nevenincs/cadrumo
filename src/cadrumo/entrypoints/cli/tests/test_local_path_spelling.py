@@ -3,9 +3,9 @@
 This is the half of the operator contract that the declared transport locus was
 added to make checkable. Before the declaration existed, a spelling gate had to
 infer which parameters carry local paths from their type or their name — and
-both fail. ``app ledger classify --file`` and ``app ledger evidence pull-all
---folder`` are both ``str``; one is a file on the operator's disk and the other
-is a Drive identifier. Reading the name to decide whether the name is right
+both fail. ``app ledger classify --file`` and ``app modelo spreadsheet pull
+--spreadsheet-id`` are both ``str``; one is a file on the operator's disk and the
+other is a workbook identifier. Reading the name to decide whether the name is right
 proves nothing at all.
 
 So this module reads the declaration. Every assertion below keys on
@@ -149,8 +149,8 @@ def test_no_local_parameter_uses_a_forbidden_spelling() -> None:
     """`--source`, `--path` and `--from-file` are refused on a local parameter.
 
     A parameter declaring locus ``none`` is outside this contract entirely,
-    which is what keeps `app ledger evidence pull --source` -- a closed enum
-    naming the link's source SYSTEM -- and `--from-year` out of scope.
+    which is what keeps `app modelo reconcile pull --source` -- a closed enum
+    naming the kind of evidence -- and `--from-year` out of scope.
     """
     offenders = []
     for path, parameter in _local_parameters():

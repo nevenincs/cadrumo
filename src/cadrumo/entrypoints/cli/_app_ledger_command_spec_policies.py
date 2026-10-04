@@ -69,15 +69,6 @@ _POLICY_7 = ExecutionPolicySpec(
     handoff=False,
     live_write=False,
 )
-_POLICY_8 = ExecutionPolicySpec(
-    capabilities=frozenset(("encrypted-facts", "google")),
-    side_effects=frozenset(("google", "local-state")),
-    performance="external-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
-    destructive=False,
-    handoff=False,
-    live_write=False,
-)
 _POLICY_9 = ExecutionPolicySpec(
     capabilities=frozenset(("encrypted-facts",)),
     side_effects=frozenset(("local-state",)),
@@ -105,7 +96,6 @@ __all__ = [
     "_POLICY_5",
     "_POLICY_6",
     "_POLICY_7",
-    "_POLICY_8",
     "_POLICY_9",
     "_POLICY_10",
 ]

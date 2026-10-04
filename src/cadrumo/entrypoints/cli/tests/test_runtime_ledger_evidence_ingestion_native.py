@@ -1,4 +1,4 @@
-"""Exact-profile worker acceptance for evidence batch, document pull, and folder sweep."""
+"""Exact-profile worker acceptance for the evidence batch."""
 
 from __future__ import annotations
 
@@ -14,20 +14,14 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from ....adapters.persistence.profile.purchase_invoice_evidence import PurchaseInvoiceEvidenceRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.ledger.evidence_ingestion_contracts import (
-    LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
-)
-from ....application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
+from ....application.ledger.evidence_ingestion_contracts import LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID
 from ....core.config import load_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....tests.cli_envelope import require_error_document, unwrap_cli_result
+from ....tests.cli_envelope import unwrap_cli_result
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import native_invoice_runtime_session, password_profile_session
@@ -41,21 +35,7 @@ pytestmark = [
 
 _CORPUS = Path(__file__).parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
 _STRUCTURED_INVOICE = "facturae_32_series_and_parties_invoice.xml"
-_PROFILE_OPERATIONS = frozenset(
-    {
-        LEDGER_ADD_OPERATION_DEFINITION_ID,
-        LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
-        LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
-        LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
-    }
-)
-_PROFILE_VALUE_OPERATIONS = frozenset(
-    {
-        LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
-        LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
-        LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
-    }
-)
+_PROFILE_OPERATIONS = frozenset({LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID})
 
 
 def _invoke(
@@ -89,35 +69,12 @@ def _result_rows(result: Result) -> list[dict[str, object]]:
     return [cast(dict[str, object], row) for row in rows]
 
 
-def _add_target(session: NativeApiCliSession[None]) -> str:
-    added = _invoke(
-        session,
-        "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-03-10",
-        "--amount",
-        "12.50",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "Evidence pull target",
-        "--idempotency-key",
-        "evidence-ingestion-target",
-    )
-    assert added.exit_code == 0, added.output
-    transaction_id = unwrap_cli_result(added)["transaction_id"]
-    assert isinstance(transaction_id, str)
-    return transaction_id
-
-
 def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_refusal_facts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Commit a structured batch once, resume it, then prove unavailable links never attach."""
+    """Commit a structured batch once, resume it, and keep each document's refusal facts."""
     caller = tmp_path / "caller"
     storage_root = (tmp_path / "cadrumo-storage").resolve()
     assert caller.resolve() != storage_root
@@ -133,13 +90,11 @@ def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_re
     with native_invoice_runtime_session(
         tmp_path,
         operation_ids=_PROFILE_OPERATIONS,
-        profile_value_operation_ids=_PROFILE_VALUE_OPERATIONS,
+        profile_value_operation_ids=_PROFILE_OPERATIONS,
         authority_operation=authority_operation,
     ) as session:
         empty = _invoke(session, "app", "ledger", "evidence", "batch", "--kind", "received")
         assert empty.exit_code != 0, "a batch without a source must refuse instead of returning an empty success"
-
-        transaction_id = _add_target(session)
 
         first = _invoke(session, "app", "ledger", "evidence", "batch", "invoices", "--kind", "received")
         assert first.exit_code == 0, first.output
@@ -221,69 +176,3 @@ def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_re
         assert len(progress) == 2, f"expected one progress line per document, got: {progress}"
         assert any("ledger.evidence.batch.item.refused" in line for line in progress)
         assert any("ledger.evidence.batch.items_refused" in line for line in text.output.splitlines())
-
-        with password_profile_session(session.profile_id, authority_operation):
-            transaction = TransactionCatalogueRepository(bucket_id=bucket_id).load().get(transaction_id)
-            assert transaction is not None
-            before_pull = transaction
-            evidence_records_before = PurchaseInvoiceEvidenceRepository(
-                objects=secure_object_repository_for_active_bucket(),
-            ).load(bucket_id)
-            assert evidence_records_before is not None
-
-        unreachable = _invoke(
-            session,
-            "app",
-            "ledger",
-            "evidence",
-            "pull",
-            transaction_id,
-            "--source",
-            "GOOGLE_DRIVE",
-            "--reference",
-            "https://drive.google.com/file/d/ABC123ticket/view",
-            "--note",
-            "ticket",
-        )
-        assert unreachable.exit_code != 0, unreachable.output
-        assert require_error_document(unreachable.output)["error"]["code"] == "REFUSED_OUTBOUND_STORAGE_VALIDATION", (
-            unreachable.output
-        )
-
-        non_link = _invoke(
-            session,
-            "app",
-            "ledger",
-            "evidence",
-            "pull",
-            transaction_id,
-            "--source",
-            "LOCAL_FILE",
-            "--reference",
-            str(caller / "local-source.txt"),
-        )
-        assert non_link.exit_code != 0, non_link.output
-
-        folder_refusal = _invoke(
-            session,
-            "app",
-            "ledger",
-            "evidence",
-            "pull-all",
-            "--folder",
-            "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz012345",
-            "--note",
-            "folder note",
-        )
-        assert folder_refusal.exit_code != 0, folder_refusal.output
-        assert (
-            require_error_document(folder_refusal.output)["error"]["code"] == "REFUSED_OUTBOUND_STORAGE_VALIDATION"
-        ), folder_refusal.output
-
-        with password_profile_session(session.profile_id, authority_operation):
-            transaction_after = TransactionCatalogueRepository(bucket_id=bucket_id).load().get(transaction_id)
-            evidence_after = PurchaseInvoiceEvidenceRepository(
-                objects=secure_object_repository_for_active_bucket(),
-            ).load(bucket_id)
-            assert transaction_after == before_pull
-            assert evidence_after == evidence_records_before

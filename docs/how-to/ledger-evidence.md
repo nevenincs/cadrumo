@@ -1,7 +1,7 @@
 (attach-invoices-and-receipts-to-ledger-transactions)=
 # Attach invoices and receipts to transactions
 
-Store a supporting document for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Stored supporting documents stay encrypted on your computer. Google Drive pull commands reach your authorized account before storing the downloaded file on your computer.
+Store a supporting document for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Stored supporting documents stay encrypted on your computer.
 
 ## Before you start
 
@@ -10,7 +10,7 @@ You need:
 - An active taxpayer profile. Supporting documents are stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - Your passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - Transactions in your records. If you have none yet, see [Import and manage transactions](import-bank-statements.md) first.
-- The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as a record of where it came from. Your original file is never needed again after `add`.
+- The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as a record of where it came from. Your original file is never needed again after `add`. Cadrumo does not fetch documents from online accounts: download a document kept in Google Drive or in your email first, then register the downloaded file.
 
 (add-an-evidence-record)=
 ## Add a supporting document
@@ -41,31 +41,9 @@ Do not reach for `aeat app ledger link` here. `attach` and `link` are different 
 
 For most receipts and invoices, use `--purchase-invoice-evidence-id`; the id comes straight from `evidence add`.
 
-The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a document already in encrypted attachment storage, and it refuses any id that has no stored document (`attachment_ids must reference existing secure attachment manifests and blobs`). The commands that store a document print that id: `evidence add` and `evidence pull-all`, as `attachment_id` in JSON output and as `source_sha256` in text output. The supporting document's ID from `evidence add` is a shorter id and is not accepted here. Inspect a stored attachment with `aeat app ledger evidence attachment-view <attachment-id>`.
+The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a document already in encrypted attachment storage, and it refuses any id that has no stored document (`attachment_ids must reference existing secure attachment manifests and blobs`). The command that stores a document prints that id: `evidence add`, as `attachment_id` in JSON output and as `source_sha256` in text output. The supporting document's ID from `evidence add` is a shorter id and is not accepted here. Inspect a stored attachment with `aeat app ledger evidence attachment-view <attachment-id>`.
 
 To unlink a supplementary attachment without deleting its bytes, run `aeat app ledger detach` with the transaction id and the attachment's `--attachment-id`. Detach cannot clear a purchase-invoice supporting document.
-
-## Pull a document from Google Drive instead
-
-When the document lives in Google Drive, pull it straight into encrypted storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
-
-```{cli-sequence} ledger-evidence-pull
-```
-
-The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as a record of where it came from. A supporting document always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and register it with `aeat app ledger evidence add`.
-
-## Bulk-fetch every invoice in a Drive folder
-
-Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `evidence pull`, this command reaches Google Drive and runs against your own authorized account:
-
-```{cli-sequence} ledger-evidence-pull-all
-```
-
-The command lists the folder's contents, downloads each PDF or image, and stores every file encrypted. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>`.
-
-Re-run the same command any time. A file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and register it with `aeat app ledger evidence add`.
-
-Gmail bulk-fetch is not available yet.
 
 ## Invoice records are a separate feature
 

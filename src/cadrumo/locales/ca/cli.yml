@@ -279,31 +279,7 @@ cli:
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
         pull_actor_help: El teu nom o etiqueta.
-        pull_all_errors:
-          folder_id_unrecognised: La referència de carpeta de Drive %{reference} no
-            conté un id de carpeta reconeixible. Indica una URL de carpeta de Drive
-            o el seu id.
-        pull_all_folder_help: URL de la carpeta de Drive o el seu id per obtenir en
-          bloc les factures PDF/imatge.
-        pull_all_help: Obté en lot totes les factures PDF o imatge d'una carpeta de
-          Drive i desa cadascuna com a evidència xifrada, sense vincular-la a cap
-          transacció.
-        pull_all_labels:
-          fetched: obtinguts
-          folder_id: id_carpeta
-          refused: rebutjats
-          skipped: omesos_no_document
-          total: documents_totals
-        pull_all_note_help: Nota opcional registrada a cada fitxer adjunt obtingut.
-        pull_all_notices:
-          files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han
-            pogut obtenir sota el permís drive.file; descarrega''ls manualment i adjunta''ls.'
-        pull_help: Descarrega un enllaç de document de Drive i desa'n els bytes com
-          a justificant xifrat en una transacció dels teus registres.
         pull_id_help: Identificador de transacció dels teus registres.
-        pull_note_help: Nota opcional.
-        pull_reference_help: Referència de l'enllaç al document.
-        pull_source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
         remove_help: Elimina un justificant de factura de compra
         review:
           advised_pending_message: Alguns documents pendents porten avisos. No bloquegen

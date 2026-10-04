@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
-from typing import Never, override
+from typing import Never
 from uuid import UUID
 
 from ....core.config import Settings, load_settings
@@ -18,23 +17,19 @@ from ....domain.attachments.models import Attachment
 from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..evidence import PurchaseInvoiceEvidence
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
-from ..evidence_ingestion_operation_ports import EvidenceAcquisitionListing, LedgerEvidenceIngestionPorts
+from ..evidence_ingestion_operation_ports import LedgerEvidenceIngestionPorts
 from ..evidence_input import EvidenceInput, resolve_purchase_invoice_evidence_input
 from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
-from ..evidence_sweep_ports import EvidenceSweepDocument, EvidenceSweepFileNotReachableError
 from ..evidence_textlayer_ports import EvidenceTextLayerPorts
 from ..extraction_draft_store import ExtractionDraftDocument, ExtractionDraftRepositoryProtocol
 from ..invoice_draft_extraction_ports import InvoiceDraftExtractionPorts, StructuredInvoiceReadError
-from ..persistence_ports import LedgerPersistenceConflictError
 from ..structured_invoice_ports import StructuredInvoiceRecord
 from .bulk_classify_operation_support import PROFILE_ID
 from .export_link_operation_support import Events
 from .export_link_operation_support import Subject as ActionSubject
-from .test_classification_rule_plan import _InMemoryTransactionRepository
 
 
 def unused(*args: object, **kwargs: object) -> Never:
@@ -186,73 +181,6 @@ class Drafts:
         return self
 
 
-class Acquisition:
-    """Controlled provider port detects admission and the released I/O guard."""
-
-    def __init__(self, subject: Subject) -> None:
-        self.subject = subject
-        self.refused: set[str] = set()
-        self.documents: tuple[EvidenceSweepDocument, ...] = (
-            EvidenceSweepDocument("A" * 10, "First invoice.pdf", "application/pdf"),
-            EvidenceSweepDocument("B" * 24, "Second invoice.pdf", "application/pdf"),
-        )
-        self.calls: list[str] = []
-        self.revoke_after_first = False
-
-    def fetch(self, *, source: AttachmentSource, reference: str) -> bytes:
-        self.subject.before_read()
-        assert not self.subject.fence.active
-        self.calls.append(reference)
-        return b"%PDF-synthetic " + reference.encode()
-
-    def list_folder(self, reference: str) -> EvidenceAcquisitionListing:
-        self.subject.before_read()
-        assert not self.subject.fence.active
-        self.calls.append(reference)
-        return EvidenceAcquisitionListing("folder", self.documents, 3)
-
-    def fetch_folder_document(self, document: EvidenceSweepDocument) -> bytes:
-        self.subject.before_read()
-        assert not self.subject.fence.active
-        self.calls.append(document.file_id)
-        if document.file_id in self.refused:
-            raise EvidenceSweepFileNotReachableError()
-        if self.revoke_after_first and document.file_id == self.documents[1].file_id:
-            self.subject.fence.deny = True
-            self.subject.before_read()
-        return b"%PDF-synthetic " + document.file_id.encode()
-
-    def mime_type(self, reference: str, data: bytes) -> str:
-        return "application/pdf"
-
-
-class Transactions(_InMemoryTransactionRepository):
-    """Canonical guarded transaction replacement also checks actual writer authority."""
-
-    def __init__(self, subject: Subject) -> None:
-        super().__init__(subject.repository.load())
-        self.subject = subject
-        self.mode = "normal"
-
-    @override
-    def save_with_secure_object_writes(
-        self, catalogue: TransactionCatalogue, extra_writes: tuple[SecureObjectWrite, ...]
-    ) -> None:
-        raise AssertionError("document pull must supply its actual opened transaction baseline")
-
-    @override
-    def replace_if_current_with_secure_object_writes(
-        self, current: Transaction, replacement: Transaction, extra_writes: tuple[SecureObjectWrite, ...]
-    ) -> None:
-        assert self.subject.fence.active and extra_writes
-        if self.mode == "conflict":
-            raise LedgerPersistenceConflictError("synthetic known row CAS rejection")
-        super().replace_if_current_with_secure_object_writes(current, replacement, extra_writes)
-        self.subject.shared_events._catalogue = BucketEventHistoryCatalogue.model_validate_json(extra_writes[0].payload)
-        if self.mode == "uncertain":
-            raise OSError("synthetic committed row acknowledgement lost")
-
-
 class SharedEvents(Events):
     """Synthetic event port exposes the same concrete custody identity."""
 
@@ -273,14 +201,6 @@ class Subject(ActionSubject):
         self.evidence = Evidence(self)
         self.shared_events = SharedEvents(self.backend)
         self.drafts = Drafts(self)
-        self.acquisition = Acquisition(self)
-        self.transactions = Transactions(self)
-        self.ports = replace(
-            self.ports,
-            transaction_repository=self.transactions,
-            attachment_store=self.store,
-            bucket_event_repository=self.shared_events,
-        )
         self.revoke_reader = False
         self.structured_refuses = True
         self.change_source: Path | None = None
@@ -368,7 +288,4 @@ class Subject(ActionSubject):
             evidence=LedgerEvidencePorts(self.evidence, Ingestor(self), self.shared_events),
             extraction=extraction,
             draft_factory=self.drafts.factory,
-            actions=self.ports,
-            attachment_store=self.store,
-            acquisition=self.acquisition,
         )

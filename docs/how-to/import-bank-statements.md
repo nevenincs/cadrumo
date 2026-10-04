@@ -210,20 +210,6 @@ reconciled invoice. See
 workflow for supporting documents and invoice records, including the `--attachment-id` option and its current
 limitation.
 
-Pull a document straight from Google Drive into encrypted storage with `evidence pull`. This command reaches Google Drive, so it runs against your own
-authorized account rather than in the documentation sandbox:
-
-```{cli-sequence} import-evidence-pull
-```
-
-The command downloads the Drive file, stores its bytes encrypted with the
-transaction, and keeps the original link as a record of where the file came
-from. Gmail links, arbitrary URLs, and Drive files outside the granted scope are
-refused - a supporting document always carries the document itself, never a
-bare link. For a refused source, download
-the document yourself, register it with `aeat app ledger evidence add`, and
-attach it with `aeat app ledger attach --purchase-invoice-evidence-id`.
-
 ## Fix a wrong row
 
 Splitting a mixed movement into parts, merging a wrong split back, and

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:782c2d90e6a68a4453e46841ad86a1c73444dd3fbe4b4ccce3e95cbf3aca8592'
+body_hash: 'sha256:484186f466e3058d9635d2458ed8fdb2439b9295f68a981d106a361a6471b830'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -98,6 +98,76 @@ related:
 - `S01` `verify:` `just check-import-boundaries` -> `fail`
 - `S01` `verify:` `dev.locales status --json --check` -> `fail`
 - `S01` `by:` `CADRUMO-GOOGLE-OATH`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/document_acquisition.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/document_link_resolver.py`
+- `S02` `D` `src/cadrumo/application/ledger/evidence_sweep.py`
+- `S02` `D` `src/cadrumo/application/ledger/evidence_sweep_ports.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/tests/test_document_acquisition_admission.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolve_roundtrip.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolver.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_bulk_fetch_roundtrip.py`
+- `S02` `D` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_listing.py`
+- `S02` `D` `src/cadrumo/application/ledger/tests/test_evidence_sweep.py`
+- `S02` `D` `src/cadrumo/entrypoints/cli/tests/test_drive_folder_reference.py`
+- `S02` `D` `docs/_sequences/contracts/how-to/import-bank-statements/import-evidence-pull.seq`
+- `S02` `D` `docs/_sequences/contracts/how-to/ledger-evidence/ledger-evidence-pull-all.seq`
+- `S02` `D` `docs/_sequences/contracts/how-to/ledger-evidence/ledger-evidence-pull.seq`
+- `S02` `M` `dev/audit/vulture_whitelist.py`
+- `S02` `M` `dev/docs/sequences/schema.py`
+- `S02` `M` `dev/docs/tests/test_static_frame_reasons.py`
+- `S02` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `M` `docs/how-to/import-bank-statements.md`
+- `S02` `M` `docs/how-to/ledger-evidence.md`
+- `S02` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py`
+- `S02` `M` `src/cadrumo/application/ledger/evidence.py`
+- `S02` `M` `src/cadrumo/application/ledger/evidence_ingestion_contracts.py`
+- `S02` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation_ports.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/evidence_ingestion_operation_support.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/test_evidence_ingestion_operation.py`
+- `S02` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S02` `M` `src/cadrumo/core/google_drive_reference.py`
+- `S02` `M` `src/cadrumo/core/tests/test_google_drive_reference.py`
+- `S02` `M` `src/cadrumo/domain/attachments/enums.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_spec_policies.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_evidence_ingestion.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_notice_action_conformance.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_evidence_ingestion_native.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py`
+- `S02` `M` `src/cadrumo/entrypoints/ledger_evidence_ingestion_operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_ingestion_support.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S02` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S02` `M` `src/cadrumo/locales/en/cli.yml`
+- `S02` `M` `src/cadrumo/locales/es/cli.yml`
+- `S02` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S02` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S02` `M` `src/cadrumo/locales/en/errors.yml`
+- `S02` `M` `src/cadrumo/locales/es/errors.yml`
+- `S02` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S02` `R` `src/cadrumo/adapters/outbound/google/tests/drive_media_server.py` -> `src/cadrumo/adapters/outbound/google/tests/drive_list_server.py`
+- `S02` `verify:` `pytest unit: evidence ingestion, Drive reference, Drive provider, attachments, CLI ledger specs and conformance gates (438 tests)` -> `pass`
+- `S02` `verify:` `pytest unit: CLI, CLI config, operator surface, ledger and entrypoints suites (5219 tests)` -> `pass`
+- `S02` `verify:` `pytest integration: registered-executor conformance for ledger evidence (18 tests)` -> `pass`
+- `S02` `verify:` `pytest integration windows_only: native evidence batch journey` -> `pass`
+- `S02` `verify:` `pytest docs lane: sequence contract, directive and static-frame tests (38 tests)` -> `pass`
+- `S02` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S02` `verify:` `just check-types` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `verify:` `dev.docs.sequences check --page how-to/ledger-evidence` -> `fail`
+- `S02` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -106,3 +176,11 @@ related:
 - `S01` The locale status check fails on a standing backlog (catalogue-only keys, spelling review); it reports no missing, unrepaired or invalid cell and requires none of the keys removed here.
 - `S01` Shared generated files carry other sessions' uncommitted changes; only this Step's lines are committed in the four errors.yml catalogues and the two `import_load_targets` files.
 - `S01` docs/technical articles and their translations still describe the removed source; they are rewritten in S09.
+- `S02` check-types reports 14 diagnostics in files this Step does not touch (invoice catalogue tests, modelo workbench operations, typed financial operands); none in files changed here.
+- `S02` check-import-boundaries kept all 15 contracts; its two hard findings name `cadrumo.application.modelo.workbench_operations,` a module another session is moving, and the shared import inventory is stale against their uncommitted work.
+- `S02` The documentation sequence check refused to execute any frame because the published registry authority is stale against other sessions' legal-source changes; the removed sequence contracts were checked by the docs-lane structure tests instead.
+- `S02` Two unit failures seen in broad runs belong elsewhere: an unregistered SupervisorLineError in the runtime supervisor work, and one profile-guard recovery test that passes when run alone. The native evidence journey also failed twice while a 12-minute suite shared the machine and passes alone.
+- `S02` Observation, not changed here: when a batch custody write is uncertain, the batch projection rejects the UNKNOWN effect with a pydantic ValidationError instead of the designed refusal; the terminal effect is still reported UNKNOWN.
+- `S02` The AttachmentSource members GMAIL, `GOOGLE_DRIVE` and URL and `AttachmentKind.DRIVE_DOCUMENT` are kept as stored-history vocabulary; only the DocumentLinkSource CLI choice is removed.
+- `S02` Translated documentation catalogues under docs/locales still carry the removed how-to passages; they are refreshed with S09.
+- `S02` Shared files carry other sessions' uncommitted changes; only this Step's lines are committed in evidence.py, `_ledger.py,` `ledger_lifecycle_cli.py,` `_application_part3a2.py,` the four errors.yml catalogues and the two `import_load_targets` files.

@@ -19,7 +19,7 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from .....tests.google_credentials import unused_google_credentials
-from ...google.tests.drive_media_server import drive_files_list_endpoint
+from ...google.tests.drive_list_server import drive_files_list_endpoint
 from .._google_drive import GoogleDriveProvider
 from .._google_drive_metadata import drive_storage_content_hash
 from ..errors import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError

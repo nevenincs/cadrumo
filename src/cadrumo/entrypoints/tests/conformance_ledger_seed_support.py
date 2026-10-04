@@ -26,8 +26,6 @@ from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
-    LedgerEvidencePullAllRequest,
-    LedgerEvidencePullRequest,
 )
 from ...application.ledger.export_operation import LedgerExportProjection, LedgerExportRequest
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest
@@ -40,7 +38,6 @@ from ...core.config_support import LLMProvider
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
@@ -113,7 +110,6 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
         "ledger.classify.iva-derive",
         "ledger.classify.review",
         "ledger.split.review",
-        "ledger.evidence.pull",
         "ledger.export",
         "ledger.link",
     }:
@@ -155,13 +151,6 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 preview=True,
                 read_evidence=False,
             )
-        elif definition_id == "ledger.evidence.pull":
-            request = LedgerEvidencePullRequest(
-                profile_id=context.profile_id,
-                transaction_id=transaction_id,
-                source=DocumentLinkSource.GOOGLE_DRIVE,
-                reference="https://drive.google.com/file/d/ABC123ticket/view",
-            )
         elif definition_id == "ledger.export":
             request = LedgerExportRequest(
                 profile_id=context.profile_id, output_path=str(context.input_root / "ledger.csv"), actor="conformance"
@@ -202,7 +191,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
             )
 
         def verify(outcome: ConformanceOutcome) -> None:
-            if definition_id in {"ledger.classify.review", "ledger.split.review", "ledger.evidence.pull"}:
+            if definition_id in {"ledger.classify.review", "ledger.split.review"}:
                 assert transactions.load() == before
                 if definition_id == "ledger.split.review":
                     assert outcome.observed.projection.failure_error_code == "ERROR_TRANSACTION_VALIDATION"
@@ -272,20 +261,6 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 sources=(str(source),),
                 source_directory=str(context.input_root),
                 direction=InvoiceKind.RECEIVED,
-            ),
-            verify=verify,
-        )
-    if definition_id == "ledger.evidence.pull_all":
-        before = transactions.load()
-
-        def verify(outcome: ConformanceOutcome) -> None:
-            assert transactions.load() == before
-
-        return ConformancePreparation(
-            profile_operation_subject(profile),
-            LedgerEvidencePullAllRequest(
-                profile_id=context.profile_id,
-                folder="https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz012345",
             ),
             verify=verify,
         )
@@ -401,20 +376,6 @@ LEDGER_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.evidence.batch",),
-        ),
-        RegisteredExecutorConformanceCase(
-            "ledger.evidence.pull",
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            ("ledger.evidence.pull",),
-            "REFUSED_OUTBOUND_STORAGE_VALIDATION",
-        ),
-        RegisteredExecutorConformanceCase(
-            "ledger.evidence.pull_all",
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            ("ledger.evidence.pull_all",),
-            "REFUSED_OUTBOUND_STORAGE_VALIDATION",
         ),
         RegisteredExecutorConformanceCase(
             "ledger.export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.export",)

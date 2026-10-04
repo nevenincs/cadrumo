@@ -844,8 +844,6 @@ errors:
       resultat final.
     canonical_bien_inversion_disposal_incomplete: L'alienació d'un bé d'inversió requereix
       tant l'exercici com el règim d'alienació.
-    canonical_evidence_sweep_file_not_reachable: El proveïdor d'evidències ha rebutjat
-      un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
     canonical_invoice_draft_reader_busy_refused: El lector automàtic de factures no

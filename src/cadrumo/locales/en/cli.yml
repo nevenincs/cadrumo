@@ -260,30 +260,7 @@ cli:
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Your name or label.
-        pull_all_errors:
-          folder_id_unrecognised: Google Drive folder reference %{reference} does
-            not contain a recognisable folder id. Pass a Drive folder URL or its bare
-            folder id.
-        pull_all_folder_help: Drive folder URL or bare folder id to bulk-fetch invoice
-          PDFs/images from.
-        pull_all_help: Bulk-fetch every PDF/image invoice in a Drive folder and store
-          each as encrypted evidence, unlinked to any transaction.
-        pull_all_labels:
-          fetched: fetched_count
-          folder_id: folder_id
-          refused: refused_count
-          skipped: skipped_non_document_count
-          total: total_documents
-        pull_all_note_help: Optional note recorded on every fetched attachment.
-        pull_all_notices:
-          files_refused: '%{refused_count} file(s) in this folder could not be fetched
-            under the drive.file scope; download them manually and attach them.'
-        pull_help: Fetch a Drive document link and store its bytes as encrypted supporting
-          document on a transaction in your records.
         pull_id_help: Transaction id in your records.
-        pull_note_help: Optional note.
-        pull_reference_help: The document link reference.
-        pull_source_help: 'Link source: gmail, google_drive, or url.'
         remove_help: Delete purchase invoice evidence
         review:
           advised_pending_message: Some pending documents carry advisories. These

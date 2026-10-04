@@ -8,12 +8,6 @@ consumed in the body:
   ``execute()`` keyword contract on the ``_ExecutableRequest`` Protocol stub
   (:mod:`cadrumo.adapters.outbound.google.api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
-* ``fileId`` — the Drive ``get_media`` keyword on the ``_DriveFilesResource``
-  Protocol stub (:mod:`cadrumo.adapters.outbound.google.document_link_resolver`).
-  The name is the google API's keyword and is part of the structural type.
-* ``q`` / ``pageSize`` / ``pageToken`` — the Drive ``files().list`` keyword
-  contract on the same ``_DriveFilesResource`` Protocol stub. The names are the
-  google API's keywords and are part of the structural type.
 * ``protocol`` — the positional argument of the ``__reduce_ex__`` dunder
   override on the decrypted-evidence tripwire
   (:mod:`cadrumo.application.ledger.evidence_input`). The signature is fixed by

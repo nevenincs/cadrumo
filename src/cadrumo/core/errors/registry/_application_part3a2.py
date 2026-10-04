@@ -18,16 +18,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.evidence_sweep_ports.EvidenceSweepFileNotReachableError",
-        ErrorCode(
-            code="REFUSED_EVIDENCE_SWEEP_FILE_NOT_REACHABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_evidence_sweep_file_not_reachable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.ledger.invoice_confirmation.InvoiceEvidenceReviewChangedError",
         ErrorCode(
             code="REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED",

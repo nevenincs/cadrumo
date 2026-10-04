@@ -11,7 +11,7 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
-from ...google.tests.drive_media_server import drive_files_list_endpoint
+from ...google.tests.drive_list_server import drive_files_list_endpoint
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
 from .._google_drive import GoogleDriveProvider

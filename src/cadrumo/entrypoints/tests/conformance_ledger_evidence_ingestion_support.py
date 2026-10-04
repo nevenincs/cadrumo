@@ -1,30 +1,21 @@
-"""Registered-executor conformance scenarios for ledger evidence batch ingestion and Drive acquisition."""
+"""Registered-executor conformance scenario for ledger evidence batch ingestion."""
 
 from __future__ import annotations
 
 import hashlib
 import shutil
-from datetime import date
-from decimal import Decimal
 from pathlib import Path
 
-from ...adapters.outbound.storage.errors import OutboundStorageValidationError
 from ...application.ledger.batch_ingest import batch_item_identity
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_ingestion_contracts import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
     LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
-    LedgerEvidencePullAllRequest,
-    LedgerEvidencePullRequest,
 )
 from ...application.ledger.extraction_draft_store import read_extraction_draft
 from ...core.config import load_settings
-from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.iva.classification import InvoiceKind
 from ..adapter_composition import build_ledger_evidence_ports
 from .conformance_family_contract import (
@@ -34,7 +25,6 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
-from .conformance_ledger_seed_support import ledger_unchanged_verifier, seed_manual_transaction
 
 # A bundled synthetic Facturae invoice: a structured document, so it is read by the
 # deterministic structured reader and needs no model runtime.
@@ -46,8 +36,6 @@ _STRUCTURED_INVOICE = (
     / "_evidence_corpus"
     / "facturae_32_recargo_invoice.xml"
 )
-_DRIVE_FILE_URL = "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123/view"
-_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz0123"
 
 
 def _prepare_batch(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -103,34 +91,8 @@ def _prepare_batch(context: ConformanceFamilyContext) -> ConformancePreparation:
     )
 
 
-def _prepare_pull(context: ConformanceFamilyContext) -> ConformancePreparation:
-    transaction_id = seed_manual_transaction(
-        context, booked_date=date(2025, 4, 3), amount=Decimal("35.00"), description="evidence pull row"
-    )
-    return ConformancePreparation(
-        subject_ref=profile_operation_subject(str(context.profile_id)),
-        request=LedgerEvidencePullRequest(
-            profile_id=context.profile_id,
-            transaction_id=transaction_id[:12],
-            source=DocumentLinkSource.GOOGLE_DRIVE,
-            reference=_DRIVE_FILE_URL,
-        ),
-        verify=ledger_unchanged_verifier(context),
-    )
-
-
-def _prepare_pull_all(context: ConformanceFamilyContext) -> ConformancePreparation:
-    return ConformancePreparation(
-        subject_ref=profile_operation_subject(str(context.profile_id)),
-        request=LedgerEvidencePullAllRequest(profile_id=context.profile_id, folder=_DRIVE_FOLDER_URL),
-        verify=ledger_unchanged_verifier(context),
-    )
-
-
 _PREPARE = {
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID: _prepare_batch,
-    LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID: _prepare_pull,
-    LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID: _prepare_pull_all,
 }
 
 
@@ -143,10 +105,6 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     return prepare(context)
 
 
-# The isolated profile has no Google OAuth client, so the first outbound read refuses
-# before any byte is fetched or written. factory.py `_build_oauth_desktop_credentials`.
-_DRIVE_NOT_CONFIGURED_REFUSAL = get_registered_error_code(OutboundStorageValidationError).code
-
 LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
         RegisteredExecutorConformanceCase(
@@ -154,20 +112,6 @@ LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             (LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,),
-        ),
-        RegisteredExecutorConformanceCase(
-            LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            (LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,),
-            expected_refusal_ref=_DRIVE_NOT_CONFIGURED_REFUSAL,
-        ),
-        RegisteredExecutorConformanceCase(
-            LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            (LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,),
-            expected_refusal_ref=_DRIVE_NOT_CONFIGURED_REFUSAL,
         ),
     ),
     prepare=_prepare,

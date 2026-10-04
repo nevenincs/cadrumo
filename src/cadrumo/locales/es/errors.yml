@@ -834,8 +834,6 @@ errors:
       de resultado final.
     canonical_bien_inversion_disposal_incomplete: La enajenación de un bien de inversión
       requiere tanto el ejercicio como el régimen de enajenación.
-    canonical_evidence_sweep_file_not_reachable: El proveedor de evidencias rechazó
-      un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
     canonical_invoice_draft_reader_busy_refused: El lector automático de facturas

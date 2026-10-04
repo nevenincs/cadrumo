@@ -250,37 +250,6 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
-        "app_ledger_evidence_pull",
-        "app_ledger_evidence",
-        "pull",
-        "leaf",
-        "cli.app.ledger.evidence.pull_help",
-        "profile-bound",
-        "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_evidence_pull",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerAttachResult", "ledger.evidence.pull"
-        ),
-        (
-            _expected_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
-            _expected_option(
-                "source",
-                "--source",
-                "cli.app.ledger.evidence.pull_source_help",
-                annotation="cadrumo.domain.attachments.enums:DocumentLinkSource",
-                default=_REQUIRED_DEFAULT,
-            ),
-            _expected_option(
-                "reference",
-                "--reference",
-                "cli.app.ledger.evidence.pull_reference_help",
-                default=_REQUIRED_DEFAULT,
-                transport=_REMOTE_HANDLE_TRANSPORT,
-            ),
-            _expected_option("note", "--note", "cli.app.ledger.evidence.pull_note_help", default=_EMPTY_DEFAULT),
-            _expected_option("actor", "--actor", "cli.app.ledger.evidence.pull_actor_help"),
-        ),
-    ),
-    _expected_command(
         "app_ledger_evidence",
         "app_ledger",
         "evidence",
@@ -648,28 +617,6 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         None,
         _NO_RESULT_SCHEMA_CONTRACT,
         invocation=_GROUP_INVOCATION_CONTRACT,
-    ),
-    _expected_command(
-        "app_ledger_evidence_pull_all",
-        "app_ledger_evidence",
-        "pull-all",
-        "leaf",
-        "cli.app.ledger.evidence.pull_all_help",
-        "profile-bound",
-        "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_evidence_pull_all",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerEvidencePullAllResult", "ledger.evidence.pull_all"
-        ),
-        (
-            _expected_option(
-                "folder",
-                "--folder",
-                "cli.app.ledger.evidence.pull_all_folder_help",
-                default=_REQUIRED_DEFAULT,
-                transport=_REMOTE_HANDLE_TRANSPORT,
-            ),
-            _expected_option("note", "--note", "cli.app.ledger.evidence.pull_all_note_help", default=_EMPTY_DEFAULT),
-        ),
     ),
     _expected_command(
         "app_ledger_ratios",
@@ -1172,13 +1119,10 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
         management["app_ledger_llm_diagnostics"],
         management["app_ledger_merge"],
         management["app_ledger_preflight"],
-        management["app_ledger_evidence_pull_all"],
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
-    assert operations["app_ledger_evidence_pull"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
     assert operations["app_ledger_exclude"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
-    assert operations["app_ledger_evidence_pull"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
     assert operations["app_ledger_exclude"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
     assert operations["app_ledger_export"].parameters[-1] is _LEDGER_ACTOR_OPTION
     for key in ("app_ledger_remove", "app_ledger_reset", "app_ledger_restore", "app_ledger_stash", "app_ledger_update"):

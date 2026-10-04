@@ -62,8 +62,6 @@ from .common import bad, emit_envelope
 from .ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
-    ledger_evidence_pull,
-    ledger_evidence_pull_all,
     ledger_merge,
     ledger_remove,
     ledger_reset,
@@ -74,8 +72,6 @@ from .ledger_lifecycle_cli import (
 __all__ = [
     "ledger_archive",
     "ledger_attach",
-    "ledger_evidence_pull",
-    "ledger_evidence_pull_all",
     "ledger_merge",
     "ledger_remove",
     "ledger_reset",

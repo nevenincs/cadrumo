@@ -274,30 +274,7 @@ cli:
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         pull_actor_help: A neved vagy címkéd.
-        pull_all_errors:
-          folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
-            tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t
-            vagy a puszta mappaazonosítót.
-        pull_all_folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák
-          tömeges letöltéséhez.
-        pull_all_help: Kötegelten kérd le egy Drive-mappa összes PDF- vagy képszámláját,
-          és tárold mindegyiket titkosított, tranzakcióhoz nem kapcsolt bizonyítékként.
-        pull_all_labels:
-          fetched: letöltött_db
-          folder_id: mappa_azonosító
-          refused: elutasított_db
-          skipped: kihagyott_nem_dokumentum_db
-          total: összes_dokumentum
-        pull_all_note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
-        pull_all_notices:
-          files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
-            a drive.file hatókörben; töltsd le őket kézzel, és csatold őket.
-        pull_help: Tölts le egy Drive dokumentumhivatkozást, és tárold a bájtjait
-          titkosított bizonylatként a nyilvántartásod egyik tranzakcióján.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
-        pull_note_help: Opcionális megjegyzés.
-        pull_reference_help: A dokumentumhivatkozás referenciája.
-        pull_source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
         remove_help: Vásárlásiszámla-bizonyíték törlése.
         review:
           advised_pending_message: Néhány függőben lévő dokumentum figyelmeztetéseket

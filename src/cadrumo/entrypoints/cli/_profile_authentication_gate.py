@@ -54,8 +54,6 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_google_probe",
         "app_quickfile",
         "app_ledger_evidence_batch",
-        "app_ledger_evidence_pull",
-        "app_ledger_evidence_pull_all",
         "config_auth_configure",
         "config_auth_apoderado_status",
         "config_auth_apoderado_configure",
