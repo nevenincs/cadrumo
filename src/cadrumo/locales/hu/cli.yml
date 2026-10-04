@@ -1,6 +1,33 @@
 cli:
   app:
     ledger:
+      account:
+        account_id_help: A saját számla azonosítója, például acc-01.
+        add_help: Adj hozzá egy számlát, amelynek tulajdonosa vagy; az IBAN-t a --secrets-stdin,
+          a --secrets-fd vagy a visszhang nélküli bekérés útján add meg.
+        close_help: Zárj le egy saját számlát egy adott napon; a rá hivatkozó tételek
+          miatt megmarad a nyilvántartásban.
+        closed_on_help: A számla megszüntetésének dátuma (ÉÉÉÉ-HH-NN).
+        currency_help: A számla ISO 4217 pénzneme; megadás nélkül EUR.
+        designate_help: Jelölj ki egy saját számlát terhelésre vagy visszatérítésre,
+          egy modellhez vagy mindegyikhez.
+        group_help: Állítsd be a saját bankszámláidat, és jelöld ki őket a modellek
+          terheléseihez és visszatérítéseihez.
+        holding_help: Egyedül (titular) vagy társtulajdonosként (cotitular) vagy-e
+          a számla tulajdonosa.
+        label_help: A számla általad választott neve.
+        list_help: Listázd a saját számláidat maszkolva, a kijelöléseikkel együtt.
+        modelo_help: A háromjegyű modell, amelyre a kijelölés vonatkozik; megadás
+          nélkül mindegyik.
+        new_label_help: A számla új neve.
+        opened_on_help: A számla megnyitásának dátuma (ÉÉÉÉ-HH-NN).
+        remove_help: Távolíts el egy saját számlát, amelyet egyetlen tétel sem használ,
+          és egyetlen kijelölés sem nevez meg.
+        role_help: 'A szerepkör: charge (terhelés) vagy refund (visszatérítés).'
+        show_help: Mutass meg egy saját számlát maszkolva, a rá vonatkozó kijelölésekkel.
+        undesignate_help: Töröld egy szerepkör kijelölését egy modellnél vagy mindegyiknél.
+        update_help: Módosítsd egy saját számla megadott adatait; új IBAN vagy bankadat
+          csak a titkos csatornán érkezhet.
       actividad_asset:
         claim_help: Előrejelzés rögzítése értékcsökkenési elszámolásként; az azonos
           ismétlés a meglévő bejegyzést adja vissza.
@@ -2989,6 +3016,20 @@ cli:
     try_for_help: 'Súgóért futtasd: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
   ledger:
+    account:
+      errors:
+        invalid_date: A(z) {option} dátumot vár ÉÉÉÉ-HH-NN formában.
+        nothing_to_update: 'Nincs mit módosítani a(z) {account} számlán: adj meg egy
+          adatot, vagy küldj számlaadatokat a titkos csatornán.'
+      none: 'Még nincs saját számla. Adj hozzá egyet ezzel: aeat app ledger account
+        add'
+      prompts:
+        bank_address: 'Bank címe: '
+        bank_city: 'Bank városa: '
+        bank_name: 'Bank neve: '
+        iban: 'IBAN: '
+        swift_bic: 'SWIFT-BIC: '
+      unchanged: 'Nincs változás: a nyilvántartás már ezeket az értékeket tartalmazta.'
     add:
       actor_help: A neved, amelyet a bucket-eseményen rögzítünk.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).

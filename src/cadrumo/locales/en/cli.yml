@@ -1,6 +1,32 @@
 cli:
   app:
     ledger:
+      account:
+        account_id_help: The own account id, for example acc-01.
+        add_help: Add an account you hold; enter its IBAN through --secrets-stdin,
+          --secrets-fd or the no-echo prompt.
+        close_help: Close an own account on a date; it stays on record for the transactions
+          that use it.
+        closed_on_help: Date the account was closed (YYYY-MM-DD).
+        currency_help: ISO 4217 currency of the account; EUR when omitted.
+        designate_help: Designate an own account for the charge or refund role, for
+          one modelo or for all.
+        group_help: Set up your own bank accounts and designate them for modelo charges
+          and refunds.
+        holding_help: Whether you hold the account alone (titular) or jointly (cotitular).
+        label_help: Your name for the account.
+        list_help: List your own accounts, masked, with their role designations.
+        modelo_help: Three-digit modelo the designation applies to; every modelo when
+          omitted.
+        new_label_help: A new name for the account.
+        opened_on_help: Date the account was opened (YYYY-MM-DD).
+        remove_help: Remove an own account that no transaction uses and no role designates.
+        role_help: 'The role: charge (domiciliación) or refund (devolución).'
+        show_help: Show one own account, masked, and the designations that name it.
+        undesignate_help: Remove the designation of a role, for one modelo or for
+          all.
+        update_help: Change the named details of an own account; a new IBAN or bank
+          block comes only through the secret channel.
       actividad_asset:
         claim_help: Record a forecast as an amortization claim; an identical replay
           returns the existing claim.
@@ -2792,6 +2818,19 @@ cli:
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
     usage_prefix: 'Usage: '
   ledger:
+    account:
+      errors:
+        invalid_date: '{option} needs a date as YYYY-MM-DD.'
+        nothing_to_update: 'Nothing to change on {account}: name a detail or send
+          account fields through the secret channel.'
+      none: 'No own accounts yet. Add one with: aeat app ledger account add'
+      prompts:
+        bank_address: 'Bank address: '
+        bank_city: 'Bank city: '
+        bank_name: 'Bank name: '
+        iban: 'IBAN: '
+        swift_bic: 'SWIFT-BIC: '
+      unchanged: 'No change: the register already held these values.'
     add:
       actor_help: Your name, recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).

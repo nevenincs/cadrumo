@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6832129e10c8839162347c17f48098dbf1dad9b4c633c4171b8872be6993c4c'
+body_hash: 'sha256:d4b74661c997303d91d775150bd2d00598464e1ee50dbfdbcaf23b5147172fb7'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -131,6 +131,24 @@ related:
 - `S03` `verify:` `ruff check and format on touched files` -> `pass`
 - `S03` `verify:` `ty pyrefly basedpyright on touched modules` -> `pass`
 - `S03` `by:` `lane-a`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_app_ledger_account_command_specs.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_ledger_account_cli.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_ledger_account_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/native_api_cli_support.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_own_account_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S04` `M` `src/cadrumo/locales/en/cli.yml`
+- `S04` `M` `src/cadrumo/locales/es/cli.yml`
+- `S04` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S04` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S04` `verify:` `pytest test_runtime_own_account_native.py` -> `pass`
+- `S04` `verify:` `pytest cli spec, graph, machine-secret, schema and authentication test set` -> `fail`
+- `S04` `verify:` `ruff check and format on touched files` -> `pass`
+- `S04` `verify:` `ty on touched files` -> `pass`
+- `S04` `verify:` `python -m dev.locales audit` -> `pass`
+- `S04` `by:` `lane-a`
 
 ## Notes
 
@@ -140,3 +158,4 @@ related:
 - `S14` the 360 export test hunk for S14 was swept into commit 6bcf868788 by the page-marker session before this Step's code landed
 - `S14` docs goldens how-to/modelo-100 and modelo-349 recorded the fabricated I disposition and need a refresh after the authority is republished
 - `S03` ty on `operation_composition.py` reports one missing-argument diagnostic from Lane B's uncommitted import-ports change, not this Step.
+- `S04` CLI spec set: 643 passed; the remaining failures are environmental or other lanes (OS keyring logon-session probe, `runtime_unavailable,` ledger import surface). The CLI reference regeneration belongs to P06a.S25; import-load-target metadata regeneration is left for the shared gate owner.

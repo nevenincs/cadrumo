@@ -200,8 +200,8 @@ class NativeApiCliSession[Prepared]:
             pytest.fail("API credential appeared in CLI output", pytrace=False)
         return result
 
-    def invoke_credential_reference(self, *command: str) -> Result:
-        """Run one JSON CLI command using the enrolled native credential reference."""
+    def invoke_credential_reference(self, *command: str, stdin: str | None = None) -> Result:
+        """Run one JSON CLI command using the enrolled native credential reference, feeding ``stdin`` if given."""
         with pytest.MonkeyPatch.context() as monkeypatch:
             monkeypatch.setattr(
                 runtime_credentials,
@@ -220,6 +220,7 @@ class NativeApiCliSession[Prepared]:
                     str(self.credential_reference),
                     *command,
                 ),
+                input=stdin,
             )
         if str(self.credential_reference) in result.output:
             pytest.fail("API credential reference appeared in CLI output", pytrace=False)

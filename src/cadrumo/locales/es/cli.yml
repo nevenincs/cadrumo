@@ -1,6 +1,34 @@
 cli:
   app:
     ledger:
+      account:
+        account_id_help: El identificador de la cuenta propia, por ejemplo acc-01.
+        add_help: Añade una cuenta de la que eres titular; introduce su IBAN con --secrets-stdin,
+          --secrets-fd o la solicitud sin eco.
+        close_help: Cierra una cuenta propia en una fecha; se conserva para los movimientos
+          que la usan.
+        closed_on_help: Fecha de cierre de la cuenta (AAAA-MM-DD).
+        currency_help: Moneda ISO 4217 de la cuenta; EUR si se omite.
+        designate_help: Designa una cuenta propia para el cargo o la devolución, para
+          un modelo o para todos.
+        group_help: Configura tus cuentas bancarias propias y desígnalas para cargos
+          y devoluciones de modelos.
+        holding_help: Si eres titular único de la cuenta (titular) o cotitular (cotitular).
+        label_help: Tu nombre para la cuenta.
+        list_help: Lista tus cuentas propias, enmascaradas, con sus designaciones.
+        modelo_help: Modelo de tres cifras al que se aplica la designación; todos
+          si se omite.
+        new_label_help: Un nombre nuevo para la cuenta.
+        opened_on_help: Fecha de apertura de la cuenta (AAAA-MM-DD).
+        remove_help: Elimina una cuenta propia que ningún movimiento usa ni ninguna
+          designación nombra.
+        role_help: 'La función: charge (domiciliación) o refund (devolución).'
+        show_help: Muestra una cuenta propia, enmascarada, y las designaciones que
+          la nombran.
+        undesignate_help: Elimina la designación de una función, para un modelo o
+          para todos.
+        update_help: Cambia los datos indicados de una cuenta propia; un IBAN o bloque
+          bancario nuevo solo llega por el canal secreto.
       actividad_asset:
         claim_help: Registra una previsión como amortización; repetirla de forma idéntica
           devuelve el registro existente.
@@ -3036,6 +3064,19 @@ cli:
     try_for_help: Prueba [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
   ledger:
+    account:
+      errors:
+        invalid_date: '{option} necesita una fecha con formato AAAA-MM-DD.'
+        nothing_to_update: 'Nada que cambiar en {account}: indica un dato o envía
+          campos de la cuenta por el canal secreto.'
+      none: 'Aún no hay cuentas propias. Añade una con: aeat app ledger account add'
+      prompts:
+        bank_address: 'Dirección del banco: '
+        bank_city: 'Ciudad del banco: '
+        bank_name: 'Nombre del banco: '
+        iban: 'IBAN: '
+        swift_bic: 'SWIFT-BIC: '
+      unchanged: 'Sin cambios: el registro ya tenía estos valores.'
     add:
       actor_help: Tu nombre, registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,

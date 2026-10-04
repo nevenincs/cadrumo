@@ -1,6 +1,33 @@
 cli:
   app:
     ledger:
+      account:
+        account_id_help: L'identificador del compte propi, per exemple acc-01.
+        add_help: Afegeix un compte del qual ets titular; introdueix-ne l'IBAN amb
+          --secrets-stdin, --secrets-fd o la sol·licitud sense eco.
+        close_help: Tanca un compte propi en una data; es conserva per als moviments
+          que l'utilitzen.
+        closed_on_help: Data de tancament del compte (AAAA-MM-DD).
+        currency_help: Moneda ISO 4217 del compte; EUR si s'omet.
+        designate_help: Designa un compte propi per al càrrec o la devolució, per
+          a un model o per a tots.
+        group_help: Configura els teus comptes bancaris propis i designa'ls per a
+          càrrecs i devolucions de models.
+        holding_help: Si n'ets titular únic (titular) o cotitular (cotitular).
+        label_help: El teu nom per al compte.
+        list_help: Llista els teus comptes propis, emmascarats, amb les seves designacions.
+        modelo_help: Model de tres xifres al qual s'aplica la designació; tots si
+          s'omet.
+        new_label_help: Un nom nou per al compte.
+        opened_on_help: Data d'obertura del compte (AAAA-MM-DD).
+        remove_help: Elimina un compte propi que cap moviment utilitza ni cap designació
+          esmenta.
+        role_help: 'La funció: charge (domiciliació) o refund (devolució).'
+        show_help: Mostra un compte propi, emmascarat, i les designacions que l'esmenten.
+        undesignate_help: Elimina la designació d'una funció, per a un model o per
+          a tots.
+        update_help: Canvia les dades indicades d'un compte propi; un IBAN o bloc
+          bancari nou només arriba pel canal secret.
       actividad_asset:
         claim_help: Registra una previsió com a amortització; repetir-la de manera
           idèntica retorna el registre existent.
@@ -3014,6 +3041,20 @@ cli:
     try_for_help: Prova [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
   ledger:
+    account:
+      errors:
+        invalid_date: '{option} necessita una data amb format AAAA-MM-DD.'
+        nothing_to_update: 'Res a canviar a {account}: indica una dada o envia camps
+          del compte pel canal secret.'
+      none: 'Encara no hi ha comptes propis. Afegeix-ne un amb: aeat app ledger account
+        add'
+      prompts:
+        bank_address: 'Adreça del banc: '
+        bank_city: 'Ciutat del banc: '
+        bank_name: 'Nom del banc: '
+        iban: 'IBAN: '
+        swift_bic: 'SWIFT-BIC: '
+      unchanged: 'Sense canvis: el registre ja tenia aquests valors.'
     add:
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
