@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:dcefce8dfa4e693121b9e3bda4ebdabafe271532c107528995c42325d1ad6944'
+body_hash: 'sha256:385fd0f3f03085d8958f8e7aa5fb1b0a42d7972889b4f784a76abb900fc33f2a'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -15,6 +15,7 @@ related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
@@ -79,14 +80,17 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
 - `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
-- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control.
+- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control, with three exceptions from `2026-10-04-application-sign-in-adr`:
+  - the sign-in view's signed-in state, as `aeat config sign-in-status` reports it
+  - that view's typed refusals
+  - the manager-start path offered when the runtime is unavailable
 - Following `2026-10-04-runtime-manager-architecture-adr` (desktop-shell plan S12), the desktop may start a missing `cadrumo-manager` by shell dispatch (Explorer on Windows, LaunchServices on macOS), never as its own child. It may ask the manager to `reveal` its own UI over the manager IPC. It never starts, stops or authenticates the runtime.
 - The desktop shell owns the cross-version GUI single instance:
   - The lock is per user, keyed by identity family and channel.
   - A second GUI launch hands its activation to the open window and exits 0.
   - A newer version launched while an older window is open hands activation to that window, and the user finishes the switch by closing the old window.
   - The headless CLI passthrough is exempt.
-- The shell shows no authentication UI. Login stays in the TUI, the runtime's profile worker launches the Cl@ve browser, and approval prompts belong to the TUI.
+- The shell hosts the application sign-in view of `2026-10-04-application-sign-in-adr`. It submits only through its dedicated host command to the canonical CLI login, and holds no session, receipt or credential. The runtime's profile worker still launches the Cl@ve browser, and approval prompts still belong to the TUI.
 - The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
 - No shell or host copy says that work completes after a terminal closes or the window closes.
 - The host adds no storage-root, log-directory or other Settings variable to its child processes beyond the pinned set `2026-10-04-canonical-environment-adr` declares. The host, every terminal kind and the CLI passthrough resolve the same root whatever their working directory, and a regression test in a relocated packaged layout proves it (desktop-shell plan S02).
@@ -260,7 +264,7 @@ The user's layout puts the two most useful surfaces, the documentation and the T
 **Reconsider if:**
 - package size or file count proves unacceptable for installation
 - Tauri stabilizes multi-webview layout
-- the runtime-manager decision places runtime state or authentication prompts in the shell
+- the runtime-manager decision places runtime state or authentication prompts in the shell. This trigger has been exercised: `2026-10-04-application-sign-in-adr` placed the sign-in view in the shell.
 
 **Seams kept but not built.** These need the user's approval:
 - a status slot fed only through the runtime manager's own local IPC, never from the runtime endpoint
