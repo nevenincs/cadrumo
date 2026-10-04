@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:45706661f464d69d3def5be7d09649a3b043a62c56afbdfd0b76133c09df1d59'
+body_hash: 'sha256:63e086e44b528d102c2a609ad75106b801ec01a2f9ed2eb1b276c2c600ff0b28'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -325,6 +325,15 @@ related:
 - `S18` `verify:` `python -m dev.locales audit (no missing keys)` -> `pass`
 - `S18` `verify:` `dev.tui visual review: snapshot own-accounts-before, render ledger-overview--ready and 7 ledger-own-accounts-* surfaces at default viewports in both themes (64 frames, no failures, no missing glyphs or geometry findings), diff, frames inspected for layout, truncation and masking; inventory covers LedgerOwnAccountsScreen` -> `pass`
 - `S18` `by:` `lane-e`
+- `S17` `M` `src/cadrumo/application/modelo/export.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S17` `M` `src/cadrumo/locales/en/errors.yml`
+- `S17` `M` `src/cadrumo/locales/es/errors.yml`
+- `S17` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S17` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S17` `verify:` `pytest entrypoints/tests/profile_persistence, application/modelo/tests, 303 export CLI parity, export verb, rectificativa motive lifecycle (2963 passed; 18 failures all in the pre-edit baseline)` -> `pass`
+- `S17` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S17` `by:` `lane-d`
 
 ## Notes
 

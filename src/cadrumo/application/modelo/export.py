@@ -363,8 +363,10 @@ class ModeloExportCommand(BaseModel):
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
-            domiciliation. It is required for Modelo 303; non-303 exports
-            resolve the neutral ``KEEP`` value internally.
+            domiciliation. ``None`` resolves the neutral ``KEEP`` value, except
+            for a Modelo 303 rectificativa stating casilla 111, where the choice
+            decides whether Nota 3 puts the refund account on the DID page and
+            is therefore required.
         charge_account_id: Per-filing choice of the own account AEAT debits for
             a domiciliación. ``None`` resolves the register's CHARGE
             designation for the modelo, else its designation for every modelo.
@@ -1895,22 +1897,27 @@ def _resolve_modelo_exportprior_domiciliation(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    amendment_evidence: AmendmentEvidence | None,
     schema_provider: RegistrySchemaAccessor,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> PriorDomiciliationElectionProjection:
-    is_m303 = str(work_unit.modelo) == Modelo("303").value
-    if is_m303 and command.prior_domiciliation_election is None:
+    """Resolve the page-3 prior-domiciliation action, KEEP unless the filing must choose.
+
+    KEEP is the neutral value: it leaves the marker blank and changes nothing
+    AEAT holds. Only a Modelo 303 rectificativa stating casilla 111 makes the
+    choice consequential -- KEEP puts the refund account on the DID page under
+    Nota 3, CANCEL_OR_MODIFY does not -- so that filing alone must state it.
+    """
+    if command.prior_domiciliation_election is None and _m303_nota_three_requires_refund_account(
+        work_unit, revision, PriorDomiciliationElection.KEEP, amendment_evidence
+    ):
         raise ModeloExportPriorDomiciliationElectionRequiredError(
-            "Modelo 303 export requires an explicit prior-domiciliation election",
+            "a Modelo 303 rectificativa stating casilla 111 requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
-        election=(
-            command.prior_domiciliation_election
-            if is_m303
-            else command.prior_domiciliation_election or PriorDomiciliationElection.KEEP
-        ),
+        election=command.prior_domiciliation_election or PriorDomiciliationElection.KEEP,
         work_unit=work_unit,
         revision=revision,
         filing_repository=export_ports.filing,
@@ -1994,6 +2001,7 @@ def _prepare_modelo_export(
         command,
         work_unit=work_unit,
         revision=revision,
+        amendment_evidence=amendment_evidence,
         schema_provider=schema_provider,
         export_ports=export_ports,
         operation=operation,

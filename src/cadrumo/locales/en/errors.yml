@@ -1146,9 +1146,10 @@ errors:
     refused_modelo_domiciliation_past_cutoff: Direct debit for this filing closed
       on {payment_cutoff_on}; on {export_on} the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
-    refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
-      needs a choice for any earlier direct debit (keep it, or cancel or modify it);
-      none was given, so nothing was written. Choose one and export again.
+    refused_modelo_export_prior_domiciliation_election_required: A Modelo 303 rectificativa
+      that states casilla 111 needs a choice for the earlier direct debit (keep it,
+      or cancel or modify it); none was given, so nothing was written. Choose one
+      and export again.
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached

@@ -1165,10 +1165,10 @@ errors:
       {payment_cutoff_on} napon lezárult; {export_on} napon az eredményt csak más
       módon fizetheted meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
-    refused_modelo_export_prior_domiciliation_election_required: A Modelo 303 exportálásához
-      döntés szükséges a korábbi csoportos beszedésről (megtartás, illetve visszavonás
-      vagy módosítás); ilyen nem érkezett, ezért semmi sem íródott ki. Válassz egyet,
-      és exportálj újra.
+    refused_modelo_export_prior_domiciliation_election_required: A 111-es mezőt kitöltő
+      Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről
+      (megtartás, illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi
+      sem íródott ki. Válassz egyet, és exportálj újra.
     refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot

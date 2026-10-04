@@ -236,30 +236,76 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
         assert event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 
 
-def test_export_modelo_303_without_a_prior_domiciliation_election_refuses_before_any_byte(
+def test_export_modelo_303_without_a_prior_domiciliation_election_keeps_it(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """The page-three marker is the operator's choice; an export that carries none is refused, not failed."""
+    """KEEP is the neutral default: an ordinary 303 with no election exports with a blank page-3 marker."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303-without-election.txt"
 
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+            ),
+            workflow_profile=_typed_profile(taxpayer_nif=taxpayer_nif),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=bucket_id,
+                taxpayer_tax_id=taxpayer_nif,
+                work_unit=work_repo,
+                calculation=calc_repo,
+                bucket_event=event_repo,
+            ),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            operation=_authority_operation_for_test,
+        )
+
+        assert result.prior_domiciliation_election.election is PriorDomiciliationElection.KEEP
+        event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+        assert event.payload["prior_domiciliation_election"] == PriorDomiciliationElection.KEEP.value
+        assert output_path.exists()
+
+
+def test_export_modelo_303_rectificativa_stating_casilla_111_requires_the_election(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """Only a rectificativa with casilla 111 must choose: KEEP puts the Nota 3 refund account on DID, X does not."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+            negative_result=True,
+            casilla_111=Decimal("0"),
+            operation=_authority_operation_for_test,
+        )
+        rectificativa = _persist_rectificativa_with_nota_three(
+            verified,
+            taxpayer_nif=taxpayer_nif,
+            work_repo=work_repo,
+            calc_repo=calc_repo,
+            operation=_authority_operation_for_test,
+        )
+        output_path = tmp_path / "modelo-303-n3-without-election.txt"
+
         with pytest.raises(ModeloExportPriorDomiciliationElectionRequiredError) as refused:
             export_modelo_revision(
                 ModeloExportCommand(
-                    calculation_revision_id=verified.calculation_revision_id,
+                    calculation_revision_id=rectificativa.calculation_revision_id,
                     output_path=output_path,
                     actor="operator",
                 ),
-                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+                workflow_profile=_nota_three_profile(
+                    taxpayer_nif=taxpayer_nif, bucket_id=bucket_id, refund_account=None
+                ),
                 export_ports=modelo_export_ports_for_test(
-                    bucket_id=bucket_id,
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
-                    calculation=calc_repo,
+                    calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
                 clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
@@ -269,7 +315,10 @@ def test_export_modelo_303_without_a_prior_domiciliation_election_refuses_before
         assert get_registered_error_code(refused.value).code == (
             "REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED"
         )
-        assert refused.value.context == {"calculation_revision_id": verified.calculation_revision_id, "modelo": "303"}
+        assert refused.value.context == {
+            "calculation_revision_id": rectificativa.calculation_revision_id,
+            "modelo": "303",
+        }
         assert not output_path.exists()
         assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 

@@ -1235,10 +1235,10 @@ errors:
       se cerró el {payment_cutoff_on}; el {export_on} solo puedes pagar el resultado
       de otra forma.
     refused_modelo_edit_parse: No se ha podido leer este dato.
-    refused_modelo_export_prior_domiciliation_election_required: La exportación del
-      modelo 303 necesita una elección sobre la domiciliación anterior (mantenerla,
-      o anularla o modificarla); no se indicó ninguna, así que no se ha escrito nada.
-      Elige una y vuelve a exportar.
+    refused_modelo_export_prior_domiciliation_election_required: Una autoliquidación
+      rectificativa del modelo 303 con la casilla 111 necesita una elección sobre
+      la domiciliación anterior (mantenerla, o anularla o modificarla); no se indicó
+      ninguna, así que no se ha escrito nada. Elige una y vuelve a exportar.
     refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
       de esta declaración porque los apuntes contables que la sustentan han cambiado
       desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge

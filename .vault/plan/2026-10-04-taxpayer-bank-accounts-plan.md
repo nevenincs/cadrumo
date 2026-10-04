@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:e426341b5f898c7a3f0a0b2bb3f7ad5fa86bd6c1b3ed096b1ae4141985ab518a'
+body_hash: 'sha256:239c8a3190d6e3ffd4f7e360d792f1ad92ae999608fa88eb0d07f3f893a3fde8'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -74,7 +74,7 @@ Gives Modelo 360 its grounded DEVOLUCION disposition, reconciles its account wit
 
 Closes the 303 refusals that are account-adjacent but not solved by the register itself.
 
-- [ ] `P05.S17` - default the prior-domiciliation election to KEEP for 303 exports and keep the explicit requirement only where a rectificativa states casilla 111; `src/cadrumo/application/modelo/export.py`.
+- [x] `P05.S17` - default the prior-domiciliation election to KEEP for 303 exports and keep the explicit requirement only where a rectificativa states casilla 111; `src/cadrumo/application/modelo/export.py`.
 
 ### Phase `P06` - TUI ledger setup and elections
 
