@@ -36,6 +36,7 @@ from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormCellKind
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
@@ -266,7 +267,7 @@ def test_a_declaration_recorded_as_filed_counts_nothing_to_do(operation: PinnedA
 
 
 def _requirement(operation: PinnedAuthorityOperation) -> CrossPeriodDependencyRequirement:
-    assert _LEGAL_REF in operation.legal_reference_ids()
+    assert _LEGAL_REF in legal_reference_ids(operation)
     return CrossPeriodDependencyRequirement(
         source_modelo="100",
         filing_year=2025,

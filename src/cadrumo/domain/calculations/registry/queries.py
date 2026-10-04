@@ -16,7 +16,6 @@ surfaces whose contract genuinely requires the complete validated graph.
 from __future__ import annotations
 
 import re
-from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -24,7 +23,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.i18n.render import output_language
 from ....core.modelo import Modelo
@@ -56,9 +54,6 @@ from .query_reports import (
     ModeloListReport,
     ModeloListRow,
     ModeloSupportMatrixReport,
-    RegistrySourceInventoryReport,
-    RegistrySourceInventoryRow,
-    RegistrySourceSite,
 )
 from .relation_prefill_bindings import RelationPrefillProvider
 from .relations import relation_prefill_bindings_for_period
@@ -319,51 +314,6 @@ class RegistryQueryService:
         # to ``ModeloListRow | Mapping[str, Any]``.
         ordered: tuple[ModeloListRow, ...] = tuple(sorted(rows, key=lambda row: row.code))
         return ModeloListReport(modelos=ordered)
-
-    def source_inventory(self) -> RegistrySourceInventoryReport:
-        """Report every :class:`~core.aggregation.BindingSourceKind` the committed registry declares, and where.
-
-        Walks every committed modelo revision and every binding it declares,
-        grouping by the binding's ``source`` kind. The result records, per
-        source kind, the committed revisions that declare it and the per-revision
-        binding count. This is a pure registry introspection surface — it does
-        not consult the live calculation mesh — so it stays inside the domain
-        boundary. Application-layer conformance compares this live inventory
-        directly with executable calculation-route ownership so an unrouted
-        declaration is refused rather than silently blanked.
-
-        Returns:
-            A :class:`~domain.calculations.registry.query_reports.RegistrySourceInventoryReport`
-            whose rows are sorted by the source kind's string value; each row's
-            sites are sorted by ``(modelo, revision_id)``.
-        """
-        sites_by_source: dict[BindingSourceKind, list[RegistrySourceSite]] = defaultdict(list)
-        for modelo_id, revision in self.iter_modelo_revisions():
-            counts: Counter[BindingSourceKind] = Counter(binding.source for binding in revision.bindings)
-            for source, count in counts.items():
-                sites_by_source[source].append(
-                    RegistrySourceSite(
-                        modelo=modelo_id,
-                        revision_id=str(revision.id),
-                        binding_count=count,
-                    ),
-                )
-        inventory: list[RegistrySourceInventoryRow] = []
-        for source, sites in sites_by_source.items():
-            ordered_sites: tuple[RegistrySourceSite, ...] = tuple(
-                sorted(sites, key=lambda site: (site.modelo, site.revision_id))
-            )
-            inventory.append(
-                RegistrySourceInventoryRow(
-                    source_kind=source,
-                    sites=ordered_sites,
-                    total_binding_count=sum(site.binding_count for site in ordered_sites),
-                ),
-            )
-        ordered_rows: tuple[RegistrySourceInventoryRow, ...] = tuple(
-            sorted(inventory, key=lambda row: row.source_kind.value)
-        )
-        return RegistrySourceInventoryReport(rows=ordered_rows)
 
     def support_matrix(self) -> ModeloSupportMatrixReport:
         """Return the registry-wide per-modelo support/capability matrix.

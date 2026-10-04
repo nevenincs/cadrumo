@@ -13,9 +13,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.type_guards import is_object_list_or_tuple
@@ -51,25 +51,6 @@ class JsonType(StrEnum):
     INTEGER = "integer"
     NUMBER = "number"
     BOOLEAN = "boolean"
-
-
-class VerbParameterJsonSchema(TypedDict):
-    """JSON Schema a consumer reads for one command parameter."""
-
-    type: str
-    items: NotRequired[VerbParameterJsonSchema]
-    enum: NotRequired[list[str]]
-    description: NotRequired[str]
-    default: NotRequired[JsonValue]
-
-
-class VerbInputJsonSchema(TypedDict):
-    """Strict JSON object schema a consumer reads for one command's inputs."""
-
-    type: Literal["object"]
-    properties: dict[str, VerbParameterJsonSchema]
-    required: list[str]
-    additionalProperties: bool
 
 
 class CommandWriteRoute(StrEnum):
@@ -301,18 +282,6 @@ class VerbParameter(BaseModel):
     default: bool | int | float | str | list[Any] | None = None
     help: str = ""
 
-    def property_schema(self) -> VerbParameterJsonSchema:
-        """Project this parameter into the consumer-facing JSON schema."""
-        scalar: VerbParameterJsonSchema = {"type": self.json_type.value}
-        if self.choices:
-            scalar["enum"] = list(self.choices)
-        if self.help:
-            scalar["description"] = self.help
-        schema: VerbParameterJsonSchema = {"type": "array", "items": scalar} if self.multiple else scalar
-        if self.default is not None:
-            schema["default"] = self.default
-        return schema
-
 
 class ResolvedVerbLeaf(BaseModel):
     """One command key resolved to its canonical outer path."""
@@ -359,15 +328,6 @@ class VerbInputSchema(BaseModel):
     def required_inputs(self) -> tuple[VerbParameter, ...]:
         """Return parameters that must be supplied by a caller."""
         return tuple(parameter for parameter in self.parameters if parameter.required)
-
-    def json_schema(self) -> VerbInputJsonSchema:
-        """Project the input contract into a strict JSON object schema."""
-        return {
-            "type": "object",
-            "properties": {parameter.name: parameter.property_schema() for parameter in self.parameters},
-            "required": [parameter.name for parameter in self.parameters if parameter.required],
-            "additionalProperties": False,
-        }
 
 
 class SchemaResolutionError(CadrumoError):

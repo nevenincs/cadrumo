@@ -61,22 +61,6 @@ class AcquisitionLineageReference(BaseModel):
     invoice_evidence_id: str = Field(min_length=1, max_length=256)
     evidence_fingerprint: Hex64Str
 
-    def resolve_current_transaction_id(self, replacements: dict[str, str]) -> str:
-        """Follow a supplied canonical edit-lineage map without minting an ID.
-
-        The application ledger owns construction of ``replacements``.  Keeping
-        this narrow domain operation pure preserves the observed ID on the
-        revision while enabling stale-state detection after ID-affecting edits.
-        """
-        current = self.observed_transaction_id
-        seen: set[str] = set()
-        while current in replacements:
-            if current in seen:
-                raise ActividadAssetValidationError("transaction edit lineage contains a cycle")
-            seen.add(current)
-            current = replacements[current]
-        return current
-
 
 class OpeningAmortizationHistory(BaseModel):
     """Recorded pre-onboarding amortization, deliberately distinct from zero."""

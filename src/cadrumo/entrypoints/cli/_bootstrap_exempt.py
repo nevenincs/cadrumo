@@ -52,8 +52,6 @@ claims are fields a gate reads:
   exemption carries today. A verb added under an exempt prefix changes the live
   subtree and reds the gate, so it cannot inherit the exemption silently ---
   the failure mode prefix matching invites.
-- ``asserts_family_read_only`` mechanises the one structural claim some entries
-  make about the operator-surface contract.
 
 ``note`` is the residue: the part of the reasoning that is judgement, not fact.
 **It is not verified by anything and must not be read as if it were.** Keep it
@@ -124,8 +122,6 @@ class BootstrapExemption:
             resolve against the live command tree.
         cites_tests: Test function names the justification leans on. Each must
             exist in the test tree.
-        asserts_family_read_only: The entry claims its operator-surface command
-            family is declared read-only. Checked against the live contract.
     """
 
     verb_path: str
@@ -134,7 +130,6 @@ class BootstrapExemption:
     subtree: tuple[str, ...] = ()
     cites_verbs: tuple[str, ...] = ()
     cites_tests: tuple[str, ...] = ()
-    asserts_family_read_only: bool = False
 
 
 #: Every bootstrap exemption, with its criterion and its checkable citations.

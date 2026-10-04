@@ -68,7 +68,7 @@ from .facts.resolution import (
 )
 from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
-from .ids import LegalRefId, RevisionId
+from .ids import RevisionId
 from .schema import (
     ModeloDefinition,
     ModeloRevision,
@@ -263,20 +263,6 @@ class ValidatedRegistryAuthority:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         """Return the registry's single filing-year support envelope."""
         return self.catalogues.require_supported_filing_years()
-
-    def project_filing_year(self, filing_year: int) -> int:
-        """Project an admitted filing year onto the authority's authored horizon."""
-        support = self.catalogues.supported_filing_years
-        if support is None:
-            raise RegistrySnapshotError("the calculation registry declares no supported filing years")
-        projected = support.projection_coordinate(filing_year)
-        if projected is None:
-            ceiling = support.hard_ceiling
-            span = f"{support.floor} and later" if ceiling is None else f"{support.floor}..{ceiling}"
-            raise RegistrySnapshotError(
-                f"filing year {filing_year} is outside the calculation registry's supported span {span}"
-            )
-        return projected
 
     def tax_domain(
         self,
@@ -820,19 +806,6 @@ class PinnedAuthorityOperation:
         if not isinstance(value, PublishedLegalEvidence):
             raise RegistryValidationError("legal evidence component decoded to an unexpected type")
         return value
-
-    def legal_reference_ids(self) -> tuple[str, ...]:
-        """Return every published legal declaration identity without hydrating payloads."""
-        return tuple(
-            query.reference_id
-            for query in self._reader.component_queries()
-            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_REFERENCE
-        )
-
-    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
-        """Answer one citation query from this generation's published legal evidence."""
-        evidence = self.legal_evidence(str(legal_ref_id))
-        return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
 
     def capture_law_selected_projection(
         self,

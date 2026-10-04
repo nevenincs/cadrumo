@@ -42,6 +42,7 @@ from ._registry_thresholds import (
     registry_menor_tres_supplement,
     registry_thresholds,
 )
+from .family_counts import descendientes_eligible_minimum, descendientes_menores_3_year_end
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -284,7 +285,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(2019, 6, 1)),  # age 5 at year-end 2024
             ),
         )
-        assert p.descendientes_menores_3_year_end(2024, context=_FACT_CONTEXT) == 1
+        assert descendientes_menores_3_year_end(p, 2024, context=_FACT_CONTEXT) == 1
 
     def test_descendientes_eligible_minimum_count(self) -> None:
         p = RentaFamilyProfile(
@@ -294,7 +295,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33),  # disabled, eligible
             ),
         )
-        assert p.descendientes_eligible_minimum(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 2
+        assert descendientes_eligible_minimum(p, 2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 2
 
 
 # ---------------------------------------------------------------------------

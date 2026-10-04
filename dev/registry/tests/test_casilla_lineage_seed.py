@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_seed_corpus import load_corpus
@@ -404,9 +405,9 @@ def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> No
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
-    assert lineage_totality((modelo,), keys).is_total
+    assert is_total(lineage_totality((modelo,), keys))
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
-    assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
+    assert not is_total(lineage_totality((modelo,), keys - {min(keys)}))
 
 
 # --------------------------------------------------------------------------- partly stamped identifiers
@@ -510,9 +511,9 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
-    assert lineage_totality((modelo,), keys).is_total
+    assert is_total(lineage_totality((modelo,), keys))
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
-    assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
+    assert not is_total(lineage_totality((modelo,), keys - {min(keys)}))
 
 
 # --------------------------------------------------------------------------- carrying forward

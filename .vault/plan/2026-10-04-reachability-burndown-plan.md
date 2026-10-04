@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:d386dbe8603668d280fb109a52f64e8ec58080543e12e5c51c648420d87fb11f'
+body_hash: 'sha256:54ba0db35828d1134a9504c2db19e2e6dbc178700b7bb808ee6b088348c8b952'
 ---
 
 # `reachability-burndown` plan
@@ -43,7 +43,8 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S15` - Bind Windows worker admission to retained process birth and exact Job membership and retire unsupported native and browser test doors; `Native worker identity, enrollment and shutdown fixture owners, browser authentication and owning tests`.
 - [x] `S16` - Retire legacy secure batch wrappers and move diagnostic observation-history and index inspection to their real fixture owners; `Secure object batches, observation repositories, transaction index probes and owning fixtures`.
 - [x] `S17` - Resolve homogeneous iterable receiver evidence without clearing shadowed or unknown element types; `Reachability receiver analysis, outside consumers and planted controls`.
-- [ ] `S18` - Retire unsupported diagnostic projections and bind existing tests to canonical kernels; `Registry diagnostics, operator schema projections, family and lineage helpers, bootstrap declarations and owning fixtures`.
+- [x] `S18` - Retire unsupported diagnostic projections and bind existing tests to canonical kernels; `Registry diagnostics, operator schema projections, family and lineage helpers, bootstrap declarations and owning fixtures`.
+- [ ] `S19` - Follow typed generic schema factories and consumed repository payload slots; `Reachability schema consumers, resolved call coordinates and planted positive and negative controls`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

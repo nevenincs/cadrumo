@@ -29,6 +29,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
@@ -373,7 +374,7 @@ def test_a_period_with_no_window_has_no_deadline(operation: PinnedAuthorityOpera
 
 
 def _requirement(operation: PinnedAuthorityOperation) -> CrossPeriodDependencyRequirement:
-    assert _LEGAL_REF in operation.legal_reference_ids()
+    assert _LEGAL_REF in legal_reference_ids(operation)
     return CrossPeriodDependencyRequirement(
         source_modelo="111",
         filing_year=2025,

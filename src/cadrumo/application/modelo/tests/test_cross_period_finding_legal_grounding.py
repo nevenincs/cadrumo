@@ -23,6 +23,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.calculations.registry.schema_references import LegalReference
+from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.calculations.registry.tests.published_authority import (
     published_legal_evidence_text,
     published_revision_definitions,
@@ -51,7 +52,7 @@ def _all_legal_references() -> dict[str, LegalReference]:
     """Return every published legal declaration, keyed by canonical identity."""
     with bundled_indexed_authority().operation() as operation:
         return {
-            reference_id: operation.legal_reference(reference_id) for reference_id in operation.legal_reference_ids()
+            reference_id: operation.legal_reference(reference_id) for reference_id in legal_reference_ids(operation)
         }
 
 

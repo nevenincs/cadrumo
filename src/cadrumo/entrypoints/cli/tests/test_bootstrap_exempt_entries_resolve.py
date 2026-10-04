@@ -44,8 +44,6 @@ import pytest
 from click import Context as ClickContext
 from typer.main import get_command
 
-from ....application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
-from ....application.operator_surface.models import OperatorMutability
 from .._bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
 from ..main import app
 
@@ -58,7 +56,6 @@ _PREFIX_ENTRIES = tuple(exemption for exemption in BOOTSTRAP_EXEMPTIONS if exemp
 _CITING_ENTRIES = tuple(
     exemption for exemption in BOOTSTRAP_EXEMPTIONS if exemption.cites_verbs or exemption.cites_tests
 )
-_READ_ONLY_CLAIMS = tuple(exemption for exemption in BOOTSTRAP_EXEMPTIONS if exemption.asserts_family_read_only)
 
 
 def _root_command() -> click.Command:
@@ -207,21 +204,6 @@ def test_a_prefix_exemption_carries_exactly_the_subtree_it_declares(exemption: B
         f"beyond what it declares, and no longer carries {sorted(set(declared) - set(live))}. "
         "Every leaf under an exempt prefix runs with no active-profile session: re-derive "
         "whether each still qualifies, then update the declared subtree."
-    )
-
-
-@pytest.mark.parametrize("exemption", _READ_ONLY_CLAIMS, ids=lambda e: e.verb_path)
-def test_a_read_only_claim_matches_the_operator_surface_contract(exemption: BootstrapExemption) -> None:
-    """An entry claiming its family is declared read-only must be right about that."""
-    root, child = exemption.verb_path.split()[:2]
-    family = next(
-        (fam for fam in MOUNTED_COMMAND_FAMILIES if fam.root.value == root and fam.child == child),
-        None,
-    )
-    assert family is not None, f"exemption {exemption.verb_path!r} names no operator-surface family"
-    assert family.mutability is OperatorMutability.READ_ONLY, (
-        f"exemption {exemption.verb_path!r} rests on the family being declared read-only, but the "
-        f"operator-surface contract now declares it {family.mutability.value}."
     )
 
 

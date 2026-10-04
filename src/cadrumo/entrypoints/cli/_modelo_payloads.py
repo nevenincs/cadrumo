@@ -19,7 +19,6 @@ results stay authoritative while these classes expose JSON-safe
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, ClassVar, Literal
 
@@ -27,7 +26,6 @@ from pydantic import ConfigDict, Field, NonNegativeInt, computed_field, field_va
 
 from ...application.aggregation.service import (
     PerModeloAggregationContributor,
-    PerModeloAggregationResult,
 )
 from ...application.aggregation.withholding_observation_service import (
     WithholdingGenerationId,
@@ -92,7 +90,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
@@ -1619,8 +1616,8 @@ class ModeloAggregateResult(OutputSchema):
     counters. Redeclaring them as bare strings and unbounded integers made this
     transport shell strictly more permissive than the result it renders, so an
     empty modelo, an unknown provider, a bogus source kind, or a negative count
-    could be emitted as a valid envelope. Build it through
-    :meth:`from_aggregation_result` rather than field-by-field.
+    could be emitted as a valid envelope. Project the actual operation result
+    through these bounded field types.
 
     ``clave_breakdown`` carries per-clave rows of the stored per-perceptor-clave
     withholding detail the modelo's calculation reads (empty when it reads
@@ -1680,48 +1677,6 @@ class ModeloAggregateResult(OutputSchema):
         if len(value) != len(set(value)):
             raise ValueError("source_kinds must be unique")
         return value
-
-    @classmethod
-    def from_aggregation_result(
-        cls,
-        result: PerModeloAggregationResult,
-        *,
-        clave_breakdown: Sequence[WithholdingClaveBreakdown] = (),
-        withholding_window: WithholdingWindowReadbackPayload | None = None,
-    ) -> ModeloAggregateResult:
-        """Project the canonical service result onto the CLI transport shape.
-
-        The one construction path, so the envelope cannot carry a modelo,
-        period, provider, source-kind set, or counter the service did not
-        produce. Counters come from the result's own
-        :class:`~application.aggregation.service.PerModeloAggregationLogFields`, which
-        already bounds them.
-
-        Args:
-            result: The canonical per-modelo aggregation result.
-            clave_breakdown: Per-clave rows of the per-perceptor-clave detail
-                the calculation reads, empty when it reads none.
-            withholding_window: Current baseline and generation metadata for an
-                invoice-backed withholding scope, absent for other modelos.
-        """
-        return cls(
-            modelo=result.modelo,
-            period=result.period,
-            provider=result.provider,
-            observation_count=result.log_fields.observation_count,
-            source_kinds=list(result.source_kinds),
-            result_row_count=result.log_fields.result_row_count,
-            withholding_window=withholding_window,
-            clave_breakdown=[
-                WithholdingClaveBreakdownPayload(
-                    clave=row.clave,
-                    percepcion_count=row.percepcion_count,
-                    percibido_total=str(row.percibido_total),
-                    retencion_total=str(row.retencion_total),
-                )
-                for row in clave_breakdown
-            ],
-        )
 
 
 class WorkPreviewMaritimeExemptionResult(OutputSchema):

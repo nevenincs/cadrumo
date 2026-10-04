@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:42a99fd244752d2259608227147bc7792784a26b47b6f21ec11bcd42dd5993b5'
+body_hash: 'sha256:585814c2035460bbb8a4bf154eb640143ccb148859b56a603b8a11bc48368c3f'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -535,6 +535,41 @@ related:
 - `S17` `verify:` `Reachability receiver planted controls: 8 passed` -> `pass`
 - `S17` `verify:` `Broader audit corpus before independent legal-screen repair: 307 passed and 2 tracked legal failures` -> `fail`
 - `S17` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S18` `M` `dev/registry/tests/test_casilla_lineage_seed.py`
+- `S18` `M` `dev/registry/tests/test_continuidad_completeness_ratchet.py`
+- `S18` `M` `dev/registry/tests/test_unsupported_filing_year_refusal.py`
+- `S18` `M` `src/cadrumo/application/modelo/tests/test_cross_period_finding_legal_grounding.py`
+- `S18` `M` `src/cadrumo/application/modelo/tests/test_cross_period_modelo_not_applicable_localization.py`
+- `S18` `M` `src/cadrumo/application/modelo/tests/test_work_form_descriptors.py`
+- `S18` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S18` `M` `src/cadrumo/application/operator_surface/command_ports.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/casilla_lineage_totality.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S18` `A` `src/cadrumo/domain/calculations/registry/tests/filing_year_projection.py`
+- `S18` `A` `src/cadrumo/domain/calculations/registry/tests/legal_inventory.py`
+- `S18` `A` `src/cadrumo/domain/calculations/registry/tests/legal_quotation.py`
+- `S18` `A` `src/cadrumo/domain/calculations/registry/tests/lineage_totality.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/tests/published_authority.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_totality.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/tests/test_pinned_operation_legal_citations.py`
+- `S18` `M` `src/cadrumo/domain/contribuyente/family_profile.py`
+- `S18` `A` `src/cadrumo/domain/contribuyente/tests/family_counts.py`
+- `S18` `M` `src/cadrumo/domain/contribuyente/tests/test_dependencia_assimilation.py`
+- `S18` `M` `src/cadrumo/domain/contribuyente/tests/test_descendant_info.py`
+- `S18` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S18` `A` `src/cadrumo/domain/renta/actividad_asset/tests/lineage_projection.py`
+- `S18` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_lifecycle.py`
+- `S18` `M` `src/cadrumo/domain/renta/tests/test_maritime_exemption.py`
+- `S18` `M` `src/cadrumo/domain/user_profile/tests/_schema_loader_fixtures.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/tests/aggregate_projection.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/tests/test_bootstrap_exempt_entries_resolve.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_payload_parity.py`
+- `S18` `verify:` `Registry, family, lineage and transport projection behavior: 264 passed; one independent catalogue debt test remains under S07` -> `pass`
+- `S18` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -554,3 +589,4 @@ related:
 - `S15` Windows worker admission now opens a non-inherited process handle, compares it with the pipe-held birth and verifies exact Job membership before accepting its PID. Handles close on every outcome; native installed workers and a real outside-Job peer prove both boundaries. Protected candidate-secret inspection and terminal retry drivers now belong to finite real-host fixtures; unsupported browser reauthentication and close-count getters are retired while real close/authenticate and lifecycle guards remain. Shared files are staged from owned transformations of HEAD to preserve concurrent changes.
 - `S16` Legacy batch wrappers are retired in favor of current-schema batches and the actual coordinated migration owner. Diagnostic observation history and raw index inventory now belong to finite fixtures that retain guarded SQL, encryption, identity refusals and ordering. Shared files are staged from owned HEAD transformations to preserve concurrent work.
 - `S17` Qualified homogeneous iterable annotations now bind loop and comprehension receivers only within their lexical scope. Mixed, unknown, vendor-shadowed and nested-shadowed receivers remain unresolved. Canonical module-qualified iterable annotations are supported without borrowing unrelated element types.
+- `S18` Uncalled JSON schema and source-inventory projections and their unsupported records are retired. Catalogue, family, lineage and old transport construction helpers now belong to finite fixtures over the same canonical kernels. The empty bootstrap family claim is removed while actual exemption membership and citation controls remain. Shared files are staged from owned HEAD transformations to preserve concurrent work.
