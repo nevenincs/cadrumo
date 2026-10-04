@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:2db30c4f2ed287a88d579c808bd25d2040b77cd98029bd868e9e35c9c1df7652'
+body_hash: 'sha256:fa687e33b7de53678bc2e2d8dee451c23114cbe515f8c1a89f2c548b5eab1250'
 ---
 
 # `reachability-burndown` plan
@@ -32,7 +32,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 
 - [x] `S01` - Refresh the full finding population and resolve assigned-validator and framework-dispatch evidence; `dev/audit/unreachable_*.py and dev/audit/tests`.
 - [x] `S02` - Remove or relocate unused core and persistence helpers with all callers updated; `src/cadrumo/core and src/cadrumo/adapters/persistence and their tests`.
-- [ ] `S03` - Remove unused application and command helpers and verify real operator paths; `src/cadrumo/application and src/cadrumo/entrypoints and their tests`.
+- [x] `S03` - Remove unused application and command helpers and verify real operator paths; `src/cadrumo/application and src/cadrumo/entrypoints and their tests`.
 - [ ] `S04` - Resolve all remaining method and data candidates through their actual contracts; `src/cadrumo/domain, application, adapters and entrypoints and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

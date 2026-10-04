@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ff925ad7db09da4967962d7703e6ddab769da0b385b6dcf2cbddbaa2b8eafa8'
+body_hash: 'sha256:ba017e2b6ff7cf14c350c9de0160127ed9babd221b601c99d53b521ca4436035'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -76,8 +76,41 @@ related:
 - `S02` `M` `src/cadrumo/core/json_contract.py`
 - `S02` `M` `src/cadrumo/core/observability/store.py`
 - `S02` `M` `src/cadrumo/core/observability/sink.py`
+- `S03` `M` `src/cadrumo/application/user_profile/profile_record_repository.py`
+- `S03` `A` `src/cadrumo/application/user_profile/tests/record_session_scope.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/operations/tests/test_censal_operation_executor.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_lifecycle.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_censal_reviewed_apply.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_complete_setup_schema_judgement.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_cotejo_apply_schema_judgement.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_health.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_registration.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/tests/test_active_profile_resolution.py`
+- `S03` `M` `src/cadrumo/application/user_profile/tests/test_capsule_record_lineage_authority.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_command_runtime.py`
+- `S03` `A` `src/cadrumo/entrypoints/cli/tests/command_runtime_support.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_review_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_app_quickfile_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_app_live_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_command_runtime.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S03` `A` `src/cadrumo/entrypoints/cli/tests/error_boundary_scope.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_active_profile_env_override_name.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_root_guard_typed_projection.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_wizard.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_work_wizard_flow.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py`
+- `S03` `verify:` `focused behavior tests (83 selected)` -> `pass`
+- `S03` `verify:` `focused Ruff format and ty` -> `pass`
 
 ## Notes
 
 - `S01` Fresh scan 285 candidates across 3217 modules; candidate count is a live observation. Assigned validators and Click dispatch resolved without identity exemptions.
 - `S02` Type errors are in concurrent reconciliation test changes. Import checks loaded every attempted module with no broken contracts but source and census changed during execution; final stable verification remains S07.
+- `S03` 91 integration/platform cases remain for S07. Removed test-only convenience doors and updated test consumers; real operator implementations unchanged.

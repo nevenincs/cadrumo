@@ -41,10 +41,7 @@ from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyTransactionCorruptError,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.bucket_pointer import read_pointer
@@ -55,6 +52,7 @@ from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
 from ......domain.calculations.registry.tests.published_authority import published_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]

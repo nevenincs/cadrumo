@@ -116,10 +116,9 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
         unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
         from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-        from cadrumo.application.user_profile.profile_record_repository import (
-            ProfileRecordRepository,
-            bound_profile_record_session,
-        )
+        from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+
+        from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
 
         session = ProfileRecordSession.from_envelope(
             envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test

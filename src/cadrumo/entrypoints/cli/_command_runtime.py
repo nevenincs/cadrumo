@@ -538,18 +538,10 @@ def build_command_app(graph: CommandSpecGraph) -> typer.Typer:
     return _node_app(graph, graph.root().key)
 
 
-@cache
-def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
-    """Compile one declared subtree for an atomic family migration."""
-    graph.spec(key)
-    return _node_app(graph, key)
-
-
 __all__ = [
     "GOVERNED_FACT_SCOPE_CAPABILITIES",
     "CommandSpecTyperGroup",
     "build_command_app",
-    "build_command_subtree",
     "refuse_declared_live_write",
     "resolve_deferred_target",
     "runs_in_governed_fact_scope",

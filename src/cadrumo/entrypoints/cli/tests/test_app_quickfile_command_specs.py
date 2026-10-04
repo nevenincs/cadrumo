@@ -6,10 +6,10 @@ import pytest
 from typer.testing import CliRunner
 
 from .._app_quickfile_command_specs import QUICKFILE_COMMAND_SPECS
-from .._command_runtime import build_command_subtree
 from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_graph import CommandSpecGraph
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

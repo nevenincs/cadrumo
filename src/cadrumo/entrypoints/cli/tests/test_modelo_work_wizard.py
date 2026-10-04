@@ -49,7 +49,11 @@ from ....application.flows.definition import FlowDefinition, FlowPage
 from ....application.flows.errors import FlowCopyResolutionError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
-from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
+from ....application.modelo.work_wizard import (
+    ModeloWorkWizardStep,
+    discover_modelo_work_wizard_steps,
+    open_modelo_work_wizard_from_steps,
+)
 from ....application.user_profile.login_session import login_profile, resolve_login_target
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
@@ -142,7 +146,9 @@ def _scripted_manual_answers(
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
         unit = load_work_unit_by_id(work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             definition = wizard.definition_for()
             tokens = ["0"] * len(wizard.steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
@@ -534,7 +540,9 @@ def test_canonical_wizard_factory_carries_real_registry_grounding(
 
     with open_test_profile_session(bucket_id):
         unit = load_work_unit_by_id(work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             steps = wizard.steps
             definition = wizard.definition_for()
             first_page = definition.sections[0].items[0]

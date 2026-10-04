@@ -24,8 +24,6 @@ The :func:`command_error_boundary` decorator wraps a callback so that
 :func:`decorate_typer_app` walks a
 :class:`~typer.Typer` tree and applies the error boundary to every graph-materialized command
 and group callback (with an opt-out via ``skip_paths``).
-:func:`suspend_error_boundary` toggles the
-boundary off for tests that want to assert on the raised exception directly.
 """
 
 from __future__ import annotations
@@ -37,9 +35,8 @@ import io
 import json
 import logging
 import sys
-from collections.abc import Callable, Generator, Mapping, Sequence
-from contextlib import contextmanager
-from contextvars import ContextVar, Token
+from collections.abc import Callable, Mapping, Sequence
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Final, Never, Protocol, TypeGuard, cast
 
@@ -377,7 +374,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     Typer/Click control-flow exceptions (e.g. :exc:`~click.exceptions.Exit`,
     :exc:`~click.Abort`, :exc:`~typer.Exit`) propagate untouched so the
     framework can act on them. When
-    :func:`suspend_error_boundary` is active
+    the context-local boundary override is active
     the original exception is re-raised instead of being emitted.
 
     Calls are memoised by callback identity so wrapping the same
@@ -797,27 +794,6 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
     raise typer.Exit(code=get_error_exit_code(code.category)) from error
 
 
-@contextmanager
-def suspend_error_boundary() -> Generator[None]:
-    """Temporarily force :func:`command_error_boundary` to re-raise originals.
-
-    Tests that need to assert on the raised exception type rather than
-    the rendered stderr payload should wrap their invocation in this
-    context manager. The override is scoped to the active context via
-    :class:`~contextvars.ContextVar`, so concurrent callbacks are
-    unaffected.
-
-    Yields:
-        ``None``. The context's only purpose is the side effect on the internal
-        flag.
-    """
-    token: Token[bool] = _BOUNDARY_SUSPENDED.set(True)
-    try:
-        yield
-    finally:
-        _BOUNDARY_SUSPENDED.reset(token)
-
-
 def _decorate_typer_node(
     app: typer.Typer,
     *,
@@ -1218,6 +1194,5 @@ __all__ = [
     "boundary_no_recovery_verdict",
     "decorate_typer_app",
     "project_cli_boundary_error",
-    "suspend_error_boundary",
     "write_stderr",
 ]

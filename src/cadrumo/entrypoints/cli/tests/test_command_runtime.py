@@ -12,11 +12,7 @@ from cadrumo.application.operator_surface.command_ports import (
 )
 
 from ....core.i18n.render import tr
-from .._command_runtime import (
-    _parameter,
-    build_command_app,
-    build_command_subtree,
-)
+from .._command_runtime import _parameter, build_command_app
 from .._command_target import resolve_deferred_target
 from ..command_graph import CommandSpecGraph
 from ..command_parameter_contracts import ArgumentSpec, OptionSpec
@@ -31,6 +27,7 @@ from ..command_shared_contracts import (
     ValueContract,
 )
 from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

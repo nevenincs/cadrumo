@@ -55,8 +55,9 @@ from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
 from ..common import cli_policy_refusal_projection
 from ..config.tests.isolated_storage_fixture import native_profile_view_server
-from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..errors import CliRefusedBoundaryError
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
+from .error_boundary_scope import suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
