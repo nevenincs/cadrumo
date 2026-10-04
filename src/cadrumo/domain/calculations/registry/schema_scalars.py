@@ -14,7 +14,7 @@ from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
-from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ....core.iban import BIC_SHAPE_RE, IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
 from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.identity.tax_id import validate_spanish_tax_id
@@ -410,16 +410,13 @@ MunicipalityCode = Annotated[str, BeforeValidator(_validate_municipality_code)]
 """Five-digit INE municipality code for the registry boundary."""
 
 
-_BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
-
-
 @pydantic_validation_boundary
 def _validate_bic_string(value: object) -> object:
     """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
     if not isinstance(value, str):
         raise RegistryValidationError(f"bic value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").upper()
-    if not _BIC_RE.match(canonical):
+    if not BIC_SHAPE_RE.match(canonical):
         raise RegistryValidationError(f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362")
     return canonical
 

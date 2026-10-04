@@ -258,6 +258,8 @@ errors:
     error_justificante: Igazolással kapcsolatos hiba történt.
     error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
       kódot.
+    error_ledger_own_account_register_record: Egy saját bankszámla-nyilvántartási
+      rekord szerkezetileg érvénytelen.
     error_llm: Nyelvi modell hiba történt.
     error_modelo_aggregation_binding: A bucket-alapú összesítési kötések ellentmondanak
       a megadott bemenetnek.
@@ -1114,6 +1116,8 @@ errors:
       válaszolt, amelyet ez a parancs nem tudott értelmezni, ezért semmi sem került
       átvételre a dokumentumból. Semmi sem lett mentve; futtasd újra a parancsot,
       és ha továbbra is előfordul, az olvasómodellt kell megváltoztatni.
+    refused_ledger_own_account_register_validation: Egy saját bankszámla vagy annak
+      kijelölése nem ment át az ellenőrzésen.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép

@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
-from ...core.iban import normalise_iban
+from ...core.iban import mask_iban as mask_iban_text
 from ...core.models import STRICT_FROZEN_CONFIG
 from .edit_value_grammar import ModeloEditRatioUnit
 
@@ -49,7 +49,6 @@ _PERCENT_SHIFT: Final[Mapping[ModeloEditRatioUnit, int]] = MappingProxyType(
     {ModeloEditRatioUnit.PERCENT: 0, ModeloEditRatioUnit.FRACTION: 2}
 )
 """How far a ratio's decimal point moves to read as a percentage, for each unit the registry lets be known."""
-_IBAN_MASK: Final[str] = "\u00b7\u00b7\u00b7\u00b7"
 _DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\d+)(?:\.(?P<fraction>\d+))?$")
 
 
@@ -182,13 +181,6 @@ def _yes_no(value: bool, language: OutputLanguage) -> str:
     return _catalogue_text(VALUE_TRUE_LOCALE_KEY if value else VALUE_FALSE_LOCALE_KEY, language)
 
 
-def _masked_iban(value: str) -> str:
-    canonical = normalise_iban(value)
-    if len(canonical) <= 8:
-        return canonical
-    return f"{canonical[:4]} {_IBAN_MASK} {canonical[-4:]}"
-
-
 def _format_declared_ratio(
     value: Decimal | int | str | bool | date,
     kind: ValuePresentationKind,
@@ -212,7 +204,7 @@ def _format_quantity_or_identity(
     if kind is ValuePresentationKind.INTEGER and isinstance(value, (int, Decimal)):
         return group_decimal_text(_decimal_text(value), language, minus=SCREEN_MINUS_SIGN) or str(value)
     if kind is ValuePresentationKind.IBAN and isinstance(value, str) and mask_iban:
-        return _masked_iban(value)
+        return mask_iban_text(value)
     return str(value)
 
 

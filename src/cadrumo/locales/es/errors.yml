@@ -266,6 +266,8 @@ errors:
     error_iva_validation: Un valor del IVA no es válido.
     error_justificante: Se produjo un error relacionado con el justificante.
     error_justificante_csv_not_found: El PDF no contiene un Código Seguro de Verificación.
+    error_ledger_own_account_register_record: Un registro de cuentas bancarias propias
+      no es estructuralmente válido.
     error_llm: Se produjo un error en el modelo de lenguaje.
     error_modelo_aggregation_binding: Los bindings de agregación derivados del bucket
       entran en conflicto con los datos indicados.
@@ -1182,6 +1184,8 @@ errors:
       en un formato que este comando no ha podido leer, así que no se ha tomado nada
       del documento. No se ha guardado nada; vuelve a ejecutar el comando y, si sigue
       ocurriendo, lo que hay que cambiar es el modelo lector.
+    refused_ledger_own_account_register_validation: Una cuenta bancaria propia o su
+      designación no superó la validación.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes

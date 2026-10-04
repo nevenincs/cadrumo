@@ -248,6 +248,8 @@ errors:
     error_justificante: A receipt-related error occurred.
     error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
       Verificación.
+    error_ledger_own_account_register_record: An own bank account register record
+      is structurally invalid.
     error_llm: A language-model error occurred.
     error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
       with the input provided.
@@ -1096,6 +1098,8 @@ errors:
       in a form this command could not read, so nothing was taken from the document.
       Nothing was saved; run the command again, and if it keeps happening the reader
       model is the thing to change.
+    refused_ledger_own_account_register_validation: An own bank account or its designation
+      failed validation.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with

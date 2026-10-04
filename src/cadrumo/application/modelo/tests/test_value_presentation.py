@@ -129,7 +129,7 @@ def test_a_bank_account_is_masked_unless_the_editor_asks_for_it() -> None:
     iban = "ES91 2100 0418 4502 0005 1332"
 
     assert (
-        format_casilla_value(iban, data_type="iban", language=OutputLanguage.ES) == "ES91 \u00b7\u00b7\u00b7\u00b7 1332"
+        format_casilla_value(iban, data_type="iban", language=OutputLanguage.ES) == "ES \u00b7\u00b7\u00b7\u00b7 1332"
     )
     assert format_casilla_value(iban, data_type="iban", language=OutputLanguage.ES, mask_iban=False) == iban
 

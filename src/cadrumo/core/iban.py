@@ -40,6 +40,30 @@ as numbers.
 """
 
 
+BIC_SHAPE_RE = re.compile(r"\A[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\Z")
+"""ISO 9362 SWIFT-BIC shape: bank, country and location codes plus an optional branch.
+
+Eight or eleven uppercase characters; callers fold spaces and case first, as for
+an IBAN.
+"""
+
+IBAN_MASK = "\u00b7\u00b7\u00b7\u00b7"
+"""Placeholder printed between the visible ends of a masked IBAN."""
+
+
+def mask_iban(value: str) -> str:
+    """Return the operator-facing mask of an IBAN: country code and last four characters.
+
+    Operator output never shows a full account number; the two ends are what an
+    operator needs to tell their own accounts apart. A value too short to hide
+    anything is masked entirely.
+    """
+    canonical = normalise_iban(value)
+    if len(canonical) <= 8:
+        return IBAN_MASK
+    return f"{canonical[:2]} {IBAN_MASK} {canonical[-4:]}"
+
+
 def normalise_iban(value: str) -> str:
     """Return the uppercase, separator-free form of a printed IBAN.
 

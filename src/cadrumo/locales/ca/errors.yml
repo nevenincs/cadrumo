@@ -268,6 +268,8 @@ errors:
     error_iva_validation: Un valor de l'IVA no és vàlid.
     error_justificante: S'ha produït un error relacionat amb el justificant.
     error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
+    error_ledger_own_account_register_record: Un registre de comptes bancaris propis
+      no és estructuralment vàlid.
     error_llm: S'ha produït un error en el model de llenguatge.
     error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
       entren en conflicte amb les dades indicades.
@@ -1190,6 +1192,8 @@ errors:
       en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
       del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,
       el que cal canviar és el model lector.
+    refused_ledger_own_account_register_validation: Un compte bancari propi o la seva
+      designació no ha superat la validació.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients

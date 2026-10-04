@@ -149,6 +149,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.transactions.own_accounts.OwnAccountRegisterError",
+        ErrorCode(
+            code="ERROR_LEDGER_OWN_ACCOUNT_REGISTER_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_ledger_own_account_register_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.transactions.own_accounts.OwnAccountRegisterValidationError",
+        ErrorCode(
+            code="REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_own_account_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.foreign_assets.record_join.ForeignAssetRecordJoinRefusedError",
         ErrorCode(
             code="REFUSED_FOREIGN_ASSET_RECORD_JOIN",
