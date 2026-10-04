@@ -173,6 +173,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.split.stack",
         "desktop.split.swap",
         "desktop.toast.copied",
+        "desktop.toast.copy_failed",
         "desktop.tui.hide",
         "desktop.tui.label",
         "desktop.tui.show",

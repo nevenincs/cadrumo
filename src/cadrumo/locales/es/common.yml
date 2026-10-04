@@ -640,6 +640,7 @@ desktop:
     swap: Intercambiar documentación y TUI
   toast:
     copied: Copiado
+    copy_failed: No se ha podido copiar.
   tui:
     hide: Ocultar la TUI
     label: TUI de Cadrumo

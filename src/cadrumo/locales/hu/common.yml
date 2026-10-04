@@ -623,6 +623,7 @@ desktop:
     swap: Dokumentáció és TUI felcserélése
   toast:
     copied: Másolva
+    copy_failed: Nem sikerült a másolás.
   tui:
     hide: TUI elrejtése
     label: Cadrumo TUI

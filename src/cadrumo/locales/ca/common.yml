@@ -634,6 +634,7 @@ desktop:
     swap: Intercanvia la documentació i la TUI
   toast:
     copied: Copiat
+    copy_failed: No s'ha pogut copiar.
   tui:
     hide: Amaga la TUI
     label: TUI de Cadrumo

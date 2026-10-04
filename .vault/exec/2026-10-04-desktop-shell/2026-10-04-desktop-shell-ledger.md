@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:358128af3c0d3b801ee34c3e6b99ff0d8c847905d601df93783e580399f9cb5f'
+body_hash: 'sha256:9bf93b9cef919929e99c9c6a3b105e725d785cf64ed2fbad7ca32b51bbcd4f3e'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -226,6 +226,9 @@ related:
 - `S07` `A` `native/desktop/src-tauri/src/shell/window_state.rs`
 - `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop, 87 tests incl. window_state round trip, corrupt record, off-screen fit)` -> `pass`
 - `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (snapshot with HEAD platform lib.rs)` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 passed) with desktop.toast.copy_failed named by App.tsx` -> `pass`
+- `S18` `by:` `orchestrator`
 
 ## Notes
 

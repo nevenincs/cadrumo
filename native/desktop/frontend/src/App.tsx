@@ -255,9 +255,11 @@ export function App({ host }: { host: Host }) {
   const copy = useCallback(
     (text: string) => {
       if (!text) return;
+      // A refused write, including one over the host's size cap, is said
+      // aloud: the person must not believe a copy happened when it did not.
       host.writeClipboard(text).then(
         () => say(t("desktop.toast.copied")),
-        () => undefined,
+        () => say(t("desktop.toast.copy_failed")),
       );
     },
     [host, say, t],

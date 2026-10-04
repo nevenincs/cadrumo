@@ -616,6 +616,7 @@ desktop:
     swap: Swap docs and TUI
   toast:
     copied: Copied
+    copy_failed: Couldn't copy that.
   tui:
     hide: Hide the TUI
     label: Cadrumo TUI
