@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8adb15cdc079bb206d36f5e5bd6650f09bcaa52059647fe49ee66a326b8f943d'
+body_hash: 'sha256:3cf62a01fc5e425b62ed7886742b744b3379b5f698a8ba683209cdf247081afc'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -91,6 +91,10 @@ related:
 - `S10` `verify:` `Real artifact_verify with CMake-generated Release command and pinned prior ZIP; Python relocation plus Rust exact80distribution probe` -> `pass`
 - `S10` `verify:` `Post-run archive and extracted manifest hash comparison against fixture locator` -> `pass`
 - `S10` `verify:` `Fresh CMake Release bundle retry; existing Modelo2322016-2017 authority bindings refused` -> `fail`
+- `S10` `verify:` `CMake configure application-cmake and fresh Release bundle plus ZIP b1787` -> `pass`
+- `S10` `verify:` `CMake verify-package initial attempt verification_destination import failure` -> `fail`
+- `S10` `verify:` `Fresh process artifact_verify b1787 Windows major-version acceptance` -> `fail`
+- `S10` `verify:` `CMake-generated Rust Release probe against fresh b1787 ZIP extraction; CPython3.13.11 and80 exact distributions` -> `pass`
 
 ## Notes
 
@@ -112,3 +116,5 @@ related:
 - `S10` The live combined verifier used build/windows-x64/application-cmake/archive-fixture and prior ZIP SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b. It is not a fresh source-build acceptance. result.json records `application_probe=passed.`
 - `S10` The live process started before the final manifest recheck assertion was added; that assertion is covered by a real manifest-mutation regression and the successful post-run comparison against the original locator.
 - `S10` Concurrent shared-branch merge commits captured the implementation during verification; source remains intact. This checkpoint records verification without rewriting those commits. No registry source changes or validation bypass. Full S10/S11 remain open.
+- `S10` User-requested recheck: prior Modelo232 registry compiler blocker cleared; all three product wheels and ZIP built. Archive SHA256 d0d0769319e4c6294f2a7aef6fbbb30c5f0c33414bb2966beee09e2131ed039b; manifest SHA256 e799b11ca559c9dd6bb5e28246b2815e15019d89f0b34a7e0ab38270d9eb7ec1.
+- `S10` Initial harness import failed; retry in fresh process passed that point but native acceptance rejected packaged Windows version6.2.9200 versus `platform_version10.0.26100.` Source host.manifest fix5b8458ce7e predates this build. No full artifact pass; separate Rust probe passed with browser MissingDependency. No source edits or acceptance bypass; S10 remains open.
