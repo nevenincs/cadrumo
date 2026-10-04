@@ -1,6 +1,6 @@
 //! Structured native diagnostic files; payloads, arguments and environment never enter them.
 use crate::{
-    failure::{Failure, FailureCode, Operation, Result},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
     filesystem,
 };
 use serde::Serialize;
@@ -29,8 +29,8 @@ impl LogPaths {
             .with_file_name(format!("cadrumo-native.jsonl.{index}"))
     }
 }
-fn failure() -> Failure {
-    Failure::new(FailureCode::LogUnavailable, Operation::Logging)
+fn failure() -> ApplicationError {
+    ApplicationError::new(ErrorCode::LogUnavailable, Operation::Logging)
 }
 
 pub struct LogFile {

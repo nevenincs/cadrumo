@@ -3,7 +3,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
-import { failureMessage, type HostFailure } from "./failure";
+import { failureMessage, type HostFailure } from "../errors";
 
 type Output = {
   bytes: number[];
@@ -11,7 +11,7 @@ type Output = {
   error: HostFailure | null;
 };
 
-export function TerminalPane() {
+export function TerminalView() {
   const container = useRef<HTMLDivElement>(null);
   const [failure, setFailure] = useState<string | null>(null);
   useEffect(() => {

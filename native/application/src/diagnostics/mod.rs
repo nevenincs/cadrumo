@@ -1,7 +1,9 @@
+pub mod logging;
+
 use crate::{
-    failure::{Failure, FailureCode, Operation, Result},
-    logging::{LogFile, LogPaths},
-    tracking::{
+    diagnostics::logging::{LogFile, LogPaths},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
+    process::status::{
         OutputChunk, ProcessPhase, ProcessRole, ProcessStatus, Stream, Tracker, timestamp_ms,
     },
 };
@@ -27,14 +29,14 @@ pub struct Event {
     pub host_pid: u32,
     pub kind: EventKind,
     pub process: Option<u64>,
-    pub failure: Option<Failure>,
+    pub failure: Option<ApplicationError>,
     pub status: Option<ProcessStatus>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
     pub paths: Option<LogPaths>,
-    pub log_failure: Option<Failure>,
+    pub log_failure: Option<ApplicationError>,
     pub events: Vec<Event>,
     pub processes: Vec<ProcessStatus>,
     pub output: Vec<OutputChunk>,
@@ -43,7 +45,7 @@ pub struct Snapshot {
 #[derive(Default)]
 struct State {
     file: Option<LogFile>,
-    log_failure: Option<Failure>,
+    log_failure: Option<ApplicationError>,
     events: VecDeque<Event>,
     tracker: Tracker,
 }
@@ -61,7 +63,7 @@ impl Diagnostics {
         state.file = Some(file);
         Ok(())
     }
-    pub fn event(&self, kind: EventKind, process: Option<u64>, failure: Option<Failure>) {
+    pub fn event(&self, kind: EventKind, process: Option<u64>, failure: Option<ApplicationError>) {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         let event = Event {
             timestamp_ms: timestamp_ms(),
@@ -82,8 +84,8 @@ impl Diagnostics {
         }
         state.events.push_back(event);
     }
-    pub fn failure(&self, error: Failure) {
-        if error.code == FailureCode::LogUnavailable {
+    pub fn failure(&self, error: ApplicationError) {
+        if error.code == ErrorCode::LogUnavailable {
             self.state
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
@@ -142,6 +144,6 @@ impl Diagnostics {
         }
     }
 }
-fn poisoned() -> Failure {
-    Failure::new(FailureCode::LockPoisoned, Operation::Logging)
+fn poisoned() -> ApplicationError {
+    ApplicationError::new(ErrorCode::LockPoisoned, Operation::Logging)
 }

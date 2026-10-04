@@ -219,7 +219,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cadrumo-desktop-preview"
+name = "cadrumo-desktop"
 version = "0.0.0"
 dependencies = [
  "cadrumo-application",

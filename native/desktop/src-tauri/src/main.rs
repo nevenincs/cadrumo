@@ -1,12 +1,12 @@
-mod gui;
-mod mode;
-mod package;
+mod app;
+mod environment;
+mod launch;
 mod terminal;
 
 use cadrumo_application::{
     child::ChildConfiguration,
     diagnostics::{Diagnostics, EventKind},
-    failure::{Failure, FailureCode, Operation, Result},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
     process,
 };
 use std::{
@@ -30,7 +30,7 @@ entry.load()()
 
 fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     let arguments = std::env::args_os().skip(1).collect();
-    let mode = mode::select(arguments, mode::desktop_available());
+    let mode = launch::select(arguments, launch::desktop_available());
     diagnostics.event(EventKind::HostStarted, None, None);
     let root = match std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").filter(|v| !v.is_empty()) {
         Some(path) => PathBuf::from(path),
@@ -40,10 +40,10 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .ok_or_else(launch_error)?
             .to_owned(),
     };
-    let launch = tauri::async_runtime::block_on(package::resolve(root, diagnostics.clone()))?;
+    let launch = tauri::async_runtime::block_on(environment::resolve(root, diagnostics.clone()))?;
     match mode? {
-        mode::Mode::Gui => gui::run(launch),
-        mode::Mode::Cli(arguments) => {
+        launch::Mode::Gui => app::run(launch),
+        launch::Mode::Cli(arguments) => {
             diagnostics.event(EventKind::HeadlessSelected, None, None);
             let configuration = ChildConfiguration::new(
                 launch.child.executable().to_owned(),
@@ -62,8 +62,8 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
         }
     }
 }
-fn launch_error() -> Failure {
-    Failure::new(FailureCode::EnvironmentFailed, Operation::Launch)
+fn launch_error() -> ApplicationError {
+    ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch)
 }
 
 fn main() {
@@ -73,7 +73,7 @@ fn main() {
     std::panic::set_hook(Box::new(|_| {}));
     let outcome =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(diagnostics.clone())))
-            .unwrap_or_else(|_| Err(Failure::new(FailureCode::Panic, Operation::Launch)));
+            .unwrap_or_else(|_| Err(ApplicationError::new(ErrorCode::Panic, Operation::Launch)));
     let code = match outcome {
         Ok(code) => code,
         Err(error) => {
@@ -83,8 +83,8 @@ fn main() {
                 serde_json::to_string(&error).unwrap_or_else(|_| "application_error".into())
             );
             match error.code {
-                FailureCode::InvalidArguments => 64,
-                FailureCode::DesktopUnavailable => 69,
+                ErrorCode::InvalidArguments => 64,
+                ErrorCode::DesktopUnavailable => 69,
                 _ => 1,
             }
         }

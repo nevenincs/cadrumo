@@ -1,8 +1,8 @@
-use crate::package::Launch;
+use crate::environment::Launch;
 use cadrumo_application::{
     diagnostics::Diagnostics,
-    failure::{Failure, FailureCode, Operation, Result},
-    tracking::{ProcessPhase, ProcessRole, Stream},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
+    process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
 use serde::Serialize;
@@ -19,8 +19,8 @@ use std::{
 
 const CHUNK: usize = 8192;
 const QUEUE: usize = 8;
-fn failure(code: FailureCode) -> Failure {
-    Failure::new(code, Operation::Terminal)
+fn failure(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Terminal)
 }
 const STOP_TIMEOUT: Duration = Duration::from_secs(3);
 
@@ -37,9 +37,9 @@ impl Workers {
             if worker.as_ref().is_some_and(JoinHandle::is_finished) {
                 worker
                     .take()
-                    .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
+                    .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
                     .join()
-                    .map_err(|_| failure(FailureCode::Panic))?;
+                    .map_err(|_| failure(ErrorCode::Panic))?;
             }
         }
         Ok(self.reader.is_none() && self.writer.is_none() && self.closer.is_none())
@@ -51,7 +51,7 @@ impl Workers {
                 return Ok(());
             }
             if Instant::now() >= deadline {
-                return Err(failure(FailureCode::CleanupFailed));
+                return Err(failure(ErrorCode::CleanupFailed));
             }
             thread::sleep(Duration::from_millis(5));
         }
@@ -63,24 +63,24 @@ impl Workers {
 pub struct Output {
     pub bytes: Vec<u8>,
     pub exit_code: Option<u32>,
-    pub error: Option<Failure>,
+    pub error: Option<ApplicationError>,
 }
 
 enum ReadEvent {
     Bytes(Vec<u8>),
-    Error(Failure),
+    Error(ApplicationError),
 }
 
 pub struct Session {
     master: Option<Box<dyn MasterPty + Send>>,
     writer: SyncSender<Vec<u8>>,
-    write_error: Arc<Mutex<Option<Failure>>>,
+    write_error: Arc<Mutex<Option<ApplicationError>>>,
     child: Box<dyn Child + Send + Sync>,
     output: Receiver<ReadEvent>,
     stopped: Arc<AtomicBool>,
     writer_stopped: Arc<AtomicBool>,
     workers: Workers,
-    cleanup_error: Option<Failure>,
+    cleanup_error: Option<ApplicationError>,
     exit_code: Option<u32>,
     diagnostics: Arc<Diagnostics>,
     process: u64,
@@ -89,7 +89,7 @@ pub struct Session {
 
 pub fn size(cols: u16, rows: u16) -> Result<PtySize> {
     if !(2..=1000).contains(&cols) || !(2..=1000).contains(&rows) {
-        return Err(failure(FailureCode::InvalidArguments));
+        return Err(failure(ErrorCode::InvalidArguments));
     }
     Ok(PtySize {
         rows,
@@ -103,7 +103,7 @@ impl Session {
     pub fn start(launch: &Launch, cols: u16, rows: u16, args: &[&str]) -> Result<Self> {
         let pair = native_pty_system()
             .openpty(size(cols, rows)?)
-            .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
+            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
         let mut command = CommandBuilder::new(launch.child.executable());
         command.env_clear();
         for (key, value) in launch.child.environment() {
@@ -116,15 +116,15 @@ impl Session {
         let mut reader = pair
             .master
             .try_clone_reader()
-            .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
+            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
         let mut writer = pair
             .master
             .take_writer()
-            .map_err(|e| failure(FailureCode::WriteFailed).caused_by(std::io::Error::other(e)))?;
+            .map_err(|e| failure(ErrorCode::WriteFailed).caused_by(std::io::Error::other(e)))?;
         let child = pair
             .slave
             .spawn_command(command)
-            .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
+            .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
         drop(pair.slave);
         let diagnostics = launch.diagnostics.clone();
         let process = diagnostics.start(child.process_id().unwrap_or(0), ProcessRole::Tui);
@@ -163,8 +163,8 @@ impl Session {
                                 {
                                     if let Ok(mut failure) = write_failure.lock() {
                                         *failure = Some(
-                                            Failure::new(
-                                                FailureCode::WriteFailed,
+                                            ApplicationError::new(
+                                                ErrorCode::WriteFailed,
                                                 Operation::Terminal,
                                             )
                                             .caused_by(error),
@@ -178,7 +178,7 @@ impl Session {
                         }
                     }
                 })
-                .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(e))?,
+                .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?,
         );
         let stop = stopped.clone();
         let captured = diagnostics.clone();
@@ -195,7 +195,7 @@ impl Session {
                                 ReadEvent::Bytes(buffer[..count].to_vec())
                             }
                             Err(error) => {
-                                ReadEvent::Error(failure(FailureCode::ReadFailed).caused_by(error))
+                                ReadEvent::Error(failure(ErrorCode::ReadFailed).caused_by(error))
                             }
                         };
                         let failed = matches!(event, ReadEvent::Error(_));
@@ -217,26 +217,26 @@ impl Session {
                         }
                     }
                 })
-                .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(e))?,
+                .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?,
         );
         Ok(session)
     }
 
     pub fn input(&mut self, data: &[u8]) -> Result<()> {
         if data.len() > 65536 {
-            return Err(failure(FailureCode::OutputLimit));
+            return Err(failure(ErrorCode::OutputLimit));
         }
         self.writer
             .try_send(data.to_vec())
-            .map_err(|_| failure(FailureCode::QueueFull))
+            .map_err(|_| failure(ErrorCode::QueueFull))
     }
 
     pub fn resize(&self, cols: u16, rows: u16) -> Result<()> {
         self.master
             .as_ref()
-            .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
+            .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
             .resize(size(cols, rows)?)
-            .map_err(|e| failure(FailureCode::ResizeFailed).caused_by(std::io::Error::other(e)))
+            .map_err(|e| failure(ErrorCode::ResizeFailed).caused_by(std::io::Error::other(e)))
     }
 
     pub fn read(&mut self) -> Result<Output> {
@@ -244,7 +244,7 @@ impl Session {
         let mut error = self
             .write_error
             .lock()
-            .map_err(|_| failure(FailureCode::LockPoisoned))?
+            .map_err(|_| failure(ErrorCode::LockPoisoned))?
             .take();
         let mut eof = false;
         for _ in 0..QUEUE {
@@ -265,7 +265,7 @@ impl Session {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
+                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
             if self.exit_code.is_some() {
                 // ConPTY signals EOF only after its master closes. Close on a separate
@@ -307,12 +307,12 @@ impl Session {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
+                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
         }
         if self.exit_code.is_none() {
             self.child.kill().map_err(|e| {
-                failure(FailureCode::CleanupFailed).caused_by(std::io::Error::other(e))
+                failure(ErrorCode::CleanupFailed).caused_by(std::io::Error::other(e))
             })?;
         }
         // The reader keeps draining (discarding after cancellation) while ConPTY closes.
@@ -321,11 +321,11 @@ impl Session {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
+                .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
             if self.exit_code.is_none() {
                 if Instant::now() >= deadline {
-                    return Err(failure(FailureCode::CleanupFailed));
+                    return Err(failure(ErrorCode::CleanupFailed));
                 }
                 thread::sleep(Duration::from_millis(5));
             }
@@ -375,7 +375,7 @@ impl TerminalState {
         let mut owned = self
             .session
             .lock()
-            .map_err(|_| failure(FailureCode::LockPoisoned))?;
+            .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         if let Some(session) = owned.as_mut() {
             session.stop()?;
         }
@@ -385,160 +385,4 @@ impl TerminalState {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[cfg(feature = "live-package-tests")]
-    use std::path::PathBuf;
-
-    #[cfg(feature = "live-package-tests")]
-    fn wait_for(session: &mut Session, needle: &str) -> Vec<u8> {
-        let deadline = Instant::now() + Duration::from_secs(45);
-        let mut bytes = Vec::new();
-        while Instant::now() < deadline {
-            let output = session.read().unwrap();
-            assert!(output.bytes.len() <= 65536, "unbounded PTY response");
-            assert!(output.error.is_none(), "PTY read error: {:?}", output.error);
-            if output.bytes.windows(4).any(|bytes| bytes == b"\x1b[6n") {
-                session.input(b"\x1b[1;1R").unwrap();
-            }
-            bytes.extend(output.bytes);
-            if String::from_utf8_lossy(&bytes).contains(needle) {
-                return bytes;
-            }
-            assert!(
-                output.exit_code.is_none(),
-                "child exited before {needle}: {}",
-                String::from_utf8_lossy(&bytes)
-            );
-            thread::sleep(Duration::from_millis(10));
-        }
-        panic!("no {needle}: {}", String::from_utf8_lossy(&bytes));
-    }
-
-    #[test]
-    fn dimensions_are_bounded() {
-        assert!(size(0, 24).is_err());
-        assert!(size(80, 1001).is_err());
-        assert!(size(132, 40).is_ok());
-    }
-
-    #[test]
-    fn unfinished_worker_stays_owned_after_deadline_and_can_be_joined_on_retry() {
-        let (release, wait) = mpsc::channel();
-        let worker = thread::spawn(move || wait.recv().unwrap());
-        let mut workers = Workers {
-            reader: Some(worker),
-            ..Workers::default()
-        };
-        let error = workers.join_until(Instant::now()).unwrap_err();
-        assert_eq!(error.code, FailureCode::CleanupFailed);
-        assert!(workers.reader.is_some(), "timed-out worker was detached");
-        release.send(()).unwrap();
-        workers
-            .join_until(Instant::now() + Duration::from_secs(1))
-            .unwrap();
-        assert!(workers.reader.is_none());
-    }
-
-    #[test]
-    fn panicked_worker_is_reported_as_cleanup_failure() {
-        let mut workers = Workers {
-            writer: Some(thread::spawn(|| panic!("controlled worker failure"))),
-            ..Workers::default()
-        };
-        assert_eq!(
-            workers
-                .join_until(Instant::now() + Duration::from_secs(1))
-                .unwrap_err()
-                .code,
-            FailureCode::Panic,
-        );
-    }
-
-    #[cfg(feature = "live-package-tests")]
-    #[tokio::test]
-    async fn packaged_pty_unicode_input_resize_output_exit_and_cleanup() {
-        let root = PathBuf::from(
-            std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").expect("select real package"),
-        );
-        let launch = crate::package::resolve(root, Arc::new(Diagnostics::default()))
-            .await
-            .unwrap();
-        assert!(
-            !launch
-                .child
-                .environment()
-                .keys()
-                .any(|key| key.to_string_lossy().starts_with("PYTHON"))
-        );
-        let script = "import os,sys,time; print('READY', flush=True); value=input(); print('UNICODE='+value,flush=True); print('SIZE='+str(os.get_terminal_size().columns),flush=True); print('X'*100000,flush=True); print('DONE',flush=True)";
-        let mut session = Session::start(&launch, 80, 24, &["-u", "-c", script]).unwrap();
-        wait_for(&mut session, "READY");
-        session.resize(132, 40).unwrap();
-        session.input("á漢字\r".as_bytes()).unwrap();
-        let result = wait_for(&mut session, "DONE");
-        let result = String::from_utf8_lossy(&result);
-        assert!(result.contains("UNICODE=á漢字"));
-        assert!(result.contains("SIZE=132"));
-        let deadline = Instant::now() + Duration::from_secs(10);
-        loop {
-            let output = session.read().unwrap();
-            if let Some(code) = output.exit_code {
-                assert_eq!(code, 0);
-                break;
-            }
-            assert!(Instant::now() < deadline, "child did not exit");
-            thread::sleep(Duration::from_millis(10));
-        }
-        let mut blocked = Session::start(
-            &launch,
-            80,
-            24,
-            &[
-                "-u",
-                "-c",
-                "import time; print('WAITING',flush=True); time.sleep(120)",
-            ],
-        )
-        .unwrap();
-        wait_for(&mut blocked, "WAITING");
-        let began = Instant::now();
-        blocked.stop().unwrap();
-        assert!(began.elapsed() < Duration::from_secs(5));
-        assert!(blocked.child.try_wait().unwrap().is_some());
-        assert!(blocked.workers.reap_finished().unwrap());
-
-        let mut flood = Session::start(&launch, 80, 24, &["-u", "-c",
-            "import time; print('FLOOD',flush=True); time.sleep(0.2); print('Z'*10000000,flush=True); time.sleep(120)"]).unwrap();
-        wait_for(&mut flood, "FLOOD");
-        thread::sleep(Duration::from_millis(500));
-        let began = Instant::now();
-        flood.stop().unwrap();
-        assert!(
-            began.elapsed() < Duration::from_secs(5),
-            "full output queue blocked cleanup"
-        );
-        assert!(flood.child.try_wait().unwrap().is_some());
-        assert!(flood.workers.reap_finished().unwrap());
-    }
-
-    #[cfg(feature = "live-package-tests")]
-    #[tokio::test]
-    async fn real_packaged_tui_draws_in_the_pty() {
-        let root = PathBuf::from(
-            std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").expect("select real package"),
-        );
-        let launch = crate::package::resolve(root, Arc::new(Diagnostics::default()))
-            .await
-            .unwrap();
-        let mut session =
-            Session::start(&launch, 120, 40, &["-m", "cadrumo.entrypoints.tui"]).unwrap();
-        let output = wait_for(&mut session, "\u{1b}[?1049h");
-        assert!(!output.is_empty());
-        session.resize(100, 30).unwrap();
-        session.input(b"\x1b[B\t").unwrap();
-        session.stop().unwrap();
-        assert!(session.child.try_wait().unwrap().is_some());
-        assert!(session.workers.reap_finished().unwrap());
-    }
-}
+mod tests;

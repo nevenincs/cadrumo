@@ -2,9 +2,9 @@ use cadrumo_application::{
     binary::{self, BinaryExpectation},
     child::ChildConfiguration,
     diagnostics::Diagnostics,
-    failure::{Failure, FailureCode, Operation, Result},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
     package::PackageManifest,
-    tracking::{ProcessPhase, ProcessRole, Stream},
+    process::status::{ProcessPhase, ProcessRole, Stream},
     value::RelativePath,
 };
 use serde::Deserialize;
@@ -61,12 +61,12 @@ json.dump(dict(environment=dict(os.environ), storage=str(configured_storage_root
                log_backups=settings.cadrumo_log_file_backup_count), sys.stdout)
 "#;
 
-fn failure(code: FailureCode) -> Failure {
-    Failure::new(code, Operation::Environment)
+fn failure(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Environment)
 }
 
 pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Launch> {
-    let invalid = || Failure::new(FailureCode::PackageUnavailable, Operation::Package);
+    let invalid = || ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Package);
     let contract: Contract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|e| invalid().caused_by(e))?;
@@ -98,21 +98,19 @@ pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Lau
     command.creation_flags(0x08000000);
     let mut child = command
         .spawn()
-        .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(e))?;
+        .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?;
     let id = diagnostics.start(
-        child
-            .id()
-            .ok_or_else(|| failure(FailureCode::SpawnFailed))?,
+        child.id().ok_or_else(|| failure(ErrorCode::SpawnFailed))?,
         ProcessRole::Environment,
     );
     let stdout = child
         .stdout
         .take()
-        .ok_or_else(|| failure(FailureCode::ReadFailed))?;
+        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
     let stderr = child
         .stderr
         .take()
-        .ok_or_else(|| failure(FailureCode::ReadFailed))?;
+        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
     let outcome = tokio::time::timeout(Duration::from_secs(30), async {
         let (output, errors) =
             tokio::try_join!(bounded(stdout, 1024 * 1024), bounded(stderr, 65536))?;
@@ -122,10 +120,10 @@ pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Lau
         let status = child
             .wait()
             .await
-            .map_err(|e| failure(FailureCode::CleanupFailed).caused_by(e))?;
+            .map_err(|e| failure(ErrorCode::CleanupFailed).caused_by(e))?;
         diagnostics.finish(id, status.code(), ProcessPhase::Exited);
         if !status.success() {
-            return Err(failure(FailureCode::EnvironmentFailed));
+            return Err(failure(ErrorCode::EnvironmentFailed));
         }
         Ok(output)
     })
@@ -135,12 +133,12 @@ pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Lau
         failure_result => {
             let primary = match failure_result {
                 Ok(Err(error)) => error,
-                _ => failure(FailureCode::TimedOut),
+                _ => failure(ErrorCode::TimedOut),
             };
             if child.try_wait().ok().flatten().is_none()
                 && let Err(error) = child.kill().await
             {
-                diagnostics.failure(failure(FailureCode::CleanupFailed).caused_by(error));
+                diagnostics.failure(failure(ErrorCode::CleanupFailed).caused_by(error));
             }
             let reaped = child.wait().await;
             diagnostics.finish(
@@ -149,18 +147,18 @@ pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Lau
                 ProcessPhase::Failed,
             );
             if let Err(error) = reaped {
-                diagnostics.failure(failure(FailureCode::CleanupFailed).caused_by(error));
+                diagnostics.failure(failure(ErrorCode::CleanupFailed).caused_by(error));
             }
             return Err(primary);
         }
     };
     let projection: Projection = serde_json::from_slice(&output)
-        .map_err(|e| failure(FailureCode::EnvironmentFailed).caused_by(e))?;
+        .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
     if !projection.cache.is_absolute()
         || !projection.storage.is_absolute()
         || !projection.logs.is_absolute()
     {
-        return Err(failure(FailureCode::EnvironmentFailed));
+        return Err(failure(ErrorCode::EnvironmentFailed));
     }
     if let Err(error) = diagnostics.configure(
         &projection.logs,
@@ -178,7 +176,7 @@ pub async fn resolve(root: PathBuf, diagnostics: Arc<Diagnostics>) -> Result<Lau
             .map(|(key, value)| (key.into(), value.into()))
             .collect(),
     )
-    .map_err(|e| failure(FailureCode::EnvironmentFailed).caused_by(e))?;
+    .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
     Ok(Launch {
         child,
         working_directory: projection.storage,
@@ -194,12 +192,12 @@ async fn bounded(mut reader: impl AsyncRead + Unpin, limit: usize) -> Result<Vec
         let count = reader
             .read(&mut buffer)
             .await
-            .map_err(|e| failure(FailureCode::ReadFailed).caused_by(e))?;
+            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(e))?;
         if count == 0 {
             return Ok(bytes);
         }
         if bytes.len() + count > limit {
-            return Err(failure(FailureCode::OutputLimit));
+            return Err(failure(ErrorCode::OutputLimit));
         }
         bytes.extend_from_slice(&buffer[..count]);
     }

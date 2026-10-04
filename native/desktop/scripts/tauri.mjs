@@ -1,6 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, readFileSync } from "node:fs";
-import { delimiter, isAbsolute, resolve } from "node:path";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+} from "node:fs";
+import { delimiter, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const desktop = fileURLToPath(new URL("../", import.meta.url));
@@ -13,6 +20,20 @@ const identity = JSON.parse(
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = resolve(binaryDir, "desktop/icons");
 const snapshot = resolve(binaryDir, "desktop/host");
+// Remove only generated source copies so renamed Rust modules cannot survive a rebuild.
+for (const directory of [
+  resolve(snapshot, "src-tauri/src"),
+  resolve(snapshot, "../application/src"),
+  resolve(snapshot, "../platform/src"),
+]) {
+  if (!existsSync(directory)) continue;
+  const ownedPath = relative(realpathSync(binaryDir), realpathSync(directory));
+  if (!ownedPath || ownedPath.startsWith("..") || isAbsolute(ownedPath))
+    throw new Error(
+      "Generated sources must remain inside the selected build directory.",
+    );
+  rmSync(directory, { recursive: true });
+}
 const contract = process.env.CADRUMO_NATIVE_CONTRACT;
 if (!contract || !isAbsolute(contract))
   throw new Error(

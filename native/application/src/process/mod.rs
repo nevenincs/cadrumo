@@ -1,9 +1,11 @@
 //! CLI stream relay. Standard output remains a byte-for-byte operator result channel.
+pub mod status;
+
 use crate::{
     child::ChildConfiguration,
     diagnostics::Diagnostics,
-    failure::{Failure, FailureCode, Operation, Result},
-    tracking::{ProcessPhase, ProcessRole, Stream},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
+    process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use std::{
     ffi::OsString,
@@ -46,13 +48,13 @@ impl Drop for OwnedChild {
             );
             if let Err(error) = result {
                 self.diagnostics
-                    .failure(fail(FailureCode::CleanupFailed).caused_by(error));
+                    .failure(fail(ErrorCode::CleanupFailed).caused_by(error));
             }
         }
     }
 }
-fn fail(code: FailureCode) -> Failure {
-    Failure::new(code, Operation::Cli)
+fn fail(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Cli)
 }
 
 pub fn passthrough(
@@ -68,7 +70,7 @@ pub fn passthrough(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| fail(FailureCode::SpawnFailed).caused_by(e))?;
+        .map_err(|e| fail(ErrorCode::SpawnFailed).caused_by(e))?;
     let id = diagnostics.start(child.id(), ProcessRole::Cli);
     let mut owned = OwnedChild {
         child,
@@ -80,12 +82,12 @@ pub fn passthrough(
         .child
         .stdout
         .take()
-        .ok_or_else(|| fail(FailureCode::ReadFailed))?;
+        .ok_or_else(|| fail(ErrorCode::ReadFailed))?;
     let stderr = owned
         .child
         .stderr
         .take()
-        .ok_or_else(|| fail(FailureCode::ReadFailed))?;
+        .ok_or_else(|| fail(ErrorCode::ReadFailed))?;
     let (sender, receiver) = mpsc::channel();
     let out_sender = sender.clone();
     let out_diagnostics = diagnostics.clone();
@@ -119,7 +121,7 @@ pub fn passthrough(
             status = owned
                 .child
                 .try_wait()
-                .map_err(|e| fail(FailureCode::CleanupFailed).caused_by(e))?;
+                .map_err(|e| fail(ErrorCode::CleanupFailed).caused_by(e))?;
             if status.is_some() {
                 drain_deadline = Some(Instant::now() + Duration::from_secs(5));
             }
@@ -130,13 +132,13 @@ pub fn passthrough(
             owned
                 .child
                 .kill()
-                .map_err(|e| fail(FailureCode::CleanupFailed).caused_by(e))?;
+                .map_err(|e| fail(ErrorCode::CleanupFailed).caused_by(e))?;
         }
         if ended == 2 && status.is_some() {
             break;
         }
         if drain_deadline.is_some_and(|deadline| Instant::now() >= deadline) {
-            return Err(fail(FailureCode::TimedOut));
+            return Err(fail(ErrorCode::TimedOut));
         }
         match receiver.recv_timeout(Duration::from_millis(20)) {
             Ok(result) => {
@@ -147,12 +149,12 @@ pub fn passthrough(
             Err(mpsc::RecvTimeoutError::Disconnected) if ended == 2 => {
                 thread::sleep(Duration::from_millis(20));
             }
-            Err(mpsc::RecvTimeoutError::Disconnected) => return Err(fail(FailureCode::Panic)),
+            Err(mpsc::RecvTimeoutError::Disconnected) => return Err(fail(ErrorCode::Panic)),
         }
     }
-    output.join().map_err(|_| fail(FailureCode::Panic))?;
-    errors.join().map_err(|_| fail(FailureCode::Panic))?;
-    let status = status.ok_or_else(|| fail(FailureCode::CleanupFailed))?;
+    output.join().map_err(|_| fail(ErrorCode::Panic))?;
+    errors.join().map_err(|_| fail(ErrorCode::Panic))?;
+    let status = status.ok_or_else(|| fail(ErrorCode::CleanupFailed))?;
     owned.finished = true;
     let code = exit_code(status);
     owned
@@ -173,7 +175,7 @@ fn relay(
         let size = match reader.read(&mut buffer) {
             Ok(size) => size,
             Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
-            Err(error) => return Err(fail(FailureCode::ReadFailed).caused_by(error)),
+            Err(error) => return Err(fail(ErrorCode::ReadFailed).caused_by(error)),
         };
         if size == 0 {
             return Ok(());
@@ -182,7 +184,7 @@ fn relay(
         writer
             .write_all(&buffer[..size])
             .and_then(|()| writer.flush())
-            .map_err(|e| fail(FailureCode::WriteFailed).caused_by(e))?;
+            .map_err(|e| fail(ErrorCode::WriteFailed).caused_by(e))?;
     }
 }
 pub fn exit_code(status: std::process::ExitStatus) -> i32 {
@@ -240,7 +242,7 @@ mod tests {
             Stream::Stderr,
         )
         .unwrap_err();
-        assert_eq!(error.code, FailureCode::WriteFailed);
+        assert_eq!(error.code, ErrorCode::WriteFailed);
         assert!(!serde_json::to_string(&error).unwrap().contains("private"));
     }
 }

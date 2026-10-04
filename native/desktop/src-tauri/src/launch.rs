@@ -1,4 +1,4 @@
-use cadrumo_application::failure::{Failure, FailureCode, Operation, Result};
+use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use std::ffi::OsString;
 
 #[derive(Debug, PartialEq)]
@@ -34,16 +34,16 @@ pub fn select(mut arguments: Vec<OsString>, desktop: bool) -> Result<Mode> {
     }
     if arguments.first().is_some_and(|arg| arg == "--gui") {
         if arguments.len() != 1 {
-            return Err(Failure::new(
-                FailureCode::InvalidArguments,
+            return Err(ApplicationError::new(
+                ErrorCode::InvalidArguments,
                 Operation::Launch,
             ));
         }
         return if desktop {
             Ok(Mode::Gui)
         } else {
-            Err(Failure::new(
-                FailureCode::DesktopUnavailable,
+            Err(ApplicationError::new(
+                ErrorCode::DesktopUnavailable,
                 Operation::Launch,
             ))
         };
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(select(headless, true).unwrap(), Mode::Cli(args));
         assert_eq!(
             select(vec!["--gui".into()], false).unwrap_err().code,
-            FailureCode::DesktopUnavailable
+            ErrorCode::DesktopUnavailable
         );
         assert!(select(vec!["--gui".into(), "--help".into()], true).is_err());
     }

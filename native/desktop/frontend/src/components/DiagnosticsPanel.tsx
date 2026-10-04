@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { failureMessage, type HostFailure } from "./failure";
+import { failureMessage, type HostFailure } from "../errors";
 
 type ProcessStatus = {
   id: number;
@@ -33,7 +33,7 @@ type Snapshot = {
   droppedBytes: number;
 };
 
-export function Diagnostics({ close }: { close: () => void }) {
+export function DiagnosticsPanel({ close }: { close: () => void }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   useEffect(() => {

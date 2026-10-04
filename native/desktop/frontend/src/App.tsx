@@ -1,5 +1,5 @@
-import { TerminalPane } from "./TerminalPane";
-import { Diagnostics } from "./Diagnostics";
+import { TerminalView } from "./components/TerminalView";
+import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { useEffect, useState } from "react";
 
 export function App() {
@@ -17,8 +17,8 @@ export function App() {
   }, []);
   return (
     <main className="terminal-page">
-      <TerminalPane />
-      {logs && <Diagnostics close={() => setLogs(false)} />}
+      <TerminalView />
+      {logs && <DiagnosticsPanel close={() => setLogs(false)} />}
     </main>
   );
 }

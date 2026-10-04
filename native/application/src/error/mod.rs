@@ -1,3 +1,5 @@
+pub mod application;
+
 use std::{fmt, io};
 
 #[derive(Debug)]

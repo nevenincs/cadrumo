@@ -1,16 +1,16 @@
 use crate::{
-    package::Launch,
+    environment::Launch,
     terminal::{Output, Session, TerminalState},
 };
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, Snapshot},
-    failure::{Failure, FailureCode, Operation, Result},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
 
-fn failure(code: FailureCode) -> Failure {
-    Failure::new(code, Operation::Terminal)
+fn failure(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Terminal)
 }
 fn record<T>(diagnostics: &Diagnostics, outcome: Result<T>) -> Result<T> {
     if let Err(error) = &outcome {
@@ -26,9 +26,9 @@ fn terminal_start(state: State<'_, Arc<TerminalState>>, cols: u16, rows: u16) ->
             let mut session = state
                 .session
                 .lock()
-                .map_err(|_| failure(FailureCode::LockPoisoned))?;
+                .map_err(|_| failure(ErrorCode::LockPoisoned))?;
             if session.is_some() {
-                return Err(failure(FailureCode::SessionUnavailable));
+                return Err(failure(ErrorCode::SessionUnavailable));
             }
             *session = Some(Session::start(
                 &state.launch,
@@ -48,9 +48,9 @@ fn terminal_input(state: State<'_, Arc<TerminalState>>, data: Vec<u8>) -> Result
             state
                 .session
                 .lock()
-                .map_err(|_| failure(FailureCode::LockPoisoned))?
+                .map_err(|_| failure(ErrorCode::LockPoisoned))?
                 .as_mut()
-                .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
+                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
                 .input(&data)
         })(),
     )
@@ -63,9 +63,9 @@ fn terminal_resize(state: State<'_, Arc<TerminalState>>, cols: u16, rows: u16) -
             state
                 .session
                 .lock()
-                .map_err(|_| failure(FailureCode::LockPoisoned))?
+                .map_err(|_| failure(ErrorCode::LockPoisoned))?
                 .as_ref()
-                .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
+                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
                 .resize(cols, rows)
         })(),
     )
@@ -78,9 +78,9 @@ fn terminal_read(state: State<'_, Arc<TerminalState>>) -> Result<Output> {
             state
                 .session
                 .lock()
-                .map_err(|_| failure(FailureCode::LockPoisoned))?
+                .map_err(|_| failure(ErrorCode::LockPoisoned))?
                 .as_mut()
-                .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
+                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
                 .read()
         })(),
     )
@@ -96,8 +96,8 @@ fn diagnostics_snapshot(state: State<'_, Arc<TerminalState>>, after: u64) -> Sna
 
 pub fn run(launch: Launch) -> Result<i32> {
     if cfg!(target_os = "macos") {
-        return Err(Failure::new(
-            FailureCode::UnsupportedPlatform,
+        return Err(ApplicationError::new(
+            ErrorCode::UnsupportedPlatform,
             Operation::Webview,
         ));
     }
@@ -135,7 +135,8 @@ pub fn run(launch: Launch) -> Result<i32> {
             .build()
             {
                 setup_diagnostics.failure(
-                    Failure::new(FailureCode::WebviewFailed, Operation::Webview).caused_by(error),
+                    ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
+                        .caused_by(error),
                 );
                 app.handle().exit(1);
             }
@@ -155,7 +156,9 @@ pub fn run(launch: Launch) -> Result<i32> {
             }
         })
         .build(tauri::generate_context!())
-        .map_err(|e| Failure::new(FailureCode::WebviewFailed, Operation::Webview).caused_by(e))?;
+        .map_err(|e| {
+            ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
+        })?;
     let code = app.run_return(|_, _| {});
     state.stop()?;
     Ok(code)

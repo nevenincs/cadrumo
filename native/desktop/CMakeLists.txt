@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 4.4)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(CADRUMO_CHANNEL preview CACHE STRING "Desktop installation channel")
   include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Identity.cmake")
   project(CADRUMO_DESKTOP VERSION "${CADRUMO_ID_VERSION}"
     DESCRIPTION "${CADRUMO_ID_DESCRIPTION}" HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}"
@@ -27,7 +26,7 @@ find_program(CADRUMO_NODE NAMES node REQUIRED)
 add_custom_target(desktop-host-build
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
-    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/host.mjs"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
   DEPENDS desktop-frontend-build
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 
@@ -37,11 +36,11 @@ foreach(action IN ITEMS test clippy)
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_LOCAL_STORAGE_ROOT=${CMAKE_BINARY_DIR}/desktop/testing/storage"
-      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/host.mjs" ${action}
+      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${action}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 endforeach()
 
-add_custom_target(desktop-preview
+add_custom_target(desktop-run
   COMMAND "${CMAKE_COMMAND}" -E env
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "${CMAKE_BINARY_DIR}/cargo/desktop/debug/cadrumo${CMAKE_EXECUTABLE_SUFFIX}"
@@ -51,6 +50,6 @@ add_custom_target(desktop-headless-test
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
-    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/headless-test.mjs"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/headless.test.mjs"
   DEPENDS desktop-host-build
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" VERBATIM)

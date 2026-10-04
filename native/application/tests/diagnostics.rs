@@ -1,8 +1,8 @@
 use cadrumo_application::{
+    diagnostics::logging::LogFile,
     diagnostics::{Diagnostics, EventKind},
-    failure::{Failure, FailureCode, Operation},
-    logging::LogFile,
-    tracking::{ProcessPhase, ProcessRole, Stream},
+    error::application::{ApplicationError, ErrorCode, Operation},
+    process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use std::{error::Error, fs};
 
@@ -16,7 +16,7 @@ fn private_causes_and_child_payloads_never_enter_native_logs() {
     let secret = b"synthetic-private-password";
     diagnostics.capture(id, Stream::Stdout, secret);
     diagnostics.capture(id, Stream::Stderr, b"failure bytes");
-    let error = Failure::new(FailureCode::ReadFailed, Operation::Cli)
+    let error = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
         .caused_by(std::io::Error::other("synthetic-private-password"));
     assert!(error.source().is_some());
     diagnostics.failure(error);
@@ -81,7 +81,7 @@ fn logging_failure_is_observable_without_replacing_process_result() {
     diagnostics.failure(failure);
     assert_eq!(
         diagnostics.snapshot(0).log_failure.unwrap().code,
-        FailureCode::LogUnavailable
+        ErrorCode::LogUnavailable
     );
     assert_eq!(fs::read(obstruction).unwrap(), b"original");
 }
