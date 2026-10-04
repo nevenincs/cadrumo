@@ -83,6 +83,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
@@ -159,6 +160,7 @@ from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloChargeAccountMissingError,
+    ModeloDomiciliationPastCutoffError,
     ModeloPreconditionErrorMixin,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundAccountMissingError,
@@ -207,6 +209,12 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
     "This fichero-BOE was NOT completeness-verified: its modelo revision declares no calculation-completeness "
     "manifest, so the structural-parity gate could not confirm every required casilla reached disk. The file may "
     "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
+)
+
+_DOMICILIATION_CUTOFF_UNVERIFIED_MESSAGE = (
+    "This domiciliación fichero was NOT checked against a direct-debit cutoff: the filing window declares no "
+    "payment cutoff date. AEAT closes domiciliación before the end of the plazo, so confirm the debit can still be "
+    "ordered for this period before filing."
 )
 
 
@@ -467,6 +475,14 @@ class ModeloExportResult(BaseModel):
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
+    domiciliation_cutoff_unverified: bool = Field(
+        default=False,
+        description=(
+            "True when a domiciliación (U) export was not checked against a direct-debit cutoff because the filing "
+            "window declares no payment cutoff date. The CLI surfaces a non-blocking advisory when set. False for "
+            "every other disposition and whenever a cutoff was declared and met."
+        ),
+    )
     completeness_unverified: bool = Field(
         default=False,
         description=(
@@ -481,6 +497,11 @@ class ModeloExportResult(BaseModel):
     def completeness_advisory_message(self) -> str:
         """Operator-facing coverage advisory text for a completeness-unverified export."""
         return _COMPLETENESS_UNVERIFIED_MESSAGE
+
+    @property
+    def domiciliation_cutoff_advisory_message(self) -> str:
+        """Operator-facing advisory text for a domiciliación export with no declared cutoff."""
+        return _DOMICILIATION_CUTOFF_UNVERIFIED_MESSAGE
 
 
 def envelope_stamped_software_identity(
@@ -920,6 +941,48 @@ def _refund_account_country(resolved: _ResolvedOwnAccount) -> str | None:
     return resolved.account.country_code
 
 
+def _require_domiciliation_before_cutoff(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    resolved_result_disposition: ResultDisposition | None,
+    exported_at: datetime,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Refuse a domiciliación dated after the filing window's payment cutoff.
+
+    The cutoff is compared with the export's Europe/Madrid civil date, since
+    AEAT's direct-debit deadline is a Spanish-calendar day. Returns whether the
+    export is a domiciliación the registry gives no cutoff for, which is an
+    advisory rather than a refusal: an undeclared cutoff is unknown, not open.
+    """
+    if resolved_result_disposition is not ResultDisposition.DOMICILIACION:
+        return False
+    window = resolve_filing_window(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        authority=operation,
+    )
+    cutoff = None if window is None else window.payment_cutoff_on
+    if cutoff is None:
+        return True
+    export_on = exported_at.astimezone(MADRID_TZ).date()
+    if export_on <= cutoff:
+        return False
+    raise ModeloDomiciliationPastCutoffError(
+        translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
+        context={
+            "calculation_revision_id": command.calculation_revision_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "payment_cutoff_on": cutoff.isoformat(),
+            "export_on": export_on.isoformat(),
+        },
+    )
+
+
 def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:
     if resolved.account is None or resolved.unavailable_reason is not None:
         return None
@@ -1325,6 +1388,13 @@ def _persist_exported_draft(
         payment_election=command.payment_election,
         refund_account_country=_refund_account_country(accounts.refund),
     )
+    domiciliation_cutoff_unverified = _require_domiciliation_before_cutoff(
+        command,
+        work_unit=work_unit,
+        resolved_result_disposition=resolved_result_disposition,
+        exported_at=exported_at,
+        operation=operation,
+    )
     producer_snapshot = _build_export_producer_snapshot(
         command=command,
         work_unit=work_unit,
@@ -1454,6 +1524,7 @@ def _persist_exported_draft(
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
         software_identity_grade=None if software_identity is None else software_identity.grade,
+        domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         completeness_unverified=completeness_unverified,
     )
 

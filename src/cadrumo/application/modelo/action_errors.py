@@ -486,6 +486,16 @@ class ModeloChargeAccountMissingError(ModeloError):
     """
 
 
+class ModeloDomiciliationPastCutoffError(ModeloError):
+    """Raised when a domiciliación export is dated after the window's payment cutoff.
+
+    The filing window's ``payment_cutoff_on`` is the last day AEAT accepts a
+    direct-debit instruction for the period, which closes before the plazo
+    itself. After it, a ``U`` fichero states a payment AEAT will not take, so
+    the export refuses and the operator settles the result another way.
+    """
+
+
 class WorkUnitRevisionDivergenceError(ModeloError):
     """Raised when the registry's law-determined revision diverges from the work unit's pinned revision.
 
@@ -557,6 +567,7 @@ __all__ = [
     "ModeloChargeAccountMissingError",
     "ModeloClearedCasillaSourceFedError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloDomiciliationPastCutoffError",
     "ModeloEditBaselineStaleError",
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",

@@ -1143,6 +1143,8 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_domiciliation_past_cutoff: Direct debit for this filing closed
+      on {payment_cutoff_on}; on {export_on} the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
     refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
       needs a choice for any earlier direct debit (keep it, or cancel or modify it);

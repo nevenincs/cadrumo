@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:7d574d435b883fefe7abea52a5cdc35fce9e83c95fb8b5a3108378ef75659de1'
+body_hash: 'sha256:2eb6077aa889a2447abe5ce3efb58011c83c55da70e263b43e702b5f9e0b5721'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -57,7 +57,7 @@ Resolves charge and refund accounts from the register at the export boundary for
 
 - [x] `P03.S09` - resolve charge and refund accounts from the register through ModeloExportPorts with per-filing charge-account and refund-account overrides, delete the ModeloIVAProfile account fields, align the refund check to IBAN, and record role and own_account_id in receipts and events; `src/cadrumo/application/modelo/export.py, src/cadrumo/application/filing/producer_snapshot.py, src/cadrumo/domain/deadlines/models.py, profiles.py, src/cadrumo/entrypoints/adapter_composition.py`.
 - [x] `P03.S10` - replace the 303-only domiciliacion branch with the declared disposition keys of each modelo and refuse a non-ES charge account with a typed capability refusal; `src/cadrumo/core/result_disposition.py, src/cadrumo/application/modelo/result_disposition_resolution.py`.
-- [ ] `P03.S11` - refuse U after the window payment_cutoff_on in Europe/Madrid and add an advisory where no cutoff is declared, with a registered refusal code and locales; `src/cadrumo/application/modelo/export.py, src/cadrumo/core/errors/registry/, src/cadrumo/locales/*/errors.yml`.
+- [x] `P03.S11` - refuse U after the window payment_cutoff_on in Europe/Madrid and add an advisory where no cutoff is declared, with a registered refusal code and locales; `src/cadrumo/application/modelo/export.py, src/cadrumo/core/errors/registry/, src/cadrumo/locales/*/errors.yml`.
 - [x] `P03.S12` - derive D versus X from the selected refund account country and prove 303 U, D, X and Nota 3 DID bytes against the design offsets; `src/cadrumo/application/modelo/result_disposition_resolution.py, src/cadrumo/application/modelo/tests/`.
 - [ ] `P03.S13` - feed the Modelo 200 account fields by role from the resolved selection and delete the orphan wizard charge-iban option, the unread RefundAccount.sepa_marca field and stale profile-account prose; `src/cadrumo/application/filing/producer_snapshot_m200.py, export_producer.py, src/cadrumo/application/wizard/commands.py, src/cadrumo/application/modelo/action_errors.py`.
 

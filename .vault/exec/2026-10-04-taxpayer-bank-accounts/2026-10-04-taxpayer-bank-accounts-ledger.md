@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:03d7be70525457d9bab9be1741b3ed7da10939aa8408ae0f528b6a3ea7c0c3e8'
+body_hash: 'sha256:edf7c81d3546a6e4aecd03193b815aa4f92fd78ca55ff377fc418134a47ad12b'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -219,6 +219,20 @@ related:
 - `S06` `verify:` `ty on touched files` -> `pass`
 - `S06` `verify:` `ruff check and format on touched files` -> `pass`
 - `S06` `by:` `vaultspec-standard-executor`
+- `S11` `M` `src/cadrumo/application/modelo/export.py`
+- `S11` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S11` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S11` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S11` `M` `src/cadrumo/locales/en/errors.yml`
+- `S11` `M` `src/cadrumo/locales/es/errors.yml`
+- `S11` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S11` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S11` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S11` `verify:` `pytest cutoff gate on the real 303 2026 windows (on/after Madrid cutoff day, undeclared cutoff) + export_output_paths + export CLI surface parity + core/errors (105 passed; 2 pre-existing exception-hygiene failures naming unrelated modules)` -> `pass`
+- `S11` `verify:` `dev.locales status --check: no finding for refused_modelo_domiciliation_past_cutoff (gate fails on pre-existing inventory backlog)` -> `pass`
+- `S11` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S11` `by:` `lane-d`
 
 ## Notes
 
@@ -233,3 +247,4 @@ related:
 - `S12` the byte proofs live in `entrypoints/tests/profile_persistence` and adapters/persistence/profile/tests because they need the real encrypted register; application/modelo/tests holds no adapter-backed export tests
 - `S12` the filing transition still resolves its disposition without the refund account, so a local filing records D where the export of a foreign refund writes X; carry is unaffected (both refunds)
 - `S06` TUI import door has no production implementation yet; LedgerImportRequestV1 carries `own_account_id` for Lane E S20 to thread
+- `S11` every 303 quarterly window in the 2026-y-siguientes revision declares no `payment_cutoff_on` (only the monthly ones do), so a quarterly 303 U export advises rather than refuses until the registry authors those cutoffs

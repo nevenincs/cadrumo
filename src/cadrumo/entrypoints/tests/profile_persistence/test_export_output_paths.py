@@ -378,6 +378,8 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
         assert result.resolved_result_disposition is ResultDisposition.DOMICILIACION
         assert result.payment_election is PaymentElection.DOMICILIACION
         assert result.refund_election is None
+        # The 2026 1T window declares no payment cutoff: the U export advises, never refuses.
+        assert result.domiciliation_cutoff_unverified is True
         assert result.selected_account == ModeloExportAccountReference(
             role=OwnAccountRole.CHARGE, own_account_id="acc-01"
         )
@@ -1022,6 +1024,7 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
 
         assert result.resolved_result_disposition is ResultDisposition.INGRESO
         assert result.selected_account is None
+        assert result.domiciliation_cutoff_unverified is False
         assert "<T303DID00>" not in output_path.read_bytes().decode("latin-1")
 
 

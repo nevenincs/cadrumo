@@ -348,6 +348,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloDomiciliationPastCutoffError",
+        ErrorCode(
+            code="REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_domiciliation_past_cutoff",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.WorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_NOT_FOUND",

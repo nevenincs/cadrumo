@@ -1161,6 +1161,9 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
+    refused_modelo_domiciliation_past_cutoff: Ennél a bevallásnál a csoportos beszedés
+      {payment_cutoff_on} napon lezárult; {export_on} napon az eredményt csak más
+      módon fizetheted meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
     refused_modelo_export_prior_domiciliation_election_required: A Modelo 303 exportálásához
       döntés szükséges a korábbi csoportos beszedésről (megtartás, illetve visszavonás

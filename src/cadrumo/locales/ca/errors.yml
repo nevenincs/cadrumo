@@ -1239,6 +1239,9 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S'ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
+    refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració
+      es va tancar el {payment_cutoff_on}; el {export_on} només pots pagar el resultat
+      d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
     refused_modelo_export_prior_domiciliation_election_required: L'exportació del
       model 303 necessita una elecció sobre la domiciliació anterior (mantenir-la,

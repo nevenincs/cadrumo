@@ -133,6 +133,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None
     local_evidence_status: str = Field(min_length=1)
     official_evidence_message: str = Field(min_length=1)
+    domiciliation_cutoff_unverified: bool = False
     completeness_unverified: bool
     software_identity_grade: AeatSoftwareIdentityGrade | None
 
@@ -168,6 +169,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             ),
             local_evidence_status=result.local_evidence_status,
             official_evidence_message=result.official_evidence_message,
+            domiciliation_cutoff_unverified=result.domiciliation_cutoff_unverified,
             completeness_unverified=result.completeness_unverified,
             software_identity_grade=result.software_identity_grade,
         )
@@ -201,6 +203,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             ),
             local_evidence_status=self.local_evidence_status,
             official_evidence_message=self.official_evidence_message,
+            domiciliation_cutoff_unverified=self.domiciliation_cutoff_unverified,
             completeness_unverified=self.completeness_unverified,
             software_identity_grade=self.software_identity_grade,
         )
