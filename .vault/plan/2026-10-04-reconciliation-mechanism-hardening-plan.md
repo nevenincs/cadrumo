@@ -16,7 +16,7 @@ related:
   - '[[2026-10-04-live-reconciliation-repair-audit]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:058b4095096e2463c481af0b7c8988c75c3ff43f5506986f344ea1d17dc206bb'
+body_hash: 'sha256:62272906b80ec220611c49aa13d93609698fbe836ac5126729161a271e7e3e5b'
 ---
 
 # Reconciliation mechanism hardening
@@ -32,7 +32,7 @@ The user explicitly directed iterating through justificante, declaration, workin
 - [ ] `S05` - Harden justificante and declaration comparisons with explicit saved-revision provenance and truthful coverage through both frontends; `src/cadrumo/application/modelo reconciliation records operations and entrypoints reconciliation CLI tests`.
 - [x] `S01` - Isolate working-calculation divergence checks to official evidence under the pinned authority and verify absence and drift semantics; `src/cadrumo/application/modelo/pulled_filing_reconcile.py verification_model_findings.py and focused encrypted persistence tests`.
 - [x] `S02` - Verify and repair filing-chain confirmation contradiction replay and evidence-enrichment transitions; `src/cadrumo/application/modelo/filing_chain_reconciliation.py live persistence integration and chain tests`.
-- [ ] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
+- [x] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
 - [ ] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
 - [ ] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
 

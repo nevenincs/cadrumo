@@ -1685,6 +1685,7 @@ application:
         del conveni.
       m210_rate_unavailable: No s'ha pogut determinar el tipus de gravamen del model
         210 per al tipus de renda %{tipo_renta_code} el %{filing_year}.
+      cross_model_reconciliation_incomplete: "La comparació entre el Model %{modelo} i el Model %{sibling_modelo} per a %{period_code}/%{filing_year} és incompleta: falten %{own_missing_count} valors locals i %{sibling_missing_count} de la declaració relacionada."
       m303_m349_intracom_reconciliation_mismatch: En el període %{period_code} de
         %{filing_year}, el total intracomunitari del model 303 (%{m303_total} EUR)
         i el total del model 349 (%{m349_total} EUR) difereixen en %{gap} EUR.

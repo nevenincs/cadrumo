@@ -1570,6 +1570,7 @@ application:
         may be subject to a limitation-on-benefits clause in the tax treaty.
       m210_rate_unavailable: The modelo 210 tax rate for income type (tipo de renta)
         %{tipo_renta_code} in %{filing_year} could not be determined.
+      cross_model_reconciliation_incomplete: "Comparison between Modelo %{modelo} and Modelo %{sibling_modelo} for %{period_code}/%{filing_year} is incomplete: %{own_missing_count} local and %{sibling_missing_count} counterpart values are missing."
       m303_m349_intracom_reconciliation_mismatch: For period %{period_code} %{filing_year},
         the intra-community total in modelo 303 (%{m303_total} EUR) and the total
         in modelo 349 (%{m349_total} EUR) differ by %{gap} EUR.

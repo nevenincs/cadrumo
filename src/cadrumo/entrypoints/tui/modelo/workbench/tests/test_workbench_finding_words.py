@@ -565,3 +565,42 @@ async def test_every_blocking_mark_in_the_findings_list_is_drawn_in_the_error_co
     assert title and heading, "the title and the blocking level's heading each draw the mark"
     assert all(colour == error for colour in (*title, *heading))
     assert check and all(colour != error for colour in check)
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_reconciliation_wire_findings_reach_tui_issue_lines(locale):
+    from ......application.modelo.verification_projection import ModeloFindingSnapshot
+    from .....tests.reconciliation_finding_fixtures import reconciliation_findings
+
+    original = reconciliation_findings()
+    restored = tuple(
+        ModeloFindingSnapshot.model_validate_json(
+            ModeloFindingSnapshot.from_finding(finding).model_dump_json()
+        ).to_finding()
+        for finding in original
+    )
+    assert restored == original
+    form = synthetic_form().model_copy(
+        update={"issues": tuple(ModeloFormIssue(finding=finding) for finding in restored)}
+    )
+    with override_settings(cadrumo_output_language=locale):
+        lines = issue_lines(form)
+    matched = [line for line in lines if "test-reconciliation-evidence" in line.technical]
+    assert len(matched) == 3
+    assert all(line.level is IssueLevel.CHECK for line in matched)
+    assert all("application.modelo" not in line.message and "%{" not in line.message for line in matched)
+    by_key = {
+        finding.message_locale_key: next(line for line in matched if finding.message_locale_key in line.technical)
+        for finding in original
+    }
+    incomplete = by_key["application.modelo.findings.cross_model_reconciliation_incomplete"]
+    assert "303" in incomplete.message and "349" in incomplete.message
+    assert "2" in incomplete.message and "1" in incomplete.message
+    working = by_key["application.modelo.findings.pulled_filing_casilla_mismatch"]
+    cross_model = by_key["application.modelo.findings.m303_m349_intracom_reconciliation_mismatch"]
+    if locale == "en":
+        assert "6,000.25" in working.message and "7,250.50" in working.message
+        assert "10,000.25" in cross_model.message and "8,000.50" in cross_model.message
+    elif locale == "es":
+        assert "6.000,25" in working.message and "7.250,50" in working.message
+        assert "10.000,25" in cross_model.message and "8.000,50" in cross_model.message

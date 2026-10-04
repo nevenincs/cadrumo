@@ -1644,6 +1644,7 @@ application:
         típusú jövedelemre az adóegyezmény kedvezménykorlátozó záradéka vonatkozhat.
       m210_rate_unavailable: Nem határozható meg a Modelo 210 adókulcsa a(z) %{tipo_renta_code}
         jövedelemtípusra (tipo de renta) %{filing_year} évre.
+      cross_model_reconciliation_incomplete: "A(z) %{modelo} és %{sibling_modelo} nyomtatvány összehasonlítása a(z) %{period_code}/%{filing_year} időszakra hiányos: %{own_missing_count} helyi és %{sibling_missing_count} kapcsolódó érték hiányzik."
       m303_m349_intracom_reconciliation_mismatch: A(z) %{filing_year} %{period_code}
         időszakban a Modelo 303 közösségen belüli összege (%{m303_total} EUR) és a
         Modelo 349 összege (%{m349_total} EUR) %{gap} EUR-val eltér.

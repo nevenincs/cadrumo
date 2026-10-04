@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c112e46889c47cf95977118031f86b6346a413eed2d8dac7cc56ee4cbb7c70a0'
+body_hash: 'sha256:36b13d9b2616c9e3d40ef1c11157fca7457488b6bd3469529168f39392d7066a'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -63,6 +63,10 @@ Twenty-three encrypted chain cases passed, including receipt-only confirmation f
 ### cross-model-rendering | medium | Shared finding formatter required enrollment
 
 Core S03 review passed with 32 combined working/cross-model cases and scoped checks. Additional operator-path verification found missing fact-kind enrollment for the new incomplete-comparison warning. Formatter correction and CLI/TUI rendering verification are in progress; S03 remains open until those checks pass.
+
+### cross-model-rendering-closed | low | S03 operator contract verified and passed
+
+The shared finding formatter now enrolls counterpart model and both missing-value counts with the correct closed fact kinds. Four-language CLI report JSON roundtrips and TUI wire-finding roundtrips assert displayed amounts and missing counts. Thirteen renderer/producer cases pass in addition to the 32 working/cross-model cases. Scoped style, types and canonical private-import checks pass. Independent review found no remaining S03 finding; the earlier formatter gap is closed.
 
 ## Recommendations
 

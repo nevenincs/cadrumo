@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:80c71c63fe061aa66b3a5a9d7a84a03aeeaa87d40d7a2f1be01e0ed5fbdcceae'
+body_hash: 'sha256:e29f7830a5712918a0ac4ccb55dbcdb91b04f9edf3e617f056b7b67b6594b2ee'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -57,3 +57,19 @@ related:
 - `S02` `verify:` `scoped Ruff format ty basedpyright pyrefly and canonical private-import checks` -> `pass`
 - `S02` `verify:` `independent S02 corrected replay review` -> `pass`
 - `S02` `by:` `root`
+- `S03` `M` `src/cadrumo/application/modelo/_m303_m349_reconcile.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_m303_m349_intracom_reconcile.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/profile/tests/test_cross_model_reconciliation_persistence.py`
+- `S03` `M` `src/cadrumo/application/modelo/finding_message_text.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/reconciliation_finding_fixtures.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_verification_report_view.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S03` `M` `src/cadrumo/locales/en/application.yml`
+- `S03` `M` `src/cadrumo/locales/es/application.yml`
+- `S03` `M` `src/cadrumo/locales/ca/application.yml`
+- `S03` `M` `src/cadrumo/locales/hu/application.yml`
+- `S03` `verify:` `combined working and cross-model tests (32 cases)` -> `pass`
+- `S03` `verify:` `CLI TUI and shared finding renderer tests (13 cases)` -> `pass`
+- `S03` `verify:` `scoped Ruff format ty basedpyright pyrefly canonical private-import checks` -> `pass`
+- `S03` `verify:` `independent S03 review including renderer correction` -> `pass`
+- `S03` `by:` `mirror_fix`

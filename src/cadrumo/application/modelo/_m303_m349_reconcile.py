@@ -178,18 +178,29 @@ def _selected_reconciliation_contract(
     return matches[0] if len(matches) == 1 else None
 
 
-def _casilla_decimal(values: Mapping[CasillaId, Decimal], casilla: CasillaId) -> Decimal:
-    """Read a persisted Decimal, using only the neutral arithmetic identity for absence."""
-    value = values.get(casilla)
-    return value if value is not None else Decimal("0")
-
-
 def _sum_declared_casillas(
     values: Mapping[CasillaId, Decimal],
     casilla_ids: tuple[CasillaId, ...],
 ) -> Decimal:
-    """Aggregate the registry-declared operand casillas with generic addition."""
-    return sum((_casilla_decimal(values, casilla) for casilla in casilla_ids), Decimal("0"))
+    """Aggregate complete registry-declared operands; absence is never zero."""
+    return sum((values[casilla] for casilla in casilla_ids), Decimal("0"))
+
+
+def _require_revision_belongs_to_unit(
+    revision: CalculationRevision, unit: WorkUnit, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Refuse another work unit's calculation even when its registry stamp is current."""
+    from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+    coordinate = revision.registry_snapshot_ref
+    if revision.work_unit_id != unit.work_unit_id or (
+        str(coordinate.modelo),
+        coordinate.modelo_year,
+        coordinate.period,
+        coordinate.revision_id,
+    ) != (str(unit.modelo), unit.filing_year, unit.period.registry_token, unit.revision_id):
+        raise ModeloValidationError("reconciliation calculation does not belong to the selected work-unit coordinate")
+    require_calculation_revision_coordinates_current(revision, operation=operation)
 
 
 def _sibling_work_unit(
@@ -241,17 +252,13 @@ def _reconcile_revision_for_work_unit(
         if pointer:
             revision = revisions.get(pointer)
             if revision is not None:
-                from .calculation_revision_gate import require_calculation_revision_coordinates_current
-
-                require_calculation_revision_coordinates_current(revision, operation=operation)
+                _require_revision_belongs_to_unit(revision, unit, operation=operation)
                 return revision
     candidates = revisions.for_work_unit(unit.work_unit_id)
     if not candidates:
         return None
     revision = max(candidates, key=_reconcile_revision_priority)
-    from .calculation_revision_gate import require_calculation_revision_coordinates_current
-
-    require_calculation_revision_coordinates_current(revision, operation=operation)
+    _require_revision_belongs_to_unit(revision, unit, operation=operation)
     return revision
 
 
@@ -290,15 +297,38 @@ def m303_m349_intracom_reconcile_findings(
         calculation_repository.load(operation=operation),
         operation=operation,
     )
-    if sibling_revision is None:
-        return []
+    sibling_values: Mapping[CasillaId, Decimal] = (
+        sibling_revision.casilla_values if sibling_revision is not None else dict[CasillaId, Decimal]()
+    )
+    _require_revision_belongs_to_unit(target, work_unit, operation=operation)
+    own_missing = set(contract.expectation.reconcile_when_present_casilla_ids) - target.casilla_values.keys()
+    sibling_missing = set(contract.sibling_expectation.reconcile_when_present_casilla_ids) - sibling_values.keys()
+    if own_missing or sibling_missing:
+        return [
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.ADVISORY,
+                severity=ModeloVerificationFindingSeverity.WARNING,
+                message_locale_key="application.modelo.findings.cross_model_reconciliation_incomplete",
+                message_facts={
+                    "modelo": str(work_unit.modelo),
+                    "sibling_modelo": contract.sibling_modelo,
+                    "period_code": work_unit.period.registry_token,
+                    "filing_year": work_unit.filing_year,
+                    "own_missing_count": len(own_missing),
+                    "sibling_missing_count": len(sibling_missing),
+                },
+                expectation_id=contract.expectation.id,
+                legal_refs=tuple(str(ref) for ref in contract.expectation.legal_refs),
+                source_refs=tuple(str(ref) for ref in contract.expectation.source_refs),
+            )
+        ]
 
     own_total = _sum_declared_casillas(
         target.casilla_values,
         tuple(contract.expectation.reconcile_when_present_casilla_ids),
     )
     sibling_total = _sum_declared_casillas(
-        sibling_revision.casilla_values,
+        sibling_values,
         tuple(contract.sibling_expectation.reconcile_when_present_casilla_ids),
     )
     if own_total == 0 and sibling_total == 0:

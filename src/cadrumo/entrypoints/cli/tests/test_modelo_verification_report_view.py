@@ -535,3 +535,40 @@ def test_narrowing_the_status_left_the_json_wire_form_untouched() -> None:
 
     assert wire["completeness_status"] == "blocked"
     assert wire["run_at"] == "2026-05-27T10:00:00+00:00"
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_reconciliation_public_report_roundtrip_renders_cli_findings(locale):
+    from ....application.modelo.verification_projection import ModeloVerificationReportSnapshot
+    from ....core.config import override_settings
+    from ....domain.modelos.verification_report import derive_verification_report_id
+    from ...tests.reconciliation_finding_fixtures import reconciliation_findings
+    from .._modelo_rendering import verification_report_lines
+
+    original = _blocked_report()
+    findings = reconciliation_findings()
+    report = original.model_copy(
+        update={
+            "findings": findings,
+            "verification_report_id": derive_verification_report_id(
+                calculation_revision_id=original.calculation_revision_id,
+                completeness_status=original.completeness_status,
+                findings=findings,
+                verified_by=original.verified_by,
+            ),
+        }
+    )
+    wire = ModeloVerificationReportSnapshot.from_report(report).model_dump_json()
+    restored = ModeloVerificationReportSnapshot.model_validate_json(wire).to_report()
+    assert restored.findings == findings
+    with override_settings(cadrumo_output_language=locale):
+        lines = verification_report_lines(restored)
+    messages = [line for line in lines if line.startswith("finding\t")]
+    assert len(messages) == 3
+    assert all("warning" in line for line in messages)
+    assert all("application.modelo" not in line and "%{" not in line for line in messages)
+    assert "349" in messages[2] and "303" in messages[2]
+    assert "2" in messages[2] and "1" in messages[2]
+    assert "6000.25" in messages[0] and "7250.50" in messages[0]
+    assert "10000.25" in messages[1] and "8000.50" in messages[1]
+    assert any(line.startswith("finding_source_refs\t") and "test-reconciliation-evidence" in line for line in lines)

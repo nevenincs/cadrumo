@@ -81,6 +81,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "modelo_code": FindingFactKind.MODELO,
         "modelo_id": FindingFactKind.MODELO,
         "source_modelo": FindingFactKind.MODELO,
+        "sibling_modelo": FindingFactKind.MODELO,
         "target_modelo": FindingFactKind.MODELO,
         "filing_year": FindingFactKind.YEAR,
         "source_filing_year": FindingFactKind.YEAR,
@@ -108,6 +109,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "threshold": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
         # Counts.
+        "own_missing_count": FindingFactKind.COUNT,
+        "sibling_missing_count": FindingFactKind.COUNT,
         "changed_count": FindingFactKind.COUNT,
         "added_count": FindingFactKind.COUNT,
         "contradicting_invoice_count": FindingFactKind.COUNT,
