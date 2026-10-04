@@ -6,11 +6,12 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { resolve } from "node:path";
+import { isAbsolute, resolve, sep } from "node:path";
 import test from "node:test";
 import { buildPath } from "../scripts/build-paths.mjs";
 import {
   docsOrigin,
+  frontendDirectory,
   identity,
   profile,
   server,
@@ -66,12 +67,11 @@ test("generated identity, server settings and artifact paths have no product fal
         "utf8",
       ),
     );
-    const config = tauriConfig(
-      template,
-      identity(),
-      resolve(root, "assets"),
-      resolve(root, "icons"),
-    );
+    const config = tauriConfig(template, identity(), {
+      configDirectory: resolve(root, "host/src-tauri"),
+      frontend: resolve(root, "assets"),
+      icons: resolve(root, "icons"),
+    });
     assert.equal(config.productName, product.name);
     assert.equal(config.identifier, product.application_id);
     assert.equal(config.version, product.version);
@@ -121,6 +121,11 @@ test("the shell policy frames only the documentation origin of the target platfo
     application_id: "org.example.configured",
     version: "3.2.1",
   };
+  const locations = {
+    configDirectory: resolve("host/src-tauri"),
+    frontend: resolve("frontend"),
+    icons: resolve("icons"),
+  };
   const frames = (config) =>
     config.app.security.csp
       .split(";")
@@ -141,13 +146,7 @@ test("the shell policy frames only the documentation origin of the target platfo
       },
     };
     assert.equal(docsOrigin(configured.app.windows[0], platform), origin);
-    const config = tauriConfig(
-      configured,
-      product,
-      "assets",
-      "icons",
-      platform,
-    );
+    const config = tauriConfig(configured, product, locations, platform);
     assert.deepEqual(frames(config), [`frame-src ${origin}`]);
     const rest = (policy) =>
       policy
@@ -169,8 +168,67 @@ test("the shell policy frames only the documentation origin of the target platfo
       app: { ...template.app, security: { ...template.app.security, csp } },
     };
     assert.throws(
-      () => tauriConfig(broken, product, "assets", "icons", "win32"),
+      () => tauriConfig(broken, product, locations, "win32"),
       /must frame nothing/,
     );
   }
+});
+
+// Tauri reads frontendDist as a URL before a path; a drive path such as
+// C:\dist then embeds no frontend, so the generated value must stay relative.
+test("the frontend directory is emitted relative to the Tauri configuration", () => {
+  const template = JSON.parse(
+    readFileSync(
+      new URL("../src-tauri/tauri.conf.json.in", import.meta.url),
+      "utf8",
+    ),
+  );
+  const product = {
+    name: "Configured application",
+    application_id: "org.example.configured",
+    version: "3.2.1",
+  };
+  const configDirectory = resolve("build", "desktop", "host", "src-tauri");
+  for (const frontend of [
+    resolve("build", "desktop", "frontend"),
+    resolve("build", "desktop", "host", "src-tauri", "dist"),
+    resolve("elsewhere", "frontend output"),
+  ]) {
+    const { frontendDist } = tauriConfig(
+      template,
+      product,
+      { configDirectory, frontend, icons: resolve("icons") },
+      "win32",
+    ).build;
+    assert.equal(typeof frontendDist, "string");
+    assert.ok(!isAbsolute(frontendDist), frontendDist);
+    assert.ok(!/^[A-Za-z]:/.test(frontendDist), frontendDist);
+    assert.ok(!frontendDist.includes("\\"), frontendDist);
+    assert.ok(!URL.canParse(frontendDist), frontendDist);
+    assert.equal(resolve(configDirectory, frontendDist), frontend);
+  }
+  assert.throws(
+    () => frontendDirectory("relative/src-tauri", resolve("frontend")),
+    /must be absolute/,
+  );
+  assert.throws(
+    () => frontendDirectory(configDirectory, "frontend"),
+    /must be absolute/,
+  );
+  assert.throws(
+    () => frontendDirectory(configDirectory, configDirectory),
+    /relative to the Tauri configuration/,
+  );
+  // A path Tauri would read as a URL: another drive on Windows, where no
+  // relative path exists, or a first segment that looks like a URL scheme.
+  const unreachable =
+    sep === "\\"
+      ? resolve(configDirectory).startsWith("Z:")
+        ? "Y:\\frontend"
+        : "Z:\\frontend"
+      : resolve(configDirectory, "y:frontend");
+  assert.throws(
+    () => frontendDirectory(configDirectory, unreachable),
+    /relative to the Tauri configuration/,
+  );
 });

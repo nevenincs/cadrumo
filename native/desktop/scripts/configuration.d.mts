@@ -16,6 +16,16 @@ export function profile(configuration?: string): {
 };
 export function artifactFile(): string;
 export function executable(): string;
+export function frontendDirectory(
+  configDirectory: string,
+  frontend: string,
+): string;
+export function tauriConfig(
+  template: Record<string, unknown>,
+  product: ProductIdentity,
+  locations: { configDirectory: string; frontend: string; icons: string },
+  platform?: string,
+): Record<string, unknown>;
 export function docsOrigin(
   window: { useHttpsScheme?: boolean },
   platform?: string,

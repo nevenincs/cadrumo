@@ -101,16 +101,16 @@ for (const entry of ["Cargo.toml", "Cargo.lock", "build.rs", "src"]) {
     { recursive: true },
   );
 }
+const configDirectory = resolve(snapshot, "src-tauri");
 const config = tauriConfig(
   JSON.parse(
     readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
   ),
   identity,
-  buildPath("desktop_frontend"),
-  icons,
+  { configDirectory, frontend: buildPath("desktop_frontend"), icons },
 );
 writeFileSync(
-  resolve(snapshot, "src-tauri/tauri.conf.json"),
+  resolve(configDirectory, "tauri.conf.json"),
   JSON.stringify(config, null, 2),
 );
 run([

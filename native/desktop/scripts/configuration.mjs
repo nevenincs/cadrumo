@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { isAbsolute, relative, resolve } from "node:path";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import { buildPath } from "./build-paths.mjs";
 
 export function identity() {
@@ -110,11 +110,27 @@ function shellPolicy(policy, origin) {
     .join("; ");
 }
 
+// Tauri reads frontendDist as a URL first, so an absolute Windows path such as
+// C:\dist becomes a URL with the scheme "c:" and no asset is embedded. Tauri
+// resolves a relative path against the configuration file's directory and
+// always reads it as a directory.
+export function frontendDirectory(configDirectory, frontend) {
+  if (!isAbsolute(configDirectory) || !isAbsolute(frontend))
+    throw new Error(
+      "The configuration and frontend directories must be absolute.",
+    );
+  const path = relative(configDirectory, frontend).split(sep).join("/");
+  if (!path || isAbsolute(path) || URL.canParse(path))
+    throw new Error(
+      "The frontend must be a directory path relative to the Tauri configuration.",
+    );
+  return path;
+}
+
 export function tauriConfig(
   template,
   product,
-  frontend,
-  icons,
+  { configDirectory, frontend, icons },
   platform = process.platform,
 ) {
   const [main] = template.app.windows;
@@ -123,7 +139,10 @@ export function tauriConfig(
     productName: product.name,
     identifier: product.application_id,
     version: product.version,
-    build: { ...template.build, frontendDist: frontend },
+    build: {
+      ...template.build,
+      frontendDist: frontendDirectory(configDirectory, frontend),
+    },
     app: {
       ...template.app,
       windows: template.app.windows.map((window) => ({

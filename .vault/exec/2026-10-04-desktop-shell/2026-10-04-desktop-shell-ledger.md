@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e9b1c2266282eb8fb64f3feb7b6ba0d749483bce9e9e461af84cfac54b2967e'
+body_hash: 'sha256:1102c91a96cec315c57b9cadbd2e773978549a0c90344dd1695f51700f42e3bc'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -304,6 +304,11 @@ related:
 - `S01` `verify:` `17 gate-check removals and 2 owner-environment removals each fail their falsifier test; source restored byte-identical` -> `pass`
 - `S01` `verify:` `widened gate over real es/ca/hu web roots and S05 desktop staging (only the MathJax CDN script refused; desktop es clean)` -> `pass`
 - `S01` `by:` `implementation-engineer-high`
+- `S05` `M` `native/desktop/scripts/tauri.mjs`
+- `S05` `verify:` `node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `npm run check in native/desktop/frontend` -> `pass`
+- `S05` `verify:` `node scripts/tauri.mjs build Release, expanded context shows FrontendDist Directory and 7 embedded assets` -> `pass`
+- `S05` `by:` `high-executor`
 
 ## Notes
 
@@ -338,3 +343,5 @@ related:
 - `S14` A fresh desktop build is blocked: the casilla reference hook fails registry validation (modelo 720 unknown bindings, stale form layout); the first attempt failed on another session's in-progress OsLockState import. Real-build verification used the S03 scratch build with the two changed scripts overlaid; `CADRUMO_DOCS_SKIP_SEQUENCE_CHECK=1` in scratch only.
 - `S14` Chromium reports a keyboard-opened contextmenu with pointerType mouse and detail 0, like a right-click; only button differs (-1 vs 2), so pointer is derived from pointerType empty or button -1.
 - `S04` groupb integration: live-only Credit::sent, Session::delivered and Session::paused gated on live-package-tests (clippy without the feature failed on dead code); relocated test rewritten to an explicit canonical root override with a pin-removal falsifier
+- `S05` Earlier host builds embedded no frontend: tauriConfig wrote frontendDist as an absolute Windows path, which Tauri parsed as FrontendDist::Url with scheme y:, leaving the EmbeddedAssets map empty. Fixed to a forward-slash path relative to the generated src-tauri directory.
+- `S05` Falsification: the new configuration test fails when frontendDist is reverted to the absolute path.
