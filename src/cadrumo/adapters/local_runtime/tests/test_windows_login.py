@@ -7,7 +7,7 @@ import sys
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from ..windows_login import WindowsLoginBinding, capture_windows_login, observe_windows_login
 
@@ -50,6 +50,6 @@ def test_runtime_requires_a_real_interactive_desktop() -> None:
 def test_unknown_native_logon_never_becomes_an_eligible_session() -> None:
     missing = WindowsLoginBinding("S-1-0-0", 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFF, 1)
     observed = observe_windows_login(missing, credential_facilities=Availability.AVAILABLE)
-    assert not observed.active and observed.locked
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
     assert observed.unattended is LoginEligibility.UNKNOWN
     assert observed.credential_facilities is Availability.UNAVAILABLE

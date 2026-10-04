@@ -171,7 +171,7 @@ class ProfileConnectionAdmissionMixin:
             raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
         self._retire_invalid_prior_session(connection, host, context, request)
         observation = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
-        if not observation.active or (request.method in {"password", "receipt"} and observation.locked):
+        if not observation.active or (request.method in {"password", "receipt"} and not observation.unlocked):
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
         connection.method = request.method
         connection.persist_human_receipt = request.persist_receipt
@@ -245,7 +245,7 @@ class ProfileConnectionAdmissionMixin:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
-        if not observed.active or observed.locked or observed.os_owner_id != context.peer.os_owner_id:
+        if not observed.active or not observed.unlocked or observed.os_owner_id != context.peer.os_owner_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         host = self._host(request.profile_id, context)
         connection = ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend, method=method)

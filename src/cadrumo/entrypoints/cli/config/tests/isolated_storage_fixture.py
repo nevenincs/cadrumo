@@ -22,7 +22,7 @@ from .....adapters.persistence.storage.custody.tests.automation_support import M
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     active_profile_record_session,
@@ -120,7 +120,7 @@ class _NativeLogin:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

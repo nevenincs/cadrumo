@@ -9,7 +9,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.login import RuntimeLoginEvidence, RuntimeLoginInventory
-from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from ...core.config import load_settings
 from .login import capture_runtime_login
 
@@ -47,7 +47,7 @@ class DevelopmentRuntimeLogin:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=active,
-            locked=not active,
+            lock_state=OsLockState.UNLOCKED if active else OsLockState.UNKNOWN,
             unattended=LoginEligibility.ELIGIBLE if active else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )

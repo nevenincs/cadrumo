@@ -38,7 +38,7 @@ from .....application.modelo.declarations_workspace_contracts import Declaration
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeClientHello
-from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -70,7 +70,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

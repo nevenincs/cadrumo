@@ -46,6 +46,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     OperationAccessPolicy,
     OperationAccessRequest,
+    OsLockState,
     ProfileAccessStatus,
     SessionKind,
 )
@@ -554,6 +555,36 @@ def test_cross_connection_lookup_cannot_disclose_or_retire_victims_session(subje
     session = subject.admit()
     assert isinstance(session, AccessSession)
     other = uuid4()
+@pytest.mark.parametrize("lock_state", [OsLockState.LOCKED, OsLockState.UNKNOWN])
+def test_attended_login_without_unlocked_evidence_retires_human_but_not_api(
+    subject: Subject, lock_state: OsLockState
+) -> None:
+    api = subject.admit()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(api, AccessSession) and isinstance(human, AccessSession)
+    before = subject.owner.current.context
+    observed = changed(before.login_contexts[0], lock_state=lock_state)
+    subject.owner.current = SessionAuthorityFacts(
+        subject.owner.current.profile, changed(before, login_contexts=(observed,))
+    )
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=human.session_id,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert not isinstance(status, AccessDenied) and not status.credential_authenticated
+    assert subject.owner.active == {api.session_id}
+    subject.owner.current = SessionAuthorityFacts(subject.owner.current.profile, before)
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=human.session_id,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert not isinstance(status, AccessDenied) and not status.credential_authenticated
+
+
     subject.owner.connections[other] = uuid4()
     status = subject.authority.status(
         connection_id=other,

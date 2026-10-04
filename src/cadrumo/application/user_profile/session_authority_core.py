@@ -86,7 +86,7 @@ class SessionAuthorityCore:
         live_logins = {
             login.login_id
             for login in facts.context.login_contexts
-            if login.active and not login.locked and login.os_owner_id == self.binding.os_owner_id
+            if login.active and login.unlocked and login.os_owner_id == self.binding.os_owner_id
         }
         self._retire(
             {

@@ -69,6 +69,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessStatus,
 )
@@ -119,7 +120,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=self.active,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )

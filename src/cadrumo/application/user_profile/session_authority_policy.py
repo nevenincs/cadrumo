@@ -150,7 +150,7 @@ def _api_key_grant_refusal(
     eligible = _eligible_api_logins(profile, context)
     if not eligible:
         return AccessDenialCode.OS_SESSION_UNAVAILABLE
-    if not grant.allow_os_lock and all(login.locked for login in eligible):
+    if not grant.allow_os_lock and not any(login.unlocked for login in eligible):
         return AccessDenialCode.OS_LOCKED
     return None
 
@@ -310,7 +310,7 @@ def _originating_login_refusal(
     )
     if login is None:
         return AccessDenialCode.OS_SESSION_UNAVAILABLE
-    if login.locked:
+    if not login.unlocked:
         return AccessDenialCode.OS_LOCKED
     return None
 

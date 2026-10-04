@@ -16,7 +16,7 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
 )
 from cadrumo.application.runtime.login import RuntimeLoginInventory
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 from cadrumo.core.config import Settings, override_settings
 
 from ..login import capture_runtime_login
@@ -64,14 +64,15 @@ def test_development_policy_preserves_owner_and_credential_facility_and_retires_
     assert policy.inventory().logins == (first,)
     for facilities in Availability:
         observation = first.observe(credential_facilities=facilities)
-        assert observation.active and not observation.locked
+        assert observation.active and observation.lock_state is OsLockState.UNLOCKED and observation.unlocked
         assert observation.unattended is LoginEligibility.ELIGIBLE
         assert observation.credential_facilities is facilities
     with pytest.raises(RuntimeRefusalError) as refused:
         policy.capture(_channel("another-owner"))
     assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
     stop.set()
-    assert not first.observe(credential_facilities=Availability.UNAVAILABLE).active
+    stopped = first.observe(credential_facilities=Availability.UNAVAILABLE)
+    assert not stopped.active and stopped.lock_state is OsLockState.UNKNOWN and not stopped.unlocked
     assert policy.inventory().logins == ()
     with pytest.raises(RuntimeRefusalError) as draining:
         policy.capture(_channel("synthetic-owner"))

@@ -18,7 +18,12 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 
 from .. import linux_login, macos_login, posix_channel
 from ..macos_login import MacosLoginBinding, MacosSessionObservation
@@ -36,7 +41,7 @@ class _LoginEvidence:
             login_id=self.login_id,
             os_owner_id="synthetic-owner",
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -268,7 +273,7 @@ def test_darwin_capture_passes_held_socket_and_owner_without_granting_eligibilit
     assert captured is binding
     assert observed == [(channel._socket, "synthetic-owner")]
     context = captured.observe(credential_facilities=Availability.AVAILABLE)
-    assert context.active and context.locked
+    assert context.active and context.lock_state is OsLockState.UNKNOWN
     assert context.unattended is LoginEligibility.UNKNOWN
 
 

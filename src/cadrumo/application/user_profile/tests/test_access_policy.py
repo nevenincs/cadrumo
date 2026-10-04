@@ -44,6 +44,7 @@ from cadrumo.application.user_profile.access_contracts import (
     LoginEligibility,
     OperationAccessPolicy,
     OperationAccessRequest,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -186,7 +187,7 @@ def scenario() -> Scenario:
                 login_id="login-a",
                 os_owner_id=binding.os_owner_id,
                 active=True,
-                locked=False,
+                lock_state=OsLockState.UNLOCKED,
                 unattended=LoginEligibility.ELIGIBLE,
                 credential_facilities=Availability.AVAILABLE,
             ),
@@ -635,13 +636,16 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
         replace(attended_subject, ancestors=(changed(human, state=SessionState.REVOKED),)),
         AccessDenialCode.SESSION_INACTIVE,
     )
-    locked = changed(scenario.context, login_contexts=(changed(scenario.context.login_contexts[0], locked=True),))
-    assert isinstance(replace(scenario, context=locked).evaluate(), AccessAllowed)
-    assert_denied(replace(attended_subject, context=locked), AccessDenialCode.OS_LOCKED)
-    assert_denied(
-        replace(scenario, context=locked, grant=changed(scenario.grant, allow_os_lock=False)),
-        AccessDenialCode.OS_LOCKED,
-    )
+    # An unknown lock state never admits attended or lock-sensitive work.
+    for lock_state in (OsLockState.LOCKED, OsLockState.UNKNOWN):
+        login = changed(scenario.context.login_contexts[0], lock_state=lock_state)
+        locked = changed(scenario.context, login_contexts=(login,))
+        assert isinstance(replace(scenario, context=locked).evaluate(), AccessAllowed)
+        assert_denied(replace(attended_subject, context=locked), AccessDenialCode.OS_LOCKED)
+        assert_denied(
+            replace(scenario, context=locked, grant=changed(scenario.grant, allow_os_lock=False)),
+            AccessDenialCode.OS_LOCKED,
+        )
     assert_denied(
         replace(scenario, context=changed(scenario.context, private_work_available=False)),
         AccessDenialCode.OS_SESSION_UNAVAILABLE,

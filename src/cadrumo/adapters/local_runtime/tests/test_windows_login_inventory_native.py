@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.test_windows_automation_
 )
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.login import RuntimeLoginInventory
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from ..windows_desktop_observation import windows_desktop_observation
 from ..windows_login import WindowsLoginBinding, capture_windows_login, windows_login_inventory
@@ -215,10 +215,12 @@ def test_normal_desktop_current_login_is_a_fresh_inventory_witness() -> None:
         altered = replace(binding, desktop_logon_time=binding.desktop_logon_time + 1)
         refused = altered.observe(credential_facilities=Availability.UNAVAILABLE)
         facts["altered_generation_refused"] = (
-            not refused.active and refused.locked and refused.unattended is LoginEligibility.INELIGIBLE
+            not refused.active
+            and refused.lock_state is OsLockState.UNKNOWN
+            and refused.unattended is LoginEligibility.INELIGIBLE
         )
         facts["altered_binding_not_recaptured"] = refused.login_id == altered.login_id != binding.login_id
-        assert not refused.active and refused.locked
+        assert not refused.active and refused.lock_state is OsLockState.UNKNOWN
         assert refused.unattended is LoginEligibility.INELIGIBLE
         assert refused.login_id == altered.login_id != binding.login_id
 

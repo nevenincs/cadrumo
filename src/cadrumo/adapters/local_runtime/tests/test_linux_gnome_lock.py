@@ -19,7 +19,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 from cadrumo.core.config import override_settings
 
 from .. import linux_gnome_lock, linux_login, linux_logind_native
@@ -233,7 +233,7 @@ def test_bound_login_release_requires_current_observer_and_preserves_custody_ind
     monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
-    assert result.active and result.locked is failure
+    assert result.active and result.lock_state is (OsLockState.UNKNOWN if failure else OsLockState.UNLOCKED)
     assert result.unattended is (LoginEligibility.UNKNOWN if failure else LoginEligibility.ELIGIBLE)
     assert result.credential_facilities is Availability.UNAVAILABLE
 
@@ -253,7 +253,7 @@ def test_missing_observer_never_reselects_an_enabled_later_producer(monkeypatch:
     monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", unexpectedly_called)
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
+    assert result.active and result.lock_state is OsLockState.UNKNOWN and result.unattended is LoginEligibility.UNKNOWN
 
 
 def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authority(
@@ -277,10 +277,47 @@ def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authori
     monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
-    assert result.active and result.locked
+    assert result.active and result.lock_state is OsLockState.LOCKED
     # Existing unattended policy still separately requires native custody.
     assert result.unattended is LoginEligibility.ELIGIBLE
     assert result.credential_facilities is Availability.UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("state", "expected"),
+    [
+        (GnomeLockState(_EPOCH, 10, False, False, "user", 2), OsLockState.UNLOCKED),
+        (GnomeLockState(_EPOCH, 10, True, True, "unlock-dialog", 2), OsLockState.LOCKED),
+        (GnomeLockState(_EPOCH, 10, True, False, "user", 2), OsLockState.UNKNOWN),
+        (GnomeLockState(_EPOCH, 10, False, True, "user", 2), OsLockState.UNKNOWN),
+        (GnomeLockState(_EPOCH, 10, False, False, "unlock-dialog", 2), OsLockState.UNKNOWN),
+        (GnomeLockState(_EPOCH, 10, True, False, "user", 3), OsLockState.LOCKED),
+    ],
+    ids=["complete-unlocked", "complete-locked", "locking", "activating", "dialog-unlocked", "generation-advanced"],
+)
+def test_only_complete_states_or_an_advanced_generation_are_positive_lock_evidence(
+    monkeypatch: pytest.MonkeyPatch, state: GnomeLockState, expected: OsLockState
+) -> None:
+    observer = GnomeLockBinding(b"a" * 32, _OWNER, 42, _EPOCH, 2)
+    binding = LinuxLoginBinding("1000", _BOOT, "c42", 500_000, observer)
+    observation = LinuxSessionObservation("c42", 1000, 500_000, "user", "wayland", "online", False)
+
+    class NativeLogin:
+        def session(self, _session_id: str) -> LinuxSessionObservation:
+            return observation
+
+    def current_observer(
+        _native: object, _session_id: str, _uid: int, expected: GnomeLockBinding | None = None
+    ) -> tuple[GnomeLockBinding, GnomeLockState]:
+        assert expected == observer
+        return observer, state
+
+    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
+    result = binding.observe(credential_facilities=Availability.AVAILABLE)
+    assert result.active and result.lock_state is expected
+    assert result.unlocked is (expected is OsLockState.UNLOCKED)
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Native passwd and no-follow filesystem primitives")

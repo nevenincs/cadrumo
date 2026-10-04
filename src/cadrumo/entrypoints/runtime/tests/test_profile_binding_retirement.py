@@ -25,7 +25,12 @@ from cadrumo.application.runtime.enrollment_access import RuntimeEnrollmentPrepa
 from cadrumo.application.runtime.installation import RuntimeInstallation
 from cadrumo.application.runtime.profile_worker import ProfileWorkerDrained, ProfileWorkerIdentity
 from cadrumo.application.runtime.transport import RuntimeConnectionContext
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.core.time.clock import now
@@ -231,7 +236,7 @@ class _RetirementLogin:
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

@@ -32,6 +32,7 @@ from cadrumo.application.runtime.contracts import RuntimeClientHello
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     SessionKind,
 )
@@ -61,7 +62,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

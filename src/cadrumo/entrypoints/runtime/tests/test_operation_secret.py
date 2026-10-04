@@ -44,7 +44,12 @@ from cadrumo.application.runtime.profile_access import (
     RuntimeProfileStatus,
     RuntimeSessionRequest,
 )
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
@@ -80,7 +85,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

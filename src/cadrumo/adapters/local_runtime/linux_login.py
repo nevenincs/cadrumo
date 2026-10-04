@@ -10,7 +10,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.login import RuntimeLoginInventory
-from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from . import linux_login_models as _models
 from . import linux_logind_bus as _bus
 from . import linux_logind_native as _native
@@ -125,12 +125,12 @@ def observe_linux_login(binding: LinuxLoginBinding, *, credential_facilities: Av
     """
     try:
         native, observation, valid = _current_login_snapshot(binding)
-        valid, locked, eligibility = _current_lock_observation(binding, native, observation, valid)
+        valid, lock_state, eligibility = _current_lock_observation(binding, native, observation, valid)
         return OsLoginContext(
             login_id=binding.login_id,
             os_owner_id=binding.os_owner_id,
             active=valid,
-            locked=locked,
+            lock_state=lock_state,
             unattended=eligibility,
             credential_facilities=credential_facilities,
         )
@@ -139,7 +139,7 @@ def observe_linux_login(binding: LinuxLoginBinding, *, credential_facilities: Av
             login_id=binding.login_id,
             os_owner_id=binding.os_owner_id,
             active=False,
-            locked=True,
+            lock_state=OsLockState.UNKNOWN,
             unattended=LoginEligibility.UNKNOWN,
             credential_facilities=credential_facilities,
         )
@@ -167,21 +167,32 @@ def _current_lock_observation(
     native: _native._NativeLogin | None,
     observation: _models.LinuxSessionObservation | None,
     valid: bool,
-) -> tuple[bool, bool, LoginEligibility]:
-    locked = True
+) -> tuple[bool, OsLockState, LoginEligibility]:
+    lock_state = OsLockState.UNKNOWN
     eligibility = LoginEligibility.UNKNOWN if valid else LoginEligibility.INELIGIBLE
     if not valid or native is None or binding.gnome_lock is None:
-        return valid, locked, eligibility
+        return valid, lock_state, eligibility
     try:
-        _, lock_state = _gnome_observation(native, binding.session_id, int(binding.os_owner_id), binding.gnome_lock)
+        _, gnome = _gnome_observation(native, binding.session_id, int(binding.os_owner_id), binding.gnome_lock)
         # Lock observations cannot outlive a changed native login snapshot.
         if native.session(binding.session_id) != observation or _native._boot_id() != binding.boot_id:
-            return False, locked, LoginEligibility.INELIGIBLE
-        locked = lock_state.safely_locked or lock_state.lock_generation > binding.gnome_lock.lock_generation
-        eligibility = lock_state.eligibility
+            return False, lock_state, LoginEligibility.INELIGIBLE
+        lock_state = _gnome_lock_state(gnome, binding.gnome_lock)
+        eligibility = gnome.eligibility
     except (RuntimeRefusalError, OSError, AttributeError, ValueError, TypeError, OverflowError):
         pass
-    return valid, locked, eligibility
+    return valid, lock_state, eligibility
+
+
+def _gnome_lock_state(state: GnomeLockState, captured: GnomeLockBinding) -> OsLockState:
+    """Only complete producer states or an advanced lock generation are positive evidence."""
+    if state.lock_generation > captured.lock_generation:
+        return OsLockState.LOCKED
+    if not state.safely_locked:
+        return OsLockState.UNLOCKED
+    if state.eligibility is LoginEligibility.ELIGIBLE:
+        return OsLockState.LOCKED
+    return OsLockState.UNKNOWN
 
 
 def linux_login_inventory(*, expected_owner: str) -> RuntimeLoginInventory:

@@ -27,6 +27,7 @@ from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -58,7 +59,7 @@ class _Login:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

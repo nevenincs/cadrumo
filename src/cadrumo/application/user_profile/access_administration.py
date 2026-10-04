@@ -238,7 +238,7 @@ def _proof_matches_reviewed_origin(
         login.login_id == proof.originating_login_id
         and login.os_owner_id == profile.binding.os_owner_id
         and login.active
-        and not login.locked
+        and login.unlocked
         for login in context.login_contexts
     )
 

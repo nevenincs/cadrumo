@@ -281,6 +281,19 @@ class LoginEligibility(StrEnum):
     UNKNOWN = "unknown"
 
 
+class OsLockState(StrEnum):
+    """Native screen-lock observation of one login.
+
+    ``LOCKED`` is positive evidence that the login was locked. ``UNKNOWN``
+    covers observer errors, incomplete transitions and platforms without a
+    lock observer; it is neither lock evidence nor proof of attendance.
+    """
+
+    LOCKED = "locked"
+    UNLOCKED = "unlocked"
+    UNKNOWN = "unknown"
+
+
 class OsLoginContext(BaseModel):
     """Fresh native observations supplied only by the trusted lifecycle owner.
 
@@ -294,9 +307,14 @@ class OsLoginContext(BaseModel):
     login_id: Annotated[str, Field(min_length=1, max_length=256)]
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     active: bool
-    locked: bool
+    lock_state: OsLockState
     unattended: LoginEligibility
     credential_facilities: Availability
+
+    @property
+    def unlocked(self) -> bool:
+        """Only a positive unlocked observation admits attended work; unknown refuses like locked."""
+        return self.lock_state is OsLockState.UNLOCKED
 
 
 class AccessEvaluationContext(BaseModel):

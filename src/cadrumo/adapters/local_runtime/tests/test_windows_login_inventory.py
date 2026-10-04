@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.login import RuntimeLoginInventory
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from .. import windows_desktop_observation, windows_login, windows_login_native
 from ..windows_desktop_logon import WindowsDesktopLogon
@@ -221,7 +221,7 @@ def test_locked_and_disconnected_owner_login_remains_a_positive_witness(
     for facilities in (Availability.AVAILABLE, Availability.UNAVAILABLE):
         observed = binding.observe(credential_facilities=facilities)
         assert observed.active and observed.unattended is LoginEligibility.ELIGIBLE
-        assert observed.locked is (flags == 0)
+        assert observed.lock_state is (OsLockState.LOCKED if flags == 0 else OsLockState.UNLOCKED)
         assert observed.credential_facilities is facilities and observed.login_id == binding.login_id
     assert not native.allocations and len(native.freed) == native.query_reads
 
@@ -291,7 +291,8 @@ def test_retained_lsa_cannot_bind_another_owners_reused_desktop(native: _Native)
     assert not result.logins and not result.complete
     assert result.eligibility is LoginEligibility.UNKNOWN
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
-    assert not observed.active and observed.locked and observed.unattended is LoginEligibility.INELIGIBLE
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
+    assert observed.unattended is LoginEligibility.INELIGIBLE
     assert observed.login_id == original.login_id
     assert original == WindowsLoginBinding(_OWNER, 101, 1, _TICKS)
 
@@ -334,7 +335,7 @@ def test_changed_logon_sid_at_current_witness_bookends_is_not_trusted(native: _N
 
     native.current_witness_reads = 0
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
-    assert not observed.active and observed.locked
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
     assert observed.unattended is LoginEligibility.UNKNOWN
     assert observed.login_id == original.login_id
     assert native.current_witness_reads >= 2
@@ -363,7 +364,7 @@ def test_missing_lsa_time_refuses_capture_and_makes_observation_unknown(native: 
     assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
     assert native.tokens_closed == [77]
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
-    assert not observed.active and observed.locked
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
     assert observed.unattended is LoginEligibility.UNKNOWN
     assert observed.login_id == original.login_id == f"windows:65:1:{_TICKS}"
     assert original == WindowsLoginBinding(_OWNER, 101, 1, _TICKS)
@@ -376,7 +377,7 @@ def test_new_wts_generation_is_captured_but_old_peer_is_refused(native: _Native)
     captured = capture_windows_login(55, expected_owner=_OWNER)
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
     assert captured == WindowsLoginBinding(_OWNER, 101, 1, _TICKS + 10)
-    assert not observed.active and observed.locked
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
     assert observed.unattended is LoginEligibility.INELIGIBLE
     assert observed.login_id == original.login_id
     assert not native.allocations and len(native.freed) == native.query_reads
@@ -412,7 +413,7 @@ def test_same_account_peer_uses_current_desktop_but_old_binding_expires(native: 
     assert capture_windows_login(55, expected_owner=_OWNER) == WindowsLoginBinding(_OWNER, 202, 1, _TICKS)
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
     inventory = windows_login_inventory(expected_owner=_OWNER)
-    assert not observed.active and observed.locked
+    assert not observed.active and observed.lock_state is OsLockState.UNKNOWN
     assert observed.unattended is LoginEligibility.INELIGIBLE
     assert observed.login_id == original.login_id
     assert inventory.logins == (WindowsLoginBinding(_OWNER, 202, 1, _TICKS),)

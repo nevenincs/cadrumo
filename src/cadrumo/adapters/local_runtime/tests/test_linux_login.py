@@ -20,7 +20,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from .. import linux_login, linux_login_models, linux_logind_bus, linux_logind_native
 from ..linux_gnome_lock import (
@@ -80,7 +80,7 @@ def test_capture_binds_login_incarnation_and_observes_without_retaining_the_proc
     unavailable = binding.observe(credential_facilities=Availability.UNAVAILABLE)
     assert available.active and unavailable.active
     assert available.unattended is unavailable.unattended is LoginEligibility.UNKNOWN
-    assert available.locked and unavailable.locked
+    assert available.lock_state is unavailable.lock_state is OsLockState.UNKNOWN
     assert available.login_id == unavailable.login_id == binding.login_id
     assert available.credential_facilities is Availability.AVAILABLE
     assert unavailable.credential_facilities is Availability.UNAVAILABLE
@@ -93,10 +93,11 @@ def test_both_lock_hint_values_preserve_lifetime_without_claiming_lock_integrati
     binding = capture_linux_login(17, expected_owner="1000")
     native.observation = replace(_SESSION, locked_hint=True, state="online")
     locked = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert locked.active and locked.locked and locked.unattended is LoginEligibility.UNKNOWN
+    assert locked.active and locked.lock_state is OsLockState.UNKNOWN and locked.unattended is LoginEligibility.UNKNOWN
     native.observation = replace(_SESSION, state="active")
     foreground = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert foreground.active and foreground.locked and foreground.unattended is LoginEligibility.UNKNOWN
+    assert foreground.active and foreground.lock_state is OsLockState.UNKNOWN
+    assert foreground.unattended is LoginEligibility.UNKNOWN
     assert foreground.login_id == locked.login_id
 
 
@@ -111,7 +112,7 @@ def test_changed_or_closing_login_cannot_reactivate_the_binding(
     binding = capture_linux_login(17, expected_owner="1000")
     native.observation = changed
     refused = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert not refused.active and refused.locked
+    assert not refused.active and refused.lock_state is OsLockState.UNKNOWN
     assert refused.unattended is LoginEligibility.INELIGIBLE
     assert refused.login_id == binding.login_id
 
@@ -123,7 +124,8 @@ def test_boot_change_invalidates_login_without_sampling_a_new_boot_session(
     binding = capture_linux_login(17, expected_owner="1000")
     monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: UUID("22222222-2222-4222-8222-222222222222"))
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert not result.active and result.locked and result.unattended is LoginEligibility.INELIGIBLE
+    assert not result.active and result.lock_state is OsLockState.UNKNOWN
+    assert result.unattended is LoginEligibility.INELIGIBLE
     assert native.session_calls == ["c42"]
 
 
@@ -138,7 +140,8 @@ def test_native_missing_or_ambiguous_evidence_is_unknown(
     binding = capture_linux_login(17, expected_owner="1000")
     native.failure = failure
     result = binding.observe(credential_facilities=facilities)
-    assert not result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
+    assert not result.active and result.lock_state is OsLockState.UNKNOWN
+    assert result.unattended is LoginEligibility.UNKNOWN
     assert result.credential_facilities is facilities
 
 
@@ -550,7 +553,8 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -
             # No independently verified same-session producer: keep the strict refusal oracle.
             assert _native_gnome_prerequisite(native, session_id=session_id, uid=uid) is None
             assert binding.gnome_lock is None
-            assert result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
+            assert result.active and result.lock_state is OsLockState.UNKNOWN
+            assert result.unattended is LoginEligibility.UNKNOWN
         else:
             expected_binding, expected_state = prerequisite
             assert binding.gnome_lock == expected_binding
@@ -558,7 +562,8 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -
             assert fresh is not None
             assert fresh == prerequisite
             assert result.active and result.unattended is LoginEligibility.ELIGIBLE
-            assert result.locked == expected_state.safely_locked
+            expected_lock = OsLockState.LOCKED if expected_state.safely_locked else OsLockState.UNLOCKED
+            assert result.lock_state is expected_lock
         assert result.credential_facilities is Availability.UNAVAILABLE
         assert result.login_id == binding.login_id
         with pytest.raises(RuntimeRefusalError) as refused:

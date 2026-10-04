@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .macos_process import read_macos_process
 
 
@@ -151,6 +151,9 @@ class MacosLoginBinding:
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
         """Refuse dependent access until trusted lock/logout evidence is available.
 
+        No lock observer exists, so lock state is always unknown: never
+        attended evidence and never positive lock evidence.
+
         Args:
             credential_facilities: Independent native custody readiness facts.
         """
@@ -166,7 +169,7 @@ class MacosLoginBinding:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=active,
-            locked=True,
+            lock_state=OsLockState.UNKNOWN,
             unattended=eligibility,
             credential_facilities=credential_facilities,
         )

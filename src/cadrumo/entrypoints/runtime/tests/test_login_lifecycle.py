@@ -21,7 +21,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionRequest
-from cadrumo.application.user_profile.access_contracts import LoginEligibility
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo.core.config import override_settings
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .. import main
@@ -54,7 +55,7 @@ def test_inventory_absence_drains_only_after_verified_eligibility(tmp_path: Path
     current = RuntimeLoginInventory((native,), complete=True)
     assert profiles._login_contexts() == (native,)
     assert profiles._private_work_available()
-    native.locked = True
+    native.lock_state = OsLockState.LOCKED
     current = RuntimeLoginInventory((native,), complete=False)
     profiles._login_contexts()
     assert profiles._private_work_available() and not stop.is_set()

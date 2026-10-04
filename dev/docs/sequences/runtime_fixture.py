@@ -31,7 +31,12 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
@@ -77,7 +82,7 @@ class _SequenceLoginObservation:
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )

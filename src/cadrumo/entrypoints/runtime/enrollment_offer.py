@@ -68,7 +68,7 @@ class RuntimeEnrollmentOffer:
         if (
             self.host.store.binding != self.prepared.profile_binding
             or not observation.active
-            or observation.locked
+            or not observation.unlocked
             or observation.os_owner_id != self.connection.context.peer.os_owner_id
         ):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)

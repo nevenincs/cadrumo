@@ -42,6 +42,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessStatus,
 )
@@ -359,7 +360,7 @@ class _NativeLoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

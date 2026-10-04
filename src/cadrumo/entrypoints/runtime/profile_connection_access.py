@@ -66,7 +66,7 @@ class ProfileConnectionAccessMixin:
         if (
             connection.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
             or not observed.active
-            or observed.locked
+            or not observed.unlocked
             or observed.os_owner_id != connection.context.peer.os_owner_id
         ):
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)

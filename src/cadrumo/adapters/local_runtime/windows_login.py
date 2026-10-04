@@ -10,7 +10,7 @@ from typing import cast
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.login import RuntimeLoginInventory
-from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .windows_desktop_logon import WindowsDesktopLogon, current_windows_desktop_logon
 from .windows_desktop_observation import WindowsDesktopObservation, windows_desktop_observation
 from .windows_login_native import (
@@ -139,7 +139,7 @@ def observe_windows_login(binding: WindowsLoginBinding, *, credential_facilities
             login_id=binding.login_id,
             os_owner_id=binding.os_owner_id,
             active=valid,
-            locked=not valid or verified.flags == 0,
+            lock_state=_desktop_lock_state(valid, verified),
             unattended=LoginEligibility.ELIGIBLE if valid else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -148,10 +148,17 @@ def observe_windows_login(binding: WindowsLoginBinding, *, credential_facilities
             login_id=binding.login_id,
             os_owner_id=binding.os_owner_id,
             active=False,
-            locked=True,
+            lock_state=OsLockState.UNKNOWN,
             unattended=LoginEligibility.UNKNOWN,
             credential_facilities=Availability.UNAVAILABLE,
         )
+
+
+def _desktop_lock_state(valid: bool, verified: WindowsDesktopObservation) -> OsLockState:
+    """WTS session flags are lock evidence only for the bound desktop generation."""
+    if not valid:
+        return OsLockState.UNKNOWN
+    return OsLockState.LOCKED if verified.flags == 0 else OsLockState.UNLOCKED
 
 
 def windows_login_inventory(*, expected_owner: str) -> RuntimeLoginInventory:

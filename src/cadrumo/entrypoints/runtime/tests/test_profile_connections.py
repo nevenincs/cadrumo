@@ -73,6 +73,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
@@ -108,14 +109,14 @@ class LoginObservation:
     owner: str
     login_id: str = "synthetic-native-login"
     active: bool = True
-    locked: bool = False
+    lock_state: OsLockState = OsLockState.UNLOCKED
 
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
         return OsLoginContext(
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=self.active,
-            locked=self.locked,
+            lock_state=self.lock_state,
             unattended=LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -272,7 +273,7 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
                 assert isinstance(still_human, RuntimeProfileStatus) and still_human.status.denial is None
                 independent = login(other, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(independent, RuntimeProfileStatus) and independent.status.denial is None
-                native_login.locked = True
+                native_login.lock_state = OsLockState.LOCKED
                 retired = human.session(
                     RuntimeSessionRequest(
                         action="session_status", request_id=uuid4(), profile_id=profile, session_id=human_id
