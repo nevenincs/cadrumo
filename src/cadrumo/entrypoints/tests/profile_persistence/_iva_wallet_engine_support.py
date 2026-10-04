@@ -188,7 +188,7 @@ def _store_prior_303_compensation(
             source_kind="aeat_sede_justificante",
             source_headers=(
                 ObservedHeaderFact(
-                    header_key="declaration_type",
+                    header_key="filing.result_disposition",
                     value="C",
                     source_artefact_kind="submitted_file",
                     source_locator="test:iva-wallet:prior-declaration-type",

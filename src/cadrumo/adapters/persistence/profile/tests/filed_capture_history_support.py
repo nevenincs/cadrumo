@@ -69,19 +69,19 @@ M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-genera
 _M303_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
 _M303_DECLARATION_TYPE_N = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="N",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",
 )
 M303_DECLARATION_TYPE_C = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="C",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",
 )
 M303_DECLARATION_TYPE_I = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="I",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",

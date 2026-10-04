@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:256133c5a4de39e24ea36edbdf39b597b424b1ad312170b1d9d07c5d94b373aa'
+body_hash: 'sha256:c7460644ac0ea093e045895a9802f428d4cf692616a0070a79fef528553fc504'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -108,6 +108,34 @@ related:
 - `S04` `verify:` `scoped Ruff format and ty basedpyright pyrefly` -> `pass`
 - `S04` `verify:` `review known drift preservation incomplete summary historical identity` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/facts/2025/mapping/0086-2025-modelo-303-carry-disposition-verification-mapping.toml`
+- `S07` `M` `src/cadrumo/application/calculations/m303_carry_ingress.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_m303_carry_mapping_revision_selection.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/cross_period_clean_state_support.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/filed_capture_history_support.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_303_filed_disposition.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_carry_gate_parity.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_compensation_filed_observations.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_compensation_relation_prefill.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m303_carry_ingress.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_observation_header_facts_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_observation_scan_key_identity.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_observations_repository_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_regularizacion_advisory.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_revision_stamp_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_terminal_preconditions.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_calendar_local_evidence.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_iva_wallet_engine_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_header_facts_reach_storage.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_compensation_provenance_population.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_integration.py`
+- `S07` `M` `.vault/adr/2026-06-21-m303-carry-reconciliation-adr.md`
+- `S07` `verify:` `canonical historical header parity ingress storage and carry 34 tests` -> `pass`
+- `S07` `verify:` `scoped Ruff format and ty` -> `pass`
+- `S07` `verify:` `isolated authority publication fixed input snapshot` -> `pass`
+- `S07` `verify:` `retained real filing 71 numeric fields observation envelope preparation` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 

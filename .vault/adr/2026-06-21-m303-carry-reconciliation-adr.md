@@ -4,7 +4,7 @@ tags:
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
 modified: '2026-10-04'
-body_hash: 'sha256:c89c481dc15d0f566160f3c597af297b7791524a19931ecbef36e05cfbc8c667'
+body_hash: 'sha256:97d7c9bddfb9c807933d1b936a4f0a05a4342d3102e2954945eaf5e4b98b6d4d'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -85,6 +85,10 @@ real gap reachable through the app's own file-then-recalculate flow.
   read as a prior compensación by the wallet reconciliation (casilla 110); the
   determined disposition feeds that gate so a period is refunded OR compensated,
   never both.
+
+### Captured disposition header repair (2026-10-04)
+
+The registry-selected disposition header is the generated export producer key `filing.result_disposition`. Earlier wording naming `source_headers[header_key='declaration_type']` describes the historical captured-evidence spelling; it is not the current producer contract. The governed carry-disposition mapping may explicitly declare that historical evidence spelling alongside the canonical key. Ingress preserves the original immutable header provenance and requires exactly one matching fact; two matching facts, missing facts, unknown codes and sign-incompatible dispositions still refuse. This does not reintroduce a legacy export/profile API or infer a disposition from amounts. Historical evidence remains readable under the architecture rule distinguishing evidence from obsolete internal APIs.
 
 ## Rationale
 

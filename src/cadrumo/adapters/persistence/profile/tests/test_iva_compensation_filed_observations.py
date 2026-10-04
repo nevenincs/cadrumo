@@ -77,7 +77,7 @@ def _history_state_from_filed_observation(observation: object, *, operation: Pin
         captured_at=observation.presented_at,
         source_headers=(
             ObservedHeaderFact(
-                header_key="declaration_type",
+                header_key="filing.result_disposition",
                 value=code,
                 source_artefact_kind="submitted_file",
                 source_locator=f"test-filed-observation:{observation.ejercicio}:{observation.period.registry_token}",

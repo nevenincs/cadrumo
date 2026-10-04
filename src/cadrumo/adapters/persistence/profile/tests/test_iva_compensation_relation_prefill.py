@@ -591,7 +591,7 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
             update={
                 "source_headers": (
                     ObservedHeaderFact(
-                        header_key="declaration_type",
+                        header_key="filing.result_disposition",
                         value="D",
                         source_artefact_kind="submitted_file",
                         source_locator="modelo-303:test:declaration_type:13:1",

@@ -258,7 +258,7 @@ def _m303_observation(values: dict[CasillaId, Decimal]) -> RegistryModeloObserva
 
 def _header(disposition: ResultDisposition) -> ObservedHeaderFact:
     return ObservedHeaderFact(
-        header_key="declaration_type",
+        header_key="filing.result_disposition",
         value=disposition.value,
         source_artefact_kind="submitted_file",
         source_locator=f"m303-submitted-file:{disposition.value}",

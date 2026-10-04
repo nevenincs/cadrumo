@@ -6,7 +6,9 @@ from collections.abc import Iterator
 
 import pytest
 
+from ....core.filing_producer_key import FilingProducerKey
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.export import resolve_export_layout
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..m303_carry_ingress import m303_declaration_type_header_key
 
@@ -36,4 +38,15 @@ def test_carry_mapping_matches_the_selected_modelo_303_revision(
         operation=authority_operation,
     )
 
-    assert header_key == "declaration_type"
+    snapshot = authority_operation.snapshot("303", filing_year=filing_year, period=period)
+    layout = resolve_export_layout(snapshot)
+    disposition_fields = tuple(
+        field
+        for field in layout.fields_by_id.values()
+        if field.producer_key is FilingProducerKey.FILING_RESULT_DISPOSITION
+    )
+    assert disposition_fields, "the export must expose the same official header that carry ingestion requires"
+    assert all(
+        field.producer_key is not None and field.producer_key.value == header_key for field in disposition_fields
+    )
+    assert header_key == FilingProducerKey.FILING_RESULT_DISPOSITION.value

@@ -78,7 +78,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 },
                 source_headers=(
                     ObservedHeaderFact(
-                        header_key="declaration_type",
+                        header_key="filing.result_disposition",
                         value="I",
                         source_artefact_kind="submitted_file",
                         source_locator="overview-calendar-local-evidence:declaration-type",

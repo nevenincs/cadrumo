@@ -789,7 +789,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             source_metadata={"aeat_justificante_csv": baseline_evidence_reference},
             source_headers=(
                 ObservedHeaderFact(
-                    header_key="declaration_type",
+                    header_key="filing.result_disposition",
                     value=ResultDisposition.DOMICILIACION.value,
                     source_artefact_kind="submitted_file",
                     source_locator=source_header_locator,

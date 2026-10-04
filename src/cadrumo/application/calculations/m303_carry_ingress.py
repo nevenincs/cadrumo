@@ -457,7 +457,14 @@ def _project_disposition_header(
 ) -> ResultDispositionProjection | None:
     """Return the one registry-selected header projection, refusing ambiguity."""
     header_key = _required_registry_value(registry_mapping, "disposition.header_key")
-    facts = tuple(item for item in envelope.source_headers if item.header_key == header_key)
+    # Historical observations retain the header spelling used at capture time.
+    # Only the registry-declared predecessor is admitted; two facts still refuse
+    # as ambiguous rather than choosing a convenient disposition.
+    legacy_header_key = registry_mapping.get("disposition.legacy_header_key")
+    accepted_keys = {header_key}
+    if legacy_header_key:
+        accepted_keys.add(legacy_header_key)
+    facts = tuple(item for item in envelope.source_headers if item.header_key in accepted_keys)
     if not facts:
         return None
     if len(facts) != 1:

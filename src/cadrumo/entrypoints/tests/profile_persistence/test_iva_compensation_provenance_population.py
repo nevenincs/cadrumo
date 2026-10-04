@@ -328,7 +328,7 @@ def _aeat_captured_303_observation(*, operation: PinnedAuthorityOperation) -> Fi
         casillas=observed,
         headers=(
             ObservedHeaderFact(
-                header_key="declaration_type",
+                header_key="filing.result_disposition",
                 value=ResultDisposition.COMPENSACION.value,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:declaration-type",

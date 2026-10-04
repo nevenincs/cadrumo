@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:6474313d54d006f07a6f16534bd12ccd5e0c61d9787b64ac4a7914fb3f971282'
+body_hash: 'sha256:65a000c7de5dc4efb82e9d8a2ed499108d77a2d2d104f745def3d0a5f5eb8dda'
 ---
 
 # Live reconciliation repair
@@ -30,7 +30,7 @@ The user explicitly authorized fixing all failures observed during authenticated
 - [x] `S03` - Restore captured submitted-file parsing against source-grounded framing; `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py and framing owner tests`.
 - [x] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
 - [x] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
-- [ ] `S07` - Align official IVA result-disposition enrollment with canonical export headers while preserving declared legacy observations; `src/cadrumo/_data/registry/aeat/facts/2025/mapping carry disposition fact and calculation observation ingress tests`.
+- [x] `S07` - Align official IVA result-disposition enrollment with canonical export headers while preserving declared legacy observations; `src/cadrumo/_data/registry/aeat/facts/2025/mapping carry disposition fact and calculation observation ingress tests`.
 - [ ] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
 
 ## Parallelization

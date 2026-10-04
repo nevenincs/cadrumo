@@ -546,7 +546,7 @@ def _official_303_envelope(
     """Persist canonical evidence, then inject the requested read-side mutation."""
     source_headers = (
         ObservedHeaderFact(
-            header_key="declaration_type",
+            header_key="filing.result_disposition",
             value=declaration_type.value,
             source_artefact_kind="submitted_file",
             source_locator=(f"modelo-303-fichero-boe:modelo-303-page-01:declaration-type:{declaration_type.value}"),
