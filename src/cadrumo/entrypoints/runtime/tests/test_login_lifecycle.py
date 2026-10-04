@@ -19,6 +19,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionRequest
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
@@ -329,7 +330,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
                 "unit-version",
             ]
         )
-        == 0
+        == RuntimeExitReason.LOGIN_WITNESS_LOSS
     )
     assert released == [True] and len(prepared) == 1
     assert signal_calls[-2:] == list(original_handlers.items())

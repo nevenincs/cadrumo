@@ -28,7 +28,12 @@ from cadrumo.adapters.local_runtime.posix import posix_owner_uid
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess, WindowsProcessScope
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import (
+    RuntimeClientHello,
+    RuntimeExitReason,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+)
 from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 
 pytestmark = [
@@ -180,7 +185,7 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
                     _wait(process, timeout=0)
                 assert waiting.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
             else:
-                assert _wait(process, timeout=0) == 2
+                assert _wait(process, timeout=0) == RuntimeExitReason.OWNER_BUSY
         first_boot = statuses[0].runtime_boot_id
         for client in clients:
             client.close()
@@ -231,12 +236,26 @@ def test_installed_mismatch_exits_without_claiming_endpoint(tmp_path: Path, mism
             "0" * 64 if mismatch == "root" else endpoint.storage_identity,
             cohort="unsupported-cohort" if mismatch == "version" else None,
         )
-        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == 2
+        expected = RuntimeExitReason.ROOT_MISMATCH if mismatch == "root" else RuntimeExitReason.VERSION_MISMATCH
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == expected
         with pytest.raises(RuntimeRefusalError) as refusal:
             endpoint.connect(timeout=0.2)
         assert refusal.value.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY
         endpoint.listen()
         assert not tuple(tmp_path.iterdir()), "refused startup must not initialize private profile storage"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows has no catchable SIGTERM")
+def test_installed_runtime_reports_a_signal_stop(tmp_path: Path) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path)
+    with ExitStack() as resources:
+        resources.callback(endpoint.close)
+        _scope, process = launch(resources, tmp_path, endpoint.storage_identity)
+        # A verified handshake proves the signal handlers are installed before the stop.
+        connect(endpoint).close()
+        assert isinstance(process, subprocess.Popen)
+        process.send_signal(signal.SIGTERM)
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == RuntimeExitReason.SIGNAL_STOP
 
 
 def _foreign_unix_listener() -> socket.socket:
@@ -265,7 +284,8 @@ def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replaceme
         assert initial.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
 
         _scope, process = launch(resources, tmp_path, endpoint.storage_identity)
-        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == 2
+        # A foreign endpoint is not a configuration refusal the supervisor can act on.
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == RuntimeExitReason.UNEXPECTED_FAILURE
         with pytest.raises(RuntimeRefusalError) as after_refusal:
             endpoint.connect(timeout=0.2)
         assert after_refusal.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED

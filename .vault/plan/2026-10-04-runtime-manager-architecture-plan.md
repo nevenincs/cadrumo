@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:a0b47dff5c470d8c23ec04a925bd230bfe6fe8ed238149f469b053d0f7e7df07'
+body_hash: 'sha256:2bb0317665504f74f5d508e0bf861edd7dab1d39cc8e6cf5c37aee267626159d'
 ---
 
 # `runtime-manager-architecture` plan
@@ -56,7 +56,7 @@ Named follow-on decisions remain outside this plan:
 
 Runtime-side supervised mode, boot record, settle and exit reasons from the supervisor-contract ADR; runtime-owned source under src/cadrumo, with the --supervised flag passed through unchanged by the packaged binary.
 
-- [ ] `P01.S01` - Add the runtime exit-reason table with reserved ranges and project it to Rust through the contract generator; `src/cadrumo/application/runtime/contracts.py, contract generator projection, owning tests`.
+- [x] `P01.S01` - Add the runtime exit-reason table with reserved ranges and project it to Rust through the contract generator; `src/cadrumo/application/runtime/contracts.py, contract generator projection, owning tests`.
 - [ ] `P01.S02` - Add the --supervised mode with private non-inheritable protocol streams, fd 0/1/2 rewired to null, hooks routed through redacted logging, and the ready/heartbeat/stopping protocol with ping/stop/stop-if-idle/session-end; `src/cadrumo/entrypoints/runtime/main.py, new supervised-channel module under src/cadrumo/entrypoints/runtime/, src/cadrumo/adapters/local_runtime/server.py, owning tests`.
 - [ ] `P01.S03` - Publish and remove the non-private boot record with custody local-record primitives and register it with the manager records in the storage taxonomy; `src/cadrumo/adapters/local_runtime/installation.py neighbour module, storage taxonomy owner, owning tests`.
 - [ ] `P01.S04` - Implement the ordered session-end settle: fence admissions, terminate and confirm the worker job, record ORPHANED or UNKNOWN and release only confirmed leases, then exit; `src/cadrumo/application/operations/_supervisor_drain.py, src/cadrumo/entrypoints/runtime/profile_connection_drain.py, owning tests`.

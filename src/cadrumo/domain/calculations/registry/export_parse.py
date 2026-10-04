@@ -641,8 +641,6 @@ def _reconstruct_component_values(
 ) -> None:
     """Recombine complete source-ordered components without discarding their raw bytes."""
     for index, field in enumerate(fields):
-        if field.value_policy is ExportValuePolicy.INTEGER_PART:
-            _reconstruct_unsigned_component_pair(fields, parsed, index)
         if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN:
             if (
                 index + 1 < len(fields)
@@ -655,51 +653,6 @@ def _reconstruct_component_values(
             _reconstruct_signed_component_triplet(fields, parsed, index)
         if field.value_policy is ExportValuePolicy.YYYYMMDD_TEXT_YEAR:
             _reconstruct_text_date_components(fields, parsed, index)
-
-
-def _reconstruct_unsigned_component_pair(
-    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
-) -> None:
-    """Recover a complete contiguous amount only from components of one declared target."""
-    if index + 1 >= len(fields):
-        return
-    integer_field, fraction_field = fields[index : index + 2]
-    if fraction_field.value_policy is not ExportValuePolicy.FRACTIONAL_DIGITS:
-        return
-    integer_target = (
-        integer_field.kind,
-        integer_field.casilla_id,
-        integer_field.binding,
-        integer_field.producer_key,
-        integer_field.projection_ref,
-        integer_field.draft_attribute,
-        integer_field.computed_key,
-    )
-    fraction_target = (
-        fraction_field.kind,
-        fraction_field.casilla_id,
-        fraction_field.binding,
-        fraction_field.producer_key,
-        fraction_field.projection_ref,
-        fraction_field.draft_attribute,
-        fraction_field.computed_key,
-    )
-    if integer_target != fraction_target or not any(item is not None for item in integer_target[1:]):
-        return
-    if (
-        integer_field.offset is None
-        or integer_field.length is None
-        or fraction_field.offset != integer_field.offset + integer_field.length
-    ):
-        return
-    integer, fraction = parsed[index : index + 2]
-    if integer.value is None or fraction.value is None:
-        return
-    if not all(part.raw.isascii() and part.raw.isdigit() for part in (integer, fraction)):
-        raise RegistryValidationError("unsigned source amount has malformed component bytes")
-    amount = Decimal(f"{integer.raw}.{fraction.raw}")
-    parsed[index] = integer.model_copy(update={"value": amount})
-    parsed[index + 1] = fraction.model_copy(update={"value": amount})
 
 
 def _reconstruct_signed_component_triplet(

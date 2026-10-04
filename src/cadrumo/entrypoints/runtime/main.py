@@ -21,7 +21,13 @@ from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransport
 from ...adapters.local_runtime.server import RuntimeTransportServer
 from ...adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ...adapters.local_runtime.windows_login import windows_login_inventory
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeShutdownIncompleteError
+from ...application.runtime.contracts import (
+    RuntimeExitReason,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+    RuntimeShutdownIncompleteError,
+    runtime_refusal_exit_reason,
+)
 from ...application.runtime.login import RuntimeLoginInventory
 from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
 from ...core.config import load_settings, override_settings
@@ -29,7 +35,7 @@ from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
 from ...domain.calculations.registry.authority import published_authority_generation
 from .profile_connections import RuntimeProfileConnections
-from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, terminate_runtime
+from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
 
 _LOGGER = get_logger(__name__)
 
@@ -86,7 +92,7 @@ def _serve_transport(
     except RuntimeShutdownIncompleteError:
         # Never release the owner lock while callbacks, constructors or
         # uncontained descendants still belong to this runtime.
-        terminate_runtime()
+        terminate_runtime(RuntimeExitReason.DRAIN_WATCHDOG)
 
 
 def _serve_runtime_endpoint(
@@ -94,14 +100,14 @@ def _serve_runtime_endpoint(
     root: Path,
     endpoint: WindowsRuntimeEndpoint | PosixRuntimeEndpoint,
     installed_version: str,
-    stop: Event,
+    stop: RuntimeStop,
     previous: Mapping[signal.Signals, Any],
 ) -> None:
     if endpoint.storage_identity != options.storage_identity:
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
     _configure_runtime_logging(root)
     for number in previous:
-        signal.signal(number, lambda _number, _frame: stop.set())
+        signal.signal(number, lambda _number, _frame: stop.request(RuntimeExitReason.SIGNAL_STOP))
     boot_id = uuid4()
     login_policy = compose_runtime_login_policy(
         os_owner_id=endpoint.os_owner_id if isinstance(endpoint, WindowsRuntimeEndpoint) else str(posix_owner_uid()),
@@ -147,7 +153,9 @@ def _release_runtime_endpoint(
             primary_error.__dict__["cleanup_error"] = retained
 
 
-def _run_runtime_owner(options: argparse.Namespace, stop: Event, previous: Mapping[signal.Signals, Any]) -> int:
+def _run_runtime_owner(
+    options: argparse.Namespace, stop: RuntimeStop, previous: Mapping[signal.Signals, Any]
+) -> RuntimeExitReason:
     installed_version = version("cadrumo")
     if options.expected_version != installed_version:
         raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
@@ -168,25 +176,26 @@ def _run_runtime_owner(options: argparse.Namespace, stop: Event, previous: Mappi
         raise
     finally:
         _release_runtime_endpoint(endpoint, owner, primary_errors)
-    return 0
+    # Serving returns only after a stop; a stop that named no reason is a defect.
+    return stop.reason or RuntimeExitReason.UNEXPECTED_FAILURE
 
 
 def run(arguments: list[str] | None = None) -> int:
-    """Run one user/root owner with independent profile admission."""
+    """Run one user/root owner with independent profile admission; return its exit reason code."""
     options = parse_runtime_arguments(arguments)
-    stop = Event()
+    stop = RuntimeStop()
     previous = {number: signal.getsignal(number) for number in (signal.SIGINT, signal.SIGTERM)}
     try:
-        return _run_runtime_owner(options, stop, previous)
+        return int(_run_runtime_owner(options, stop, previous))
     except RuntimeRefusalError as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
         sys.stderr.write(error.reason.value + "\n")
-        return 2
+        return int(runtime_refusal_exit_reason(error.reason))
     except KeyboardInterrupt as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
-        return 0
+        return int(RuntimeExitReason.SIGNAL_STOP)
     finally:
         for number, handler in previous.items():
             signal.signal(number, handler)

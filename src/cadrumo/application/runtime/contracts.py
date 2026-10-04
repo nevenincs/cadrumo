@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import IntEnum, StrEnum
+from types import MappingProxyType
 from typing import Annotated, Literal, Protocol
 from uuid import UUID
 
@@ -45,6 +48,79 @@ class RuntimeShutdownIncompleteError(RuntimeRefusalError):
     def __init__(self) -> None:
         """Expose a fixed containment refusal without carrying private diagnostics."""
         super().__init__(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
+class RuntimeExitReason(IntEnum):
+    """Process exit codes by which a runtime names why it ended.
+
+    The reasons occupy 64-73. Every code in ``RESERVED_RUNTIME_EXIT_CODES``
+    already belongs to another owner and never names a runtime reason. A
+    runtime never exits ``0`` for its own stop. CPython can exit ``1`` or ``2``
+    before runtime code runs, so a supervisor reads those as launch failures.
+    The range lies inside BSD ``sysexits.h``, which neither CPython nor the
+    runtime emits.
+
+    ``SESSION_END_SETTLE`` and ``ELEVATED_TOKEN_REFUSED`` occur only in
+    supervised mode. ``DRAIN_WATCHDOG`` is a forced exit after the drain did not
+    settle within its bound.
+    """
+
+    SUPERVISOR_STOP = 64
+    SIGNAL_STOP = 65
+    SESSION_END_SETTLE = 66
+    OWNER_BUSY = 67
+    ROOT_MISMATCH = 68
+    VERSION_MISMATCH = 69
+    LOGIN_WITNESS_LOSS = 70
+    DRAIN_WATCHDOG = 71
+    ELEVATED_TOKEN_REFUSED = 72
+    UNEXPECTED_FAILURE = 73
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeReservedExitCodes:
+    """An inclusive range of unsigned exit codes owned outside the runtime."""
+
+    owner: str
+    first: int
+    last: int
+
+    def __contains__(self, code: int) -> bool:
+        """Report whether ``code`` lies in this inclusive range."""
+        return self.first <= code <= self.last
+
+
+RESERVED_RUNTIME_EXIT_CODES: tuple[RuntimeReservedExitCodes, ...] = (
+    # Uncaught Python exceptions, CPython configuration errors and forced job termination.
+    RuntimeReservedExitCodes("python_failure", 1, 1),
+    # argparse and CPython command-line usage errors.
+    RuntimeReservedExitCodes("usage", 2, 2),
+    # The Windows C runtime's abort().
+    RuntimeReservedExitCodes("c_runtime_abort", 3, 3),
+    # CPython's finalization failure (120) and the native interpreter host's startup refusals.
+    RuntimeReservedExitCodes("native_host", 120, 124),
+    # POSIX signal exits reported as 128 + N, and negative codes wrapped to a byte.
+    RuntimeReservedExitCodes("posix_signal", 128, 255),
+    # NTSTATUS warning and error codes, including STATUS_CONTROL_C_EXIT (0xC000013A).
+    RuntimeReservedExitCodes("ntstatus", 0x8000_0000, 0xFFFF_FFFF),
+)
+
+_REFUSAL_EXIT_REASONS: Mapping[RuntimeRefusalCode, RuntimeExitReason] = MappingProxyType(
+    {
+        RuntimeRefusalCode.OWNER_BUSY: RuntimeExitReason.OWNER_BUSY,
+        RuntimeRefusalCode.ROOT_MISMATCH: RuntimeExitReason.ROOT_MISMATCH,
+        RuntimeRefusalCode.VERSION_MISMATCH: RuntimeExitReason.VERSION_MISMATCH,
+    }
+)
+
+
+def runtime_refusal_exit_reason(code: RuntimeRefusalCode) -> RuntimeExitReason:
+    """Name the exit reason for a refusal that ended the runtime.
+
+    Only configuration refusals have their own reason. Any other refusal that
+    escapes the runtime is an unexpected failure.
+    """
+    return _REFUSAL_EXIT_REASONS.get(code, RuntimeExitReason.UNEXPECTED_FAILURE)
 
 
 # The published registry authority's logical generation. An editable install

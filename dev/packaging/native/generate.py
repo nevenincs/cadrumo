@@ -25,6 +25,7 @@ from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev.packaging.native.storage_vectors import storage_root_vectors
 
 from .layout import entrypoint_files, load_layout
+from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
 
 CONTRACT_SCHEMA = 1
 
@@ -238,6 +239,7 @@ def generate(root: Path, destination: Path) -> None:
         "environment": _environment_section(fields),
         "mode": _mode_section(layout),
         "vectors": [vector.as_contract() for vector in storage_root_vectors()],
+        "runtime_exit": runtime_exit_section(),
     }
     # Retained for the platform crate until it consumes the schema 1 constants; the
     # tool-cache pair is a development location the packaged pywin32 cache still reads.
@@ -263,6 +265,7 @@ def generate(root: Path, destination: Path) -> None:
     entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
     rust.extend(_rust_root_and_environment(contract))
+    rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "contract.rs").write_text("\n".join(rust) + "\n", encoding="utf-8")
     (destination / "contract.h").write_text(

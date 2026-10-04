@@ -15,6 +15,7 @@ from ...adapters.local_runtime.login import capture_runtime_login
 from ...application.operations.registry import OperationRegistry
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
+    RuntimeExitReason,
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
@@ -43,6 +44,7 @@ from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainR
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_sessions import ProfileConnectionSessionMixin
 from .profile_host import ProfileConnection, RuntimeProfileHost
+from .shutdown import request_runtime_stop
 
 _LOGGER = get_logger(__name__)
 
@@ -125,7 +127,7 @@ class RuntimeProfileConnections(
                 # logout or change grants; positive locked witnesses survive.
                 # The existing server owns bounded drain and custody release.
                 _LOGGER.warning("no eligible login witness remains; stopping the runtime")
-                self.stop.set()
+                request_runtime_stop(self.stop, RuntimeExitReason.LOGIN_WITNESS_LOSS)
         return tuple(logins.values())
 
     def _private_work_available(self) -> bool:
