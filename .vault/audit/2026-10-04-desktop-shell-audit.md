@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:84a9f5acf940014655e1c828ca626349f03b4b51e7ed6c8ad9b2d1f5a2d34075'
+body_hash: 'sha256:6a53931cfce4e4f2aa108fa46e13f36f2396b9d892a0ea50c18d47b0d221995b'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -62,6 +62,10 @@ Python and Rust agree; `native/interpreter/bootstrap.py:45-49` lacks reserved-na
 ### pending-verification | low | end-to-end proof remains pending and is not a code defect
 
 Pending: the full four-language docs build and rebuild behavior, the Release docs bundle and the shell frame-src change (S01); the adversarial docs-frame isolation proof (S10, no interactive session in Session 0); a re-run of S02 live tests on a current package; Rust replay of the conformance vectors (canonical-environment S03) and the literal gate (S05); confirmation that Windows profile workers receive non-secret settings through the operation request.
+
+### localized-term-records | medium | localized docs search returns Spanish-key term titles and domain crumbs
+
+Observed by the designer session on 2026-10-05 against the 2026-10-04 Catalan web-flavor build with the current bridge: term results carry unaccented lowercase Spanish keys as titles (for example "regimen del recargo de equivalencia") and Spanish domain words in the crumb, taken from Pagefind record meta read at `docs/_static/cadrumo-docs.js:554-571` and produced by the record injection in `dev/docs/pagefind_inject.py` and `dev/docs/terminology/concept_card_projection.py`. Needs confirmation on a fresh desktop-flavor build, currently blocked by the stale authority; if confirmed, the localized term records should carry the localized display title and domain label rather than the canonical key.
 
 ## Recommendations
 
