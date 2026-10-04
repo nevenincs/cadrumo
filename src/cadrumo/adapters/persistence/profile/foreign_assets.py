@@ -5,9 +5,9 @@ as a ``FINANCIAL`` secure object through the profile secure-object kernel, in th
 singleton namespace
 :data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE`.
 
-The register is authoritative primary state: the operator registers each foreign
-asset once and declares the per-asset facts the type 2 record needs, so it has a
-strict save/load roundtrip and revision-guarded mutation.
+The adapter loads the typed register consumed by the Modelo 720 resolver.
+Finite fixtures author register documents through the guarded secure-object
+kernel.
 
 See Also:
     :mod:`domain.foreign_assets.register`
@@ -18,14 +18,10 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.foreign_assets.register import (
-    ForeignAssetDeclarationEntry,
     ForeignAssetRegister,
-    ForeignAssetRegisterEntry,
     ForeignAssetRegisterError,
 )
 from ..storage.secure_object_namespaces import PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE
@@ -77,20 +73,6 @@ class ForeignAssetRegisterRepository:
                 context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
                 translated_message="adapters.persistence.profile.foreign_assets.errors.load_register_failed",
             ) from exc
-
-    def register_asset(self, entry: ForeignAssetRegisterEntry) -> ForeignAssetRegister:
-        """Atomically add one asset; the document refuses a repeated ref or official identifier."""
-        return self._mutate(lambda current: current.with_asset(entry))
-
-    def declare(self, entry: ForeignAssetDeclarationEntry) -> ForeignAssetRegister:
-        """Atomically add one declaration; an unknown asset or a repeated key is refused."""
-        return self._mutate(lambda current: current.with_declaration(entry))
-
-    def _mutate(self, change: Callable[[ForeignAssetRegister], ForeignAssetRegister]) -> ForeignAssetRegister:
-        # The register is a singleton row: every change rewrites the document,
-        # so it runs through the revision-guarded unit of work and is re-applied
-        # to the newly current document on a concurrent write.
-        return self._storage.mutate(change)
 
 
 __all__ = ["ForeignAssetRegisterRepository"]

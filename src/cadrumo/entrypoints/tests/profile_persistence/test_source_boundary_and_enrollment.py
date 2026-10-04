@@ -83,6 +83,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -634,7 +635,8 @@ def _register_sole_holder(
     """Register each account once and declare the taxpayer its sole holder."""
     register = ForeignAssetRegisterRepository(bucket_id=_BUCKET_ID, objects=objects)
     for observation in observations:
-        register.register_asset(
+        register_asset(
+            register,
             ForeignAssetRegisterEntry(
                 asset_ref=observation.asset_ref,
                 asset_class=M720AssetClassCode.CUENTA,
@@ -647,7 +649,8 @@ def _register_sole_holder(
                 held_since=date(2015, 1, 1),
             ),
         )
-        register.declare(
+        declare_foreign_asset(
+            register,
             ForeignAssetDeclarationEntry(
                 asset_ref=observation.asset_ref,
                 condition=M720DeclarantCondition.TITULAR,

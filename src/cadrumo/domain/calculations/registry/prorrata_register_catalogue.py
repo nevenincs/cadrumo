@@ -214,30 +214,6 @@ def revocacion_prorrata_transition(
     ).revocacion_transition
 
 
-def aeat_autorizada_prorrata_provenance(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared AEAT-authorised provenance token."""
-    return resolve_prorrata_register_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).aeat_autorizada_provenance
-
-
-def inicio_actividad_prorrata_provenance(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared start-of-activity provenance token."""
-    return resolve_prorrata_register_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).inicio_actividad_provenance
-
-
 def carried_prior_definitiva_prorrata_provenance(
     *,
     effective_date: date | None = None,
@@ -360,11 +336,9 @@ def require_sector_diferenciado_letra(
 
 
 __all__ = [
-    "aeat_autorizada_prorrata_provenance",
     "carried_prior_definitiva_prorrata_provenance",
     "especial_prorrata_register_regime",
     "general_prorrata_register_regime",
-    "inicio_actividad_prorrata_provenance",
     "ninguna_prorrata_register_regime",
     "opcion_prorrata_transition",
     "prorrata_electable_provenances",

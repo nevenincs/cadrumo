@@ -25,6 +25,7 @@ from ..register import (
     M720DeclarantCondition,
     M720IdentifierScheme,
 )
+from .register_authoring import with_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -192,7 +193,7 @@ def test_a_declaration_for_an_unregistered_asset_is_refused() -> None:
 
 def test_two_declarations_for_one_asset_and_condition_are_refused() -> None:
     register = ForeignAssetRegister(assets=(_account(_ref("1")),), declarations=(_declaration(_ref("1")),))
-    _assert_refused(lambda: register.with_declaration(_declaration(_ref("1"))), "one asset and condition")
+    _assert_refused(lambda: with_declaration(register, _declaration(_ref("1"))), "one asset and condition")
 
 
 @pytest.mark.parametrize(

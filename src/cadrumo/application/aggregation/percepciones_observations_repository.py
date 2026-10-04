@@ -11,12 +11,9 @@ implicit application dependency.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Protocol
 
-from ...core.aggregation import AggregationCaptureKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
@@ -88,20 +85,6 @@ class PercepcionObservationPersistenceError(CadrumoError):
 
 class PercepcionObservationRepository(Protocol):
     """Application-facing read/write capability for percepciones windows."""
-
-    def replace_observations(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observations: Sequence[WithholdingObservation],
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Atomically replace the complete observation window."""
-        ...
 
     def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
         """Return observations for one modelo and filing period."""

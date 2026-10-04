@@ -20,12 +20,10 @@ distinct-count primitive.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Protocol
 
-from ...core.aggregation import AggregationCaptureKind, RetencionScheme
+from ...core.aggregation import RetencionScheme
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.translatable import Translatable as tr
@@ -83,20 +81,6 @@ class RetencionObservationPersistenceError(CadrumoError):
 
 class RetencionObservationRepository(Protocol):
     """Application persistence capability for per-perceptor observations."""
-
-    def replace_observations(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observations: Sequence[RetencionObservation],
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Atomically replace the complete observation window."""
-        ...
 
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         """Return observations for one modelo and filing period."""

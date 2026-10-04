@@ -14,6 +14,7 @@ from .....application.prorrata_register.service import (
     ProrrataRegisterService,
     ProrrataWholeSeedUnavailableError,
 )
+from .....application.prorrata_register.tests.provisional_override import record_aeat_autorizada
 from .....core.casilla_id import validated_casilla_id
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
@@ -106,7 +107,8 @@ def test_concurrent_regulated_override_survives_target_revision_retry() -> None:
     """A new standing target is re-read and may refuse the stale proposed carry."""
     _observation("4T", "80", hour=10)
     repository = _RacingWholeSeedRepository(
-        lambda: _service().record_aeat_autorizada(
+        lambda: record_aeat_autorizada(
+            _service(),
             ejercicio=2026,
             provisional_percentage=Decimal("55"),
             authorisation_reference="AEAT-PRORRATA-RACE-2026",

@@ -49,6 +49,8 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 
+from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ....application.aggregation.retenciones import (
@@ -235,7 +237,8 @@ def _binding_id_for_fact(revision: ModeloRevision, source: BindingSourceKind, fa
 
 
 def _store_retenciones(bucket_id: str, modelo: str, period: Period, *rows: RetencionObservation) -> None:
-    build_retencion_observation_ports(bucket_id=bucket_id).repository.replace_observations(
+    replace_retencion_observations(
+        build_retencion_observation_ports(bucket_id=bucket_id).repository,
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
@@ -245,7 +248,8 @@ def _store_retenciones(bucket_id: str, modelo: str, period: Period, *rows: Reten
 
 
 def _store_percepciones(bucket_id: str, modelo: str, period: Period, *rows: WithholdingObservation) -> None:
-    build_percepcion_observation_ports(bucket_id=bucket_id).repository.replace_observations(
+    replace_percepcion_observations(
+        build_percepcion_observation_ports(bucket_id=bucket_id).repository,
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,

@@ -29,6 +29,7 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
@@ -367,7 +368,8 @@ def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_without_a
 
 def _store_one_m111_retencion(bucket_id: str, period: Period) -> None:
     """Store one paid professional retención, so the Modelo 111 quarter is not all blank."""
-    build_retencion_observation_ports(bucket_id=bucket_id).repository.replace_observations(
+    replace_retencion_observations(
+        build_retencion_observation_ports(bucket_id=bucket_id).repository,
         modelo="111",
         filing_year=period.filing_year,
         period=period,

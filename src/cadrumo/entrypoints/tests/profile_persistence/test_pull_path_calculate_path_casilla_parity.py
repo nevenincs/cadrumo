@@ -142,6 +142,7 @@ from cadrumo.entrypoints.adapter_composition import build_retencion_observation_
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -331,7 +332,8 @@ def _seed_115_retencion_observations(ports: RetencionObservationPorts) -> Decima
     for quarter, accrued_on, nif in zip(
         ("1T", "3T"), (f"{_YEAR}-03-15", f"{_YEAR}-09-15"), _M180_PERCEPTOR_NIFS, strict=True
     ):
-        ports.repository.replace_observations(
+        replace_retencion_observations(
+            ports.repository,
             modelo="115",
             filing_year=_YEAR,
             period=Period.from_year_and_code(_YEAR, quarter),

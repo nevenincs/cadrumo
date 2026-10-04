@@ -21,7 +21,6 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -218,19 +217,6 @@ class InMemoryProrrataRegisterRepository:
             entries=self._register.entries,
             sector_definitions=(*retained, definition),
             activity_rows=self._register.activity_rows,
-        )
-        return self._register
-
-    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
-        retained = tuple(
-            existing
-            for existing in self._register.activity_rows
-            if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
-        )
-        self._register = ProrrataRegister(
-            entries=self._register.entries,
-            sector_definitions=self._register.sector_definitions,
-            activity_rows=(*retained, row),
         )
         return self._register
 

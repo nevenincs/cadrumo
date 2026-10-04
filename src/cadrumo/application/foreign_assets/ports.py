@@ -9,25 +9,15 @@ from __future__ import annotations
 from typing import Protocol
 
 from ...domain.foreign_assets.register import (
-    ForeignAssetDeclarationEntry,
     ForeignAssetRegister,
-    ForeignAssetRegisterEntry,
 )
 
 
 class ForeignAssetRegisterRepositoryProtocol(Protocol):
-    """Required bucket-bound read/write capability for the foreign-asset register."""
+    """Required bucket-bound read capability for the foreign-asset register."""
 
     def load(self) -> ForeignAssetRegister:
         """Load the register, returning an empty register when no state exists."""
-        ...
-
-    def register_asset(self, entry: ForeignAssetRegisterEntry) -> ForeignAssetRegister:
-        """Atomically add one asset and return the updated register."""
-        ...
-
-    def declare(self, entry: ForeignAssetDeclarationEntry) -> ForeignAssetRegister:
-        """Atomically add one declaration and return the updated register."""
         ...
 
 

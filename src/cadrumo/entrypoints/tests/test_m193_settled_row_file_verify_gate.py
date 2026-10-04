@@ -93,6 +93,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_verification_repository_bundle,
 )
 
+from ...adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000193"
@@ -194,7 +196,8 @@ def _persist_manual_row(objects: SecureObjectRepository, *, filing_year: int) ->
 
 def _seed_declarant_retenciones(objects: SecureObjectRepository, *, filing_year: int) -> None:
     """Store the retenciones the 193 declarant totals read from its own annual window."""
-    RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=objects),
         modelo="193",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "0A"),

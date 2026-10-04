@@ -70,6 +70,7 @@ __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
+from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -201,7 +202,8 @@ def _register_and_declare_the_assets() -> None:
             M720AssetIdentifier(scheme=M720IdentifierScheme.ISIN, value="DE0007164600"),
         ),
     ):
-        register.register_asset(
+        register_asset(
+            register,
             ForeignAssetRegisterEntry(
                 asset_ref=asset_ref,
                 asset_class=asset_class,
@@ -212,11 +214,10 @@ def _register_and_declare_the_assets() -> None:
                 held_since=date(2015, 1, 1),
             ),
         )
-        register.declare(
+        declare_foreign_asset(
+            register,
             ForeignAssetDeclarationEntry(
-                asset_ref=asset_ref,
-                condition=M720DeclarantCondition.TITULAR,
-                participation_pct=Decimal("100.00"),
+                asset_ref=asset_ref, condition=M720DeclarantCondition.TITULAR, participation_pct=Decimal("100.00")
             ),
         )
 

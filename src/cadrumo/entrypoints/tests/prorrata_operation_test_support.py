@@ -52,6 +52,7 @@ from ...application.prorrata_register.seed import (
     evaluate_carried_prior_definitiva_seed_from_observations,
 )
 from ...application.prorrata_register.service import ProrrataRegisterService
+from ...application.prorrata_register.tests.provisional_override import record_aeat_autorizada
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.operations import OperationEffect
@@ -564,7 +565,8 @@ def prepare_prorrata_whole_seed_refusal_case(
         service = _service(profile_id, repository_factory=repository_factory, operation=operation)
         expected_provenance: str | None = None
         if refusal_reason == "regulated_override_standing":
-            register = service.record_aeat_autorizada(
+            register = record_aeat_autorizada(
+                service,
                 ejercicio=_SEED_TARGET_YEAR,
                 provisional_percentage=Decimal("55.00"),
                 authorisation_reference="AEAT-PRORRATA-STANDING-2026",

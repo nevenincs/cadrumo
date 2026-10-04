@@ -33,6 +33,7 @@ from ...storage.sql.engine import get_engine
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..foreign_assets import ForeignAssetRegisterRepository
+from .foreign_asset_authoring import declare_foreign_asset, register_asset
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -81,11 +82,11 @@ def _declarations() -> tuple[ForeignAssetDeclarationEntry, ...]:
 
 
 def _populate(repository: ForeignAssetRegisterRepository) -> ForeignAssetRegister:
-    repository.register_asset(_account())
-    repository.register_asset(_real_estate())
+    register_asset(repository, _account())
+    register_asset(repository, _real_estate())
     current = repository.load()
     for declaration in _declarations():
-        current = repository.declare(declaration)
+        current = declare_foreign_asset(repository, declaration)
     return current
 
 
@@ -115,11 +116,11 @@ def test_the_register_survives_encrypted_storage_field_for_field(tmp_path: Path)
 def test_registering_the_same_official_identifier_twice_is_refused(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7d3e1b2a-5c4f-4e90-9b32-7208c3d4e5f6"):
         repository = ForeignAssetRegisterRepository()
-        repository.register_asset(_account())
+        register_asset(repository, _account())
         duplicate = _account().model_copy(update={"asset_ref": "m720a_" + "c" * 32})
 
         with pytest.raises(ValueError, match="same official identifier"):
-            repository.register_asset(duplicate)
+            register_asset(repository, duplicate)
         assert repository.load().assets == (_account(),)
 
 
@@ -128,7 +129,7 @@ def test_declaring_an_unregistered_asset_is_refused(tmp_path: Path) -> None:
         repository = ForeignAssetRegisterRepository()
 
         with pytest.raises(ValueError, match="unregistered assets"):
-            repository.declare(_declarations()[0])
+            declare_foreign_asset(repository, _declarations()[0])
         assert repository.load() == ForeignAssetRegister()
 
 

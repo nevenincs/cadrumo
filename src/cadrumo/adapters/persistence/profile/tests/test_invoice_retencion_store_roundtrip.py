@@ -50,6 +50,8 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 
+from .retencion_observation_authoring import replace_retencion_observations
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
@@ -145,7 +147,8 @@ def test_an_invoice_sourced_observation_survives_the_encrypted_boundary_intact(t
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        repository.replace_observations(
+        replace_retencion_observations(
+            repository,
             modelo=_MODELO,
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,

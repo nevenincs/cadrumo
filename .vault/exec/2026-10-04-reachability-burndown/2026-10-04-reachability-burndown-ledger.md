@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6aa9512800e56eef8c2d14166b8688d5533a2256e716fff1835ca5dff25ae43b'
+body_hash: 'sha256:073bb68afebc39b7cda6e385e37509ceed70ecedb1f142b5235a7c56d9cd5783'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -618,6 +618,54 @@ related:
 - `S21` `verify:` `Model selection, local reader and profile operation corpus: 151 passed` -> `pass`
 - `S21` `verify:` `Real closed-endpoint pull and verify JSON and text, all locales: 4 passed` -> `pass`
 - `S21` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/foreign_assets.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/percepciones_observations.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/prorrata_register.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/retencion_observations.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/profile/tests/foreign_asset_authoring.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/ledger_capital_support.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/profile/tests/observation_window_authoring.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/profile/tests/percepcion_observation_authoring.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/profile/tests/prorrata_activity_authoring.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/profile/tests/retencion_observation_authoring.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_invoice_retencion_store_roundtrip.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_190_percepciones_e2e.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_percepciones_observations_repository_roundtrip.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_lifecycle_atomic_sources.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_service.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_observations_repository_roundtrip.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/tests/test_withholding_source_m193_phases.py`
+- `S22` `M` `src/cadrumo/application/aggregation/observation_window.py`
+- `S22` `M` `src/cadrumo/application/aggregation/percepciones_observations_repository.py`
+- `S22` `M` `src/cadrumo/application/aggregation/retencion_observations_repository.py`
+- `S22` `M` `src/cadrumo/application/foreign_assets/ports.py`
+- `S22` `M` `src/cadrumo/application/modelo/tests/advisory_diagnostic_repositories.py`
+- `S22` `M` `src/cadrumo/application/prorrata_register/ports.py`
+- `S22` `M` `src/cadrumo/application/prorrata_register/service.py`
+- `S22` `A` `src/cadrumo/application/prorrata_register/tests/provisional_override.py`
+- `S22` `M` `src/cadrumo/application/prorrata_register/tests/test_service.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py`
+- `S22` `A` `src/cadrumo/domain/calculations/registry/tests/provisional_catalogue.py`
+- `S22` `M` `src/cadrumo/domain/foreign_assets/register.py`
+- `S22` `A` `src/cadrumo/domain/foreign_assets/tests/register_authoring.py`
+- `S22` `M` `src/cadrumo/domain/foreign_assets/tests/test_register.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_annual_withholding_rows.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_calculate_loads_profile_once.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m111_retenciones_observation_live.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_disclosure_phase_calculation.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_settled_row_export_gate.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_foreign_asset_producer_join.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pull_path_calculate_path_casilla_parity.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_relation_fold_in_live.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/prorrata_operation_test_support.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
+- `S22` `verify:` `Owned register and observation corpus: 144 passed` -> `pass`
+- `S22` `verify:` `Cascade storage and prorrata proofs: 41 passed` -> `pass`
+- `S22` `verify:` `Owned Ruff format and ty` -> `pass`
 
 ## Notes
 
@@ -641,3 +689,4 @@ related:
 - `S19` Typed PEP-695 schema consumers retain exact positional and keyword arguments. Actual schema specialization proves payload consumption; constructed repositories bind their class payload slots and overridden payload getters through the inherited schema factory. Imported-only models, unused repository classes, rebound parameters and shadowed getattr remain candidates. Module-level shadow facts are cached per pass to avoid repeating whole-module walks.
 - `S20` Relocated raw corruption, digest inventories, per-row failure inspection, passphrase decryption and retained custody probes into finite owning fixtures. Existing encryption, UTC, KDF, revision and authenticated-session kernels and refusal behavior remain exercised; fixture functions refuse unsupported adapter identities.
 - `S21` Retain the existing localized restricted-licence advisory on deduplicated role targets, every provisioning outcome and its public projection. The CLI publishes warning notices for pull, verify, load and setup. Remove the fictional strong-logout DTO and declare the actual request-only result capability.
+- `S22` Legacy fixture entrypoints and their exact cascades now belong to finite authoring helpers over the same guarded typed and atomic kernels.

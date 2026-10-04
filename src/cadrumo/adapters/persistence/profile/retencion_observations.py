@@ -7,13 +7,12 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ....application.aggregation.observation_window import replace_observation_window
 from ....application.aggregation.retencion_observations_repository import (
     RetencionObservationPersistenceError,
     RetencionObservationRepository,
@@ -114,61 +113,6 @@ class RetencionObservationRepositoryAdapter(
             source_kind=source_kind,
             source_metadata=dict(source_metadata or {}),
             projection_identity=projection_identity,
-        )
-
-    def save_observation(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observation: RetencionObservation,
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Persist one per-perceptor retención observation."""
-        _translate_storage_failure(
-            "retencion_save_observation",
-            lambda: self.save(
-                self.build_observation_payload(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observation=observation,
-                    source_kind=source_kind,
-                    captured_at=captured_at,
-                    source_metadata=source_metadata,
-                )
-            ),
-        )
-
-    @override
-    def replace_observations(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observations: Sequence[RetencionObservation],
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Atomically replace the complete per-perceptor observation window."""
-        _translate_storage_failure(
-            "retencion_replace_observations",
-            lambda: replace_observation_window(
-                self,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observations=observations,
-                source_kind=source_kind,
-                build_payload=self.build_observation_payload,
-                captured_at=captured_at,
-                source_metadata=source_metadata,
-            ),
         )
 
     @override

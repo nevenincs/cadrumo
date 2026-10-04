@@ -17,7 +17,6 @@ from typing import Protocol, override
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -34,10 +33,6 @@ class ProrrataRegisterServiceRepositoryProtocol(ProrrataRegisterRepositoryProtoc
 
     def upsert_sector_definition(self, definition: SectorDefinition) -> ProrrataRegister:
         """Atomically add or replace one differentiated-sector definition."""
-        ...
-
-    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
-        """Atomically add or replace one activity row."""
         ...
 
     def seed_sector_carried(
