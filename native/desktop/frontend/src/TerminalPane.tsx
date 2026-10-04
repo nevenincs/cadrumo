@@ -3,11 +3,12 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { failureMessage, type HostFailure } from "./failure";
 
 type Output = {
   bytes: number[];
   exitCode: number | null;
-  error: string | null;
+  error: HostFailure | null;
 };
 
 export function TerminalPane() {
@@ -37,7 +38,7 @@ export function TerminalPane() {
     const fail = (error: unknown) => {
       if (!disposed) {
         terminal.options.disableStdin = true;
-        setFailure(String(error));
+        setFailure(failureMessage(error));
       }
     };
     const send = (bytes: Uint8Array) => {
@@ -95,7 +96,7 @@ export function TerminalPane() {
             terminal.write(new Uint8Array(output.bytes), resolve),
           );
         }
-        if (output.error) throw new Error(output.error);
+        if (output.error) throw output.error;
         if (output.exitCode !== null) {
           terminal.options.disableStdin = true;
           if (output.exitCode !== 0)

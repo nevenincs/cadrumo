@@ -1,143 +1,94 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
+mod gui;
+mod mode;
 mod package;
 mod terminal;
 
-use std::{
-    io,
-    path::PathBuf,
-    sync::{Arc, Mutex},
+use cadrumo_application::{
+    child::ChildConfiguration,
+    diagnostics::{Diagnostics, EventKind},
+    failure::{Failure, FailureCode, Operation, Result},
+    process,
 };
-use tauri::{Manager, State};
-use terminal::{Output, Session, TerminalState};
+use std::{
+    ffi::OsString,
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 
-#[tauri::command]
-fn terminal_start(
-    state: State<'_, Arc<TerminalState>>,
-    cols: u16,
-    rows: u16,
-) -> Result<(), String> {
-    let mut session = state.session.lock().map_err(|e| e.to_string())?;
-    if session.is_some() {
-        return Err("A TUI session is already running".into());
-    }
-    *session = Some(Session::start(
-        &state.launch,
-        cols,
-        rows,
-        &["-m", "cadrumo.entrypoints.tui"],
-    )?);
-    Ok(())
-}
+const CLI_ENTRYPOINT: &str = r#"
+import sys
+from importlib.metadata import distribution
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
+sys.argv[0] = PRODUCT_IDENTITY.cli_executable
+entry = next(e for e in distribution(PRODUCT_IDENTITY.distribution).entry_points
+             if e.group == 'console_scripts' and e.name == PRODUCT_IDENTITY.cli_executable)
+entry.load()()
+"#;
 
-#[tauri::command]
-fn terminal_input(state: State<'_, Arc<TerminalState>>, data: Vec<u8>) -> Result<(), String> {
-    state
-        .session
-        .lock()
-        .map_err(|e| e.to_string())?
-        .as_mut()
-        .ok_or("TUI is not running")?
-        .input(&data)
-}
-
-#[tauri::command]
-fn terminal_resize(
-    state: State<'_, Arc<TerminalState>>,
-    cols: u16,
-    rows: u16,
-) -> Result<(), String> {
-    state
-        .session
-        .lock()
-        .map_err(|e| e.to_string())?
-        .as_ref()
-        .ok_or("TUI is not running")?
-        .resize(cols, rows)
-}
-
-#[tauri::command]
-fn terminal_read(state: State<'_, Arc<TerminalState>>) -> Result<Output, String> {
-    state
-        .session
-        .lock()
-        .map_err(|e| e.to_string())?
-        .as_mut()
-        .ok_or("TUI is not running")?
-        .read()
-}
-
-#[tauri::command]
-fn terminal_stop(state: State<'_, Arc<TerminalState>>) -> Result<(), String> {
-    state.stop()
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    if cfg!(target_os = "macos") {
-        return Err(
-            io::Error::other("macOS WebView storage containment remains unverified").into(),
-        );
-    }
-    let root = std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT")
-        .filter(|value| !value.is_empty())
-        .map(PathBuf::from)
-        .unwrap_or(
-            std::env::current_exe()?
-                .parent()
-                .ok_or("Executable has no parent")?
-                .to_owned(),
-        );
-    let launch =
-        tauri::async_runtime::block_on(package::resolve(root)).map_err(io::Error::other)?;
-    let data_directory = launch.webview.clone();
-    // Keep the session owner through the event loop's final cleanup as well.
-    let state = Arc::new(TerminalState {
-        launch,
-        session: Mutex::new(None),
-    });
-    let outcome = tauri::Builder::default()
-        .manage(state.clone())
-        .invoke_handler(tauri::generate_handler![
-            terminal_start,
-            terminal_input,
-            terminal_resize,
-            terminal_read,
-            terminal_stop
-        ])
-        .setup(move |app| {
-            let title = app.config().product_name.as_deref().unwrap_or("CADRUMO");
-            tauri::WebviewWindowBuilder::new(
-                app,
-                "main",
-                tauri::WebviewUrl::App("index.html".into()),
+fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
+    let arguments = std::env::args_os().skip(1).collect();
+    let mode = mode::select(arguments, mode::desktop_available());
+    diagnostics.event(EventKind::HostStarted, None, None);
+    let root = match std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").filter(|v| !v.is_empty()) {
+        Some(path) => PathBuf::from(path),
+        None => std::env::current_exe()
+            .map_err(|e| launch_error().caused_by(e))?
+            .parent()
+            .ok_or_else(launch_error)?
+            .to_owned(),
+    };
+    let launch = tauri::async_runtime::block_on(package::resolve(root, diagnostics.clone()))?;
+    match mode? {
+        mode::Mode::Gui => gui::run(launch),
+        mode::Mode::Cli(arguments) => {
+            diagnostics.event(EventKind::HeadlessSelected, None, None);
+            let configuration = ChildConfiguration::new(
+                launch.child.executable().to_owned(),
+                std::env::current_dir().map_err(|e| launch_error().caused_by(e))?,
+                launch.child.environment().clone(),
             )
-            .title(title)
-            .inner_size(1440.0, 1050.0)
-            .min_inner_size(520.0, 400.0)
-            .data_directory(data_directory)
-            .build()?;
-            Ok(())
-        })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                let state = window.state::<Arc<TerminalState>>();
-                if let Err(error) = state.stop() {
-                    api.prevent_close();
-                    eprintln!("Terminal shutdown refused window closure: {error}");
-                }
-            } else if matches!(event, tauri::WindowEvent::Destroyed) {
-                let state = window.state::<Arc<TerminalState>>();
-                if let Err(error) = state.stop() {
-                    eprintln!("Terminal shutdown after window destruction did not settle: {error}");
-                }
-            }
-        })
-        .run(tauri::generate_context!());
-    let cleanup = state.stop();
-    if let Err(error) = &cleanup {
-        eprintln!("Terminal final shutdown did not settle: {error}");
+            .map_err(|e| launch_error().caused_by(e))?;
+            let mut forwarded: Vec<OsString> =
+                vec!["-u".into(), "-c".into(), CLI_ENTRYPOINT.into()];
+            forwarded.extend(arguments);
+            let cancelled = Arc::new(AtomicBool::new(false));
+            let interrupted = cancelled.clone();
+            ctrlc::set_handler(move || interrupted.store(true, Ordering::Release))
+                .map_err(|e| launch_error().caused_by(e))?;
+            process::passthrough(&configuration, &forwarded, diagnostics, cancelled)
+        }
     }
-    outcome?;
-    cleanup.map_err(io::Error::other)?;
-    Ok(())
+}
+fn launch_error() -> Failure {
+    Failure::new(FailureCode::EnvironmentFailed, Operation::Launch)
+}
+
+fn main() {
+    let diagnostics = Arc::new(Diagnostics::default());
+    // Report after unwinding: hooks run before locks held by the panicking code release.
+    // Suppress Rust's default hook, which can expose private payloads on stderr.
+    std::panic::set_hook(Box::new(|_| {}));
+    let outcome =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(diagnostics.clone())))
+            .unwrap_or_else(|_| Err(Failure::new(FailureCode::Panic, Operation::Launch)));
+    let code = match outcome {
+        Ok(code) => code,
+        Err(error) => {
+            diagnostics.failure(error.clone());
+            eprintln!(
+                "{}",
+                serde_json::to_string(&error).unwrap_or_else(|_| "application_error".into())
+            );
+            match error.code {
+                FailureCode::InvalidArguments => 64,
+                FailureCode::DesktopUnavailable => 69,
+                _ => 1,
+            }
+        }
+    };
+    diagnostics.event(EventKind::HostStopped, None, None);
+    std::process::exit(code);
 }

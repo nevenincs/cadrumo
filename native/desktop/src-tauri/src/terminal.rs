@@ -1,4 +1,9 @@
 use crate::package::Launch;
+use cadrumo_application::{
+    diagnostics::Diagnostics,
+    failure::{Failure, FailureCode, Operation, Result},
+    tracking::{ProcessPhase, ProcessRole, Stream},
+};
 use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
 use serde::Serialize;
 use std::{
@@ -14,6 +19,9 @@ use std::{
 
 const CHUNK: usize = 8192;
 const QUEUE: usize = 8;
+fn failure(code: FailureCode) -> Failure {
+    Failure::new(code, Operation::Terminal)
+}
 const STOP_TIMEOUT: Duration = Duration::from_secs(3);
 
 #[derive(Default)]
@@ -24,28 +32,26 @@ struct Workers {
 }
 
 impl Workers {
-    fn reap_finished(&mut self) -> Result<bool, String> {
+    fn reap_finished(&mut self) -> Result<bool> {
         for worker in [&mut self.reader, &mut self.writer, &mut self.closer] {
             if worker.as_ref().is_some_and(JoinHandle::is_finished) {
                 worker
                     .take()
-                    .ok_or("Terminal worker ownership is missing")?
+                    .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
                     .join()
-                    .map_err(|_| "Terminal worker panicked")?;
+                    .map_err(|_| failure(FailureCode::Panic))?;
             }
         }
         Ok(self.reader.is_none() && self.writer.is_none() && self.closer.is_none())
     }
 
-    fn join_until(&mut self, deadline: Instant) -> Result<(), String> {
+    fn join_until(&mut self, deadline: Instant) -> Result<()> {
         loop {
             if self.reap_finished()? {
                 return Ok(());
             }
             if Instant::now() >= deadline {
-                return Err(
-                    "Terminal workers have not settled before the shutdown deadline".into(),
-                );
+                return Err(failure(FailureCode::CleanupFailed));
             }
             thread::sleep(Duration::from_millis(5));
         }
@@ -57,30 +63,33 @@ impl Workers {
 pub struct Output {
     pub bytes: Vec<u8>,
     pub exit_code: Option<u32>,
-    pub error: Option<String>,
+    pub error: Option<Failure>,
 }
 
 enum ReadEvent {
     Bytes(Vec<u8>),
-    Error(String),
+    Error(Failure),
 }
 
 pub struct Session {
     master: Option<Box<dyn MasterPty + Send>>,
     writer: SyncSender<Vec<u8>>,
-    write_error: Arc<Mutex<Option<String>>>,
+    write_error: Arc<Mutex<Option<Failure>>>,
     child: Box<dyn Child + Send + Sync>,
     output: Receiver<ReadEvent>,
     stopped: Arc<AtomicBool>,
     writer_stopped: Arc<AtomicBool>,
     workers: Workers,
-    cleanup_error: Option<String>,
+    cleanup_error: Option<Failure>,
     exit_code: Option<u32>,
+    diagnostics: Arc<Diagnostics>,
+    process: u64,
+    tracked_exit: bool,
 }
 
-pub fn size(cols: u16, rows: u16) -> Result<PtySize, String> {
+pub fn size(cols: u16, rows: u16) -> Result<PtySize> {
     if !(2..=1000).contains(&cols) || !(2..=1000).contains(&rows) {
-        return Err("Terminal dimensions are outside 2..1000".into());
+        return Err(failure(FailureCode::InvalidArguments));
     }
     Ok(PtySize {
         rows,
@@ -91,10 +100,10 @@ pub fn size(cols: u16, rows: u16) -> Result<PtySize, String> {
 }
 
 impl Session {
-    pub fn start(launch: &Launch, cols: u16, rows: u16, args: &[&str]) -> Result<Self, String> {
+    pub fn start(launch: &Launch, cols: u16, rows: u16, args: &[&str]) -> Result<Self> {
         let pair = native_pty_system()
             .openpty(size(cols, rows)?)
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
         let mut command = CommandBuilder::new(launch.child.executable());
         command.env_clear();
         for (key, value) in launch.child.environment() {
@@ -104,13 +113,21 @@ impl Session {
         command.env("COLORTERM", "truecolor");
         command.cwd(&launch.working_directory);
         command.args(args);
-        let mut reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
-        let mut writer = pair.master.take_writer().map_err(|e| e.to_string())?;
+        let mut reader = pair
+            .master
+            .try_clone_reader()
+            .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
+        let mut writer = pair
+            .master
+            .take_writer()
+            .map_err(|e| failure(FailureCode::WriteFailed).caused_by(std::io::Error::other(e)))?;
         let child = pair
             .slave
             .spawn_command(command)
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
         drop(pair.slave);
+        let diagnostics = launch.diagnostics.clone();
+        let process = diagnostics.start(child.process_id().unwrap_or(0), ProcessRole::Tui);
         let (sender, output) = mpsc::sync_channel(QUEUE);
         let stopped = Arc::new(AtomicBool::new(false));
         let (input_sender, input_receiver) = mpsc::sync_channel::<Vec<u8>>(QUEUE);
@@ -118,88 +135,117 @@ impl Session {
         let write_failure = write_error.clone();
         let writer_stopped = Arc::new(AtomicBool::new(false));
         let writer_stop = writer_stopped.clone();
-        let writer_worker = thread::spawn(move || {
-            while !writer_stop.load(Ordering::Acquire) {
-                match input_receiver.recv_timeout(Duration::from_millis(50)) {
-                    Ok(bytes) => {
-                        if let Err(error) = writer.write_all(&bytes).and_then(|()| writer.flush()) {
-                            if let Ok(mut failure) = write_failure.lock() {
-                                *failure = Some(error.to_string());
-                            }
-                            break;
-                        }
-                    }
-                    Err(RecvTimeoutError::Timeout) => continue,
-                    Err(RecvTimeoutError::Disconnected) => break,
-                }
-            }
-        });
-        let stop = stopped.clone();
-        let reader_worker = thread::spawn(move || {
-            let mut buffer = [0; CHUNK];
-            loop {
-                let mut event = match reader.read(&mut buffer) {
-                    Ok(0) => break,
-                    Ok(count) => ReadEvent::Bytes(buffer[..count].to_vec()),
-                    Err(error) => ReadEvent::Error(error.to_string()),
-                };
-                let failed = matches!(event, ReadEvent::Error(_));
-                loop {
-                    if stop.load(Ordering::Acquire) {
-                        break;
-                    }
-                    match sender.try_send(event) {
-                        Ok(()) => break,
-                        Err(TrySendError::Disconnected(_)) => return,
-                        Err(TrySendError::Full(pending)) => {
-                            event = pending;
-                            thread::sleep(Duration::from_millis(5));
-                        }
-                    }
-                }
-                if failed {
-                    break;
-                }
-            }
-        });
-        Ok(Self {
+        // Establish cleanup ownership before worker creation can fail or unwind.
+        let mut session = Self {
             master: Some(pair.master),
             writer: input_sender,
             write_error,
             child,
             output,
-            stopped,
+            stopped: stopped.clone(),
             writer_stopped,
-            workers: Workers {
-                reader: Some(reader_worker),
-                writer: Some(writer_worker),
-                closer: None,
-            },
+            workers: Workers::default(),
             cleanup_error: None,
             exit_code: None,
-        })
+            diagnostics: diagnostics.clone(),
+            process,
+            tracked_exit: false,
+        };
+        session.workers.writer = Some(
+            thread::Builder::new()
+                .name("terminal-input".into())
+                .spawn(move || {
+                    while !writer_stop.load(Ordering::Acquire) {
+                        match input_receiver.recv_timeout(Duration::from_millis(50)) {
+                            Ok(bytes) => {
+                                if let Err(error) =
+                                    writer.write_all(&bytes).and_then(|()| writer.flush())
+                                {
+                                    if let Ok(mut failure) = write_failure.lock() {
+                                        *failure = Some(
+                                            Failure::new(
+                                                FailureCode::WriteFailed,
+                                                Operation::Terminal,
+                                            )
+                                            .caused_by(error),
+                                        );
+                                    }
+                                    break;
+                                }
+                            }
+                            Err(RecvTimeoutError::Timeout) => continue,
+                            Err(RecvTimeoutError::Disconnected) => break,
+                        }
+                    }
+                })
+                .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(e))?,
+        );
+        let stop = stopped.clone();
+        let captured = diagnostics.clone();
+        session.workers.reader = Some(
+            thread::Builder::new()
+                .name("terminal-output".into())
+                .spawn(move || {
+                    let mut buffer = [0; CHUNK];
+                    loop {
+                        let mut event = match reader.read(&mut buffer) {
+                            Ok(0) => break,
+                            Ok(count) => {
+                                captured.capture(process, Stream::Terminal, &buffer[..count]);
+                                ReadEvent::Bytes(buffer[..count].to_vec())
+                            }
+                            Err(error) => {
+                                ReadEvent::Error(failure(FailureCode::ReadFailed).caused_by(error))
+                            }
+                        };
+                        let failed = matches!(event, ReadEvent::Error(_));
+                        loop {
+                            if stop.load(Ordering::Acquire) {
+                                break;
+                            }
+                            match sender.try_send(event) {
+                                Ok(()) => break,
+                                Err(TrySendError::Disconnected(_)) => return,
+                                Err(TrySendError::Full(pending)) => {
+                                    event = pending;
+                                    thread::sleep(Duration::from_millis(5));
+                                }
+                            }
+                        }
+                        if failed {
+                            break;
+                        }
+                    }
+                })
+                .map_err(|e| failure(FailureCode::SpawnFailed).caused_by(e))?,
+        );
+        Ok(session)
     }
 
-    pub fn input(&mut self, data: &[u8]) -> Result<(), String> {
+    pub fn input(&mut self, data: &[u8]) -> Result<()> {
         if data.len() > 65536 {
-            return Err("Terminal input exceeds limit".into());
+            return Err(failure(FailureCode::OutputLimit));
         }
         self.writer
             .try_send(data.to_vec())
-            .map_err(|_| "Terminal input queue is full or closed".into())
+            .map_err(|_| failure(FailureCode::QueueFull))
     }
 
-    pub fn resize(&self, cols: u16, rows: u16) -> Result<(), String> {
+    pub fn resize(&self, cols: u16, rows: u16) -> Result<()> {
         self.master
             .as_ref()
-            .ok_or("TUI has exited")?
+            .ok_or_else(|| failure(FailureCode::SessionUnavailable))?
             .resize(size(cols, rows)?)
-            .map_err(|e| e.to_string())
+            .map_err(|e| failure(FailureCode::ResizeFailed).caused_by(std::io::Error::other(e)))
     }
 
-    pub fn read(&mut self) -> Result<Output, String> {
+    pub fn read(&mut self) -> Result<Output> {
         let mut bytes = Vec::new();
-        let mut error = self.write_error.lock().map_err(|e| e.to_string())?.take();
+        let mut error = self
+            .write_error
+            .lock()
+            .map_err(|_| failure(FailureCode::LockPoisoned))?
+            .take();
         let mut eof = false;
         for _ in 0..QUEUE {
             match self.output.try_recv() {
@@ -219,7 +265,7 @@ impl Session {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| e.to_string())?
+                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
             if self.exit_code.is_some() {
                 // ConPTY signals EOF only after its master closes. Close on a separate
@@ -228,6 +274,17 @@ impl Session {
             }
         }
         let joined = self.workers.reap_finished()?;
+        if self.exit_code.is_some() && eof && joined && !self.tracked_exit {
+            self.diagnostics.finish(
+                self.process,
+                self.exit_code.map(|c| c as i32),
+                ProcessPhase::Exited,
+            );
+            self.tracked_exit = true;
+        }
+        if let Some(failure) = &error {
+            self.diagnostics.failure(failure.clone());
+        }
         // Drain the PTY before reporting exit so the final screen is preserved.
         Ok(Output {
             bytes,
@@ -243,18 +300,20 @@ impl Session {
         }
     }
 
-    fn settle(&mut self, deadline: Instant) -> Result<(), String> {
+    fn settle(&mut self, deadline: Instant) -> Result<()> {
         self.stopped.store(true, Ordering::Release);
         self.writer_stopped.store(true, Ordering::Release);
         if self.exit_code.is_none() {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| e.to_string())?
+                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
         }
         if self.exit_code.is_none() {
-            self.child.kill().map_err(|e| e.to_string())?;
+            self.child.kill().map_err(|e| {
+                failure(FailureCode::CleanupFailed).caused_by(std::io::Error::other(e))
+            })?;
         }
         // The reader keeps draining (discarding after cancellation) while ConPTY closes.
         self.close_master();
@@ -262,11 +321,11 @@ impl Session {
             self.exit_code = self
                 .child
                 .try_wait()
-                .map_err(|e| e.to_string())?
+                .map_err(|e| failure(FailureCode::ReadFailed).caused_by(std::io::Error::other(e)))?
                 .map(|status| status.exit_code());
             if self.exit_code.is_none() {
                 if Instant::now() >= deadline {
-                    return Err("Terminal child has not exited before the shutdown deadline".into());
+                    return Err(failure(FailureCode::CleanupFailed));
                 }
                 thread::sleep(Duration::from_millis(5));
             }
@@ -274,16 +333,23 @@ impl Session {
         self.workers.join_until(deadline)
     }
 
-    pub fn stop(&mut self) -> Result<(), String> {
+    pub fn stop(&mut self) -> Result<()> {
         match self.settle(Instant::now() + STOP_TIMEOUT) {
-            Ok(()) => Ok(()),
+            Ok(()) => {
+                if !self.tracked_exit {
+                    self.diagnostics.finish(
+                        self.process,
+                        self.exit_code.map(|c| c as i32),
+                        ProcessPhase::Terminated,
+                    );
+                    self.tracked_exit = true;
+                }
+                Ok(())
+            }
             Err(error) => {
                 let primary = self.cleanup_error.get_or_insert_with(|| error.clone());
-                if *primary == error {
-                    Err(error)
-                } else {
-                    Err(format!("{primary}; cleanup retry: {error}"))
-                }
+                self.diagnostics.failure(error);
+                Err(primary.clone())
             }
         }
     }
@@ -294,7 +360,7 @@ impl Drop for Session {
         if let Err(error) = self.stop() {
             // Normal window closure retains the Session on failure. Unexpected host
             // destruction cannot establish joined cleanup; do not report it as success.
-            eprintln!("Terminal teardown did not settle: {error}");
+            self.diagnostics.failure(error);
         }
     }
 }
@@ -305,8 +371,11 @@ pub struct TerminalState {
 }
 
 impl TerminalState {
-    pub fn stop(&self) -> Result<(), String> {
-        let mut owned = self.session.lock().map_err(|e| e.to_string())?;
+    pub fn stop(&self) -> Result<()> {
+        let mut owned = self
+            .session
+            .lock()
+            .map_err(|_| failure(FailureCode::LockPoisoned))?;
         if let Some(session) = owned.as_mut() {
             session.stop()?;
         }
@@ -362,7 +431,7 @@ mod tests {
             ..Workers::default()
         };
         let error = workers.join_until(Instant::now()).unwrap_err();
-        assert!(error.contains("shutdown deadline"));
+        assert_eq!(error.code, FailureCode::CleanupFailed);
         assert!(workers.reader.is_some(), "timed-out worker was detached");
         release.send(()).unwrap();
         workers
@@ -380,8 +449,9 @@ mod tests {
         assert_eq!(
             workers
                 .join_until(Instant::now() + Duration::from_secs(1))
-                .unwrap_err(),
-            "Terminal worker panicked",
+                .unwrap_err()
+                .code,
+            FailureCode::Panic,
         );
     }
 
@@ -391,7 +461,9 @@ mod tests {
         let root = PathBuf::from(
             std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").expect("select real package"),
         );
-        let launch = crate::package::resolve(root).await.unwrap();
+        let launch = crate::package::resolve(root, Arc::new(Diagnostics::default()))
+            .await
+            .unwrap();
         assert!(
             !launch
                 .child
@@ -456,7 +528,9 @@ mod tests {
         let root = PathBuf::from(
             std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").expect("select real package"),
         );
-        let launch = crate::package::resolve(root).await.unwrap();
+        let launch = crate::package::resolve(root, Arc::new(Diagnostics::default()))
+            .await
+            .unwrap();
         let mut session =
             Session::start(&launch, 120, 40, &["-m", "cadrumo.entrypoints.tui"]).unwrap();
         let output = wait_for(&mut session, "\u{1b}[?1049h");

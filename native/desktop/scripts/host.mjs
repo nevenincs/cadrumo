@@ -22,6 +22,7 @@ const environment = {
   ...process.env,
   CARGO_TARGET_DIR: resolve(binaryDir, "cargo/desktop"),
   CADRUMO_NATIVE_CONTRACT: contract,
+  CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
 };
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =
@@ -39,6 +40,9 @@ cpSync(
     recursive: true,
   },
 );
+cpSync(resolve(desktop, "../platform"), resolve(snapshot, "../platform"), {
+  recursive: true,
+});
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: snapshot,

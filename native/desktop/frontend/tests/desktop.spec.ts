@@ -16,3 +16,25 @@ test("terminal fills the window without fabricated browser output", async ({
     expect(terminal).toMatchObject({ x: 0, y: 0, ...viewport });
   }
 });
+
+test("logs are optional and closing them restores the full-window terminal", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator(".xterm-helper-textarea").focus();
+  await page.keyboard.press("Control+Shift+L");
+  await expect(
+    page.getByRole("complementary", { name: "Application logs" }),
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Native diagnostics are available in the desktop application.",
+  );
+  await page.getByRole("button", { name: "Close logs" }).click();
+  await expect(page.getByRole("complementary")).toHaveCount(0);
+  expect(await page.locator(".terminal-surface").boundingBox()).toMatchObject({
+    x: 0,
+    y: 0,
+    width: 1440,
+    height: 1050,
+  });
+});

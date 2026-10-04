@@ -27,3 +27,39 @@ body {
   padding: 8px;
   background: #172320;
 }
+.diagnostics {
+  position: absolute;
+  inset: 10% 3% 3%;
+  z-index: 2;
+  overflow: auto;
+  padding: 16px;
+  background: #172320;
+  border: 1px solid #647567;
+}
+.diagnostics header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.diagnostics pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.diagnostics table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.diagnostics th,
+.diagnostics td {
+  padding: 6px;
+  border-bottom: 1px solid #647567;
+}
+.diagnostics button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid #647567;
+  padding: 6px;
+  cursor: pointer;
+}

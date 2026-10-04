@@ -8,6 +8,7 @@ use std::{
     ptr,
 };
 include!(env!("CADRUMO_CONTRACT_RS"));
+pub mod desktop;
 
 #[repr(C)]
 pub struct Buffer {

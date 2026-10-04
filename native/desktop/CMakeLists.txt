@@ -46,3 +46,11 @@ add_custom_target(desktop-preview
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "${CMAKE_BINARY_DIR}/cargo/desktop/debug/cadrumo${CMAKE_EXECUTABLE_SUFFIX}"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" VERBATIM)
+
+add_custom_target(desktop-headless-test
+  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/headless-test.mjs"
+  DEPENDS desktop-host-build
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" VERBATIM)
