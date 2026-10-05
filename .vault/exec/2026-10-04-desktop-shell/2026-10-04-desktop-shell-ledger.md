@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a17caff95796488c2e64cc721843ba5f3092b7c8097a75fc192d8f44537c75ee'
+body_hash: 'sha256:44334764c657a83fdf0482dc0d59cf29702ff914e4eb6c14765ccb50b64b672a'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -540,6 +540,13 @@ related:
 - `S10` `verify:` `configured node snapshot/build-paths/configuration seven tests` -> `pass`
 - `S10` `verify:` `Python CLI producer freshness Ruff format ty and native rustfmt` -> `pass`
 - `S10` `verify:` `Node syntax PowerShell parser Prettier and scoped git diff check` -> `pass`
+- `S10` `M` `justfile`
+- `S10` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py`
+- `S10` `verify:` `Ruff check and format native source authentication test` -> `pass`
+- `S10` `verify:` `ty check native source authentication test` -> `pass`
+- `S10` `verify:` `pytest collect-only native authentication selects one test` -> `pass`
+- `S10` `verify:` `just show test-runtime-auth` -> `pass`
+- `S10` `verify:` `just test-runtime-auth agent Session0 native desktop prerequisite` -> `fail`
 
 ## Notes
 
@@ -626,3 +633,4 @@ related:
 - `S10` Final native lint passed against exact two-module test snapshot; all current regression/build checks pass. Awaiting user desktop rerun.
 - `S10` Operator redirected session to define package/runtime integration proof and separate Tauri development. Scope recorded in desktop-shell audit; no application fixes started from this run. Manager launch remains unproven (fixture-owned runtime), positive sign-in/revocation and active host boundary checks remain open. Original full UI/packaging acceptance obligations retained; no narrowing of recorded verdicts.
 - `S10` Operator explicitly moved frontend development to another session and prohibited full application compilation as the development loop. Current work compiles only native test/lint artifacts and reuses existing app-v1 for real PTYs. Fixes canonical credential refusal and throttle metadata. Logs `build/windows-x86-64/e2e-desktop/backend-*.log.` Native capability passes do not close full WebView/sign-in/manager/package acceptance; no plan checkbox closed.
+- `S10` Live authentication remains pending signed-in desktop execution. Operator deleted disposable build outputs; abandoned package-specific runner changes were removed. Canonical just test-runtime-auth uses current development entrypoints, shared environment resolver, pytest storage and standard reporting; no build or preserved package prerequisite. Session0 refusal is not a passing auth test.

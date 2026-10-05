@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb9df01b1c35abbcd71c4e6310ce9fc9f8b86a415d82fe92d75bb0fe19b16fda'
+body_hash: 'sha256:e5facb43a08bc2a52d5e100fde50b92a10b0a4e4a442b692eee3c1d0664e47de'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -182,6 +182,14 @@ Next acceptance design should provide separately runnable package/runtime, sign-
 The new PowerShell entrypoint consumes existing generated metadata, isolates storage, restores its environment and runs native tests or Clippy. Package mode reuses the existing app-v1 candidate. It does not invoke a frontend/docs/package build. Backend snapshots preserve unchanged source timestamps, remove stale source members only beneath the checked build root and reject linked destinations; a present empty capability directory prevents repeated tauri-build invalidation. Review found no remaining high/critical issue in this scoped patch. PASS for scoped native repair and runner verification: 138 host tests, eight individually selected real-package PTY/invoke/lifecycle tests, seven Node snapshot/path/configuration tests, fixture freshness, Ruff/ty/rustfmt/Prettier, syntax and native Clippy -D warnings. The first Node invocation lacked the required build-directory environment and failed two setup checks; corrected configured invocation passed seven. Native run logs are build/windows-x86-64/e2e-desktop/backend-*.log. Warm capability Cargo startup measured 0.41-0.44s; test bodies take additional time. Paused termination measured 10.81ms and page reload settlement 32.09ms in this run.
 
 Overall S10/S16 acceptance stays PENDING. These real PTY checks use mock Tauri IPC and an existing assembled package, not a real WebView or rebuilt product. They prove console selection/PATH, Python root/cwd, final-output ordering, flood credit, paused termination, Ctrl+C, raw/JSON/Unicode IPC, resize/close and reload replacement. They do not prove positive native desktop sign-in/revocation, real-WebView confinement, production manager startup/ordered shutdown, or the final integrated package. The frontend handover is separate; no frontend files changed in this repair.
+
+### native-runtime-auth-development | medium | Canonical source test prepared; live desktop result pending
+
+2026-10-05 operator requires actual runtime authentication and rejects retained package/build-directory dependencies for the development loop. A package-backed native test was prepared but its outputs were removed during operator cleanup; the entire build tree is disposable. That uncommitted runner and its native test feature were removed, not retained as another workflow. No full application build was run. Earlier build evidence remains historical, not available artifact evidence.
+
+The current scoped change is justfile:test-runtime-auth and src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py. The command uses the normal project environment, sysconfig-owned installed source entrypoints, canonical child_environment, pytest tmp_path and existing test-run reporting. It starts the real Windows runtime in an explicitly owned job, uses strict native desktop observation and real credential custody, and calls the canonical CLI over separate processes. Assertions cover initial absence, wrong-password refusal, typed throttle handling, persisted password login, independently observed presence, runtime-owned logout, receipt/keychain removal and exact-profile absence. Passwords travel over stdin; failure diagnostics retain only bounded public identifiers. Cleanup terminates the runtime job and addresses only the fresh profile receipt. No session bridge, login observer override or fake keyring is introduced.
+
+Review verdict PENDING. Ruff, formatting, ty and collection pass (one selected test), and just resolves the canonical recipe. Running the recipe in agent Session0 fails at the native desktop precondition before profile creation, as expected; this is explicitly not live authentication success. Evidence is the ordinary test run log under var/storage/development/.logs/test-runs/2026-10-05/20261005T200357.292747Z-pytest-69348-0390799e/run.log. The user has been asked to run just test-runtime-auth in the signed-in terminal. This source-level CLI/runtime test does not claim Rust host/WebView or final packaged acceptance. Do not close authentication acceptance until the real desktop run passes.
 
 ## Recommendations
 

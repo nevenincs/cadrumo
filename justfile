@@ -1160,6 +1160,11 @@ test-native-host-facilities:
 test-os-keychain:
     uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests
 
+[doc('Test current-source password login and logout against the real runtime (signed-in Windows desktop).')]
+[group('test')]
+test-runtime-auth:
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py
+
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
 test-resident-service:
