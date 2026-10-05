@@ -1,7 +1,8 @@
 use super::{
+    media::{self, MediaTypes},
     open,
     policy::{self, CLOSED, SCHEME},
-    request::{self, member_path, respond},
+    request::{member_path, respond},
     site::{self, Site},
 };
 use cadrumo_application::error::application::ErrorCode;
@@ -77,6 +78,48 @@ const MEMBERS: &[&str] = &[
     "missing.html",
 ];
 
+/// The members every manifest must list: each language's entry and search.
+const REQUIRED: &[&str] = &[
+    "index.html",
+    "es/index.html",
+    "pagefind/pagefind.js",
+    "es/pagefind/pagefind.js",
+];
+
+/// A staged tree holding the required members and `extra`, each file's
+/// bytes its own member path.
+fn tree(label: &str, extra: &[String]) -> (Scratch, Site) {
+    let scratch = Scratch::new(label);
+    let root = scratch.0.join("user");
+    let members: Vec<&str> = REQUIRED
+        .iter()
+        .copied()
+        .chain(extra.iter().map(String::as_str))
+        .collect();
+    for member in &members {
+        write(&root, member, member.as_bytes());
+    }
+    write(
+        &root,
+        "manifest.json",
+        manifest(&members).to_string().as_bytes(),
+    );
+    let site = Site::open(&root, &root.join("manifest.json")).unwrap();
+    (scratch, site)
+}
+
+/// The media-type table the package layout declares for this build.
+fn declared() -> MediaTypes {
+    MediaTypes::declared().unwrap()
+}
+
+/// The layout's `user_docs.media_types`, read independently of the host's
+/// parser.
+fn declared_table() -> serde_json::Value {
+    let contract: serde_json::Value = serde_json::from_str(media::CONTRACT).unwrap();
+    contract["layout"]["user_docs"]["media_types"].clone()
+}
+
 /// A staged tree with a manifest; `objects.inv` is a member outside the media
 /// table, `missing.html` a member absent from disk and `stray.html` a file on
 /// disk the manifest does not list.
@@ -120,7 +163,7 @@ fn assert_guarded(response: &Response<Vec<u8>>, policy: &str) {
 }
 
 fn served(site: &Site, method: Method, uri: &str) -> Response<Vec<u8>> {
-    let response = respond(site, POLICY, &get(method, uri));
+    let response = respond(site, &declared(), POLICY, &get(method, uri));
     assert_guarded(&response, POLICY);
     response
 }
@@ -174,42 +217,160 @@ fn paths_map_to_manifest_keys_only_without_escapes() {
     }
 }
 
+/// Every name and extension the layout declares is served as its declared
+/// type, under a nested directory as at the root.
 #[test]
-fn the_media_table_is_closed() {
-    for (path, media) in [
-        ("a/index.html", "text/html; charset=utf-8"),
-        ("a.css", "text/css; charset=utf-8"),
-        ("a.js", "text/javascript; charset=utf-8"),
-        ("a.mjs", "text/javascript; charset=utf-8"),
-        ("a.json", "application/json"),
-        ("pagefind/pagefind-entry.json", "application/json"),
-        ("a.woff2", "font/woff2"),
-        ("a.svg", "image/svg+xml"),
-        ("a.png", "image/png"),
-        ("a.wasm", "application/wasm"),
-        ("pagefind/a.pf_meta", "application/octet-stream"),
-        ("pagefind/a.pf_index", "application/octet-stream"),
-        ("pagefind/a.pf_fragment", "application/octet-stream"),
-        ("pagefind/a.pf_filter", "application/octet-stream"),
-        ("pagefind/wasm.en.pagefind", "application/octet-stream"),
-    ] {
-        let path = member_path(&format!("/{path}")).unwrap();
-        assert_eq!(request::media_type(&path), Some(media), "{path:?}");
+fn every_declared_name_and_extension_is_served_as_its_declared_type() {
+    let table = declared_table();
+    let names = table["names"].as_object().unwrap();
+    let extensions = table["extensions"].as_object().unwrap();
+    assert!(!names.is_empty() && !extensions.is_empty());
+    let mut expected = Vec::new();
+    for (name, media) in names {
+        expected.push((name.clone(), media.as_str().unwrap()));
     }
-    for path in [
+    for (extension, media) in extensions {
+        let probe = format!("probe.{extension}");
+        assert!(!names.contains_key(&probe), "{probe}");
+        expected.push((probe, media.as_str().unwrap()));
+    }
+    let members: Vec<String> = expected
+        .iter()
+        .flat_map(|(name, _)| [name.clone(), format!("nested/{name}")])
+        .collect();
+    let (_scratch, site) = tree("declared", &members);
+    let media = declared();
+    for (name, declared) in &expected {
+        assert_eq!(media.of(name).unwrap(), declared, "{name}");
+        for member in [name.clone(), format!("nested/{name}")] {
+            let uri = format!("cadrumo-docs://localhost/{member}");
+            let response = served(&site, Method::GET, &uri);
+            assert_eq!(response.status(), StatusCode::OK, "{member}");
+            assert_eq!(
+                response.headers()[header::CONTENT_TYPE],
+                *declared,
+                "{member}"
+            );
+            assert_eq!(response.body(), member.as_bytes(), "{member}");
+        }
+    }
+}
+
+/// A member the table does not type is not served, and its refusal carries
+/// the policy and `nosniff` like every other response.
+#[test]
+fn undeclared_types_are_refused_with_the_policy_and_nosniff() {
+    let table = declared_table();
+    let undeclared = [
         "objects.inv",
-        "a.css.map",
-        "a.txt",
-        "a.ttf",
-        "a.gif",
-        "a.htm",
-        "a.HTML",
-        "a.exe",
-        "a.xml",
+        "furo.css.map",
+        "index.HTML",
+        "index.htm",
+        "readme.txt",
+        "font.ttf",
+        "demo.gif",
         "Makefile",
-    ] {
-        let path = member_path(&format!("/{path}")).unwrap();
-        assert_eq!(request::media_type(&path), None, "{path:?}");
+        "html",
+    ];
+    for name in undeclared {
+        let extension = name.rsplit_once('.').map(|(_, extension)| extension);
+        assert!(table["names"].get(name).is_none(), "{name}");
+        assert!(
+            extension.is_none_or(|extension| table["extensions"].get(extension).is_none()),
+            "{name}"
+        );
+    }
+    let members: Vec<String> = undeclared
+        .iter()
+        .map(|name| format!("_static/{name}"))
+        .collect();
+    let (_scratch, site) = tree("undeclared", &members);
+    for member in &members {
+        assert!(site.contains(&member_path(&format!("/{member}")).unwrap()));
+        for method in [Method::GET, Method::HEAD] {
+            let uri = format!("cadrumo-docs://localhost/{member}");
+            let response = served(&site, method, &uri);
+            assert_eq!(response.status(), StatusCode::NOT_FOUND, "{member}");
+            assert!(response.body().is_empty(), "{member}");
+        }
+    }
+}
+
+/// The case list the packaging gate's parser replays too: the same table
+/// and names must give the same type, or none, on both sides.
+const SHARED_CASES: &str = include_str!("media_type_cases.json");
+
+#[test]
+fn media_types_agree_with_the_packaging_gate_on_the_shared_cases() {
+    let shared: serde_json::Value = serde_json::from_str(SHARED_CASES).unwrap();
+    let media = MediaTypes::from_table(shared["table"].clone()).unwrap();
+    let cases: Vec<(String, Option<String>)> =
+        serde_json::from_value(shared["cases"].clone()).unwrap();
+    assert!(!cases.is_empty());
+    let mut members = Vec::new();
+    for (name, expected) in &cases {
+        let resolved = media.of(name).map(|value| value.to_str().unwrap());
+        assert_eq!(resolved, expected.as_deref(), "{name}");
+        if member_path(&format!("/{name}")).is_some() {
+            members.extend([format!("cases/{name}"), format!("cases/nested/{name}")]);
+        } else {
+            // A name no request can address must not be one the table serves.
+            assert_eq!(expected, &None, "{name}");
+        }
+    }
+    let (_scratch, site) = tree("shared", &members);
+    for member in &members {
+        let name = member.rsplit('/').next().unwrap();
+        let (_, expected) = cases.iter().find(|(case, _)| case == name).unwrap();
+        let request = get(Method::GET, &format!("cadrumo-docs://localhost/{member}"));
+        let response = respond(&site, &media, POLICY, &request);
+        assert_guarded(&response, POLICY);
+        match expected {
+            Some(declared) => {
+                assert_eq!(response.status(), StatusCode::OK, "{member}");
+                assert_eq!(
+                    response.headers()[header::CONTENT_TYPE],
+                    declared.as_str(),
+                    "{member}"
+                );
+            }
+            None => assert_eq!(response.status(), StatusCode::NOT_FOUND, "{member}"),
+        }
+    }
+}
+
+#[test]
+fn malformed_media_type_tables_refuse_the_scheme() {
+    let shared: serde_json::Value = serde_json::from_str(SHARED_CASES).unwrap();
+    let malformed = shared["malformed"].as_array().unwrap();
+    assert!(!malformed.is_empty());
+    // A type is sent as a header value, so it must be a valid one.
+    let unsendable = serde_json::json!({
+        "names": {},
+        "extensions": {"html": "text/html\r\nx-injected: 1"}
+    });
+    for table in malformed.iter().chain([&unsendable]) {
+        let error = MediaTypes::from_table(table.clone())
+            .err()
+            .expect("refused");
+        assert_eq!(error.code, ErrorCode::PackageUnavailable, "{table}");
+    }
+}
+
+#[test]
+fn the_contract_must_declare_the_media_type_table() {
+    assert!(MediaTypes::from_contract(media::CONTRACT).is_ok());
+    let contract: serde_json::Value = serde_json::from_str(media::CONTRACT).unwrap();
+    let mut absent = contract.clone();
+    absent["layout"]["user_docs"]
+        .as_object_mut()
+        .unwrap()
+        .remove("media_types");
+    let mut empty = contract;
+    empty["layout"]["user_docs"]["media_types"]["extensions"] = serde_json::json!({});
+    for text in [absent.to_string(), empty.to_string(), "{".to_owned()] {
+        let error = MediaTypes::from_contract(&text).err().expect("refused");
+        assert_eq!(error.code, ErrorCode::PackageUnavailable);
     }
 }
 
@@ -714,6 +875,7 @@ fn staged_documentation_serves_pages_search_and_worker_with_the_policy() {
     for (path, media) in probes {
         let response = respond(
             &site,
+            &declared(),
             &csp,
             &get(Method::GET, &format!("cadrumo-docs://localhost/{path}")),
         );
@@ -729,6 +891,7 @@ fn staged_documentation_serves_pages_search_and_worker_with_the_policy() {
     }
     let refused = respond(
         &site,
+        &declared(),
         &csp,
         &get(Method::GET, "cadrumo-docs://localhost/_/api/v3/embed/"),
     );

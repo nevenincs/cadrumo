@@ -1,0 +1,62 @@
+{
+  "table": {
+    "names": {
+      "entry.json": "application/manifest+json",
+      "LICENSE": "text/plain; charset=utf-8"
+    },
+    "extensions": {
+      "html": "text/html; charset=utf-8",
+      "js": "text/javascript; charset=utf-8",
+      "json": "application/json",
+      "pf_index": "application/octet-stream",
+      "pagefind": "application/octet-stream"
+    }
+  },
+  "cases": [
+    ["entry.json", "application/manifest+json"],
+    ["other.json", "application/json"],
+    ["Entry.json", "application/json"],
+    ["ENTRY.JSON", null],
+    ["entry.json.bak", null],
+    ["LICENSE", "text/plain; charset=utf-8"],
+    ["License", null],
+    ["LICENSE.txt", null],
+    ["index.html", "text/html; charset=utf-8"],
+    ["index.HTML", null],
+    ["index.Html", null],
+    ["index.htm", null],
+    ["index.html5", null],
+    ["furo.js", "text/javascript; charset=utf-8"],
+    ["furo.js.map", null],
+    ["furo.map.js", "text/javascript; charset=utf-8"],
+    ["wasm.en.pagefind", "application/octet-stream"],
+    ["en_1.pf_index", "application/octet-stream"],
+    ["en_1.pf_meta", null],
+    [".js", "text/javascript; charset=utf-8"],
+    ["a..js", "text/javascript; charset=utf-8"],
+    ["js", null],
+    ["html", null],
+    ["a.", null]
+  ],
+  "malformed": [
+    null,
+    "text/html",
+    {"extensions": {"html": "text/html"}},
+    {"names": {}},
+    {"names": {}, "extensions": {"html": "text/html"}, "types": {}},
+    {"names": {}, "extensions": {}},
+    {"names": [], "extensions": {"html": "text/html"}},
+    {"names": {}, "extensions": ["html"]},
+    {"names": {}, "extensions": {".html": "text/html"}},
+    {"names": {}, "extensions": {"a/b": "text/html"}},
+    {"names": {}, "extensions": {"a\\b": "text/html"}},
+    {"names": {}, "extensions": {"": "text/html"}},
+    {"names": {}, "extensions": {"html": ""}},
+    {"names": {}, "extensions": {"html": 1}},
+    {"names": {}, "extensions": {"html": null}},
+    {"names": {"a/b.json": "application/json"}, "extensions": {"html": "text/html"}},
+    {"names": {"a\\b.json": "application/json"}, "extensions": {"html": "text/html"}},
+    {"names": {"": "application/json"}, "extensions": {"html": "text/html"}},
+    {"names": {"entry.json": ""}, "extensions": {"html": "text/html"}}
+  ]
+}

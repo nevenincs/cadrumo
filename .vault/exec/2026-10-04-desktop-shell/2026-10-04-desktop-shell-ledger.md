@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:5168f49d54282253a44460db9f345bd7db969fd2c5360a0e08ff45367dbb9d54'
+body_hash: 'sha256:9789f5bcf6e888e0f28697e3f7463eb4387a4a7967a747aefc15c2eab9a31617'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -326,6 +326,17 @@ related:
 - `S15` `verify:` `linux backend std-only rustc --test and clippy-driver -D clippy::all in rust:1.96-slim container (5 tests: activation without reading the connection, families, stale socket, refusing holder timeout, open directory and invalid family refusal)` -> `pass`
 - `S15` `verify:` `rustfmt --check on touched files` -> `pass`
 - `S15` `by:` `high-executor`
+- `S05` `A` `native/desktop/src-tauri/src/docs/media.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/media_type_cases.json`
+- `S05` `M` `native/desktop/src-tauri/src/docs/request.rs`
+- `S05` `M` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S05` `M` `dev/packaging/tests/test_native_docs_references.py`
+- `S05` `verify:` `cmake --build build/s05b-desktop-host --target desktop-host-clippy (all targets, -D warnings)` -> `pass`
+- `S05` `verify:` `cargo test docs::tests:: in build/s05b-desktop-host snapshot: 17 of 18 docs tests incl. 5 media-type tests` -> `pass`
+- `S05` `verify:` `staged_documentation_serves_pages_search_and_worker_with_the_policy against s02 pkg-current (package has no docs/user manifest)` -> `fail`
+- `S05` `verify:` `pytest dev/packaging/tests/test_native_docs_references.py (68 incl. 24 shared cases, 19 shared malformed tables)` -> `pass`
+- `S05` `verify:` `mutants in build snapshot: old hard-coded table, hard-coded htm, case-insensitive extension each fail the shared-case test; Python first-dot, case-insensitive, extension-first, hard-coded htm each fail shared cases` -> `pass`
+- `S05` `by:` `s05b-high-executor`
 
 ## Notes
 
@@ -369,3 +380,6 @@ related:
 - `S15` GUI focus and restore were not exercised: the agent runs in Session 0; left to the live smoke run
 - `S15` Cross-version invariant: every future version must keep these object names and the activation protocol, or two versions could open windows at once
 - `S15` Checks ran on an isolated snapshot (build/s15-desktop-host/snap) of HEAD plus the S15 files, with HEAD native/platform/src/lib.rs and the s07-cmake generated contract; another worker has uncommitted edits in native/desktop/src-tauri/src/docs and native/desktop/scripts/configuration.mjs
+- `S05` Served media types now come from the contract's `layout.user_docs.media_types,` parsed once in docs::plugin; the shared case list `media_type_cases.json` is read by Rust tests and pytest
+- `S05` Rust also refuses a media type that is not a valid HTTP header value; the Python staging parser does not check this
+- `S05` Live docs test still fails pre-existing: the s02 package lacks docs/user/manifest.json and no staged docs tree exists in the worktree

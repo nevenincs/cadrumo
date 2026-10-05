@@ -1,6 +1,7 @@
 //! The read-only `cadrumo-docs` scheme that serves the packaged user
 //! documentation to the shell's documentation frame.
 
+mod media;
 mod policy;
 mod request;
 mod site;
@@ -64,7 +65,10 @@ fn published(site: &Site, origin: &str) -> Result<Published> {
     })
 }
 
+/// The scheme plugin. The media-type table and the documentation tree are
+/// admitted here, once; a malformed table or tree refuses the plugin.
 pub fn plugin<R: Runtime>(launch: &Launch) -> Result<TauriPlugin<R>> {
+    let media = Arc::new(media::MediaTypes::declared()?);
     let development = std::env::var_os(DEVELOPMENT_ROOT).filter(|_| tauri::is_dev());
     let site = Arc::new(open(
         &launch.package_root,
@@ -85,11 +89,12 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> Result<TauriPlugin<R>> {
         })
         .register_asynchronous_uri_scheme_protocol(policy::SCHEME, move |_, request, responder| {
             let site = served.clone();
+            let media = media.clone();
             let issued = issued.clone();
             // Reads leave the webview's thread; the response may arrive later.
             tauri::async_runtime::spawn_blocking(move || {
                 let policy = issued.get().map_or(policy::CLOSED, String::as_str);
-                responder.respond(request::respond(&site, policy, &request));
+                responder.respond(request::respond(&site, &media, policy, &request));
             });
         });
     #[cfg(windows)]

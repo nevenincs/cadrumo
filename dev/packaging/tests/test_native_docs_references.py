@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..native.docs_stage import (
     DocsPackagingError,
     ServedMediaTypes,
@@ -235,29 +237,18 @@ def test_staging_excludes_unserved_file_types_from_the_package(tmp_path: Path) -
     assert set(manifest["files"]) == {f"{package_prefix(language)}{name}" for language in languages for name in served}
 
 
-@pytest.mark.parametrize(
-    "table",
-    [
-        None,
-        {"extensions": {"html": "text/html"}},
-        {"names": {}, "extensions": {}},
-        {"names": {}, "extensions": {".html": "text/html"}},
-        {"names": {"a/b.json": "application/json"}, "extensions": {"html": "text/html"}},
-        {"names": {}, "extensions": {"html": ""}},
-        {"names": [], "extensions": {"html": "text/html"}},
-    ],
+# The desktop host's documentation scheme replays the same cases against its own parser.
+SHARED_MEDIA_TYPE_CASES = json.loads(
+    (REPO_ROOT / "native/desktop/src-tauri/src/docs/media_type_cases.json").read_text(encoding="utf-8")
 )
+
+
+@pytest.mark.parametrize("table", SHARED_MEDIA_TYPE_CASES["malformed"])
 def test_media_type_declaration_must_be_a_closed_table(table: object) -> None:
     with pytest.raises(DocsPackagingError, match="media_types"):
         served_media_types({} if table is None else {"media_types": table})
 
 
-def test_media_types_match_names_before_the_final_extension() -> None:
-    media_types = served_media_types(
-        {"media_types": {"names": {"entry.json": "application/json"}, "extensions": {"js": "text/javascript"}}}
-    )
-    assert media_types.of("entry.json") == "application/json"
-    assert media_types.of("furo.js") == "text/javascript"
-    assert media_types.of("furo.js.map") is None
-    assert media_types.of("js") is None
-    assert media_types.of("other.json") is None
+@pytest.mark.parametrize(("name", "expected"), SHARED_MEDIA_TYPE_CASES["cases"])
+def test_media_types_match_names_before_the_final_extension(name: str, expected: str | None) -> None:
+    assert served_media_types({"media_types": SHARED_MEDIA_TYPE_CASES["table"]}).of(name) == expected

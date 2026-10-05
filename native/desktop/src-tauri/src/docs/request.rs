@@ -1,4 +1,4 @@
-use super::{policy::SCHEME, site::Site};
+use super::{media::MediaTypes, policy::SCHEME, site::Site};
 use cadrumo_application::value::RelativePath;
 use std::{fs, path::Path};
 use tauri::http::{Method, Request, Response, StatusCode, header};
@@ -7,33 +7,15 @@ const HOST: &str = "localhost";
 const DIRECTORY_INDEX: &str = "index.html";
 const NO_SNIFF: &str = "nosniff";
 
-/// The closed set of media types the documentation may be served as. Pagefind
-/// index chunks are compressed binary data its own script decodes.
-pub fn media_type(path: &RelativePath) -> Option<&'static str> {
-    let name = path.as_str().rsplit('/').next().unwrap_or_default();
-    if name == "pagefind-entry.json" {
-        return Some("application/json");
-    }
-    let (_, extension) = name.rsplit_once('.')?;
-    Some(match extension {
-        "html" => "text/html; charset=utf-8",
-        "css" => "text/css; charset=utf-8",
-        "js" | "mjs" => "text/javascript; charset=utf-8",
-        "json" => "application/json",
-        "woff2" => "font/woff2",
-        "svg" => "image/svg+xml",
-        "png" => "image/png",
-        "wasm" => "application/wasm",
-        "pf_meta" | "pf_index" | "pf_fragment" | "pf_filter" | "pagefind" => {
-            "application/octet-stream"
-        }
-        _ => return None,
-    })
-}
-
-/// Answers one request on the documentation scheme. Every response, refusals
-/// included, carries `policy` and `nosniff`.
-pub fn respond(site: &Site, policy: &str, request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
+/// Answers one request on the documentation scheme. A member is served only
+/// when `media` types its name. Every response, refusals included, carries
+/// `policy` and `nosniff`.
+pub fn respond(
+    site: &Site,
+    media: &MediaTypes,
+    policy: &str,
+    request: &Request<Vec<u8>>,
+) -> Response<Vec<u8>> {
     let head = match *request.method() {
         Method::GET => false,
         Method::HEAD => true,
@@ -45,7 +27,7 @@ pub fn respond(site: &Site, policy: &str, request: &Request<Vec<u8>>) -> Respons
     let Some(path) = member_path(request.uri().path()) else {
         return refusal(StatusCode::BAD_REQUEST, policy);
     };
-    let (true, Some(media)) = (site.contains(&path), media_type(&path)) else {
+    let (true, Some(content_type)) = (site.contains(&path), media.of_member(&path)) else {
         return refusal(StatusCode::NOT_FOUND, policy);
     };
     let Some(bytes) = read_contained(site.root(), &path) else {
@@ -53,7 +35,7 @@ pub fn respond(site: &Site, policy: &str, request: &Request<Vec<u8>>) -> Respons
     };
     let length = bytes.len();
     response(StatusCode::OK, policy)
-        .header(header::CONTENT_TYPE, media)
+        .header(header::CONTENT_TYPE, content_type.clone())
         .header(header::CONTENT_LENGTH, length)
         .body(if head { Vec::new() } else { bytes })
         .unwrap_or_else(|_| failed())
