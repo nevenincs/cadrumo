@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.config import Settings
-from ...storage.errors import OutboundStorageConflictError, OutboundStorageNotFoundError
+from ...storage.errors import OutboundStorageConflictError
 from ..drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 from ..root_folder import MY_DRIVE, ensure_root_folder, profile_root_folder_name, require_owned_folder
 from .drive_files_server import drive_files_endpoint
@@ -87,22 +87,22 @@ def test_a_stored_root_that_is_a_live_marked_folder_is_accepted() -> None:
     (
         pytest.param(
             _folder("stored-root"),
-            {"is_folder": True, "is_live": True, "ownership_marker_present": False},
+            {"visible_to_application": True, "is_folder": True, "is_live": True, "ownership_marker_present": False},
             id="unmarked",
         ),
         pytest.param(
             _folder("stored-root", appProperties={OWNERSHIP_KEY: "someone-else"}),
-            {"is_folder": True, "is_live": True, "ownership_marker_present": False},
+            {"visible_to_application": True, "is_folder": True, "is_live": True, "ownership_marker_present": False},
             id="foreign-marker",
         ),
         pytest.param(
             _folder("stored-root", appProperties=_MARKER, trashed=True),
-            {"is_folder": True, "is_live": False, "ownership_marker_present": True},
+            {"visible_to_application": True, "is_folder": True, "is_live": False, "ownership_marker_present": True},
             id="trashed",
         ),
         pytest.param(
             _folder("stored-root", appProperties=_MARKER, mimeType="application/vnd.google-apps.spreadsheet"),
-            {"is_folder": False, "is_live": True, "ownership_marker_present": True},
+            {"visible_to_application": True, "is_folder": False, "is_live": True, "ownership_marker_present": True},
             id="not-a-folder",
         ),
     ),
@@ -126,10 +126,22 @@ def test_a_stored_root_that_is_not_a_live_folder_of_ours_is_refused(
     assert dict(verdict.evidence[0].values) == facts
 
 
-def test_a_stored_root_drive_does_not_show_is_not_found() -> None:
-    """Under the files-it-created scope, a folder the user picked by hand is simply invisible."""
-    with drive_files_endpoint() as drive, pytest.raises(OutboundStorageNotFoundError):
-        require_owned_folder(drive.service, root_folder_id="a-folder-the-user-pasted")
+def test_a_stored_root_drive_does_not_show_is_refused_as_not_ours() -> None:
+    """A folder created under another client, or pasted by hand, is invisible under the granted scope.
+
+    It is refused, not reported as an error, so every operation settles it
+    as a refusal whose remedy is signing in again.
+    """
+    with drive_files_endpoint() as drive, pytest.raises(OutboundStorageConflictError) as refused:
+        require_owned_folder(drive.service, root_folder_id="a-folder-from-another-client")
+
+    error = refused.value
+    assert error.code.code == "REFUSED_OUTBOUND_STORAGE_CONFLICT"
+    assert error.code.category.value == "REFUSED"
+    assert error.translated_message == "adapters.google.root_folder.errors.root_folder_not_owned"
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert dict(verdict.evidence[0].values) == {"visible_to_application": False}
 
 
 def test_no_setting_supplies_a_drive_folder() -> None:

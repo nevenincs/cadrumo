@@ -593,7 +593,7 @@ class Transaction(BaseModel):
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
     # ``created_at`` is stamped once and carried verbatim through every later
     # edit; ``modified_at`` is re-stamped on every mutating edit
-    # (update/classify/allocate/attach/doclink/archive/stash/restore/link/
+    # (update/classify/allocate/attach/archive/stash/restore/link/
     # split/merge). They make ``--sort-by created_at|modified_at`` honest for
     # hand-added rows, which otherwise carry no creation timestamp (only
     # imported rows have ``raw.provenance.ingested_at``). Both are UTC-aware.

@@ -83,8 +83,8 @@ _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp"
 # those readers existed this gate refused them, which was the right answer;
 # leaving it refusing them afterwards would be the campaign's own named
 # failure mode -- a deliverable that ships correct, tested and unreachable,
-# readable only if the document happened to arrive through `doclink` or
-# `pull-folder` instead of the front door.
+# readable only if the document happened to arrive some other way than
+# through the front door.
 _STRUCTURED_EXTENSIONS = frozenset({".xml"})
 
 # Concrete MIME types by source extension. The on-host vision reader needs a

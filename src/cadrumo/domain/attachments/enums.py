@@ -51,7 +51,8 @@ class AttachmentSource(StrEnum):
     """Closed taxonomy of channels an attachment can originate from.
 
     Used by :attr:`domain.attachments.models.Attachment.source` to record where
-    bytes were captured from for provenance and re-fetch logic.
+    bytes were captured from, as provenance. Nothing fetches from a recorded
+    source again.
 
     Attributes:
         LOCAL_FILE: A file read from the local filesystem.

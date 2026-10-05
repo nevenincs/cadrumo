@@ -21,7 +21,7 @@ from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.type_guards import is_str_keyed_dict
-from ..storage.errors import OutboundStorageConflictError
+from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageNotFoundError
 from ._preconditions import google_terminal_refusal
 from .api import RequestRetryPolicy, drive_v3_service, execute_request
 from .drive_entries import is_app_owned
@@ -88,10 +88,11 @@ def require_owned_root_folder(credentials: Credentials, *, root_folder_id: str) 
         root_folder_id: The ID stored for the profile.
 
     Raises:
-        :exc:`~adapters.outbound.storage.errors.OutboundStorageNotFoundError`:
-            When Drive does not show the folder to this application.
         :exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError`:
-            When the entry is trashed, is not a folder, or lacks the marker.
+            When Drive does not show the folder to this application, or the
+            entry is trashed, is not a folder, or lacks the marker. A folder
+            created under another client is invisible here, and the remedy
+            is the same in every case: sign in again.
     """
     drive = drive_v3_service(
         credentials, unavailable_condition_id=RootFolderPreconditionCondition.API_CLIENT_AVAILABLE.value
@@ -101,11 +102,17 @@ def require_owned_root_folder(credentials: Credentials, *, root_folder_id: str) 
 
 def require_owned_folder(drive: DriveResource, *, root_folder_id: str) -> None:
     """Apply :func:`require_owned_root_folder` through an already built Drive service."""
-    entry = execute_request(
-        drive.files().get(fileId=root_folder_id, fields="id,mimeType,trashed,appProperties"),
-        action="drive.files.get.root_folder",
-        retry=RequestRetryPolicy.REPLAY_SAFE,
-    )
+    try:
+        entry = execute_request(
+            drive.files().get(fileId=root_folder_id, fields="id,mimeType,trashed,appProperties"),
+            action="drive.files.get.root_folder",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
+        )
+    except OutboundStorageNotFoundError:
+        # Not found is an error elsewhere; here it is the expected state of a
+        # folder this client never created, so it is refused like any other
+        # root that is not ours.
+        raise _not_owned(root_folder_id, facts={"visible_to_application": False}) from None
     raw_properties = entry.get("appProperties")
     properties: Mapping[str, object] = raw_properties if is_str_keyed_dict(raw_properties) else {}
     is_folder = entry.get("mimeType") == GOOGLE_DRIVE_FOLDER_MIME_TYPE
@@ -113,14 +120,27 @@ def require_owned_folder(drive: DriveResource, *, root_folder_id: str) -> None:
     owned = is_app_owned(properties)
     if is_folder and is_live and owned:
         return
-    raise google_terminal_refusal(
+    raise _not_owned(
+        root_folder_id,
+        facts={
+            "visible_to_application": True,
+            "is_folder": is_folder,
+            "is_live": is_live,
+            "ownership_marker_present": owned,
+        },
+    )
+
+
+def _not_owned(root_folder_id: str, *, facts: Mapping[str, bool]) -> OutboundStorageError:
+    """Build the one refusal for a stored root that is not a live folder of this application."""
+    return google_terminal_refusal(
         OutboundStorageConflictError(
             "the stored Drive root is not a live folder created by this application",
             context={"root_folder_id": root_folder_id},
             translated_message="adapters.google.root_folder.errors.root_folder_not_owned",
         ),
         condition_id=RootFolderPreconditionCondition.OWNED_BY_APPLICATION.value,
-        facts={"is_folder": is_folder, "is_live": is_live, "ownership_marker_present": owned},
+        facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
