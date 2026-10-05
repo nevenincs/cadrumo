@@ -1,47 +1,82 @@
-"""CLI logout clears selection without revoking independent runtime access."""
+"""Global CLI sign-out revokes human access while preserving profile selection."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import TypeAdapter
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
-from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
-from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
-from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.core.bucket_pointer import pointer_path, resolve_active_bucket_id
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.sign_in import (
+    RuntimeHumanSignedOut,
+    RuntimeSignInStatusReply,
+    SignInPresence,
+    SignInStatus,
+)
+from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
+from cadrumo.application.user_profile.profile_pointer import (
+    active_profile_pointer_transaction,
+    observe_active_profile_pointer,
+)
+from cadrumo.core.bucket_pointer import pointer_path
 from cadrumo.core.config import override_settings
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
+__all__ = ["_isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_CREDENTIAL = "runtime-logout-test-passphrase"
+
+class _Client:
+    """Controlled transport boundary; selection and CLI projection remain real."""
+
+    def __init__(self, profile_id: UUID) -> None:
+        self.profile_id = profile_id
+        self.calls: list[str] = []
+        self.on_logout: Callable[[], None] | None = None
+
+    def human_sign_out(self) -> RuntimeHumanSignedOut:
+        self.calls.append("sign_out")
+        if self.on_logout is not None:
+            self.on_logout()
+        return RuntimeHumanSignedOut(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            profile_id=self.profile_id,
+            session_ids=(),
+            receipt_removed=True,
+            keychain_removed=True,
+            automation_enabled=True,
+        )
+
+    def sign_in_status(self) -> RuntimeSignInStatusReply:
+        self.calls.append("status")
+        return RuntimeSignInStatusReply(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            profile_id=self.profile_id,
+            status=SignInStatus(presence=SignInPresence.ABSENT),
+        )
+
+    def close(self) -> None:
+        self.calls.append("close")
 
 
-class _KeyringError(Exception):
-    """An exact test credential-store failure type."""
+def _install_client(monkeypatch: pytest.MonkeyPatch, client: _Client) -> None:
+    async def open_client(*, profile_id: UUID, frontend: OperationFrontendProjection) -> _Client:
+        assert profile_id == client.profile_id
+        assert frontend is OperationFrontendProjection.CLI
+        return client
 
-
-class _Keyring:
-    def __init__(self) -> None:
-        self.entries: dict[tuple[str, str], str] = {}
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        return self.entries.get((service_name, username))
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        self.entries[(service_name, username)] = password
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        self.entries.pop((service_name, username), None)
+    monkeypatch.setattr("cadrumo.adapters.local_runtime.runtime_client.open_installed_runtime_client", open_client)
 
 
 def _logout() -> dict[str, object]:
@@ -52,83 +87,74 @@ def _logout() -> dict[str, object]:
     return payload
 
 
-def test_logout_clears_only_captured_default_and_preserves_other_access(tmp_path: Path) -> None:
-    with pytest.MonkeyPatch.context() as patcher, isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        keyring = _Keyring()
-        patcher.setattr(receipt, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
-        with override_settings(cadrumo_output_language="en"):
-            create, decode = profile_authority_contexts()
-            first = register_profile_with_credentials(
-                label="Default profile",
-                passphrase=_PROFILE_CREDENTIAL,
-                profile_create_context=create,
-                profile_decode_context=decode,
-            )
-            second = register_profile_with_credentials(
-                label="Other live profile",
-                passphrase=_PROFILE_CREDENTIAL,
-                profile_create_context=create,
-                profile_decode_context=decode,
-            )
-            other_id = UUID(second.profile_id)
-            active = current_active_bucket_session()
-            assert active is not None and active.bucket_id == second.profile_id
-            material = load_committed_profile_password_material(other_id, root=root)
-            stored = receipt.mint_profile_session(
-                storage_root=root,
-                profile_id=other_id,
-                custody_generation=material.envelope.password_generation,
-                dek_epoch=material.envelope.dek_epoch,
-                dek=active.dek,
-                now=active.opened_at,
-                idle_minutes=15,
-                absolute_minutes=240,
-                login_id=RECEIPT_LOGIN_ID,
-                sign_in=committed_sign_in(root, other_id),
-                generation=committed_sign_in(root, other_id).establish().current,
-            )
-            other_path = receipt.profile_session_path(storage_root=root, profile_id=other_id)
-            original_receipt = other_path.read_bytes()
-            account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{stored.session_id}")
-            original_key = keyring.entries[account]
-
-            with active_profile_pointer_transaction() as pointer:
-                pointer.compare_and_select(expected=pointer.read(), bucket_id=first.profile_id)
-            assert resolve_active_bucket_id() == first.profile_id
-
-            cleared = _logout()
-            result = cleared["result"]
-            assert isinstance(result, dict)
-            assert result == {
-                "logged_out_profile": CLI_PROFILE_ID_PLACEHOLDER,
-                "already_logged_out": False,
-                "scope": "cli_context",
-                "human_receipt_revoked": False,
-                "automation_revoked": False,
-            }
-            notices = cleared["notices"]
-            assert isinstance(notices, list)
-            assert "config.logout.remaining_access" in {notice["code"] for notice in notices}
-            assert resolve_active_bucket_id() is None
-            assert current_active_bucket_session() is active and not active.sealed
-            assert other_path.read_bytes() == original_receipt
-            assert keyring.entries[account] == original_key
-
-            repeated = _logout()
-            repeat = repeated["result"]
-            assert isinstance(repeat, dict)
-            assert repeat["already_logged_out"] is True
-            assert repeat["logged_out_profile"] is None
-            assert resolve_active_bucket_id() is None
-            assert other_path.read_bytes() == original_receipt
+def test_logout_retains_selection_and_status_queries_the_same_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    profile_id = UUID(register_cli_profile(label="Selected profile", log_in=False))
+    client = _Client(profile_id)
+    _install_client(monkeypatch, client)
+    captured = observe_active_profile_pointer()
+    payload = _logout()
+    assert payload["result"] == {
+        "logged_out_profile": CLI_PROFILE_ID_PLACEHOLDER,
+        "already_logged_out": False,
+        "scope": "profile_human_access",
+        "human_receipt_revoked": True,
+        "receipt_removed": True,
+        "keychain_removed": True,
+        "automation_enabled": True,
+        "automation_revoked": False,
+    }
+    assert observe_active_profile_pointer() == captured
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        result = invoke_cached_cli(("--format", "json", "config", "sign-in-status"))
+    assert result.exit_code == 0, result.output
+    status = TypeAdapter(dict[str, object]).validate_json(result.stdout)["result"]
+    assert isinstance(status, dict)
+    assert status["profile_id"] == str(profile_id)
+    assert status["status"] == {"presence": "absent", "idle_deadline": None, "absolute_deadline": None}
+    assert client.calls == ["sign_out", "close", "status", "close"]
 
 
-def test_logout_refuses_corrupt_default_without_claiming_idempotence(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root, override_settings(cadrumo_output_language="en"):
-        root.mkdir()
-        corrupt = b"not = valid = toml"
-        pointer_path(root).write_bytes(corrupt)
-        result = invoke_cached_cli(("--format", "json", "config", "logout"))
-        assert result.exit_code != 0
-        assert pointer_path(root).read_bytes() == corrupt
-        assert '"already_logged_out": true' not in result.output
+def test_logout_does_not_overwrite_concurrent_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    first = register_cli_profile(label="First profile", log_in=False)
+    second = register_cli_profile(label="Second profile", log_in=False)
+    with active_profile_pointer_transaction() as pointer:
+        pointer.compare_and_select(expected=pointer.read(), bucket_id=first)
+    client = _Client(UUID(first))
+    _install_client(monkeypatch, client)
+
+    def select_other() -> None:
+        with active_profile_pointer_transaction() as pointer:
+            pointer.compare_and_select(expected=pointer.read(), bucket_id=second)
+
+    client.on_logout = select_other
+    assert _logout()["result"] is not None
+    assert observe_active_profile_pointer().bucket_id == second
+    assert client.calls == ["sign_out", "close"]
+
+
+def test_logout_missing_human_proof_refuses_and_keeps_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    profile_id = UUID(register_cli_profile(label="No human proof", log_in=False))
+    client = _Client(profile_id)
+    _install_client(monkeypatch, client)
+    captured = observe_active_profile_pointer()
+
+    def refuse() -> None:
+        raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
+
+    client.on_logout = refuse
+    result = invoke_cached_cli(("--format", "json", "config", "logout"))
+    assert result.exit_code != 0
+    assert observe_active_profile_pointer() == captured
+    assert client.calls == ["sign_out", "close"]
+    assert '"already_logged_out": true' not in result.output
+
+
+def test_logout_refuses_corrupt_default_without_claiming_idempotence(_isolated_cli_backend: Path) -> None:
+    root = _isolated_cli_backend
+    root.mkdir(exist_ok=True)
+    corrupt = b"not = valid = toml"
+    pointer_path(root).write_bytes(corrupt)
+    result = invoke_cached_cli(("--format", "json", "config", "logout"))
+    assert result.exit_code != 0
+    assert pointer_path(root).read_bytes() == corrupt
+    assert '"already_logged_out": true' not in result.output

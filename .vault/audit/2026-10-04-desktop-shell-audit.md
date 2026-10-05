@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8bb91f4d80d36742c8d80370a1af14273a81cbe47f48deb6e25be74cc4dfb982'
+body_hash: 'sha256:106b4185625be0ae9935b55528492d29339a52e30bbd5e7fdbcfcdb92d2f8d76'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -146,6 +146,10 @@ The first final-source harness regression reproduced an EPERM browser-profile te
 ### ledger-prerequisite-contract-fixes | low | Successful changed-ID updates and repeated merge argv corrected
 
 2026-10-05 full documentation prerequisite exposed two current backend defects, independently reproduced with current contracts. Update correlation rejected a successful amount/narrative edit because the resulting content-derived ID differs from the submitted source ID. The result now carries its authoritative resolved source identity; correlation retains source-prefix, profile, result-reference, effect and patch checks, and no-effect results must retain identity. CLI merge now normalizes repeated option values to the strict tuple request. Root reviewed all seven changed files; these paths had no prior external edits. Focused and related suites pass 37 tests including actual command parsing, changed-ID wire roundtrip, mismatched-source refusal and encrypted-repository integration. Ruff, formatting, ty and diff checks pass. Full S10 acceptance remains PENDING: fresh workers/packages and a clean docs gate are still required; this review does not accept other observed golden differences or runtime timeouts.
+
+### selected-profile-signout-acceptance | low | 2026-10-05
+
+Reviewed scoped logout selection correction: successful global human sign-out leaves the non-authoritative selected profile pointer untouched, including concurrent selection. Four integration tests cover same-profile status, concurrent selection, absent proof refusal and corrupt pointer; Ruff and ty pass. Packaged assertions now require the same synthetic profile UUID before and after sign-out. Fixture profile enrollment alone allows 300 seconds for cold calibration and records timings; host production deadlines are unchanged. External B4 changes share custody.py, so that mixed file remains uncommitted. This does not establish actual WebView2 acceptance.
 
 ## Recommendations
 

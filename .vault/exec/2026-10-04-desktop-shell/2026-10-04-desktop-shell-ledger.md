@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:52fa990055129b505d6c1825393d928d500b73933a0f0ceac573901bb774c85c'
+body_hash: 'sha256:cc02eb90d9d359164d715483a62c4bdf36af1dd0f322d18fd1bb7dd977db51b6'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -491,6 +491,11 @@ related:
 - `S10` `verify:` `pytest encrypted ledger update repository integration (2 tests)` -> `pass`
 - `S10` `verify:` `ruff check and format check seven ledger files` -> `pass`
 - `S10` `verify:` `ty check seven ledger files` -> `pass`
+- `S10` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S10` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S10` `verify:` `logout selection integration tests (4)` -> `pass`
+- `S10` `verify:` `logout Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -567,3 +572,4 @@ related:
 - `S16` Acceptance preparation found the host used unsupported leaf --json; corrected to the canonical root --format json before config. Built test host SHA256 e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687. S16 remains open pending real interactive packaged sign-in and non-Windows capability acceptance.
 - `S10` Prepared real packaged profile/runtime/sign-in/status/logout checks, secret-isolation observation, palette exact-result navigation, localized Home and docs appearance flows. Actual acceptance not run: agent is Session 0; user agreed to run prepared command in active desktop. First harness regression exposed EPERM profile teardown and left handles open; corrected graceful browser close, all-release cleanup and bounded retries. Final 20 tests pass, zero failures; build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log. These regression tests use stand-in pages and establish harness assertions only. S10 remains open; fresh full package and documentation sequence gate are still in progress.
 - `S10` Necessary backend corrections found by fresh docs prerequisite for packaged E2E: successful amount/narrative update changes transaction identity, so correlate against new authoritative `source_transaction_id` rather than resulting ID; preserve profile/result/effect/patch checks. Repeated merge CLI IDs now normalize list to tuple at strict request boundary. Root reviewed seven previously clean paths; 37 tests pass. Logs var/storage/development/.logs/test-runs/2026-10-05/{20261005T155911.682204Z-pytest-37640-be893697,20261005T160139.195827Z-pytest-29836-92f91dea,20261005T160216.305991Z-pytest-35060-8c83b635}/run.log. New result shape requires fresh worker/package snapshots. S10 remains open; broader docs gate still failed.
+- `S10` S10 remains open. Logout retains selected profile after human-access revocation; exact-profile packaged assertions prevent empty pointer falsely proving revocation. Mixed custody.py includes external B4 work and remains uncommitted. Synthetic cold profile setup bound 300s; other fixture commands and production host deadlines unchanged. Actual GUI acceptance pending interactive run.

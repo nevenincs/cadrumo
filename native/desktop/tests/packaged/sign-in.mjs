@@ -70,17 +70,19 @@ export class SignInFixture {
     this.created = false;
   }
 
-  cliCall(args, input) {
+  cliCall(args, input, revealIdentifiers = false, timeout = 120000) {
     const payload =
       input === undefined ? undefined : Buffer.from(JSON.stringify(input));
     let result;
     try {
       result = spawnSync(this.cli, ["--format", "json", ...args], {
         cwd: this.config.run,
-        env: this.env,
+        env: revealIdentifiers
+          ? { ...this.env, CADRUMO_CLI_REVEAL_IDENTIFIERS: "true" }
+          : this.env,
         input: payload,
         encoding: "utf8",
-        timeout: 120000,
+        timeout,
         maxBuffer: 1024 * 1024,
         windowsHide: true,
       });
@@ -104,6 +106,7 @@ export class SignInFixture {
   }
 
   async start() {
+    const setupStarted = performance.now();
     const created = this.cliCall(
       [
         "config",
@@ -117,7 +120,10 @@ export class SignInFixture {
         passphrase: this.secret,
         passphrase_confirmation: this.secret,
       },
+      false,
+      300000, // Cold profile enrollment includes calibration and initial storage.
     );
+    const profileCreateSeconds = (performance.now() - setupStarted) / 1000;
     assert.equal(created.command, "config.profile.create");
     this.created = true;
     const script = fileURLToPath(
@@ -171,6 +177,10 @@ export class SignInFixture {
       verdict: PASS,
       detail:
         "canonical CLI created fresh profile; contained packaged runtime completed verified handshake",
+      data: {
+        profileCreateSeconds,
+        setupSeconds: (performance.now() - setupStarted) / 1000,
+      },
     };
   }
 
@@ -279,20 +289,30 @@ export class SignInFixture {
   }
 
   async signOut(session) {
+    const before = this.cliCall(["config", "sign-in-status"], undefined, true);
+    const profileId = this.messages.find(
+      (message) => message.kind === "ready",
+    )?.profileId;
+    assert(
+      profileId,
+      "the runtime fixture must identify its exact new profile",
+    );
+    assert.equal(before.result.profile_id, profileId);
+    assert.equal(before.result.status.presence, "present");
     const response = await session.call("sign_out");
     assert.equal(response.ok, true);
     assert.equal(response.value.remainingAccess.automationRevoked, false);
     const after = await session.call("sign_in_status");
     assert.equal(after.ok, true);
     assert.equal(after.value.state, "absent");
-    assert.equal(
-      this.cliCall(["config", "sign-in-status"]).result.status.presence,
-      "absent",
-    );
+    assert.equal(after.value.active_profile, "Desktop Acceptance");
+    const fresh = this.cliCall(["config", "sign-in-status"], undefined, true);
+    assert.equal(fresh.result.profile_id, profileId);
+    assert.equal(fresh.result.status.presence, "absent");
     return {
       verdict: PASS,
       detail:
-        "canonical logout revoked human access; host and fresh CLI both report absent; remaining automation is explicit",
+        "canonical logout revoked human access; selected profile and exact ID remain; host and fresh CLI report absent; remaining automation is explicit",
       data: response.value,
     };
   }
