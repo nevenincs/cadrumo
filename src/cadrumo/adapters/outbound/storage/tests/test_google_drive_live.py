@@ -1,9 +1,8 @@
 """Live-gated tests for `GoogleDriveProvider`.
 
-Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND the operator has
-pre-registered an OAuth client + token for the named test profile
-(`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`) AND
-the active profile has signed in, which creates its Drive root folder.
+Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND the named test profile
+(`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`) has signed in to Google,
+which stores its token and creates its Drive root folder.
 
 The tests exercise three real Drive paths:
 
