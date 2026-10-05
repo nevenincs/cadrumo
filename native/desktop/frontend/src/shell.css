@@ -1,0 +1,9 @@
+/* The shell's styles, in ownership order: the tokens that replace Tailwind's
+   default scales, the colour roles and base styles, then the shell's own rules
+   in the components layer, where any utility on the same element overrides
+   them. An entry sheet imports Tailwind first and then this file. */
+
+@import "tw-animate-css";
+@import "./tokens.css";
+@import "./theme.css";
+@import "./styles.css" layer(components);

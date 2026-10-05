@@ -17,5 +17,12 @@
     "types": ["vite/client", "node"],
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src", "dev", "vite.config.ts", "playwright.config.ts", "tests"]
+  "include": [
+    "src",
+    "dev",
+    ".storybook",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "tests"
+  ]
 }

@@ -1,11 +1,26 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@/components/ui/segmented-control";
+import { Separator } from "@/components/ui/separator";
 import { SCENARIOS, type Scenario } from "./scenarios";
 
 /** One host call, numbered so the list keeps its rows as it slides. */
 export type HostCallLine = { id: number; call: string };
 
 // The development entry's own control: it names the page as simulated and
-// switches scenario and language. It is tool chrome, not product chrome, so
-// its text is not in the locale catalogues and it never ships.
+// switches scenario and language. It is built from the shell's primitives
+// only, so it follows the theme like everything else. Its text is tool text,
+// not product chrome, so it is not in the locale catalogues, and it never
+// ships.
 export function ScenarioBar({
   scenario,
   language,
@@ -24,55 +39,76 @@ export function ScenarioBar({
   onRestart: () => void;
 }) {
   return (
-    <details className="scenario-bar">
-      <summary>
-        <span className="scenario-bar-flag">Simulated host</span>
-        <span className="scenario-bar-name">{scenario.title}</span>
-      </summary>
-      <div className="scenario-bar-body">
-        <p className="scenario-bar-note">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="xs"
+          className="scenario-bar pointer-events-auto fixed right-2 bottom-2 z-(--layer-toast) gap-2 shadow-raised"
+        >
+          <Badge variant="warning">Simulated host</Badge>
+          {scenario.title}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="end" className="grid w-settings gap-3">
+        <p className="text-sm text-muted-foreground">
           Nothing here reaches a desktop host. A sign-in this page accepts
           authenticated nothing.
         </p>
-        <label>
-          <span>Scenario</span>
-          <select
-            value={scenario.id}
-            onChange={(event) => onScenario(event.target.value)}
+        <Field>
+          <FieldLabel id="scenario-label">Scenario</FieldLabel>
+          <div
+            role="group"
+            aria-labelledby="scenario-label"
+            className="grid grid-cols-2 gap-1"
           >
             {SCENARIOS.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.title}
-              </option>
+              <Button
+                key={entry.id}
+                variant="ghost"
+                size="xs"
+                className="justify-start"
+                aria-pressed={entry.id === scenario.id}
+                onClick={() => onScenario(entry.id)}
+              >
+                <span className="truncate">{entry.title}</span>
+              </Button>
             ))}
-          </select>
-        </label>
-        <p className="scenario-bar-summary">{scenario.summary}</p>
-        <label>
-          <span>Language</span>
-          <select
+          </div>
+          <FieldDescription>{scenario.summary}</FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel id="scenario-language">Language</FieldLabel>
+          <SegmentedControl
+            aria-labelledby="scenario-language"
             value={language}
-            onChange={(event) => onLanguage(event.target.value)}
+            onValueChange={onLanguage}
           >
             {languages.map((code) => (
-              <option key={code} value={code}>
+              <SegmentedControlItem key={code} value={code}>
                 {code}
-              </option>
+              </SegmentedControlItem>
             ))}
-          </select>
-        </label>
-        <button type="button" onClick={onRestart}>
-          Restart scenario
-        </button>
-        <div className="scenario-bar-calls">
-          <span>Host calls</span>
-          <ol aria-label="Host calls">
+          </SegmentedControl>
+        </Field>
+        <Separator />
+        <Field>
+          <div className="flex items-center justify-between gap-2">
+            <FieldLabel id="scenario-calls">Host calls</FieldLabel>
+            <Button variant="outline" size="xs" onClick={onRestart}>
+              Restart scenario
+            </Button>
+          </div>
+          <ol
+            aria-labelledby="scenario-calls"
+            className="max-h-32 overflow-auto rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
+          >
             {calls.map(({ id, call }) => (
               <li key={id}>{call}</li>
             ))}
           </ol>
-        </div>
-      </div>
-    </details>
+        </Field>
+      </PopoverContent>
+    </Popover>
   );
 }

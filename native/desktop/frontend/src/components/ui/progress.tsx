@@ -16,7 +16,7 @@ function Progress({
       value={value}
       max={max}
       className={cn(
-        "relative h-1 w-full overflow-hidden rounded-full bg-secondary",
+        "relative h-1 w-full overflow-hidden rounded-full bg-foreground/10",
         className,
       )}
       {...props}

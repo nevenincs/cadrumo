@@ -1,12 +1,11 @@
-/* The shell's one stylesheet entry. Order is ownership: Tailwind, then the
-   tokens that replace its default scales, then the colour roles and base
-   styles, then the shell's own rules in the components layer, where any
-   utility on the same element overrides them. Class names are read from this
-   directory only. The generated palette is loaded beside this file by the
-   entry module, because it is absent until its generator has run. */
+/* The product's stylesheet entry. Class names are read from this directory,
+   without the development tooling and the catalogue's stories, so the product
+   carries no utility only they use. The generated palette is loaded beside
+   this file by the entry module, because it is absent until its generator has
+   run. */
 
 @import "tailwindcss" source(".");
-@import "tw-animate-css";
-@import "./tokens.css";
-@import "./theme.css";
-@import "./styles.css" layer(components);
+@import "./shell.css";
+
+@source not "./dev";
+@source not "./**/*.stories.tsx";

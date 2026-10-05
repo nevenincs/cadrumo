@@ -8,8 +8,7 @@ import { identity } from "virtual:desktop-content";
 import { port as docsPort } from "virtual:docs-fixture";
 import { App } from "../App";
 import type { DocsLanguage } from "../ipc/contract";
-import "../index.css";
-import "./dev.css";
+import "./index.css";
 import { ScenarioBar, type HostCallLine } from "./ScenarioBar";
 import { scenarioHost } from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
@@ -52,6 +51,13 @@ function readParams() {
   };
 }
 
+declare global {
+  interface Window {
+    /** Every host call of the current run, in order, for the scenario tests. */
+    __scenarioHostCalls?: string[];
+  }
+}
+
 /** One mounted shell: a new run remounts it on a fresh host. */
 type Run = { id: number; scenario: Scenario; language: string };
 
@@ -72,6 +78,7 @@ function Scenarios() {
   const nextCall = useRef(0);
 
   const restart = useCallback((change: Partial<Omit<Run, "id">> = {}) => {
+    window.__scenarioHostCalls = [];
     setCalls([]);
     setRun((current) => ({ ...current, ...change, id: current.id + 1 }));
   }, []);
@@ -86,6 +93,7 @@ function Scenarios() {
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
+        (window.__scenarioHostCalls ??= []).push(call);
         const id = nextCall.current++;
         setCalls((current) => [...current, { id, call }].slice(-CALL_LIMIT));
       },

@@ -1,7 +1,7 @@
 import { buildPath } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
-import { docsFixture } from "./dev/docs-fixture/plugin";
-import { productBoundary } from "./dev/product-boundary";
+import { docsFixture } from "./dev/docs-fixture/plugin.ts";
+import { productBoundary } from "./dev/product-boundary.ts";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";

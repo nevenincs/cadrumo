@@ -7,10 +7,18 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleCheck,
+  CircleUser,
+  Clock,
   Columns2,
   Copy,
+  Eye,
+  EyeOff,
   FileText,
+  Info,
   LoaderCircle,
+  LockKeyhole,
+  LogOut,
   Logs,
   Maximize2,
   Minimize2,
@@ -19,6 +27,8 @@ import {
   Search,
   Settings,
   SquareTerminal,
+  TriangleAlert,
+  Unplug,
   X,
   ZoomIn,
   ZoomOut,
@@ -53,15 +63,22 @@ function PythonMark(props: React.ComponentProps<"svg">) {
  * imports it, so a name maps to one glyph everywhere.
  */
 const ICONS = {
+  alert: TriangleAlert,
   arrow: ArrowRight,
   back: ChevronLeft,
   book: BookOpen,
+  check: CircleCheck,
   chevronDown: ChevronDown,
+  clock: Clock,
   close: X,
   console: SquareTerminal,
   copy: Copy,
+  eye: Eye,
+  eyeOff: EyeOff,
   forward: ChevronRight,
+  info: Info,
   loader: LoaderCircle,
+  lock: LockKeyhole,
   logs: Logs,
   maximize: Maximize2,
   page: FileText,
@@ -69,17 +86,23 @@ const ICONS = {
   restore: Minimize2,
   search: Search,
   settings: Settings,
+  signOut: LogOut,
   splitColumn: Rows2,
   splitRow: Columns2,
   swap: ArrowLeftRight,
   term: BookA,
   tui: PanelsTopLeft,
+  unplug: Unplug,
+  user: CircleUser,
   zoomIn: ZoomIn,
   zoomOut: ZoomOut,
 } satisfies Record<string, LucideIcon | typeof PythonMark>;
 
 export type IconName = keyof typeof ICONS;
 export type IconSize = "xs" | "sm" | "md" | "lg";
+
+/** Every icon name, for the catalogue. */
+export const ICON_NAMES = Object.keys(ICONS) as IconName[];
 
 const SIZES: Record<IconSize, string> = {
   xs: "size-icon-xs",
