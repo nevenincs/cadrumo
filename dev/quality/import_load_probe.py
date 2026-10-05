@@ -264,6 +264,24 @@ def compile_load_target_inventory(authority: Authority) -> dict[str, object]:
     return {"schema_version": 1, "target_sets": dict(sorted(target_sets.items()))}
 
 
+def write_load_target_inventory(authority: Authority) -> tuple[Path, ...]:
+    """Publish the aggregate and every worker partition from one source census."""
+    document = compile_load_target_inventory(authority)
+    target_sets = cast("dict[str, object]", document["target_sets"])
+    output = authority.repository / _TARGET_METADATA
+    documents = {
+        output: document,
+        **{
+            output.with_name(f"{output.stem}.{name}.json"): {"schema_version": 1, "target_sets": {name: target_set}}
+            for name, target_set in target_sets.items()
+        },
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    for path, payload in documents.items():
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=UTF_8, newline="\n")
+    return tuple(documents)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the import-load probe or compile its checked target metadata."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -284,14 +302,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     read = read_authority(args.root, args.config)
     if read.authority is not None and not read.findings and args.compile_targets:
-        output = args.root.resolve() / _TARGET_METADATA
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            json.dumps(compile_load_target_inventory(read.authority), indent=2, sort_keys=True) + "\n",
-            encoding=UTF_8,
-            newline="\n",
-        )
-        print(f"compiled import load targets: {output}")
+        for output in write_load_target_inventory(read.authority):
+            print(f"compiled import load targets: {output}")
         return 0
     if args.report is None:
         parser.error("--report is required unless --compile-targets is used")
@@ -308,7 +320,13 @@ def main(argv: list[str] | None = None) -> int:
     return status
 
 
-__all__ = ["compile_load_target_inventory", "governed_load_targets", "main", "probe_loadability"]
+__all__ = [
+    "compile_load_target_inventory",
+    "governed_load_targets",
+    "main",
+    "probe_loadability",
+    "write_load_target_inventory",
+]
 
 
 def _validate_worker_failure(

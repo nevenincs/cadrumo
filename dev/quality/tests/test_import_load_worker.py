@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import hashlib
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -13,12 +14,46 @@ from dev._paths import REPO_ROOT
 from dev.quality import import_load_worker
 from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import read_modules
-from dev.quality.import_check_models import RootPackage
+from dev.quality.import_check_models import AuthorityRead, RootPackage
 from dev.quality.import_dynamic_targets import metadata_target_set_targets
-from dev.quality.import_load_probe import governed_load_targets
+from dev.quality.import_load_probe import governed_load_targets, main
 from dev.quality.import_target_evaluation import TargetEvaluationContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_compile_command_refreshes_worker_partitions_after_source_moves(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A renamed module disappears from every consumer's finite target set."""
+    read = read_authority(REPO_ROOT)
+    assert read.authority is not None and not read.broken
+    roots = tuple(RootPackage(root.name, tmp_path / root.name) for root in read.authority.roots)
+    for root in roots:
+        root.path.mkdir()
+        (root.path / "__init__.py").write_text("", encoding="utf-8")
+        (root.path / "old.py").write_text("", encoding="utf-8")
+    authority = replace(read.authority, repository=tmp_path, roots=roots)
+    monkeypatch.setattr("dev.quality.import_load_probe.read_authority", lambda *_args: AuthorityRead(authority))
+    assert main(["--root", str(tmp_path), "--compile-targets"]) == 0
+    for root in roots:
+        (root.path / "old.py").rename(root.path / "new.py")
+    assert main(["--root", str(tmp_path), "--compile-targets"]) == 0
+
+    aggregate = "dev/quality/metadata/import_load_targets.json"
+    expected = governed_load_targets(authority)
+    assert_all_target_sets_current(aggregate, repository=tmp_path)
+    assert load_all_target_sets(aggregate, repository=tmp_path) == expected
+    for root in roots:
+        partition = f"dev/quality/metadata/import_load_targets.{root.name}.json"
+        assert_all_target_sets_current(partition, repository=tmp_path)
+        assert load_all_target_sets(partition, repository=tmp_path) == (root.name, f"{root.name}.new")
+    attempted: list[str] = []
+    monkeypatch.setattr(import_load_worker.importlib, "import_module", attempted.append)
+    report = import_load_worker.load_declared_targets(tmp_path)
+    assert tuple(sorted(attempted)) == expected
+    assert report["attempted"] == len(expected)
+    assert report["failures"] == []
 
 
 def test_actual_subordinate_resolver_proves_each_complete_root_census() -> None:

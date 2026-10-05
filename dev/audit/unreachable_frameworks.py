@@ -7,10 +7,36 @@ import ctypes
 from collections.abc import Mapping
 from dataclasses import dataclass
 from importlib import import_module
+from typing import Final
 
 from dev.quality.source_import_analysis import resolve_relative_import
 
 from .unreachable_models import ShippedModule
+
+_INSTALLED_FRAMEWORK_MODULES: Final = (
+    "click",
+    "click.core",
+    "ctypes",
+    "pydantic",
+    "pydantic.main",
+    "pydantic_settings",
+    "sqlalchemy",
+    "sqlalchemy.orm",
+    "sqlalchemy.types",
+    "textual.app",
+    "textual.command",
+    "textual.containers",
+    "textual.dom",
+    "textual.message",
+    "textual.message_pump",
+    "textual.screen",
+    "textual.scroll_view",
+    "textual.widget",
+    "textual.widgets",
+    "typer",
+    "typer._click.types",
+    "typer.core",
+)
 
 
 @dataclass(frozen=True)
@@ -71,7 +97,12 @@ def _installed_contract(target: str) -> FrameworkContract:
         "typer",
     }:
         return FrameworkContract()
-    base = getattr(import_module(module_name), class_name, None)
+    for installed_module in _INSTALLED_FRAMEWORK_MODULES:
+        if installed_module == module_name:
+            base = getattr(import_module(installed_module), class_name, None)
+            break
+    else:
+        raise ValueError(f"framework contract requires an explicitly declared installed module: {module_name}")
     if not isinstance(base, type):
         return FrameworkContract()
     members: set[str] = set()

@@ -74,6 +74,12 @@ class Lookup(ColumnType[bytes]):
     assert definitions == {"Lookup", "Lookup.UNUSED", "Lookup.unused"}
 
 
+def test_undeclared_dependency_module_refuses_instead_of_silently_dropping_its_contract() -> None:
+    module = _module("pkg.unknown", "from textual.unknown import Base\nclass Child(Base): pass")
+    with pytest.raises(ValueError, match=r"explicitly declared installed module: textual\.unknown"):
+        framework_contracts({module.name: module})
+
+
 def test_live_checkbox_override_is_bound_and_a_renamed_member_is_reported() -> None:
     path = REPO_ROOT / "src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py"
     tree = ast.parse(path.read_bytes())

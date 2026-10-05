@@ -27,8 +27,8 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
+from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
@@ -115,7 +115,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         outcomes: list[AutomationRequestOutcome] = []
@@ -272,7 +272,11 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
             del observations[:-32]
 
         with (
-            override_settings(cadrumo_local_storage_root=storage_root, cadrumo_output_language="en"),
+            override_settings(
+                cadrumo_local_storage_root=storage_root,
+                cadrumo_output_language="en",
+                cadrumo_cli_reveal_identifiers=True,
+            ),
             observe_native_runtime_failures(server, profiles, failure_observer=observe),
         ):
             runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
@@ -415,7 +419,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         observations: list[RuntimeFailureObservation] = []
@@ -425,7 +429,11 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
             del observations[:-32]
 
         def invoke_create() -> Result:
-            with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_output_language="en"):
+            with override_settings(
+                cadrumo_local_storage_root=storage_root,
+                cadrumo_output_language="en",
+                cadrumo_cli_reveal_identifiers=True,
+            ):
                 return invoke_cached_cli(
                     (
                         "--format",
@@ -467,7 +475,11 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
             return document["result"]
 
         with (
-            override_settings(cadrumo_local_storage_root=storage_root, cadrumo_output_language="en"),
+            override_settings(
+                cadrumo_local_storage_root=storage_root,
+                cadrumo_output_language="en",
+                cadrumo_cli_reveal_identifiers=True,
+            ),
             observe_native_runtime_failures(server, profiles, failure_observer=observe),
         ):
             runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
@@ -603,7 +615,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
                                 envelope = json.loads(result.stdout)
                                 assert envelope["command"] == "config.profile.automation.create"
                                 create_result = envelope["result"]
-                                assert create_result["profile_id"] == "<profile-id>"
+                                assert create_result["profile_id"] == str(profile_id)
                                 assert create_result["submitted"]["request_id"] == str(request_id)
                                 assert create_result["terminal"]["request_id"] == str(request_id)
                                 assert create_result["terminal"]["stage"] == expected_stage

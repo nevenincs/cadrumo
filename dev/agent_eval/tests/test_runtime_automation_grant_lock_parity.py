@@ -29,8 +29,8 @@ from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFron
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
+from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
@@ -266,7 +266,7 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
@@ -718,7 +718,7 @@ def test_tui_profile_lock_resumes_only_selected_grant_seen_by_cli(tmp_path: Path
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with override_settings(cadrumo_local_storage_root=storage_root):
@@ -843,7 +843,7 @@ def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         factories: list[RuntimeFrontendClient] = []

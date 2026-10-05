@@ -324,7 +324,21 @@ def collect_ty(platform: TargetPlatform) -> list[Diagnostic]:
 
 def collect_pyrefly(platform: TargetPlatform) -> list[Diagnostic]:
     """Run pyrefly against one target platform and parse its JSON error-level diagnostics."""
-    result = _run(["pyrefly", "check", "--python-platform", platform.key, "--output-format", "json"])
+    # Resolve dependencies through the interpreter running this harness. Automatic
+    # discovery can select a different Python on PATH, producing missing-import
+    # cascades even though the project environment has every dependency installed.
+    result = _run(
+        [
+            "pyrefly",
+            "check",
+            "--python-platform",
+            platform.key,
+            "--python-interpreter-path",
+            sys.executable,
+            "--output-format",
+            "json",
+        ]
+    )
     payload = result.stdout.strip()
     require_report(payload, result, f"pyrefly[{platform.key}]")
     try:

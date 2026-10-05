@@ -15,14 +15,19 @@ The rule now lives in one place. These cases drive it directly with constructed
 completed processes - a ``CompletedProcess`` is a data holder, not a stand-in for
 the code under test - because running the three real checkers over ``src`` takes
 minutes and would prove the checkers rather than the harness.
+
+The interpreter-resolution case runs the real pyrefly binary over an isolated
+module, proving both dependency resolution and rejection of a type error.
 """
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
 import threading
+import venv
 from dataclasses import replace
 from pathlib import Path
 
@@ -38,6 +43,7 @@ from ..types import (
     _describe_stream,
     _ExternalGap,
     _is_irreducible_external_gap,
+    _run,
     collect_all,
     collect_basedpyright,
     collect_pyrefly,
@@ -213,6 +219,39 @@ def test_every_checker_names_the_target_platform_it_analyses_for(monkeypatch: py
     assert seen[1][2:4] == ["--python-platform", "darwin"]
     assert "--pythonplatform" in seen[2]
     assert seen[2][seen[2].index("--pythonplatform") + 1] == "Darwin"
+
+
+def test_pyrefly_resolves_project_dependencies_without_losing_type_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A dependency-free discovered interpreter must not replace the harness's environment."""
+    discovered_environment = tmp_path / "discovered-environment"
+    venv.EnvBuilder(with_pip=False).create(discovered_environment)
+    discovered_python = discovered_environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    (tmp_path / "pyrefly.toml").write_text(
+        'project-includes = ["sample.py"]\n'
+        f'python-interpreter-path = "{discovered_python.as_posix()}"\n'
+        "use-ignore-files = false\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "sample.py"
+    source.write_text("from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    target = TargetPlatform(key="linux", basedpyright="Linux")
+
+    automatic = _run(["pyrefly", "check", "--python-platform", "linux", "--output-format", "json"])
+    assert automatic.returncode == 1
+    assert any(finding["name"] == "missing-import" for finding in json.loads(automatic.stdout)["errors"])
+    assert collect_pyrefly(target) == []
+
+    source.write_text(
+        "from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n"
+        "record = Record(value=1)\ntext: str = record.value\n",
+        encoding="utf-8",
+    )
+    findings = collect_pyrefly(target)
+    assert any(finding.rule == "bad-assignment" and finding.line == 5 for finding in findings)
+    assert all(finding.rule != "missing-import" for finding in findings)
 
 
 def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPatch) -> None:
