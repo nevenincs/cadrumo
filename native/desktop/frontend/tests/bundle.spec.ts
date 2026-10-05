@@ -86,13 +86,15 @@ test("the production build contains no development scenario code", () => {
   expect(
     files(built).filter((name) => /scenario|docs-fixture|stories/i.test(name)),
   ).toEqual([]);
-  // Only the files this build's entry page loads: an earlier build's files
-  // stay in the directory, and they are not the product.
+  // Every file in the directory: the desktop package embeds all of it, and
+  // a build leaves nothing of an earlier one behind.
   const page = readFileSync(join(built, "index.html"), "utf8");
-  const loaded = [...page.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(
+  const entry = [...page.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(
     (match) => match[1] ?? "",
   );
-  expect(loaded.length).toBeGreaterThan(0);
+  expect(entry.length).toBeGreaterThan(0);
+  const loaded = files(built);
+  expect(loaded.filter((name) => /\.js$/.test(name)).length).toBeLessThan(8);
   for (const text of [
     SCENARIO_HOST_MARKER,
     "Simulated TUI session",

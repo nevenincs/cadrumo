@@ -44,7 +44,9 @@ export default defineConfig(({ mode }) => {
       outDir: scenarios
         ? resolve(buildPath("desktop_testing"), "scenarios")
         : buildPath("desktop_frontend"),
-      emptyOutDir: scenarios,
+      // The desktop package embeds this whole directory, so nothing from an
+      // earlier build may be left in it.
+      emptyOutDir: true,
       rolldownOptions: { input },
     },
     server: {

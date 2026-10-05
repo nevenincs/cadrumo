@@ -1,15 +1,24 @@
-// Measures the shell as it ships: bundle size, start-up, memory, and the
-// interactions that can cost the most (a ten-thousand-record log, the
-// palette, a splitter drag). It builds the product and a minified build of
-// the development entry, serves the latter from memory-free static files,
-// drives it in Chromium and writes the numbers under the build directory's
-// test results. The numbers describe this machine; compare runs, not hosts.
+// Measures the shell: bundle size, start-up, memory, and the interactions
+// that can cost the most (a ten-thousand-record log, the palette, a splitter
+// drag, overlays opened and closed many times).
+//
+// Bundle size is the product build's. Everything timed runs on a minified
+// build of the scenario page, which is the product's own code over the
+// scenario host: no desktop host, runtime or real terminal is in it. It is
+// served as static files and driven in Chromium, and the numbers go under
+// the build directory's test results.
+//
+// Times are taken to the next frame, so they come in steps of a frame. The
+// numbers describe this machine: compare runs, not hosts. `--check` fails
+// the run when a number is over its budget; the budgets are loose on purpose
+// and catch a regression of kind, not of degree.
 import { chromium } from "@playwright/test";
 import { spawnSync } from "node:child_process";
 import {
   createReadStream,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
 } from "node:fs";
@@ -25,6 +34,7 @@ const { values } = parseArgs({
   options: {
     records: { type: "string", default: "10000" },
     runs: { type: "string", default: "5" },
+    check: { type: "boolean", default: false },
   },
 });
 const RECORDS = Number(values.records);
@@ -39,20 +49,20 @@ function vite(...args) {
   if (result.status !== 0) throw new Error(`vite ${args.join(" ")} failed`);
 }
 
-/** The bytes of what one entry page loads, raw and gzipped, by kind. */
-function bundle(directory, page) {
-  const html = readFileSync(join(directory, page), "utf8");
-  const loaded = [...html.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(
-    (match) => match[1],
-  );
+/** The bytes of everything a build emitted, raw and gzipped, by kind: the
+ * entry's own files and every chunk and font it can go on to load. */
+function bundle(directory) {
   const sizes = {};
-  for (const name of loaded) {
-    const bytes = readFileSync(join(directory, name));
+  for (const name of readdirSync(directory, { recursive: true })) {
     const kind = extname(name).slice(1);
+    if (!kind) continue;
+    const bytes = readFileSync(join(directory, name));
     sizes[kind] ??= { raw: 0, gzip: 0 };
     sizes[kind].raw += bytes.length;
     sizes[kind].gzip += gzipSync(bytes).length;
   }
+  if (!sizes.js || !sizes.css)
+    throw new Error(`No script or stylesheet was built into ${directory}.`);
   return sizes;
 }
 
@@ -97,6 +107,10 @@ const percentile = (list, p) => {
 const round = (value, places = 1) => Number(value.toFixed(places));
 
 async function metrics(client) {
+  // Twice, with a pause between: what the first collection frees can hold
+  // the last references to nodes, which the second then lets go.
+  await client.send("HeapProfiler.collectGarbage");
+  await new Promise((done) => setTimeout(done, 250));
   await client.send("HeapProfiler.collectGarbage");
   const { metrics: list } = await client.send("Performance.getMetrics");
   const of = (name) => list.find((metric) => metric.name === name)?.value ?? 0;
@@ -134,8 +148,12 @@ const { server, origin } = await serve(built);
 const browser = await chromium.launch();
 const report = {
   at: new Date().toISOString(),
-  bundle: { product: bundle(product, "index.html") },
+  bundle: { product: bundle(product) },
 };
+
+/** One frame in the page, so what was just done has been drawn. */
+const nextFrame = (page) =>
+  page.evaluate(() => new Promise((done) => requestAnimationFrame(done)));
 
 try {
   // Start-up: a fresh context each run, so nothing is cached.
@@ -145,8 +163,19 @@ try {
       viewport: { width: 1440, height: 900 },
     });
     const page = await context.newPage();
+    // The page notes for itself when its terminals have drawn, so the time
+    // carries none of this script's own polling.
+    await page.addInitScript(() => {
+      const seen = new MutationObserver(() => {
+        if (!document.querySelector('[data-terminal="console"] .xterm-rows'))
+          return;
+        seen.disconnect();
+        window.__terminalsReady = performance.now();
+      });
+      seen.observe(document, { childList: true, subtree: true });
+    });
     await page.goto(`${origin}/scenarios.html?scenario=signed-in&bar=off`);
-    await page.waitForSelector('[data-terminal="console"] .xterm-rows');
+    await page.waitForFunction(() => window.__terminalsReady !== undefined);
     start.push(
       await page.evaluate(() => {
         const [navigation] = performance.getEntriesByType("navigation");
@@ -156,7 +185,7 @@ try {
         return {
           domContentLoaded: navigation.domContentLoadedEventEnd,
           firstContentfulPaint: paint?.startTime ?? 0,
-          terminalsReady: performance.now(),
+          terminalsReady: window.__terminalsReady,
         };
       }),
     );
@@ -215,17 +244,50 @@ try {
     median: round(median(palette)),
     p95: round(percentile(palette, 0.95)),
   };
-  report.afterPalette = await metrics(client);
 
-  // A splitter drag across the main area.
-  const handle = await page.locator(".split-separator").boundingBox();
+  // Overlays opened and closed many times: what is left behind after the
+  // first rounds must not keep growing. Locators, not element handles, so
+  // this script holds on to nothing in the page.
+  const churn = async (count) => {
+    for (let run = 0; run < count; run++) {
+      await page.keyboard.press("Control+Shift+KeyK");
+      await page.locator(".palette").waitFor();
+      await page.keyboard.press("Escape");
+      await page.locator(".palette").waitFor({ state: "detached" });
+      await page.keyboard.press("Control+Comma");
+      await page.locator(".settings").waitFor();
+      await page.keyboard.press("Escape");
+      await page.locator(".settings").waitFor({ state: "detached" });
+    }
+    return metrics(client);
+  };
+  await page.locator(".rail button").first().focus();
+  const settled = await churn(10);
+  const later = await churn(40);
+  report.overlayChurn = {
+    cycles: 40,
+    settled,
+    later,
+    nodesGrown: later.nodes - settled.nodes,
+    listenersGrown: later.listeners - settled.listeners,
+  };
+
+  // A splitter drag across the main area, one pointer move to a frame, as a
+  // hand moves it.
+  const separator = page.locator(".split-separator");
+  const handle = await separator.boundingBox();
+  const before = await separator.getAttribute("aria-valuenow");
   const drag = await frames(page, async () => {
     await page.mouse.move(handle.x, handle.y + 200);
     await page.mouse.down();
-    for (let step = 0; step <= 60; step++)
+    for (let step = 0; step <= 60; step++) {
       await page.mouse.move(handle.x - 300 + step * 10, handle.y + 200);
+      await nextFrame(page);
+    }
     await page.mouse.up();
   });
+  if ((await separator.getAttribute("aria-valuenow")) === before)
+    throw new Error("The splitter drag did not move the split.");
   report.splitDragFrameMs = {
     median: round(median(drag)),
     p95: round(percentile(drag, 0.95)),
@@ -252,24 +314,8 @@ try {
   await page.selectOption(".logview select", "0");
   await page.waitForTimeout(300);
   const drawn = await page.locator(".logview-list .record").count();
-  const scroll = await frames(page, () =>
-    page.evaluate(
-      () =>
-        new Promise((done) => {
-          const list = document.querySelector(".logview-list");
-          const started = performance.now();
-          // From the newest record up toward the oldest, so every earlier
-          // span is brought in on the way.
-          const step = (now) => {
-            const share = 1 - (now - started) / 2000;
-            list.scrollTop = share * (list.scrollHeight - list.clientHeight);
-            if (now - started < 2000) requestAnimationFrame(step);
-            else done();
-          };
-          requestAnimationFrame(step);
-        }),
-    ),
-  );
+  // The filter is timed from the newest span, before any scrolling has
+  // brought earlier ones in.
   const filter = await page.evaluate(
     () =>
       new Promise((done) => {
@@ -281,10 +327,27 @@ try {
         ).set;
         setter.call(input, "record 99");
         input.dispatchEvent(new Event("input", { bubbles: true }));
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => done(performance.now() - started)),
-        );
+        requestAnimationFrame(() => done(performance.now() - started));
       }),
+  );
+  await page.fill(".filter-text", "");
+  await page.waitForTimeout(300);
+  const scroll = await frames(page, () =>
+    page.evaluate(
+      () =>
+        new Promise((done) => {
+          const list = document.querySelector(".logview-list");
+          const started = performance.now();
+          // Upward at a steady pace for two seconds, as a held Page Up
+          // scrolls, so earlier spans are brought in on the way.
+          const step = (now) => {
+            list.scrollTop -= list.clientHeight / 3;
+            if (now - started < 2000) requestAnimationFrame(step);
+            else done();
+          };
+          requestAnimationFrame(step);
+        }),
+    ),
   );
   report.log = {
     records: RECORDS,
@@ -305,9 +368,46 @@ try {
   server.close();
 }
 
+// What each number may be at most. Sizes are of the product build; a frame
+// budget of two frames allows one dropped frame, never a run of them.
+const BUDGETS = [
+  ["product script, gzip kB", report.bundle.product.js.gzip / 1024, 320],
+  ["product stylesheet, gzip kB", report.bundle.product.css.gzip / 1024, 20],
+  ["first contentful paint ms", report.startMs.firstContentfulPaint, 1000],
+  ["terminals ready ms", report.startMs.terminalsReady, 1500],
+  ["idle heap MB", report.idle.heapMB, 24],
+  ["palette open, median ms", report.paletteOpenMs.median, 100],
+  // What stays after an overlay closes is the last one or two, kept until the
+  // next render replaces them, so the count wanders by a few overlays' worth.
+  // A leak keeps one for every cycle: several thousand nodes over forty.
+  ["nodes grown over 40 overlay cycles", report.overlayChurn.nodesGrown, 1500],
+  [
+    "listeners grown over 40 overlay cycles",
+    report.overlayChurn.listenersGrown,
+    300,
+  ],
+  ["splitter drag frame, p95 ms", report.splitDragFrameMs.p95, 34],
+  ["log first rows ms", report.log.firstRowsMs, 150],
+  ["log scroll frame, p95 ms", report.log.scrollFrameMs.p95, 34],
+  ["log filter ms", report.log.filterMs, 100],
+  ["heap with the largest log MB", report.log.heapMB, 48],
+];
+report.budgets = BUDGETS.map(([name, value, most]) => ({
+  name,
+  value: round(value),
+  most,
+  within: value <= most,
+}));
+
 const out = resolve(buildPath("desktop_results"), "benchmark");
 mkdirSync(out, { recursive: true });
 const file = resolve(out, "benchmark.json");
 writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify(report, null, 2));
 console.log(`\nWritten to ${file}`);
+const over = report.budgets.filter((budget) => !budget.within);
+for (const budget of over)
+  console.error(
+    `over budget: ${budget.name}: ${budget.value} > ${budget.most}`,
+  );
+if (values.check && over.length) process.exit(1);
