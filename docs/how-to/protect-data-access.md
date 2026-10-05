@@ -280,6 +280,33 @@ connections, and keeps the profile selected for the next exact login:
 Nothing in the profile is deleted. Log in again with `aeat config login` to use
 the selected profile, or name another exact profile when you return.
 
+## Remove Google access
+
+Profile logout and Google logout serve different purposes. To remove the saved
+Google refresh token and account metadata from the active profile, run:
+
+```text
+aeat config google logout
+```
+
+This keeps the Drive folder and exported workbooks. It does not revoke Google's
+grant or invalidate a token copied elsewhere. To revoke access, open your
+[Google account connections](https://myaccount.google.com/connections), select
+Cadrumo, and remove its access to your Google account. Then clear the local
+session with the command above. Google documents this in
+[Manage third-party connections](https://support.google.com/accounts/answer/13533235).
+
+Google Sheets exports contain readable financial data. Review the workbook's
+sharing settings in Google Drive; anyone with sufficient Google authorization
+can read it. Removing Cadrumo's access does not delete exported data or copies
+already obtained by others. Encrypted backups have a different boundary: keep
+the profile passphrase and recovery material separate from the backup.
+
+Install Cadrumo through its published distribution channels. A counterfeit app
+can reuse the public Google client metadata and display the same consent brand.
+PKCE protects the authorization-code exchange; the consent screen does not
+prove which program you installed.
+
 ## Reset local state (last resort)
 
 Export every profile you want to keep before continuing. Reset permanently deletes

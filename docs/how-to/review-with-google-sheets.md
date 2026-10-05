@@ -162,6 +162,10 @@ copy and never reads Drive back as the original of your data.
 
 ## Sign out of Google
 
+Google logout removes local credentials; it does not revoke Google's grant.
+To stop access by copied credentials as well, follow
+[Remove Google access](protect-data-access.md#remove-google-access).
+
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
 metadata. The profile's Drive folder is kept, so a later `aeat config google
