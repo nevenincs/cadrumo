@@ -158,6 +158,26 @@ class SignInGenerationCustody:
                 )
             return self._start_lineage(observed.state)
 
+    def require_current(self, captured: SignInGeneration) -> None:
+        """Refuse unless ``captured`` is still the durable current generation.
+
+        A sign-out or lock-down that advanced the record after the capture, or
+        a record that went missing or unreadable since, refuses. This never
+        writes, so it never creates a missing record. Every write holds the
+        same custody root lock, so the answer stays true for as long as the
+        caller keeps holding that lock.
+
+        Raises:
+            AutomationCustodyError: ``INVALID`` when this binding is not the
+                committed custody; ``CONFLICT`` when the record no longer
+                holds ``captured``.
+            ProfileCustodyRecordError: When the custody root lock cannot be held.
+        """
+        with profile_custody_root_lock(self.root):
+            validate_automation_profile_binding(self.binding, root=self.root)
+            if self._observe().current != captured:
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+
     def advance(self) -> SignInGenerationWrite:
         """Durably move past every generation issued so far, then return.
 

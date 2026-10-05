@@ -177,6 +177,7 @@ class TestKeyringBoundary:
                 absolute_minutes=_ABSOLUTE_MINUTES,
                 login_id=RECEIPT_LOGIN_ID,
                 sign_in=sign_in_custody(tmp_path, profile_id),
+                generation=sign_in_custody(tmp_path, profile_id).establish().current,
             )
         except KeyringUnavailableError:
             # The live Windows credential boundary refused the key before a
@@ -292,6 +293,7 @@ finally:
         children: list[asyncio.subprocess.Process] = []
         minted = False
         sign_in = sign_in_custody(tmp_path, profile_id)
+        captured = sign_in.establish().current
         try:
             with profile_custody_root_lock(tmp_path):
                 child = await asyncio.create_subprocess_exec(
@@ -327,6 +329,7 @@ finally:
                         absolute_minutes=_ABSOLUTE_MINUTES,
                         login_id=RECEIPT_LOGIN_ID,
                         sign_in=sign_in,
+                        generation=captured,
                     )
                 except KeyringUnavailableError:
                     pass
@@ -628,6 +631,7 @@ class TestProfileSessionAcceleration:
             absolute_minutes=_ABSOLUTE_MINUTES,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
         return record, dek
 
@@ -812,6 +816,7 @@ class TestProfileSessionAcceleration:
                 absolute_minutes=_ABSOLUTE_MINUTES,
                 login_id=RECEIPT_LOGIN_ID,
                 sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()
         assert not (tmp_path / ".profile-custody-root.lock").exists()
@@ -875,6 +880,7 @@ class TestProfileSessionAcceleration:
                 absolute_minutes=_ABSOLUTE_MINUTES,
                 login_id=RECEIPT_LOGIN_ID,
                 sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not (tmp_path / ".profile-custody-root.lock").exists()
         assert not any(tmp_path.iterdir())
@@ -910,6 +916,7 @@ def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) 
         absolute_minutes=_ABSOLUTE_MINUTES,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     try:
@@ -948,6 +955,7 @@ def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path)
         absolute_minutes=_ABSOLUTE_MINUTES,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     assert path.exists()

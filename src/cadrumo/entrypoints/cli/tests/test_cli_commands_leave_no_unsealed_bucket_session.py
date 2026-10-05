@@ -43,6 +43,7 @@ from ....application.user_profile.login_session_port import (
     ProfileLoginThrottleEvaluationPort,
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
+    ProfileSignInGenerationPort,
     bind_profile_login_session_port,
 )
 from ....application.user_profile.profile_record_repository import profile_record_session_if_authenticated
@@ -210,7 +211,8 @@ class _ReceiptResumingPort:
         absolute_minutes: int,
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
-    ) -> ProfilePersistedSessionPort:
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
         return self._real.mint_acceleration_receipt(
             storage_root=storage_root,
             profile_id=profile_id,
@@ -222,6 +224,7 @@ class _ReceiptResumingPort:
             absolute_minutes=absolute_minutes,
             login_id=login_id,
             sign_in_binding=sign_in_binding,
+            sign_in_generation=sign_in_generation,
         )
 
     def resume_acceleration_receipt(

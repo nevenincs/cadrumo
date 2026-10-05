@@ -61,7 +61,27 @@ class SessionAuthorityOwner(Protocol):
         ...
 
     def bind_human(self, session: AccessSession) -> None:
-        """Attach this lease to the exact worker admitted by authenticate_human."""
+        """Attach this lease to the exact worker admitted by authenticate_human.
+
+        A requested receipt stays pending: binding precedes publication, and a
+        refusal before publication must leave no receipt.
+        """
+        ...
+
+    def capture_human_sign_in(self, session_id: UUID) -> bool:
+        """Durably establish, at publication, the sign-in generation of a pending receipt.
+
+        Called under the admission guard right after the session is published.
+        Return ``False``, writing nothing, when no receipt is pending.
+        """
+        ...
+
+    def mint_human_receipt(self, session_id: UUID) -> None:
+        """Mint the pending receipt, stamped with the generation captured at publication.
+
+        Called under the admission guard, and only for a session still
+        published. Nothing is written when that generation is no longer current.
+        """
         ...
 
     def human_admission_deadline(self, connection_id: UUID) -> float:

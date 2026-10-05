@@ -62,6 +62,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
     port = build_profile_login_session_port()
     receipt_path = port.acceleration_receipt_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
     sign_in = sign_in_custody(tmp_path, _PROFILE_ID, custody_generation=3)
+    captured = sign_in.establish().current
     try:
         minted = port.mint_acceleration_receipt(
             storage_root=tmp_path,
@@ -74,6 +75,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
             absolute_minutes=240,
             login_id=RECEIPT_LOGIN_ID,
             sign_in_binding=sign_in.binding,
+            sign_in_generation=captured,
         )
     except KeyringUnavailableError:
         assert not receipt_path.exists()
@@ -81,7 +83,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
 
     try:
         assert isinstance(minted, PersistedProfileSession)
-        assert minted.sign_in == sign_in.observe().current
+        assert minted.sign_in == captured == sign_in.observe().current
         assert minted.profile_id == _PROFILE_ID
         assert minted.custody_generation == 3
         assert minted.dek_epoch == "epoch-3"
@@ -147,3 +149,28 @@ def test_receipt_path_and_absent_delete_use_the_canonical_custody_location(tmp_p
         profile_id=_PROFILE_ID,
     ) == profile_session_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
     port.delete_acceleration_receipt(storage_root=tmp_path, profile_id=_PROFILE_ID)
+
+
+def test_receipt_mint_reports_none_when_the_captured_generation_moved(tmp_path: Path) -> None:
+    port = build_profile_login_session_port()
+    sign_in = sign_in_custody(tmp_path, _PROFILE_ID, custody_generation=3)
+    captured = sign_in.establish().current
+    advanced = sign_in.advance().current
+
+    minted = port.mint_acceleration_receipt(
+        storage_root=tmp_path,
+        profile_id=_PROFILE_ID,
+        custody_generation=3,
+        dek_epoch="epoch-3",
+        dek=_DEK,
+        now=_NOW,
+        idle_minutes=15,
+        absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in_binding=sign_in.binding,
+        sign_in_generation=captured,
+    )
+
+    assert minted is None
+    assert not port.acceleration_receipt_path(storage_root=tmp_path, profile_id=_PROFILE_ID).exists()
+    assert sign_in.observe().current == advanced

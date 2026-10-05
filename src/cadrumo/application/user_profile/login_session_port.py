@@ -110,6 +110,20 @@ class ProfilePersistedSessionPort(Protocol):
         ...
 
 
+class ProfileSignInGenerationPort(Protocol):
+    """One captured position in a profile's durable human sign-in sequence."""
+
+    @property
+    def lineage(self) -> UUID:
+        """The random lineage the position belongs to."""
+        ...
+
+    @property
+    def generation(self) -> int:
+        """The counter within that lineage."""
+        ...
+
+
 class ProfileSessionResumeOutcomePort(Protocol):
     """Fail-closed persisted-session evaluation result."""
 
@@ -238,11 +252,14 @@ class ProfileLoginSessionPort(Protocol):
         absolute_minutes: int,
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
-    ) -> ProfilePersistedSessionPort:
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
         """Mint and return the canonical persisted acceleration receipt.
 
-        The receipt binds ``login_id``, the originating OS login, and the
-        sign-in generation durably held for ``sign_in_binding``'s custody.
+        The receipt binds ``login_id``, the originating OS login, and exactly
+        ``sign_in_generation``, captured for ``sign_in_binding``'s custody
+        when its session was published. Return ``None``, having written
+        nothing, when that generation is no longer the durable current one.
         """
         ...
 
@@ -346,6 +363,7 @@ __all__ = [
     "ProfileLoginThrottleEvaluationPort",
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
+    "ProfileSignInGenerationPort",
     "bind_profile_login_session_port",
     "profile_current_bucket_session",
     "profile_login_session_port",

@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......application.user_profile.automation_custody_port import AutomationCustodyError
+from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ......core.base64_codec import b64_decode, b64_encode
 from ......core.hashing import canonical_json_bytes
 from ......core.profile_session import ProfileSessionRefusalReason
@@ -87,7 +87,14 @@ def sign_in(tmp_path: Path, profile_id: UUID) -> SignInGenerationCustody:
     return publish_sign_in_custody(tmp_path, profile_id)
 
 
-def _mint(sign_in: SignInGenerationCustody, *, login_id: str = RECEIPT_LOGIN_ID) -> PersistedProfileSession:
+def _mint(
+    sign_in: SignInGenerationCustody,
+    *,
+    login_id: str = RECEIPT_LOGIN_ID,
+    generation: SignInGeneration | None = None,
+) -> PersistedProfileSession:
+    """Mint as the runtime does: with the generation captured when the session was published."""
+    captured = sign_in.establish().current if generation is None else generation
     return receipt.mint_profile_session(
         storage_root=sign_in.root,
         profile_id=sign_in.binding.profile_id,
@@ -99,6 +106,7 @@ def _mint(sign_in: SignInGenerationCustody, *, login_id: str = RECEIPT_LOGIN_ID)
         absolute_minutes=240,
         login_id=login_id,
         sign_in=sign_in,
+        generation=captured,
     )
 
 
@@ -235,8 +243,10 @@ class TestMintBinding:
     ) -> None:
         unbacked = uncommitted_sign_in(tmp_path, profile_id)
 
-        with pytest.raises(AutomationCustodyError):
-            _mint(unbacked)
+        with pytest.raises(AutomationCustodyError) as refused:
+            _mint(unbacked, generation=SignInGeneration(lineage=uuid4(), generation=1))
+
+        assert refused.value.reason is AutomationCustodyCode.INVALID
 
         assert not _path(unbacked).exists()
         assert unbacked.observe().state is SignInGenerationState.MISSING
@@ -272,9 +282,63 @@ class TestMintBinding:
                 absolute_minutes=240,
                 login_id=login,
                 sign_in=sign_in,
+                generation=SignInGeneration(lineage=uuid4(), generation=1),
             )
         assert sign_in.observe().state is SignInGenerationState.MISSING
         assert keychain.entries == {}
+
+
+class TestCapturedGeneration:
+    """A mint stamps the generation captured at publication, or writes nothing."""
+
+    def test_a_generation_advanced_after_capture_leaves_no_receipt(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
+        captured = sign_in.establish().current
+        advanced = sign_in.advance().current
+
+        with pytest.raises(AutomationCustodyError) as refused:
+            _mint(sign_in, generation=captured)
+
+        assert refused.value.reason is AutomationCustodyCode.CONFLICT
+        assert not _path(sign_in).exists()
+        assert keychain.entries == {}
+        assert sign_in.observe().current == advanced
+
+    def test_a_mint_never_creates_the_generation_record(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
+        with pytest.raises(AutomationCustodyError) as refused:
+            _mint(sign_in, generation=SignInGeneration(lineage=uuid4(), generation=1))
+
+        assert refused.value.reason is AutomationCustodyCode.CONFLICT
+        assert sign_in.observe().state is SignInGenerationState.MISSING
+        assert not _path(sign_in).exists()
+        assert keychain.entries == {}
+
+    def test_a_record_that_became_unreadable_after_capture_leaves_no_receipt(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
+        captured = sign_in.establish().current
+        sign_in.path.write_bytes(b"{not a record")
+
+        with pytest.raises(AutomationCustodyError) as refused:
+            _mint(sign_in, generation=captured)
+
+        assert refused.value.reason is AutomationCustodyCode.CONFLICT
+        assert sign_in.observe().state is SignInGenerationState.UNREADABLE
+        assert not _path(sign_in).exists()
+        assert keychain.entries == {}
+
+    def test_the_mint_stamps_the_capture_not_a_later_lineage(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
+        captured = sign_in.establish().current
+
+        record = _mint(sign_in, generation=captured)
+
+        assert record.sign_in == captured == sign_in.observe().current
+        assert _resume(sign_in).resumed
 
 
 class TestOlderSchemaDispatch:

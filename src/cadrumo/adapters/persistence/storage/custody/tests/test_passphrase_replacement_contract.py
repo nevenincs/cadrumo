@@ -315,6 +315,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
             absolute_minutes=240,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
         try:
             # The control: before the reset the same receipt resumes, so the

@@ -130,6 +130,10 @@ class AdmissionOwner:
         self.fail_human_release = False
         self.refreshed: list[AccessSession] = []
         self.fail_refresh = False
+        self.persist_receipt = False
+        self.pending_receipts: set[UUID] = set()
+        self.receipt_events: list[tuple[str, UUID]] = []
+        self.after_capture: Callable[[UUID], None] = lambda _session_id: None
 
     @contextmanager
     def admission_guard(self) -> Iterator[None]:
@@ -171,8 +175,25 @@ class AdmissionOwner:
             raise RuntimeError("synthetic worker preparation failure")
         self.human_bound.add(session.session_id)
         self.active.add(session.session_id)
+        if self.persist_receipt:
+            self.pending_receipts.add(session.session_id)
+
+    def capture_human_sign_in(self, session_id: UUID) -> bool:
+        if session_id not in self.pending_receipts:
+            return False
+        self.receipt_events.append(("capture", session_id))
+        self.after_capture(session_id)
+        return True
+
+    def mint_human_receipt(self, session_id: UUID) -> None:
+        assert session_id in self.pending_receipts and session_id in self.active
+        self.pending_receipts.discard(session_id)
+        self.receipt_events.append(("mint", session_id))
 
     def retire(self, session_id: UUID) -> None:
+        if session_id in self.pending_receipts:
+            self.pending_receipts.discard(session_id)
+            self.receipt_events.append(("discard", session_id))
         self.active.discard(session_id)
         self.retired.append(session_id)
         if session_id in self.failed_retirements:
@@ -1476,3 +1497,112 @@ def test_operation_guard_orders_revocation_and_never_enters_after_denial(subject
     ):
         effects.append("forbidden body")
     assert effects == ["protected body completed"]
+
+
+def _lock_native_login(subject: Subject) -> None:
+    before = subject.owner.current.context
+    locked = changed(before.login_contexts[0], lock_state=OsLockState.LOCKED)
+    subject.owner.current = SessionAuthorityFacts(
+        subject.owner.current.profile, changed(before, login_contexts=(locked,))
+    )
+
+
+def _published(subject: Subject, session_id: UUID) -> bool:
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=session_id,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    return isinstance(status, ProfileAccessStatus) and status.credential_authenticated
+
+
+def test_requested_receipt_is_minted_after_publication_under_the_guard(subject: Subject) -> None:
+    subject.owner.persist_receipt = True
+    published_at_capture: list[bool] = []
+    guarded_at_capture: list[bool] = []
+
+    def acquired_elsewhere() -> bool:
+        acquired = subject.owner.guard.acquire(blocking=False)
+        if acquired:
+            subject.owner.guard.release()
+        return acquired
+
+    def observe_capture(session_id: UUID) -> None:
+        published_at_capture.append(_published(subject, session_id))
+        # Another thread cannot take the admission guard while the capture runs.
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            guarded_at_capture.append(not executor.submit(acquired_elsewhere).result())
+
+    subject.owner.after_capture = observe_capture
+    human = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(human, AccessSession)
+    assert subject.owner.receipt_events == [("capture", human.session_id), ("mint", human.session_id)]
+    assert published_at_capture == [True] and guarded_at_capture == [True]
+    assert _published(subject, human.session_id)
+
+
+def test_login_without_a_receipt_request_captures_nothing(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(human, AccessSession)
+    assert subject.owner.receipt_events == []
+
+
+def test_refused_publication_leaves_no_receipt(subject: Subject) -> None:
+    subject.owner.persist_receipt = True
+
+    class LockingOwner(AdmissionOwner):
+        @override
+        def bind_human(self, session: AccessSession) -> None:
+            super().bind_human(session)
+            _lock_native_login(subject)
+
+    owner = LockingOwner(subject.enrollment)
+    owner.persist_receipt = True
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+
+    result = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(result, AccessDenied)
+    attempted = owner.human_bind_attempt
+    assert attempted is not None
+    assert owner.receipt_events == [("discard", attempted)]
+    assert not owner.pending_receipts and attempted in owner.retired
+
+
+def test_session_retired_before_mint_leaves_no_receipt(subject: Subject) -> None:
+    subject.owner.persist_receipt = True
+    subject.owner.after_capture = lambda _session_id: _lock_native_login(subject)
+
+    result = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(result, AccessDenied)
+    attempted = subject.owner.human_bind_attempt
+    assert attempted is not None
+    assert subject.owner.receipt_events == [("capture", attempted), ("discard", attempted)]
+    assert not subject.owner.pending_receipts and attempted not in subject.owner.active
+
+
+def test_failed_mint_retires_the_published_session(subject: Subject) -> None:
+    subject.owner.persist_receipt = True
+
+    class FailingMintOwner(AdmissionOwner):
+        @override
+        def mint_human_receipt(self, session_id: UUID) -> None:
+            raise RuntimeError("synthetic receipt mint failure")
+
+    owner = FailingMintOwner(subject.enrollment)
+    owner.persist_receipt = True
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+
+    with pytest.raises(RuntimeError, match="synthetic receipt mint failure"):
+        subject.authority.admit_human(connection_id=subject.connection)
+
+    attempted = owner.human_bind_attempt
+    assert attempted is not None
+    assert owner.receipt_events == [("capture", attempted), ("discard", attempted)]
+    assert not owner.active and not _published(subject, attempted)

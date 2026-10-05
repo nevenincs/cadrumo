@@ -88,6 +88,7 @@ def test_supplied_proof_is_non_destructive_and_uses_no_keyring_lookup(
         absolute_minutes=240,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=sign_in_custody(tmp_path, profile_id, custody_generation=3),
+        generation=sign_in_custody(tmp_path, profile_id, custody_generation=3).establish().current,
     )
     other_record = receipt.mint_profile_session(
         storage_root=tmp_path,
@@ -100,6 +101,7 @@ def test_supplied_proof_is_non_destructive_and_uses_no_keyring_lookup(
         absolute_minutes=240,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=sign_in_custody(tmp_path, other_id, custody_generation=3),
+        generation=sign_in_custody(tmp_path, other_id, custody_generation=3).establish().current,
     )
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     other_path = receipt.profile_session_path(storage_root=tmp_path, profile_id=other_id)
@@ -170,6 +172,7 @@ def test_application_borrow_and_candidate_preserve_ambient_session_and_deadlines
             absolute_minutes=240,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=committed_sign_in(tmp_path, profile_id),
+            generation=committed_sign_in(tmp_path, profile_id).establish().current,
         )
         _, decode = profile_authority_contexts()
         with (

@@ -94,6 +94,21 @@ class ProfileWorkerHumanBindingRequest(BaseModel):
     persist_receipt: bool = False
 
 
+class ProfileWorkerHumanReceiptRequest(BaseModel):
+    """Mint the receipt a bound human session left pending, after its publication.
+
+    The runtime sends this only for a session it still publishes, under its
+    admission guard, with the sign-in generation it captured at publication.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["mint_human_receipt"] = "mint_human_receipt"
+    request_id: UUID
+    session_id: UUID
+    sign_in_lineage: UUID
+    sign_in_generation: Annotated[int, Field(ge=1)]
+
+
 class ProfileWorkerContractRequest(BaseModel):
     """Inspect one registered operation through a live exact-profile session."""
 
@@ -259,6 +274,7 @@ class ProfileWorkerRequest(
             | ProfileWorkerSettlementRequest
             | ProfileWorkerControlRequest
             | ProfileWorkerHumanBindingRequest
+            | ProfileWorkerHumanReceiptRequest
             | ProfileWorkerContractRequest
             | ProfileWorkerSubmitRequest
             | ProfileWorkerSubmissionBeginRequest
@@ -323,7 +339,11 @@ class ProfileWorkerHumanOutcome(BaseModel):
 
 
 class ProfileWorkerHumanBound(BaseModel):
-    """Acknowledge the exact admitted human session and acceleration outcome."""
+    """Acknowledge the exact admitted human session and acceleration outcome.
+
+    ``receipt_pending`` means the worker holds the proof for a receipt that it
+    mints only on a later request; ``receipt`` then reports nothing persisted.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_bound"] = "human_bound"
@@ -331,6 +351,7 @@ class ProfileWorkerHumanBound(BaseModel):
     request_id: UUID
     session_id: UUID
     receipt: ProfileHumanLoginReceipt
+    receipt_pending: bool = False
 
 
 class ProfileWorkerRefusal(BaseModel):

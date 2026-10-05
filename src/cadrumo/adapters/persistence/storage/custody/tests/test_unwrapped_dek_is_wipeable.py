@@ -156,6 +156,7 @@ def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: P
             absolute_minutes=480,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
 
         outcome, resumed = resume_profile_session(

@@ -376,8 +376,36 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             if isinstance(decision, AccessDenied):
                 return decision
             self._sessions[candidate.session.session_id] = candidate.session
+            refusal = self._mint_published_human_receipt(connection_id, candidate.session)
+            if refusal is not None:
+                return refusal
             retirement.committed = True
             return candidate.session
+
+    def _mint_published_human_receipt(
+        self: SessionAuthorityAdmission, connection_id: UUID, session: AccessSession
+    ) -> AccessDenied | None:
+        """Mint a requested receipt only after publication, for the lease still published.
+
+        The caller holds the admission guard across publication, capture and
+        mint, so a sign-out cannot interleave. The owner captures the sign-in
+        generation at publication and the mint stamps exactly that capture,
+        refusing to write if another writer advanced it since. A lease the
+        re-observation retires is refused uncommitted; its retirement discards
+        the pending receipt, so none exists.
+        """
+        if not self.owner.capture_human_sign_in(session.session_id):
+            return None
+        current = self._facts(connection_id)
+        if isinstance(current, AccessDenied):
+            return current
+        decision = self._evaluate(session, current, None, None)
+        if isinstance(decision, AccessDenied):
+            return decision
+        if self._sessions.get(session.session_id) != session:
+            return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+        self.owner.mint_human_receipt(session.session_id)
+        return None
 
     def refresh_api_key(
         self: SessionAuthorityAdmission, *, connection_id: UUID, session_id: UUID

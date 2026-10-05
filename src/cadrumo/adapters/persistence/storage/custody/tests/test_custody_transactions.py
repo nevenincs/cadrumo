@@ -208,6 +208,7 @@ def _persist_real_current_session_acceleration(root: Path) -> Path:
         absolute_minutes=240,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=committed_sign_in(root, _PROFILE_ID),
+        generation=committed_sign_in(root, _PROFILE_ID).establish().current,
     )
     return profile_session_path(storage_root=root, profile_id=_PROFILE_ID)
 

@@ -28,8 +28,10 @@ and refused as ``SCHEMA_VERSION_MISMATCH``. A strict parse of an older record
 would fail on fields it never had, and that failure must not strand the
 receipt or abort a mint that replaces it.
 
-A mint stamps the profile's current sign-in generation, establishing its
-durable record first. :func:`verify_profile_session_binding` checks a receipt
+A mint stamps the sign-in generation its caller captured, and writes nothing
+unless that generation is still the durable current one. It never creates the
+generation record: the runtime establishes it when it publishes the session
+the receipt belongs to. :func:`verify_profile_session_binding` checks a receipt
 against an expected OS login and the current generation, and deletes the
 receipt on any refusal; :func:`classify_profile_session_binding` is the same
 decision without any I/O.
@@ -793,6 +795,7 @@ def mint_profile_session(
     absolute_minutes: int,
     login_id: str,
     sign_in: SignInGenerationCustody,
+    generation: SignInGeneration,
 ) -> _crypto.PersistedProfileSession:
     """Mint a profile receipt under the custody-wide session lifecycle lock.
 
@@ -800,16 +803,21 @@ def mint_profile_session(
     A rejected bootstrap call must not provision a durable lock leaf merely
     to report malformed identity, metadata, key material, or time windows.
 
-    The receipt binds ``login_id``, the originating OS login, and the sign-in
-    generation that ``sign_in`` establishes under the same root lock. The
-    generation record is created and fsynced before any keychain or receipt
-    write, so no receipt can name a generation that is not durable.
+    The receipt binds ``login_id``, the originating OS login, and exactly
+    ``generation``: the value the caller captured from ``sign_in`` when it
+    published the session, never a fresh read. Under the custody root lock,
+    which every generation write also holds, the mint refuses before any
+    keychain or receipt write unless ``generation`` is still current. A
+    sign-out or lock-down that advanced it in between therefore leaves no
+    receipt, and a missing record is never created here.
 
     Raises:
         StorageValidationError: When an input is malformed or ``sign_in`` is
             bound to another storage root, profile or custody generation.
-        AutomationCustodyError: When ``sign_in`` is not the committed custody.
-        ProfileCustodyRecordError: When the generation cannot be made durable.
+        AutomationCustodyError: ``INVALID`` when ``sign_in`` is not the
+            committed custody; ``CONFLICT`` when ``generation`` is no longer
+            current.
+        ProfileCustodyRecordError: When the custody root lock cannot be held.
     """
     if idle_minutes <= 0:
         raise StorageValidationError("idle_minutes must be a strict positive integer")
@@ -832,7 +840,7 @@ def mint_profile_session(
     ):
         raise StorageValidationError("sign-in generation custody does not belong to this receipt")
     with profile_custody_root_lock(storage_root):
-        generation = sign_in.establish().current
+        sign_in.require_current(generation)
         return _mint_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,

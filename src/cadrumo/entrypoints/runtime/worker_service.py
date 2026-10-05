@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...adapters.local_runtime.worker_transport import WorkerChannel
+from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.operations.drain import OperationDrainResult
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
@@ -23,6 +24,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerHumanBindingRequest,
     ProfileWorkerHumanBound,
     ProfileWorkerHumanOutcome,
+    ProfileWorkerHumanReceiptRequest,
     ProfileWorkerLeaseRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObserveRequest,
@@ -101,17 +103,37 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
             context.custody.share(request.lease)
         return "status"
     if isinstance(request, ProfileWorkerRetireRequest):
+        context.human.discard(request.session_id)
         context.custody.retire(request.session_id)
         context.uploads.expire(live_sessions=context.custody.live_sessions())
         return "status"
     if isinstance(request, ProfileWorkerHumanBindingRequest):
-        receipt = context.human.bind(request.candidate_id, request.lease, persist_receipt=request.persist_receipt)
+        receipt, pending = context.human.bind(
+            request.candidate_id, request.lease, persist_receipt=request.persist_receipt
+        )
         write_document(
             context.channel,
             ProfileWorkerHumanBound(
                 identity=context.custody.identity,
                 request_id=request.request_id,
                 session_id=request.lease.session_id,
+                receipt=receipt,
+                receipt_pending=pending,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        return "handled"
+    if isinstance(request, ProfileWorkerHumanReceiptRequest):
+        receipt = context.human.mint_receipt(
+            request.session_id,
+            SignInGeneration(lineage=request.sign_in_lineage, generation=request.sign_in_generation),
+        )
+        write_document(
+            context.channel,
+            ProfileWorkerHumanBound(
+                identity=context.custody.identity,
+                request_id=request.request_id,
+                session_id=request.session_id,
                 receipt=receipt,
             ),
             deadline=time.monotonic() + 5,
@@ -166,7 +188,7 @@ async def _handle_human_control(
         context.operations.prepare()
     except BaseException as primary:
         try:
-            context.human.close()
+            context.human.cancel()
         except BaseException as cleanup:
             _worker_cleanup.retain_task_failures(primary, (cleanup,))
             failed.set()
@@ -191,7 +213,7 @@ async def _handle_action_control(context: _WorkerControl, request: object) -> _C
         context.operations.prepare()
         return "status"
     if request.action == "cancel_human":
-        context.human.close()
+        context.human.cancel()
         return "status"
     if request.action != "stop":
         return None

@@ -316,6 +316,7 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         absolute_minutes=240,
         login_id=RECEIPT_LOGIN_ID,
         sign_in=committed_sign_in(_isolated_cli_backend, first_id),
+        generation=committed_sign_in(_isolated_cli_backend, first_id).establish().current,
     )
     receipt_path = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     original_receipt = receipt_path.read_bytes()
@@ -394,9 +395,9 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=authority.profile_decode_context(),
             ) as candidate:
+                sign_in = committed_sign_in(_isolated_cli_backend, profile_id)
                 assert candidate.persist_acceleration_receipt(
-                    login_id=RECEIPT_LOGIN_ID,
-                    binding=committed_sign_in(_isolated_cli_backend, profile_id).binding,
+                    login_id=RECEIPT_LOGIN_ID, binding=sign_in.binding, sign_in=sign_in.establish().current
                 )
     _select(first_id)
     first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:3078bf38495793957da16801ad230c74217ef0faa31b997e84db5c0a0c5987b7'
+body_hash: 'sha256:a66ea5eda795198ce5d56846f936e86ef0cf14c340240efb196aefae7f98f3bd'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -156,9 +156,44 @@ related:
 - `S03` `verify:` `just check-module-reachability` -> `pass`
 - `S03` `verify:` `just check-persistence-write-paths and check-secure-store-write-paths` -> `pass`
 - `S03` `verify:` `runtime and CLI receipt suites 103 passed 17 failed` -> `fail`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
+- `S04` `M` `src/cadrumo/application/user_profile/session_authority_admission.py`
+- `S04` `M` `src/cadrumo/application/user_profile/session_authority_contracts.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S04` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/profile_worker_human_admission.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/profile_login_session.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/sign_in_generation.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_sign_in_binding.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_candidate_receipt_publication.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/receipt_sign_in.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_transactions.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_passphrase_replacement_contract.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_supplied_human_receipt.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_test_support_runtime_context_lifecycle.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_commands_leave_no_unsealed_bucket_session.py`
+- `S04` `verify:` `binding, generation, adapter, candidate-publication, session-authority pytest 118 passed` -> `pass`
+- `S04` `verify:` `real runtime+worker mint-ordering scenarios (refused publication, retired before mint, generation advanced, success)` -> `pass`
+- `S04` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S04` `verify:` `just check-module-reachability; check-persistence-write-paths; registry enforcement` -> `pass`
+- `S04` `verify:` `runtime directory -n 3 (13 failed 1 error; 4 reproduce alone and predate this Step)` -> `fail`
 
 ## Notes
 
 - `S01` Import-boundary gate reported unavailable because the governed tree changed mid-run; its findings name no touched file. Four unrelated test failures came from other writers' in-progress journal and label repository edits and passed when rerun alone. Mixed-owner files committed with only the lock-state hunks.
 - `S02` Reachability is red only until P01.S03 consumes the module; S03 lands in the next commit and its reachability run passes. Import gate failed on 44 findings in other writers' files plus a mid-run tree change. Record kept in the keystore beside the receipt and throttle, since .automation-v1 is cleared on automation retirement; value is lineage plus counter so an unreadable record can be repaired without reusing an issued generation. Taxonomy files committed with only this Step's hunks.
 - `S03` The 17 runtime/CLI failures precede login `(runtime_unavailable` without a started runtime, a desktop webview directory, a placeholder logout text) and do not reach this change. `os_keychain` tests cannot run here (Credential Manager error 1312 in this logon session) and need an interactive desktop run. Legacy in-process login no longer mints receipts; P03.S12 retires it and the now-vacuous handover keyring-failure test. Mint order unchanged; S04 moves it after publication.
+- `S04` Mint now runs after publication under the admission guard with the generation captured at publication; `require_current` refuses a moved record before any write. The worker holds the password proof as a pending receipt from bind to mint (a DEK copy for that window). Remaining failures predate this Step in earlier run logs `(runtime_unavailable` resume tests, modelo revision lifecycle, automation approval renew, operation secret tui export, worker drain) or pass alone under less load. `os_keychain` tests not run (Credential Manager error 1312 in this logon session). New internal runtime-worker request `mint_human_receipt;` scope corrected in the plan.

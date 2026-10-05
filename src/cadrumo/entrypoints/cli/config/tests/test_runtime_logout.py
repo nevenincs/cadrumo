@@ -85,6 +85,7 @@ def test_logout_clears_only_captured_default_and_preserves_other_access(tmp_path
                 absolute_minutes=240,
                 login_id=RECEIPT_LOGIN_ID,
                 sign_in=committed_sign_in(root, other_id),
+                generation=committed_sign_in(root, other_id).establish().current,
             )
             other_path = receipt.profile_session_path(storage_root=root, profile_id=other_id)
             original_receipt = other_path.read_bytes()

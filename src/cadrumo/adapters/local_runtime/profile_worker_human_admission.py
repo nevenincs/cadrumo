@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeHumanProofMethod
@@ -14,12 +14,14 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerHumanBindingRequest,
     ProfileWorkerHumanBound,
     ProfileWorkerHumanOutcome,
+    ProfileWorkerHumanReceiptRequest,
     ProfileWorkerRequest,
     ProfileWorkerStatus,
 )
 from ...application.user_profile.access_contracts import AccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
+from ...application.user_profile.login_session_port import ProfileSignInGenerationPort
 from ...core.async_cleanup import AsyncResourceCleanupError
 from .profile_worker_operation_client import ProfileWorkerOperationClient
 from .worker_admission_budget import WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS
@@ -83,8 +85,12 @@ class ProfileWorkerHumanAdmission(ProfileWorkerOperationClient):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         return self._human_deadline
 
-    def bind_human(self, lease: AccessSession, *, persist_receipt: bool = False) -> ProfileHumanLoginReceipt:
-        """Promote only the human candidate held by this admission context."""
+    def bind_human(self, lease: AccessSession, *, persist_receipt: bool = False) -> ProfileWorkerHumanBound:
+        """Promote only the human candidate held by this admission context.
+
+        A requested receipt is not minted here: the worker keeps its proof
+        pending until :meth:`mint_human_receipt` or the lease's retirement.
+        """
         if self._human_candidate is None or self._human_deadline is None:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         deadline = min(time.monotonic() + 10, self._human_deadline)
@@ -105,6 +111,23 @@ class ProfileWorkerHumanAdmission(ProfileWorkerOperationClient):
         if result.session_id != lease.session_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         self._human_candidate = None
+        return result
+
+    def mint_human_receipt(self, session_id: UUID, sign_in: ProfileSignInGenerationPort) -> ProfileHumanLoginReceipt:
+        """Mint a bound session's pending receipt, stamped with ``sign_in`` exactly."""
+        result = self._exchange(
+            ProfileWorkerRequest(
+                ProfileWorkerHumanReceiptRequest(
+                    request_id=uuid4(),
+                    session_id=session_id,
+                    sign_in_lineage=sign_in.lineage,
+                    sign_in_generation=sign_in.generation,
+                )
+            ),
+            ProfileWorkerHumanBound,
+        )
+        if result.session_id != session_id or result.receipt_pending:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return result.receipt
 
 

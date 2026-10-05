@@ -93,6 +93,7 @@ def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: P
             absolute_minutes=240,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
         account = f"{profile_id}:{record.session_id}"
         assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is not None

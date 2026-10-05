@@ -11,6 +11,7 @@ from threading import Event, Lock, RLock, get_ident
 from uuid import UUID
 
 from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
+from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeHumanProof
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
@@ -67,6 +68,8 @@ class ProfileWorkerSessionOwner:
         self._human_connection: UUID | None = None
         self._persist_human_receipt = False
         self._human_receipts: dict[UUID, ProfileHumanLoginReceipt] = {}
+        self._pending_human_receipts: dict[UUID, ProfileWorkerProcess] = {}
+        self._human_sign_ins: dict[UUID, SignInGeneration] = {}
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:
@@ -291,17 +294,51 @@ class ProfileWorkerSessionOwner:
                 or self._human_connection != session.connection_id
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        self._human_receipts[session.session_id] = worker.bind_human(
-            session, persist_receipt=self._persist_human_receipt
-        )
+        bound = worker.bind_human(session, persist_receipt=self._persist_human_receipt)
+        self._human_receipts[session.session_id] = bound.receipt
+        if bound.receipt_pending:
+            self._pending_human_receipts[session.session_id] = worker
+
+    def capture_human_sign_in(self, session_id: UUID) -> bool:
+        """Capture, at publication, the sign-in generation a pending receipt will carry.
+
+        The caller holds the admission guard and has just published the session.
+        A missing or unusable generation record is created and fsynced here, so
+        the record exists before any receipt can name it. Return ``False``,
+        writing nothing, when the session's login asked for no receipt.
+        """
+        if session_id not in self._pending_human_receipts:
+            return False
+        sign_in = SignInGenerationCustody(root=self.root, binding=self.identity.binding)
+        self._human_sign_ins[session_id] = sign_in.establish().current
+        return True
+
+    def mint_human_receipt(self, session_id: UUID) -> None:
+        """Mint a still-published session's receipt with the generation captured at publication.
+
+        The caller holds the admission guard. The worker refuses to write when
+        the captured generation has moved since, and reports no persistence.
+        """
+        worker = self._pending_human_receipts.pop(session_id, None)
+        sign_in = self._human_sign_ins.pop(session_id, None)
+        with self._lifecycle_guard:
+            if worker is None or sign_in is None or self._lost or worker is not self._worker:
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        self._human_receipts[session_id] = worker.mint_human_receipt(session_id, sign_in)
 
     def take_human_login_receipt(self, session_id: UUID) -> ProfileHumanLoginReceipt | None:
         """Consume the nonsecret acknowledgement after exact-session admission."""
         return self._human_receipts.pop(session_id, None)
 
     def retire(self, session_id: UUID) -> None:
-        """Release an admitted lineage; retirement never starts a replacement worker."""
+        """Release an admitted lineage; retirement never starts a replacement worker.
+
+        The worker discards a pending receipt with the lineage, so a session
+        retired before its mint leaves no receipt.
+        """
         self._human_receipts.pop(session_id, None)
+        self._pending_human_receipts.pop(session_id, None)
+        self._human_sign_ins.pop(session_id, None)
         if self._worker is not None:
             with self._custody() as worker:
                 worker.retire(session_id)
@@ -312,6 +349,8 @@ class ProfileWorkerSessionOwner:
             self._stopping.set()
             self._lost = True
             self._human_receipts.clear()
+            self._pending_human_receipts.clear()
+            self._human_sign_ins.clear()
             worker, self._worker = self._worker, None
             if worker is not None:
                 self._retiring.append(worker)

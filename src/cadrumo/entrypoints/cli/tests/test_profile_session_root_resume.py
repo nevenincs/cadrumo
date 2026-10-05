@@ -588,6 +588,7 @@ class TestFailClosedRefusals:
             absolute_minutes=absolute_minutes,
             login_id=RECEIPT_LOGIN_ID,
             sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
 
 

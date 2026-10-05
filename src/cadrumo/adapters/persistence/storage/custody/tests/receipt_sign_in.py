@@ -82,20 +82,21 @@ def persist_signed_in_receipt(
     profile_decode_context: ProfileDecodeContext,
     login_id: str = RECEIPT_LOGIN_ID,
 ) -> bool:
-    """Persist a receipt the way the runtime worker does after admitting a human session.
+    """Persist a receipt the way the runtime worker does after publishing a human session.
 
     An in-process login no longer mints one, so a test that needs a live
     sign-in receipt proves the password again through the candidate door and
-    publishes from it, bound to ``login_id`` and the committed custody.
+    publishes from it, bound to ``login_id``, the committed custody and the
+    generation the runtime would capture at publication.
     """
+    sign_in = committed_sign_in(root, profile_id)
+    captured = sign_in.establish().current
     with authenticate_profile_candidate(
         bucket_id=profile_id,
         passphrase_callback=lambda: passphrase,
         profile_decode_context=profile_decode_context,
     ) as candidate:
-        return candidate.persist_acceleration_receipt(
-            login_id=login_id, binding=committed_sign_in(root, profile_id).binding
-        )
+        return candidate.persist_acceleration_receipt(login_id=login_id, binding=sign_in.binding, sign_in=captured)
 
 
 def publish_sign_in_custody(root: Path, profile_id: UUID, *, custody_generation: int = 1) -> SignInGenerationCustody:
