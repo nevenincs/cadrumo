@@ -71,6 +71,7 @@ import {
   type Translate,
 } from "./shell/strings";
 import { DARK_TERMINAL, LIGHT_TERMINAL } from "./shell/terminalThemes";
+import { failureCode } from "./errors";
 
 const RECORD_CAP = 10000;
 const TABS: readonly (readonly [PanelTab, string, string])[] = [
@@ -329,10 +330,19 @@ export function App({ host }: { host: Host }) {
       if (!kind) return;
       host.readClipboard().then(
         (text) => terminals.current[kind]?.paste(text),
-        () => undefined,
+        // The host refuses rather than truncates an oversized clipboard, so
+        // say why nothing arrived.
+        (error: unknown) =>
+          say(
+            t(
+              failureCode(error) === "output_limit"
+                ? "desktop.toast.paste_too_large"
+                : "desktop.toast.paste_failed",
+            ),
+          ),
       );
     },
-    [host],
+    [host, say, t],
   );
 
   const goHome = useCallback(() => {

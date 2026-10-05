@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b23124382a520296bee613a571a4dc3e0096105d6516328e37a15fb26a4873de'
+body_hash: 'sha256:6ff67d4a4e969aae84618666d7f6075e3f7831a04c4899e524547e931949f5e8'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -430,6 +430,15 @@ related:
 - `S13` `verify:` `cmake configure docs OFF: desktop project not configured, cadrumo.exe omitted; docs ON: configured and staged` -> `pass`
 - `S13` `verify:` `pytest application images and installation (56 passed, 2 skipped)` -> `pass`
 - `S13` `by:` `orchestrator`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16)` -> `pass`
+- `S09` `verify:` `dev.locales status: 0 findings on desktop.toast.paste_* keys; exit 1 from pre-existing 23312 inventory violations` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test (12)` -> `pass`
 
 ## Notes
 

@@ -635,6 +635,8 @@ desktop:
   toast:
     copied: Copiat
     copy_failed: No s'ha pogut copiar.
+    paste_failed: No s'ha pogut enganxar.
+    paste_too_large: És massa text per enganxar d'una vegada.
   tui:
     hide: Amaga la TUI
     label: TUI de Cadrumo

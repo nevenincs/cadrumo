@@ -641,6 +641,8 @@ desktop:
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.
+    paste_failed: No se ha podido pegar.
+    paste_too_large: Es demasiado texto para pegar de una vez.
   tui:
     hide: Ocultar la TUI
     label: TUI de Cadrumo

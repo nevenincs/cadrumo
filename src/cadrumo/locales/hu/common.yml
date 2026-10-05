@@ -624,6 +624,8 @@ desktop:
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
+    paste_failed: Nem sikerült a beillesztés.
+    paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
   tui:
     hide: TUI elrejtése
     label: Cadrumo TUI
