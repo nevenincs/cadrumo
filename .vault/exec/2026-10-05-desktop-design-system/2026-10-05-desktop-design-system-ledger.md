@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:1617f2597ba424c2f0e18126ff29dc13da63723ce48ca8ae27f04335e2653727'
+body_hash: 'sha256:f0f804685a89ef7bf8063e4e387234b86b76e87aa4386b8e121de1367c0403ab'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -226,6 +226,20 @@ related:
 - `S13` `verify:` `node --test native/desktop/tests/build-paths.test.mjs` -> `pass`
 - `S13` `verify:` `node --test native/desktop/tests/packaged-harness.test.mjs` -> `pass`
 - `S13` `verify:` `node --test native/desktop/tests/backend-snapshot.test.mjs` -> `pass`
+- `S11` `M` `native/desktop/frontend/playwright.config.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ui/tabs.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/catalogue/Foundations.stories.tsx`
+- `S11` `M` `native/desktop/frontend/README.md`
+- `S11` `verify:` `npm test (105 passed)` -> `pass`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `A` `native/desktop/frontend/src/shell/pointer.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/fixtures/logs.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S11` `M` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S11` `verify:` `npm test (109 passed, twice)` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 
 ## Notes
 

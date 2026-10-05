@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2c4647ccf25989de2f277202c58cfa4cbd0e7445979f7a77d7899226a340ad4'
+body_hash: 'sha256:8b3231ef8ba613d48a6544808cafe91df74524d5f2c3ab0ec74914f77cc14892'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -134,6 +134,50 @@ Resolved in `6a9b5a200c`: whole-build sizes, in-page terminal timing, a drag of 
 ### P05 accepted | low | left as they are
 
 The palette, settings and the menu unmount when they close, so they leave at once while the sign-in dialog fades; the difference is deliberate, since each captures where focus came from when it mounts. Popper offsets are pixel numbers the foundation takes as props. The record menu's rule-engine audit leaves out the landmark rule, because a context menu is drawn at the pointer outside any landmark, as the native menu it stands in for is.
+
+### Final review focus | high | a view chosen in the palette from a terminal or the documentation often did not get focus
+
+The re-review of the P05 fixes measured it: opened in the console terminal, the palette's Python shell was focused five times in eight; a chord pressed inside the documentation frame, none in eight. The view is shown by a state change that commits after the request, and the focus call ran while its pane was still hidden. Resolved in `ce5a6efd14`: focus is a wish held in a ref and granted after the commit that shows the view, or dropped after a second (`src/App.tsx`, `grantFocus`). Two keyboard tests repeat the terminal and the documentation paths.
+
+### Final review guard | medium | the chord guard counted a dialog that was not on screen, and one entry skipped it
+
+Chords were dead while the sign-in state was still being read, and chords forwarded by the documentation's bridge acted under the open dialog. Resolved in `ce5a6efd14`: the guard requires an answered status, and the key listener and the bridge pass through the same function. F6 skips an area that has nothing to focus.
+
+### Final review menu | medium | the shell's own menu took focus back from a press outside it
+
+Made non-modal in the P05 fixes, it still refocused its origin on every close, so a click on the filter lost its focus and a right-click on another record opened no menu. Resolved in `ce5a6efd14`: a close caused by a press elsewhere leaves focus there; a menu opened by the menu key is anchored to its row's edge and no longer covers it.
+
+### Final review log | medium | the log was not one tab stop, and a short panel made it a second scroller
+
+Every record's detail toggle was tabbable, and the short-window fix of `e33436de3d` let the whole view scroll, which hid the newest record in the smallest window. Resolved in `ce5a6efd14`: the toggle is reached from its row; a panel near its floor gives the bar one row through a height query on the panel, and only the list scrolls. Bringing in earlier records now holds the view on the record at its top, and a focused record that leaves the drawn span hands focus to the oldest one drawn.
+
+### Final review minor | low | contrast, touch sizes and statements
+
+Shortcut text on a highlighted menu item, the narrow tab and the palette's close control under a fingertip, and three README sentences that did not match the code. Resolved in `ce5a6efd14`. Left: the Hungarian level select cuts one letter at its narrowest, and the log bar's sideways scroll has no visible cue.
+
+### Final review results directory | medium | the browser tests emptied the directory other results are written to
+
+Found when a benchmark result vanished: Playwright empties its output directory at each start, and that was the directory the benchmark, the catalogue screenshots and the packaged run write into. Resolved in `ce5a6efd14`: the browser tests have their own subdirectory.
+
+### Confirmation follow | high | the log stopped following by itself while records arrived
+
+Found by the scenario page's live feed, added to test the confirmation pass's findings: with a batch every 30 to 40 milliseconds the drawn span grew past its window with no interaction. The view was moved to the end in a passive effect, and a scroll reported between the commit and that effect saw an end that had moved on. Resolved in `f3ec3897b9`: the view moves in the commit that draws the records, and following ends only on an upward scroll (`src/components/RecordList.tsx`).
+
+### Confirmation menu key | high | the real menu key still laid the menu across its row
+
+The confirmation pass pressed the key 48 times and the menu was clear of its row in none: Chromium reports the key as a mouse event with no button, which the test's synthetic event did not reproduce. Resolved in `f3ec3897b9`: `src/shell/pointer.ts` tells the two apart for the log and the terminals, and the keyboard test presses the key at the end, the middle and the top of the list.
+
+### Confirmation short bar | high | the level select collapsed in the one-row bar
+
+In a panel near its floor the select's wrapper shrank to nothing and lay under its neighbours. Resolved in `f3ec3897b9`: each control of the row keeps its width; a test at the smallest window holds every control's width and order.
+
+### Confirmation reader's place | medium | arriving records moved the view of a reader who had left the end
+
+The drawn span slid with the newest record, so a reader resting high in a large span lost their place, and a focused record that left the span sent focus hopping from record to record. Resolved in `f3ec3897b9`: off the end the span is pinned to its first record and grows; a focused record that leaves hands focus to the list once; a press outside the log clears the memory of where focus was. Two tests run against the live feed.
+
+### Confirmation minor | low | focus after a press in the documentation, after signing in with the TUI hidden, and from a detail toggle
+
+Resolved in `f3ec3897b9`. A pending focus wish is dropped on the next press, which the confirmation pass measured at 0 of 24 overridden with the guard and 22 of 24 without. Left: with an unreadable source and records together in a panel at its floor, the banner leaves the list less than one row.
 
 ## Recommendations
 
