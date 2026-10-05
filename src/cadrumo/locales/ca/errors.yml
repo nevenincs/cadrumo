@@ -926,6 +926,9 @@ errors:
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
+    financial_edit_journal_purge: No s’ha pogut depurar de manera segura aquest diari
+      antic d’edició financera. L’operació no està disponible. No s’ha carregat cap
+      valor d’edició.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja

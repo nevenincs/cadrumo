@@ -859,6 +859,9 @@ errors:
     censal_read_identity: A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.
     clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
       egy szükséges hitelesítő adat.
+    financial_edit_journal_purge: A korábbi pénzügyi szerkesztési napló biztonságos
+      törlése nem sikerült. A művelet nem érhető el. Egyetlen szerkesztési érték sem
+      lett betöltve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a bevallás számítását,
       mert az még nem nyújtható be.
     locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.

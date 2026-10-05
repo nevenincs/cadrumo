@@ -916,6 +916,9 @@ errors:
       perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
       una credencial que necesita.
+    financial_edit_journal_purge: No se pudo depurar de forma segura este diario antiguo
+      de edición financiera. Su operación no está disponible. No se cargó ningún valor
+      de edición.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
     locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya

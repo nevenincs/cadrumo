@@ -10,7 +10,7 @@ from typing import override
 
 from pydantic import BaseModel
 
-from ....application.journal_repository import JournalRepositoryBase
+from ....application.journal_repository import JournalBusyError, JournalRepositoryBase
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.idempotency import OperationIdempotencyClaim
@@ -48,6 +48,7 @@ from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
 from ..storage.master_key.login_handover_journal import handover_journal_path
 from ._journal_validation import OperationJournalRecord, validate_advance
+from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from .lease import OperationLeaseStorage
 
 
@@ -126,6 +127,25 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
         self._profile_handover_path = handover_journal_path(storage_root)
 
+    @override
+    def load(self, operation_id: str) -> OperationJournalRecord:
+        """Purge legacy values under the same exclusion as every journal writer."""
+        if not self._validate_existing_root():
+            return super().load(operation_id)
+        with exclusive_file_lock(self.lock_target):
+            return self._load_unlocked(operation_id)
+
+    def _load_unlocked(self, operation_id: str) -> OperationJournalRecord:
+        raw = self._read_payload(operation_id)
+        replacement = purge_legacy_financial_edit_journal(raw, operation_id=operation_id)
+        if replacement is not None:
+            try:
+                self._write_payload(self.path_for(operation_id), replacement)
+            except (OSError, RepositoryError, JournalBusyError):
+                raise FinancialEditJournalPurgeRefusedError from None
+            raw = replacement
+        return self._decode_payload(operation_id, raw)
+
     def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
         """Resolve a durable retry key from a complete operation journal only."""
         self._ensure_root()
@@ -142,7 +162,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             return None
         with exclusive_file_lock(self.lock_target):
             try:
-                record = super().load(operation_id)
+                record = self._load_unlocked(operation_id)
             except RepositoryError:
                 if self.is_absent(operation_id):
                     return None
@@ -207,7 +227,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
     def _recovery_inventory_entry(self, operation_id: OperationId) -> OperationRecoveryInventoryEntry:
         """Classify one present journal row while refusing an inventory race."""
         try:
-            record = super().load(operation_id)
+            record = self._load_unlocked(operation_id)
         except RepositoryError:
             if not self._validate_existing_root() or self.is_absent(operation_id):
                 raise RepositoryError("operation journal inventory changed during read") from None
@@ -227,7 +247,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             operation_id = path.stem
             if len(operation_id) != 64 or any(character not in "0123456789abcdef" for character in operation_id):
                 continue
-            persisted_claim = super().load(operation_id).snapshot.idempotency_claim
+            persisted_claim = self._load_unlocked(operation_id).snapshot.idempotency_claim
             if persisted_claim is None or persisted_claim.key_digest != claim.key_digest:
                 continue
             if (
@@ -328,7 +348,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         path = self.path_for(snapshot.operation_id)
         if not os.path.lexists(path):
             raise RepositoryError("operation journal commit requires an existing snapshot created via create")
-        current = super().load(snapshot.operation_id)
+        current = self._load_unlocked(snapshot.operation_id)
         self._validate_advance(current.snapshot, snapshot, expected_revision)
         record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
         self._write(path, record)

@@ -848,6 +848,8 @@ errors:
     censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.
+    financial_edit_journal_purge: This legacy financial edit journal could not be
+      safely purged. Its operation is unavailable. No edit value was loaded.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
     locale_catalogue_capture_not_current: This locale catalogue capture is no longer

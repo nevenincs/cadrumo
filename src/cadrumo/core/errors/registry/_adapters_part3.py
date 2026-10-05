@@ -8,6 +8,16 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.adapters.persistence.operations.financial_journal_purge.FinancialEditJournalPurgeRefusedError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_EDIT_JOURNAL_PURGE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.financial_edit_journal_purge",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.local_runtime.automation_requester.AutomationRequesterUncertainError",
         ErrorCode(
             code="ERROR_AUTOMATION_REQUESTER_UNCERTAIN",
