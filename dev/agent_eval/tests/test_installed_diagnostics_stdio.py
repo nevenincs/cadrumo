@@ -66,6 +66,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.diagnostics_operation_composition import build_diagnostics_read_ports
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -178,6 +179,7 @@ def _canonical_report(projection: DiagnosticsReadProjection) -> object:
 
 @pytest.mark.anyio
 async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(tmp_path: Path) -> None:
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native = native_automation_secret_store(backend)
     assert native.backend is backend

@@ -14,7 +14,7 @@ Examples:
 src/cadrumo/domain/modelos/tests/test_work_unit.py
 src/cadrumo/application/modelo/tests/test_work_addressing.py
 src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py
-src/cadrumo/tests/test_marker_integrity.py
+src/cadrumo/tests/test_marker_contract_enforcement.py
 ```
 
 Test module filenames must start with `test_`. `_test_*.py` and
@@ -170,17 +170,23 @@ sign-off: every change to login, logout, session resume, or session-key
 custody re-opens the hole, and only a desktop run closes it again. A
 green run once does not vouch for the code as it stands now.
 
-The pinned membership set in `test_marker_integrity.py` keeps the hole
-from growing quietly - a test cannot take the label without being
-enrolled there - but it cannot make an unrun test pass. It bounds the
-hole; it does not fill it.
+Two gates keep the hole from going unnoticed.
+`dev/ci/tests/test_os_keychain_lane_scope.py` refuses a labelled case
+that sits outside the paths `just test-os-keychain` names, and
+`dev/tests/test_lane_reachability.py` requires every test no automated
+lane can run to carry a label naming why. Neither pins which cases may
+take the label, so keeping it to what is irreducibly capability-bound
+stays with the author. They bound the hole; they do not fill it.
 
 ## Enforcement
 
-`src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
-`src/cadrumo` via `ast` and fails if any module violates placement,
-filename, module-level marker, execution-scope, hex-layer, or retired
-marker rules.
+`--strict-markers` in `pyproject.toml` refuses any marker the registry
+there does not declare, so a retired or misspelt marker fails collection
+instead of selecting nothing.
+
+`src/cadrumo/tests/test_every_test_module_is_lane_reachable.py` and
+`dev/tests/test_lane_reachability.py` fail when a test is selected by no
+lane.
 
 The repo-root `conftest.py` invokes the collection policy in
 `cadrumo.tests.marker_hook` once for every collected subtree. It raises
@@ -275,6 +281,10 @@ Checklist:
 ## Cross-References
 
 - `src/cadrumo/tests/marker_hook.py` - shared collection hook body.
-- `src/cadrumo/tests/test_marker_integrity.py` - AST-backed drift detector.
+- `src/cadrumo/tests/test_marker_contract_enforcement.py` - proves the
+  hook reports a violation both at `-n0` and under xdist workers.
+- `src/cadrumo/tests/os_keychain_hook.py` - shared credential-store
+  precondition for `os_keychain` cases.
+- `dev/tests/test_lane_reachability.py` - per-test lane reachability gate.
 - `pyproject.toml` - pytest discovery, marker registry, and coverage
   omit settings.
