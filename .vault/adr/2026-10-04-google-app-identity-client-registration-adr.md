@@ -3,23 +3,25 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7c39681164dc486d10ee88cbbba9bb4dfb3053f25cc3be4f56990e121afffe79'
+body_hash: 'sha256:6c1bc1c8358841af65168b4466031b88fcc037377fcd9a634652254dfcce063c'
 related:
   - "[[2026-10-04-google-app-identity-adr]]"
   - "[[2026-10-04-google-app-identity-reference]]"
   - "[[2026-10-04-google-app-identity-research]]"
 ---
 
-# `google-app-identity` adr: `Single client resolution path without operator registration` | (**status:** `proposed`)
+# `google-app-identity` adr: `Single client resolution path without operator registration` | (**status:** `deprecated`)
+
+Retired on 2026-10-05: the product owner approved this amendment and its
+wording was applied to `2026-10-04-google-app-identity-adr`, which is now the
+only authority for it. This record is kept as the history of the proposal.
 
 ## Problem Statement
 
-This record holds a pending amendment to commitment 3 of
-`2026-10-04-google-app-identity-adr`. It changes nothing until the product
-owner accepts it; on acceptance its wording is applied to that record and this
-record is retired.
+This record held a pending amendment to commitment 3 of
+`2026-10-04-google-app-identity-adr`.
 
 Commitment 3 keeps a client registered by the operator as a supported,
 per-profile production override. On 2026-10-05 the product owner refused to

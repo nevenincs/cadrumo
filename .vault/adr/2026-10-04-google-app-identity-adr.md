@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:4fdc33438ab35a2402a87e20e6f12a5480f73d04951636a2d342494f3a52815c'
+body_hash: 'sha256:76f7e33b6a04213d379ee47c11fb798c172cc90ab4ca8948b5c855b20b11a990'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -39,9 +39,14 @@ and, after the service-account evidence, re-ruled the same day as removal;
 that ruling was given in the implementing session and relayed. Commitment 10
 was approved in conversation as removal without a deprecation window.
 The product owner then accepted this record as a whole on 2026-10-04, in both
-the authoring and the implementing session, which covers commitments 7 to 9
-and commitment 3 as written, including the optional operator-registered
-client. Statements under "Implementation hypotheses" remain hypotheses.
+the authoring and the implementing session, which covers commitments 7 to 9.
+Commitment 3 was amended on 2026-10-05: as first accepted it kept an
+operator-registered client as a production override, which the product owner
+then refused as conflating development with production. The amendment was
+drafted in `2026-10-04-google-app-identity-client-registration-adr`, approved
+by the product owner on 2026-10-05 in the cloud-setup session on a summary of
+its main points, and relayed. Statements under "Implementation hypotheses"
+remain hypotheses.
 
 ## Considerations
 
@@ -74,7 +79,9 @@ client. Statements under "Implementation hypotheses" remain hypotheses.
    and a justification that contradicts Google's own recommendation, for
    access the product does not use.
 3. **Publisher-owned client on non-sensitive scopes, application-created
-   files only, imported client as an override.** Chosen.
+   files only.** Chosen. A variant that kept the imported client as a
+   per-profile override was first accepted and then withdrawn; see the
+   authorization basis.
 4. **Publisher-owned client plus Google Picker for user-chosen folders and
    files.** Rejected for now: Picker is a browser component with its own
    API key and hosting needs, and the product boundary does not require
@@ -90,12 +97,14 @@ Binding commitments:
 2. **Scope set.** The desktop sign-in requests exactly `openid`,
    `userinfo.email` and `drive.file`. No sensitive or restricted scope is
    requested by any Cadrumo credential source.
-3. **Client identity.** A publisher-owned Desktop client is the default. A
-   client registered by the operator for a profile remains supported and
-   takes precedence for that profile. With neither present, sign-in is a
-   typed refusal with remediation. The publisher client's metadata is public
-   installation data; it is not stored as a profile secret and no client ID
-   is committed before the publisher registration exists.
+3. **Client identity.** A publisher-owned Desktop client is the only client.
+   Its metadata is public installation data read from one location by one
+   resolver; it is not a profile record and not a secret. No command, setting
+   or environment override accepts a client from the operator. A development
+   installation uses the same location and the same code path, holding the
+   development project's client file, which the developer supplies and which
+   is never committed. With no client metadata present, sign-in is a typed
+   refusal with remediation.
 4. **Root folder.** Cadrumo creates its root folder and stores its ID per
    profile. No command, setting or environment override accepts a Drive
    folder or file reference from the user. The one exception is a workbook
@@ -121,15 +130,16 @@ Binding commitments:
    is not adopted. Creation carries the marker so that an application-created
    entry without it cannot exist.
 8. **Token integrity.** A stored token is bound to the client that minted it
-   and is never used with another. A sign-in that yields no refresh token is
+   and is never used with another, so a token minted under the development
+   client cannot be used with the production one. A sign-in that yields no refresh token is
    refused. A revoked or expired grant is reported as a typed
    sign-in-required state, not as a network failure.
 9. **No migration.** No compatibility reader and no adoption of earlier
    remote state. Tokens stored without a client binding require a new
    sign-in. Folders and workbooks created under another client stay in the
    user's Drive untouched and are not searched for; the user exports again.
-   A stored credential-source selection is never honoured, and its namespace
-   registration is removed with the source. By the product owner's account
+   A stored credential-source selection and a stored per-profile client
+   record are never honoured, and their namespace registrations are removed. By the product owner's account
    on 2026-10-04 (relayed from the implementing session), only the team's
    own test profiles hold stored Google state and only test data has been
    pushed to Drive, so those profiles are cleared by hand. The profile
@@ -138,12 +148,14 @@ Binding commitments:
    affects only such an uncleared test profile.
 10. **Released surface is removed without a deprecation window.** The
     evidence pull commands, the folder-set command, the
-    `config google credential-source` commands and the
+    `config google credential-source` commands, `config google register` and
+    the
     `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` setting are present in the tagged
     releases `v0.4.0`, `v0.5.0` and `v0.5.1`. They are removed in the first
     release that carries this decision, with a supported window of zero,
-    because each one either accepts a Drive reference the product boundary
-    forbids or selects a credential source that cannot serve it, and because
+    because each one accepts a Drive reference the product boundary forbids,
+    selects a credential source that cannot serve it, or registers a client
+    commitment 3 no longer admits, and because
     no one outside the team is known to rely on them. The release notes name
     the removals and the local import replacement. The setting's
     removal also changes the generated environment example and the native
@@ -151,8 +163,8 @@ Binding commitments:
 
 Out of scope: the publisher's Google Cloud registration and verification,
 build-time delivery of the client metadata, the desktop Connect interface, and
-the remote-mirror policy for the OAuth client and token namespaces. The last
-is an open question recorded in `2026-10-04-google-app-identity-reference`.
+the remote-mirror policy for the OAuth token namespace. The last is an open
+question recorded in `2026-10-04-google-app-identity-reference`.
 
 Affected prior rulings. These amendments were applied to the named accepted
 records when this record was accepted:
@@ -208,15 +220,20 @@ records when this record was accepted:
 
 ## Implementation
 
-We will run Cadrumo's Google integration on a publisher-owned Desktop client
-restricted to non-sensitive scopes and to files Cadrumo created, keeping the
-operator-registered client as a per-profile override.
+We will run Cadrumo's Google integration on one publisher-owned Desktop
+client, read from installation data, restricted to non-sensitive scopes and
+to files Cadrumo created.
 
 Outline:
 
 - Drop `spreadsheets` from the required scope set and from the bundled scope
   constants.
-- Resolve the client through one owner with the precedence in commitment 3.
+- Resolve the client from installation data through one owner, and remove the
+  register operation with its command, input kind, contracts and correlation,
+  and the per-profile client record. Status and logout results lose their
+  client-registration fields, which changes two public result schemas. One
+  "no client metadata in this installation" refusal replaces the "client not
+  registered" refusals.
 - Replace the user-supplied root folder with a created, marker-stamped folder
   and remove the folder-set command and the environment override.
 - Remove the Drive evidence pull commands and their acquisition code; keep the
@@ -233,7 +250,12 @@ Implementation hypotheses, free to change within the commitments:
   MIME type, parent and marker in one call, then populated through Sheets
   `batchUpdate`.
 - The publisher client metadata lives under the installation's `data/google/`
-  location named in `2026-10-03-application-packaging-adr`.
+  location named in `2026-10-03-application-packaging-adr`; a development
+  checkout resolves it through the same storage taxonomy. The metadata
+  includes `client_secret`, because refreshing a Desktop client's token
+  without it was not tested.
+- A helper under `dev/` may place a client file into a development
+  installation. It is not part of the shipped command tree.
 - The loopback listener uses the IP literal. Sign-in does not force a consent
   prompt: Google always returns a refresh token to an installed application
   (`2026-10-04-google-app-identity-research`), so the refusal in commitment 8
@@ -253,15 +275,16 @@ Option 3 is the only option that needs no review of sensitive data use,
 because it requests none (`2026-10-04-google-app-identity-research`). The
 product boundary makes the narrower scope sufficient rather than a
 compromise: nothing Cadrumo is meant to do requires a file it did not create.
-Keeping the imported client as an override costs little, since that path
-already exists, and serves organisations that block third-party clients.
+One client read from one location means the sign-in the publisher verifies
+with Google is the sign-in developers test, and no user can be asked to bring
+a Cloud project.
 
 Enforcing ownership in code rather than relying on the scope keeps the
-boundary true under the override client, where the publisher's verified scope
-set is not the guarantee. Removing impersonation leaves one sign-in path to
-verify and document, and drops a path that could not serve the product goal. Binding tokens to their client follows from
-having two possible clients: without it a token could be refreshed against
-the wrong one.
+boundary true whichever client file an installation holds. Removing
+impersonation leaves one sign-in path to verify and document, and drops a
+path that could not serve the product goal. Binding tokens to their client
+follows from development and production installations holding different
+clients: without it a token could be refreshed against the wrong one.
 
 ## Consequences
 
@@ -269,15 +292,20 @@ the wrong one.
   Cloud project before any user outside a 100-person test list can sign in.
 - Files exported under an operator's own client are not visible to the
   publisher client; affected users export again.
+- An organisation that blocks third-party clients must allow the publisher
+  client; it cannot substitute its own.
+- A development installation cannot sign in until a developer supplies a
+  client file, and until build-time delivery of the client metadata exists,
+  only development installations can sign in.
 - Users lose evidence pull from Drive and use local import instead.
 - The public client can be presented by a third party on a consent screen;
   the exposure is limited to `drive.file`.
 - Tokens stored before the client binding require a new sign-in.
 - Teams that shared one service-account identity lose that option; each
   profile signs in with a Google account.
-- Operators on a tagged release lose the evidence pull, folder-set and
-  credential-source commands and one setting at upgrade, with no transition
-  period.
+- Operators on a tagged release lose the evidence pull, folder-set,
+  credential-source and client-register commands and one setting at upgrade,
+  with no transition period.
 
 Reconsider if the live proof shows a required Sheets method refusing
 `drive.file`, or if users need Cadrumo to open a spreadsheet or folder they
