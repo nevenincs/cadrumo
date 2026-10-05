@@ -29,7 +29,7 @@ Other reusable data contracts include defensive immutable mappings, best-effort 
 
 ## External service, hardware, and workbook boundaries
 
-The Google-related modules are boundary helpers, not a Google Drive client. They distinguish desktop OAuth from service-account impersonation, escape Drive query literals, parse file/folder IDs from accepted reference forms, and extract HTTP status and quota markers from structured errors. This supports callers in choosing credential and retry behavior, but these functions do not perform OAuth, establish a user's Drive authorization, or verify that a referenced object is accessible. Credential-source kinds (`src/cadrumo/core/google_credential_source.py`) Drive reference parsing (`src/cadrumo/core/google_drive_reference.py`) Structured HTTP/quota extraction (`src/cadrumo/core/google_http_error.py`)
+The Google-related modules are boundary helpers, not a Google Drive client. They escape Drive query literals, parse a Drive file ID from the reference forms that stored attachment records carry, and extract HTTP status and quota markers from structured errors. This supports callers in choosing retry behavior and in reading stored history, but these functions do not perform OAuth, establish a user's Drive authorization, or verify that a referenced object is accessible. Drive query escaping (`src/cadrumo/core/google_drive_query.py`) Drive reference parsing (`src/cadrumo/core/google_drive_reference.py`) Structured HTTP/quota extraction (`src/cadrumo/core/google_http_error.py`)
 
 Hardware capability types distinguish a measured lack of accelerator (`NONE`) from an unknown measurement (`UNKNOWN`) and expose free-memory tiering. The module documents that execution decisions should use measured bytes rather than treating a broad tier as a reservation; peer-process contention is separately represented from resident runtime use and unreadable measurements. This makes unknown resource state expressible without silently turning it into evidence of absence. Accelerator and contention states (`src/cadrumo/core/hardware.py`) Memory tier selection (`src/cadrumo/core/hardware.py`)
 
@@ -57,9 +57,8 @@ The strongest local capabilities are precise typed filing destinations, validate
 - frozen_mapping.py (`src/cadrumo/core/frozen_mapping.py`) — lines 1–108
 - fsync.py (`src/cadrumo/core/fsync.py`) — lines 1–58
 - fts_query.py (`src/cadrumo/core/fts_query.py`) — lines 1–23
-- google_credential_source.py (`src/cadrumo/core/google_credential_source.py`) — lines 1–48
 - google_drive_query.py (`src/cadrumo/core/google_drive_query.py`) — lines 1–22
-- google_drive_reference.py (`src/cadrumo/core/google_drive_reference.py`) — lines 1–67
+- google_drive_reference.py (`src/cadrumo/core/google_drive_reference.py`) — lines 1–37
 - google_http_error.py (`src/cadrumo/core/google_http_error.py`) — lines 1–85
 - hardware.py (`src/cadrumo/core/hardware.py`) — lines 1–150
 - hashing.py (`src/cadrumo/core/hashing.py`) — lines 1–269

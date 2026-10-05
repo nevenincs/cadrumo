@@ -76,7 +76,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 - [Censal reads, filed-declaration capture, and GROI checks](010-censal-reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`
 - [IVA wallet, notifications, VIES checks, and expediente reads](011-iva-wallet-notifications-vies-checks-and-expediente-reads.md) — `STAGE-2-011`
 - [PDF summaries, ECB rates, and Google Sheets exports](012-pdf-summaries-ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`
-- [Google Sheets readback, Drive evidence, and Google credentials](013-google-sheets-readback-drive-evidence-and-google-credentials.md) — `STAGE-2-013`
+- [Google Sheets readback, Drive ownership, and Google sign-in](013-google-sheets-readback-drive-ownership-and-google-sign-in.md) — `STAGE-2-013`
 - [LLM dispatch, consent, and invoice-reading pipeline](014-llm-dispatch-consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`
 - [LLM provider adapters and Google Drive storage](015-llm-provider-adapters-and-google-drive-storage.md) — `STAGE-2-015`
 - [Local storage, remote ciphertext mirroring, and offline workbooks](016-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md) — `STAGE-2-016`

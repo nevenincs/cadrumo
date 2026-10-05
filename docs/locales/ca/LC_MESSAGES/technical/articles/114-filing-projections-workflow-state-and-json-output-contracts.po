@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"POT-Creation-Date: 2026-10-05 11:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -297,26 +297,25 @@ msgstr "Límits de serveis externs, maquinari i llibres"
 #: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:32
 msgid ""
 "The Google-related modules are boundary helpers, not a Google Drive "
-"client. They distinguish desktop OAuth from service-account "
-"impersonation, escape Drive query literals, parse file/folder IDs from "
-"accepted reference forms, and extract HTTP status and quota markers from "
-"structured errors. This supports callers in choosing credential and retry"
-" behavior, but these functions do not perform OAuth, establish a user's "
-"Drive authorization, or verify that a referenced object is accessible. "
-"Credential-source kinds (`src/cadrumo/core/google_credential_source.py`) "
-"Drive reference parsing (`src/cadrumo/core/google_drive_reference.py`) "
-"Structured HTTP/quota extraction "
-"(`src/cadrumo/core/google_http_error.py`)"
+"client. They escape Drive query literals, parse a Drive file ID from the "
+"reference forms that stored attachment records carry, and extract HTTP "
+"status and quota markers from structured errors. This supports callers in"
+" choosing retry behavior and in reading stored history, but these "
+"functions do not perform OAuth, establish a user's Drive authorization, "
+"or verify that a referenced object is accessible. Drive query escaping "
+"(`src/cadrumo/core/google_drive_query.py`) Drive reference parsing "
+"(`src/cadrumo/core/google_drive_reference.py`) Structured HTTP/quota "
+"extraction (`src/cadrumo/core/google_http_error.py`)"
 msgstr ""
 "Els mòduls relacionats amb Google són ajudants de límit, no un client de "
-"Google Drive. Distingeixen OAuth d'escriptori de suplantació de compte de"
-" servei, escapen literals de consultes Drive, analitzen identificadors de"
-" fitxers i carpetes a partir de formes acceptades de referència i "
-"extreuen estat HTTP i marcadors de quota d'errors estructurats. Això "
-"ajuda els cridadors a triar comportament de credencials i reintents, però"
+"Google Drive. Escapen literals de consultes Drive, analitzen un "
+"identificador de fitxer Drive a partir de les formes de referència que "
+"porten els registres d'adjunts emmagatzemats i extreuen estat HTTP i "
+"marcadors de quota d'errors estructurats. Això ajuda els cridadors a "
+"triar comportament de reintents i a llegir l'historial emmagatzemat, però"
 " aquestes funcions no fan OAuth, no estableixen l'autorització Drive d'un"
-" usuari ni verifiquen que un objecte referenciat sigui accessible. Tipus "
-"de fonts de credencials (`src/cadrumo/core/google_credential_source.py`) "
+" usuari ni verifiquen que un objecte referenciat sigui accessible. "
+"Escapament de consultes Drive (`src/cadrumo/core/google_drive_query.py`) "
 "Anàlisi de referències Drive "
 "(`src/cadrumo/core/google_drive_reference.py`) Extracció estructurada "
 "d'HTTP i quota (`src/cadrumo/core/google_http_error.py`)"
@@ -572,29 +571,21 @@ msgstr "fts_query.py (`src/cadrumo/core/fts_query.py`) — línies 1–23"
 
 #: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:60
 msgid ""
-"google_credential_source.py "
-"(`src/cadrumo/core/google_credential_source.py`) — lines 1–48"
-msgstr ""
-"google_credential_source.py "
-"(`src/cadrumo/core/google_credential_source.py`) — línies 1–48"
-
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:61
-msgid ""
 "google_drive_query.py (`src/cadrumo/core/google_drive_query.py`) — lines "
 "1–22"
 msgstr ""
 "google_drive_query.py (`src/cadrumo/core/google_drive_query.py`) — línies"
 " 1–22"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:62
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:61
 msgid ""
 "google_drive_reference.py (`src/cadrumo/core/google_drive_reference.py`) "
-"— lines 1–67"
+"— lines 1–37"
 msgstr ""
 "google_drive_reference.py (`src/cadrumo/core/google_drive_reference.py`) "
-"— línies 1–67"
+"— línies 1–37"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:63
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:62
 msgid ""
 "google_http_error.py (`src/cadrumo/core/google_http_error.py`) — lines "
 "1–85"
@@ -602,23 +593,23 @@ msgstr ""
 "google_http_error.py (`src/cadrumo/core/google_http_error.py`) — línies "
 "1–85"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:64
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:63
 msgid "hardware.py (`src/cadrumo/core/hardware.py`) — lines 1–150"
 msgstr "hardware.py (`src/cadrumo/core/hardware.py`) — línies 1–150"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:65
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:64
 msgid "hashing.py (`src/cadrumo/core/hashing.py`) — lines 1–269"
 msgstr "hashing.py (`src/cadrumo/core/hashing.py`) — línies 1–269"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:66
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:65
 msgid "hex.py (`src/cadrumo/core/hex.py`) — lines 1–120"
 msgstr "hex.py (`src/cadrumo/core/hex.py`) — línies 1–120"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:67
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:66
 msgid "iban.py (`src/cadrumo/core/iban.py`) — lines 1–97"
 msgstr "iban.py (`src/cadrumo/core/iban.py`) — línies 1–97"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:68
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:67
 msgid ""
 "identifier_grammar.py (`src/cadrumo/core/identifier_grammar.py`) — lines "
 "1–41"
@@ -626,7 +617,7 @@ msgstr ""
 "identifier_grammar.py (`src/cadrumo/core/identifier_grammar.py`) — línies"
 " 1–41"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:69
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:68
 msgid ""
 "identity_check_verdict.py (`src/cadrumo/core/identity_check_verdict.py`) "
 "— lines 1–48"
@@ -634,19 +625,19 @@ msgstr ""
 "identity_check_verdict.py (`src/cadrumo/core/identity_check_verdict.py`) "
 "— línies 1–48"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:70
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:69
 msgid "image_media_type.py (`src/cadrumo/core/image_media_type.py`) — lines 1–77"
 msgstr "image_media_type.py (`src/cadrumo/core/image_media_type.py`) — línies 1–77"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:71
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:70
 msgid "invoice_link.py (`src/cadrumo/core/invoice_link.py`) — lines 1–40"
 msgstr "invoice_link.py (`src/cadrumo/core/invoice_link.py`) — línies 1–40"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:72
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:71
 msgid "irnr.py (`src/cadrumo/core/irnr.py`) — lines 1–75"
 msgstr "irnr.py (`src/cadrumo/core/irnr.py`) — línies 1–75"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:73
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:72
 msgid ""
 "iva_category_resolution.py "
 "(`src/cadrumo/core/iva_category_resolution.py`) — lines 1–122"
@@ -654,7 +645,7 @@ msgstr ""
 "iva_category_resolution.py "
 "(`src/cadrumo/core/iva_category_resolution.py`) — línies 1–122"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:74
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:73
 msgid ""
 "iva_compensation_provenance.py "
 "(`src/cadrumo/core/iva_compensation_provenance.py`) — lines 1–66"
@@ -662,7 +653,7 @@ msgstr ""
 "iva_compensation_provenance.py "
 "(`src/cadrumo/core/iva_compensation_provenance.py`) — línies 1–66"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:75
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:74
 msgid ""
 "iva_deduction_fact.py (`src/cadrumo/core/iva_deduction_fact.py`) — lines "
 "1–23"
@@ -670,38 +661,38 @@ msgstr ""
 "iva_deduction_fact.py (`src/cadrumo/core/iva_deduction_fact.py`) — línies"
 " 1–23"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:76
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:75
 msgid "json_contract.py (`src/cadrumo/core/json_contract.py`) — lines 1–731"
 msgstr "json_contract.py (`src/cadrumo/core/json_contract.py`) — línies 1–731"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:77
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:76
 msgid "json_shapes.py (`src/cadrumo/core/json_shapes.py`) — lines 1–64"
 msgstr "json_shapes.py (`src/cadrumo/core/json_shapes.py`) — línies 1–64"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:78
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:77
 msgid "keyed_digest.py (`src/cadrumo/core/keyed_digest.py`) — lines 1–81"
 msgstr "keyed_digest.py (`src/cadrumo/core/keyed_digest.py`) — línies 1–81"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:79
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:78
 msgid "ledger_sort.py (`src/cadrumo/core/ledger_sort.py`) — lines 1–84"
 msgstr "ledger_sort.py (`src/cadrumo/core/ledger_sort.py`) — línies 1–84"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:80
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:79
 msgid "legacy_workbook.py (`src/cadrumo/core/legacy_workbook.py`) — lines 1–212"
 msgstr "legacy_workbook.py (`src/cadrumo/core/legacy_workbook.py`) — línies 1–212"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:81
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:80
 msgid "link_safety.py (`src/cadrumo/core/link_safety.py`) — lines 1–35"
 msgstr "link_safety.py (`src/cadrumo/core/link_safety.py`) — línies 1–35"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:82
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:81
 msgid "lockfile_unlink.py (`src/cadrumo/core/lockfile_unlink.py`) — lines 1–100"
 msgstr "lockfile_unlink.py (`src/cadrumo/core/lockfile_unlink.py`) — línies 1–100"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:83
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:82
 msgid "locks.py (`src/cadrumo/core/locks.py`) — lines 1–311"
 msgstr "locks.py (`src/cadrumo/core/locks.py`) — línies 1–311"
 
-#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:84
+#: ../../technical/articles/114-filing-projections-workflow-state-and-json-output-contracts.md:83
 msgid "locks_errors.py (`src/cadrumo/core/locks_errors.py`) — lines 1–30"
 msgstr "locks_errors.py (`src/cadrumo/core/locks_errors.py`) — línies 1–30"

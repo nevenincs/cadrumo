@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This 28-file slice covers command loading and suggestions, shared output/action transport, profile history and mutations, censal import/pull, authentication and representative setup, profile backup schemas, collaboration recipients, and Google configuration. I read all 5,584 assigned lines (46,296 measured tokens) across the nine planned pages. This is static analysis; I did not run commands, access an account, or contact AEAT, Google, or a remote storage provider.
+This 26-file slice covers command loading and suggestions, shared output/action transport, profile history and mutations, censal import/pull, authentication and representative setup, profile backup schemas, collaboration recipients, and Google configuration. I read all 5,384 assigned lines across the nine planned pages. This is static analysis; I did not run commands, access an account, or contact AEAT, Google, or a remote storage provider.
 
 ## Command routing, output, and taxpayer identity
 
@@ -33,7 +33,7 @@ Apoderado configuration writes only to the encrypted representative namespace, n
 
 Profile archive export writes a sealed encrypted capsule and refuses a bad suffix or existing destination before reading the capsule. The archive omits the profile label; key-free inspection reports the plaintext header (product, bucket ID, schema version, creation time, manifest digest) and no recovery-enrollment status. A separate push payload describes remote mirroring of ciphertext objects and namespace manifests, not a portable archive: failed objects are identified by namespace/HMAC rather than plaintext. It also makes cleanup failure visible because an object left remotely after rollback failure may have no manifest to enumerate it. Reconciliation payloads distinguish journals whose staged cleartext was removed from failures left journalled for later retry. These are security-relevant states; the actual archive cryptography, remote storage, and reconciliation implementation were not inspected here. Collaboration declarations likewise make public-key recipient add/list/remove available, but key validation and trust are delegated (archive export/inspect (`src/cadrumo/entrypoints/cli/config/_archive_cli.py`), mirror result schema (`src/cadrumo/entrypoints/cli/config/_archive_push_payloads.py`), reconciliation result schema (`src/cadrumo/entrypoints/cli/config/_archive_reconcile_payloads.py`), collaboration command authority (`src/cadrumo/entrypoints/cli/config/_collab_command_specs.py`)).
 
-Google commands distinguish client registration, OAuth login/status/logout, credential-source selection, folder configuration, and provider probing. Result schemas omit client secrets, refresh tokens, and service-account private keys; login/status expose account email, scopes, presence and timestamps. Impersonation selection requires a target principal when scopes, delegates, subject, or lifetime are supplied, then reconstructs the canonical selection for validation. The token is described as re-derived from Application Default Credentials rather than stored in the CLI payload. Drive folder IDs and probe facts are projected as configuration/health, not proof of a successful sync. Credential acquisition, OAuth, remote permissions, and storage-provider behavior remain delegated (Google command authority (`src/cadrumo/entrypoints/cli/config/_google_command_specs.py`), credential-source handler (`src/cadrumo/entrypoints/cli/config/_google_credential_source_cli.py`), credential-source validation (`src/cadrumo/entrypoints/cli/config/_google_credential_source_payloads.py`), folder commands (`src/cadrumo/entrypoints/cli/config/_google_folder.py`), Google result schemas (`src/cadrumo/entrypoints/cli/config/_google_payloads.py`)).
+Google commands distinguish OAuth login/status/logout, folder view, and provider probing. Result schemas omit refresh tokens and every client field; login/status expose account email, scopes, presence and the issuance timestamp. The profile's Drive folder ID and probe facts are projected as configuration/health, not proof of a successful sync. Credential acquisition, OAuth, remote permissions, and storage-provider behavior remain delegated (Google command authority (`src/cadrumo/entrypoints/cli/config/_google_command_specs.py`), folder command (`src/cadrumo/entrypoints/cli/config/_google_folder.py`), Google result schemas (`src/cadrumo/entrypoints/cli/config/_google_payloads.py`)).
 
 The profile create/edit dispatcher constructs wizard flows only after the selected lazy leaf is resolved. It keeps the pinned registry operation lease around flow construction and dispatch, routes creation through scripted registration, and routes editing through the wizard’s runtime patch persister. A shared command error boundary wraps both modes, avoiding wizard imports on unrelated config commands. Config schema helper and check declaration keep deferred payload references and the workstation check surface import-light. This code establishes routing and schema intent; it does not establish the wizard’s profile-update correctness or the workstation check’s diagnostic coverage (profile wizard dispatch (`src/cadrumo/entrypoints/cli/config/_manager_dispatch.py`), shared schema declaration (`src/cadrumo/entrypoints/cli/config/_command_spec_schema.py`), check command authority (`src/cadrumo/entrypoints/cli/config/_check_command_specs.py`)).
 
@@ -43,7 +43,7 @@ The strongest evidence here is the separation of data provenance and authority: 
 
 ## Coverage appendix
 
-All 28 assigned files are linked below.
+All 26 assigned files are linked below.
 
 - `src/cadrumo/entrypoints/cli/command_suggestions.py`
 - `src/cadrumo/entrypoints/cli/common.py`
@@ -67,8 +67,6 @@ All 28 assigned files are linked below.
 - `src/cadrumo/entrypoints/cli/config/_complete_setup_payloads.py`
 - `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py`
 - `src/cadrumo/entrypoints/cli/config/_google_command_specs.py`
-- `src/cadrumo/entrypoints/cli/config/_google_credential_source_cli.py`
-- `src/cadrumo/entrypoints/cli/config/_google_credential_source_payloads.py`
 - `src/cadrumo/entrypoints/cli/config/_google_folder.py`
 - `src/cadrumo/entrypoints/cli/config/_google_folder_payloads.py`
 - `src/cadrumo/entrypoints/cli/config/_google_payloads.py`

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"POT-Creation-Date: 2026-10-05 11:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -55,22 +55,18 @@ msgstr "Hatókör"
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:12
 msgid ""
-"This chunk covers 20 CLI modules and all 4,533 assigned lines (37,732 "
-"measured proxy tokens). I read the complete helper plan in seven bounded "
-"pages, including the full secure-input module and both slices of the "
-"shared config payload module. Inspection was static: no application "
-"imports, CLI execution, worker calls, filesystem mutation, or external "
-"provider access. The token count is a measured proxy, not an "
-"authoritative native-model context limit."
+"This chunk covers 19 CLI modules and all 4,448 assigned lines. I read the"
+" complete helper plan in seven bounded pages, including the full secure-"
+"input module and both slices of the shared config payload module. "
+"Inspection was static: no application imports, CLI execution, worker "
+"calls, filesystem mutation, or external provider access."
 msgstr ""
-"Ez a részlet 20 CLI-modult és mind a 4,533 kijelölt sort lefedi (37,732 "
-"mért helyettesítő token). A teljes segédtervet elolvastam hét "
-"körülhatárolt oldalon, beleértve a teljes biztonságosbemenet-modult és a "
-"közös konfigurációstartalom-modul mindkét szeletét. A vizsgálat statikus "
-"volt: nem importáltam alkalmazást, nem futtattam CLI-t, nem hívtam "
-"workert, nem módosítottam fájlrendszert és nem értem el külső "
-"szolgáltatót. A tokenszám mért helyettesítő érték, nem mérvadó "
-"natívmodell-kontextuskorlát."
+"Ez a részlet 19 CLI-modult és mind a 4,448 kijelölt sort lefedi. A teljes"
+" segédtervet elolvastam hét körülhatárolt oldalon, beleértve a teljes "
+"biztonságosbemenet-modult és a közös konfigurációstartalom-modul mindkét "
+"szeletét. A vizsgálat statikus volt: nem importáltam alkalmazást, nem "
+"futtattam CLI-t, nem hívtam workert, nem módosítottam fájlrendszert és "
+"nem értem el külső szolgáltatót."
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:14
 msgid "Capabilities and main flows"
@@ -200,18 +196,14 @@ msgid ""
 "`finally`; removal reports whether a secret was present, never its value "
 "(certificate bridge "
 "(`src/cadrumo/entrypoints/cli/config/runtime_certificate.py`)). Google "
-"client registration similarly reads at most 65,536 bytes, hashes and "
-"submits path/digest publicly while sending JSON bytes as a protected "
-"secret, and wipes its mutable buffer on every path. Human Google login "
-"goes through a dedicated consent flow that pins profile/session, checks "
-"the registered contract, waits for the exact terminal review, and returns"
-" a correlated result; other typed configuration requests use the "
-"registered-operation bridge (Google configuration "
+"configuration takes no secret input. Human Google login goes through a "
+"dedicated consent flow that pins profile/session, checks the registered "
+"contract, waits for the exact terminal review, and returns a correlated "
+"result; other typed configuration requests use the registered-operation "
+"bridge (Google configuration "
 "(`src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`), "
 "Google consent "
-"(`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`), Google "
-"registration "
-"(`src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`))."
+"(`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`))."
 msgstr ""
 "A tanúsítványparancsok pontos profilworkeren keresztül regisztrálnak, "
 "listáznak, választanak ki, ellenőriznek és távolítanak el elnevezett "
@@ -222,19 +214,15 @@ msgstr ""
 "titokként adja át, és `finally` ágban törli; az eltávolítás azt jelenti, "
 "jelen volt-e titok, soha nem az értékét (tanúsítványhíd "
 "(`src/cadrumo/entrypoints/cli/config/runtime_certificate.py`)). A Google-"
-"kliens regisztrációja hasonlóan legfeljebb 65,536 bájtot olvas, hashel és"
-" nyilvánosan útvonalat/kivonatot küld be, miközben a JSON-bájtokat védett"
-" titokként továbbítja, és minden útvonalon felülírja a módosítható "
-"pufferét. Az emberi Google-bejelentkezés külön hozzájárulási folyamaton "
-"halad át, amely rögzíti a profilt/munkamenetet, ellenőrzi a regisztrált "
-"szerződést, megvárja a pontos végállapoti áttekintést, és összerendelt "
-"eredményt ad vissza; más típusos konfigurációs kérések a "
-"regisztráltművelet-hidat használják (Google-konfiguráció "
+"konfiguráció nem fogad titkos bemenetet. Az emberi Google-bejelentkezés "
+"külön hozzájárulási folyamaton halad át, amely rögzíti a "
+"profilt/munkamenetet, ellenőrzi a regisztrált szerződést, megvárja a "
+"pontos végállapoti áttekintést, és összerendelt eredményt ad vissza; más "
+"típusos konfigurációs kérések a regisztráltművelet-hidat használják "
+"(Google-konfiguráció "
 "(`src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`), "
 "Google-hozzájárulás "
-"(`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`), Google-"
-"regisztráció "
-"(`src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`))."
+"(`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`))."
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:24
 msgid ""
@@ -441,8 +429,8 @@ msgid "Coverage appendix"
 msgstr "Lefedettségi függelék"
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:42
-msgid "All 20 assigned source files were read in full."
-msgstr "A kijelölt 20 forrásfájl mindegyikét teljes egészében elolvastam."
+msgid "All 19 assigned source files were read in full."
+msgstr "A kijelölt 19 forrásfájl mindegyikét teljes egészében elolvastam."
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:44
 msgid "`src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`"
@@ -477,49 +465,45 @@ msgid "`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`"
 
 #: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:52
-msgid "`src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`"
-msgstr "`src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`"
-
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:53
 msgid "`src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:54
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:53
 msgid "`src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:55
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:54
 msgid "`src/cadrumo/entrypoints/cli/config/runtime_recovery_status.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/runtime_recovery_status.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:56
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:55
 msgid "`src/cadrumo/entrypoints/cli/config/runtime_workstation_check.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/runtime_workstation_check.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:57
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:56
 msgid "`src/cadrumo/entrypoints/cli/config/scripted_registration.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/scripted_registration.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:58
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:57
 msgid "`src/cadrumo/entrypoints/cli/config/secure_input.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/secure_input.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:59
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:58
 msgid "`src/cadrumo/entrypoints/cli/config/status_rendering.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/status_rendering.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:60
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:59
 msgid "`src/cadrumo/entrypoints/cli/config/storage_cli.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/storage_cli.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:61
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:60
 msgid "`src/cadrumo/entrypoints/cli/config/storage_payloads.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config/storage_payloads.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:62
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:61
 msgid "`src/cadrumo/entrypoints/cli/config_payloads.py`"
 msgstr "`src/cadrumo/entrypoints/cli/config_payloads.py`"
 
-#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:63
+#: ../../technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.md:62
 msgid "`src/cadrumo/entrypoints/cli/counterparty_correlation.py`"
 msgstr "`src/cadrumo/entrypoints/cli/counterparty_correlation.py`"

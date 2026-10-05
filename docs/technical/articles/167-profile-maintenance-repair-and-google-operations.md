@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This 42-file slice covers profile inspection and mutation, repair and backup reconciliation, secure custody, certificate sources, descendant facts, workstation checks, and Google account/Drive operations. I read all 5,971 assigned lines (47,642 measured tokens) across the nine planned pages. I inspected code and declared transport contracts only; I did not execute commands, connect to an account, or test filesystem, runtime, browser, or provider effects.
+This 41-file slice covers profile inspection and mutation, repair and backup reconciliation, secure custody, certificate sources, descendant facts, workstation checks, and Google account/Drive operations. I read all 5,881 assigned lines across the nine planned pages. I inspected code and declared transport contracts only; I did not execute commands, connect to an account, or test filesystem, runtime, browser, or provider effects.
 
 ## Profile lifecycle and repair
 
@@ -29,9 +29,9 @@ The descendant interface reads and validates governed family facts against the p
 
 ## Google, recipients, and external actions
 
-Google configuration uses registered exact-profile requests for Desktop-client registration, login/refresh, status, logout, credential-source selection, Drive-folder configuration, and provider probing. Result schemas omit OAuth client secrets and refresh tokens; status exposes account email, scopes, and timestamps. Logout removes token/metadata while preserving the registered client. Credential-source payload validation rebuilds a canonical selection, requiring a target principal when impersonation fields are present; the documented service-account token is re-derived from Application Default Credentials and is absent from the payload. Folder ID and probe status describe configured location and observed reachability/writability, not proof of a successful mirror (Google handlers (`src/cadrumo/entrypoints/cli/config/google.py`), credential-source payload (`src/cadrumo/entrypoints/cli/config/_google_credential_source_payloads.py`)).
+Google configuration uses registered exact-profile requests for login, status, logout, folder view, and provider probing. Result schemas omit refresh tokens and every client field; status exposes whether a sign-in is stored, the account email, scopes, and the issuance timestamp. Logout removes token/metadata while preserving the profile's Drive folder record. Folder ID and probe status describe the stored location and observed reachability/writability, not proof of a successful mirror (Google handlers (`src/cadrumo/entrypoints/cli/config/google.py`)).
 
-The Google correlation layer checks request class against the registered definition and projection, exact profile/session/frontend, terminal condition, refusal code, and permitted operation effect. It also correlates returned folder IDs, credential-source fields, login mode, client registration, and status completeness to the request/result. Human login consent is bounded to a finite timeout of at most 420 seconds and pins profile/session identity around each runtime exchange. It validates the registered request/review/response schema bindings, operation identity, revision, and proposal digest before requiring an interactive terminal. A noninteractive attempt tries to reject that exact proposal when transport permits, then returns the terminal refusal; apply/reject responses are tied to the available interaction revision and session actor. This is strong transport correlation, while OAuth/provider behavior remains delegated (Google contract map (`src/cadrumo/entrypoints/cli/config/google_configuration_contract_map.py`), receipt checks (`src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`), consent admission (`src/cadrumo/entrypoints/cli/config/google_consent_admission.py`), consent review (`src/cadrumo/entrypoints/cli/config/google_consent_review.py`), response checks (`src/cadrumo/entrypoints/cli/config/google_consent_response.py`), exchange boundary (`src/cadrumo/entrypoints/cli/config/google_consent_exchange.py`), observation and result checks (`src/cadrumo/entrypoints/cli/config/google_consent_observation.py`)).
+The Google correlation layer checks request class against the registered definition and projection, exact profile/session/frontend, terminal condition, refusal code, and permitted operation effect. It also correlates returned folder IDs, probe and logout facts, and status completeness to the request/result. Human login consent is bounded to a finite timeout of at most 420 seconds and pins profile/session identity around each runtime exchange. It validates the registered request/review/response schema bindings, operation identity, revision, and proposal digest before requiring an interactive terminal. A noninteractive attempt tries to reject that exact proposal when transport permits, then returns the terminal refusal; apply/reject responses are tied to the available interaction revision and session actor. This is strong transport correlation, while OAuth/provider behavior remains delegated (Google contract map (`src/cadrumo/entrypoints/cli/config/google_configuration_contract_map.py`), receipt checks (`src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`), consent admission (`src/cadrumo/entrypoints/cli/config/google_consent_admission.py`), consent review (`src/cadrumo/entrypoints/cli/config/google_consent_review.py`), response checks (`src/cadrumo/entrypoints/cli/config/google_consent_response.py`), exchange boundary (`src/cadrumo/entrypoints/cli/config/google_consent_exchange.py`), observation and result checks (`src/cadrumo/entrypoints/cli/config/google_consent_observation.py`)).
 
 One bounded receipt-contract question remains: `correlate_probe` verifies that the result echoes the request’s `read_only` flag and identifies Google Drive, but `google_success_effects` permits `NONE`, `UPDATED`, or `UNKNOWN` for every probe request. Thus this local admission code would accept an `UPDATED` receipt even when `read_only=True`. The effect guarantee of the underlying probe operation/provider path is not in this slice, so this is a confirmed permissive correlation rule, not enough evidence by itself to claim a reachable remote-write defect (Google receipt correlation (`src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`), probe request correlation (`src/cadrumo/entrypoints/cli/config/google_configuration_session_correlation.py`)).
 
@@ -43,7 +43,7 @@ The main strengths are explicit destructive preflights, pointer-lock and revisio
 
 ## Coverage appendix
 
-All 42 assigned files are linked below.
+All 41 assigned files are linked below.
 
 - `src/cadrumo/entrypoints/cli/config/_profile_delete.py`
 - `src/cadrumo/entrypoints/cli/config/_profile_inspect.py`
@@ -79,7 +79,6 @@ All 42 assigned files are linked below.
 - `src/cadrumo/entrypoints/cli/config/google_configuration_refusals.py`
 - `src/cadrumo/entrypoints/cli/config/google_configuration_request_correlation.py`
 - `src/cadrumo/entrypoints/cli/config/google_configuration_session_correlation.py`
-- `src/cadrumo/entrypoints/cli/config/google_configuration_source_correlation.py`
 - `src/cadrumo/entrypoints/cli/config/google_configuration_status_correlation.py`
 - `src/cadrumo/entrypoints/cli/config/google_consent_admission.py`
 - `src/cadrumo/entrypoints/cli/config/google_consent_exchange.py`

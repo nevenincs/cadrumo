@@ -90,7 +90,7 @@
     {
       "source": "map/stage-2/STAGE-2-013.md",
       "source_sha256": "7fe82b50d45c0c3f84ce1a16b7171b307ad749a4a1cffbaa6c0d03df647a2d00",
-      "page": "articles/013-google-sheets-readback-drive-evidence-and-google-credentials.md",
+      "page": "articles/013-google-sheets-readback-drive-ownership-and-google-sign-in.md",
       "section": "article",
       "body_sha256": "59c0262dd366f472657afcc4ceb3d3c324ef783c62eff9bed9c1dcdf125a8a62"
     },

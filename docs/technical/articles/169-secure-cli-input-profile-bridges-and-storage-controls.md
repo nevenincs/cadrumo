@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers 20 CLI modules and all 4,533 assigned lines (37,732 measured proxy tokens). I read the complete helper plan in seven bounded pages, including the full secure-input module and both slices of the shared config payload module. Inspection was static: no application imports, CLI execution, worker calls, filesystem mutation, or external provider access. The token count is a measured proxy, not an authoritative native-model context limit.
+This chunk covers 19 CLI modules and all 4,448 assigned lines. I read the complete helper plan in seven bounded pages, including the full secure-input module and both slices of the shared config payload module. Inspection was static: no application imports, CLI execution, worker calls, filesystem mutation, or external provider access.
 
 ## Capabilities and main flows
 
@@ -19,7 +19,7 @@ Scripted profile creation gives noninteractive callers a real create path: it va
 
 Profile reads and writes are assembled from authenticated worker projections. The view path reads facts, chooses output language by explicit option/settings/profile/default precedence, then requests issues and overview against the same revision and content digest; it checks that profile/setup/schema/readiness identity agrees before rendering. Validation reports canonical readiness issues. Wizard patch persistence rereads a mutation baseline, validates the proposed patch against that baseline and pinned authority, submits revision plus content-digest preconditions, and returns only a complete settled fact page. The descendant flow seeds the interactive form from one runtime-authorized revision and keeps that original revision through human input; the write goes through the same baseline-checked mutation seam and verifies the resulting count. A post-commit readback failure is surfaced with operation ID and committed state rather than disguised as a failed write (profile view projection (`src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`), wizard patch (`src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`), descendant flow (`src/cadrumo/entrypoints/cli/config/runtime_descendant_door.py`), descendant persistence (`src/cadrumo/entrypoints/cli/config/runtime_descendants.py`)).
 
-Certificate commands register, list, select, check, and remove named sources through the exact profile worker. Caller-relative certificate paths are resolved before crossing into a worker with a different current directory. The bridge checks typed projection, exact profile, terminal success, expected mutation effect, and selected result facts. A passphrase is passed as a mutable one-shot secret and cleared in `finally`; removal reports whether a secret was present, never its value (certificate bridge (`src/cadrumo/entrypoints/cli/config/runtime_certificate.py`)). Google client registration similarly reads at most 65,536 bytes, hashes and submits path/digest publicly while sending JSON bytes as a protected secret, and wipes its mutable buffer on every path. Human Google login goes through a dedicated consent flow that pins profile/session, checks the registered contract, waits for the exact terminal review, and returns a correlated result; other typed configuration requests use the registered-operation bridge (Google configuration (`src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`), Google consent (`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`), Google registration (`src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`)).
+Certificate commands register, list, select, check, and remove named sources through the exact profile worker. Caller-relative certificate paths are resolved before crossing into a worker with a different current directory. The bridge checks typed projection, exact profile, terminal success, expected mutation effect, and selected result facts. A passphrase is passed as a mutable one-shot secret and cleared in `finally`; removal reports whether a secret was present, never its value (certificate bridge (`src/cadrumo/entrypoints/cli/config/runtime_certificate.py`)). Google configuration takes no secret input. Human Google login goes through a dedicated consent flow that pins profile/session, checks the registered contract, waits for the exact terminal review, and returns a correlated result; other typed configuration requests use the registered-operation bridge (Google configuration (`src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`), Google consent (`src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`)).
 
 Censal review validates the registered operation/schema contract and profile baseline before submission, enforces a payload-size limit, starts only after the runtime confirms no ephemeral secret is required, and exchanges requests on the same exact session. It reads and validates the canonical review projection, compares the reviewed field intents with the request, obtains operation/interaction/revision-specific response authority, and correlates the accepted apply/reject response. After response it observes to settlement under a deadline, keeps the most recent admitted receipt facts if a later operation fails, and checks the result document against the exact contract, outcome, and reviewed-proposal digest. The CLI response path therefore controls explicit human apply/reject; the actual census/provider operation remains worker-owned (censal review (`src/cadrumo/entrypoints/cli/config/runtime_censal_review.py`), review projection (`src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`), response authority (`src/cadrumo/entrypoints/cli/config/runtime_censal_response.py`)).
 
@@ -39,7 +39,7 @@ Synthesis should connect these CLI guards to the application registration and cu
 
 ## Coverage appendix
 
-All 20 assigned source files were read in full.
+All 19 assigned source files were read in full.
 
 - `src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_censal_response.py`
@@ -49,7 +49,6 @@ All 20 assigned source files were read in full.
 - `src/cadrumo/entrypoints/cli/config/runtime_descendants.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`
-- `src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`
 - `src/cadrumo/entrypoints/cli/config/runtime_recovery_status.py`
