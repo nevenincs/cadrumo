@@ -9,7 +9,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -22,7 +22,14 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.operation_definition import OperationDefinition
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenied, Availability, DisclosureCategory
+from ...user_profile.access_contracts import (
+    AccessAction,
+    AccessAllowed,
+    AccessDenialCode,
+    AccessDenied,
+    Availability,
+    DisclosureCategory,
+)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..batch_ingest import (
     BatchItemResult,
@@ -34,6 +41,7 @@ from ..batch_ingest import (
 )
 from ..evidence_ingestion_contracts import (
     LedgerEvidenceBatchExecutionResult,
+    LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
     LedgerEvidenceBatchSnapshot,
 )
@@ -342,3 +350,43 @@ def test_projection_rejects_terminal_effect_that_hides_real_writes(subject: Subj
         project_ledger_evidence_ingestion_result(result, receipt.model_copy(update={"effect": OperationEffect.UPDATED}))
         == result.projection
     )
+
+
+def test_batch_with_a_custody_write_of_unknown_outcome_refuses_and_reports_unknown(
+    subject: Subject, tmp_path: Path
+) -> None:
+    """The batch absorbs the failed row, so the uncertainty has to be raised as the operation's refusal."""
+    path = tmp_path / "invoice.pdf"
+    path.write_bytes(b"synthetic structured invoice bytes")
+    subject.structured_refuses = False
+    # The writer stores the bytes and then loses the acknowledgement: nothing can
+    # say whether the write is durable.
+    subject.store.fail_after_blob_write = True
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _run(
+            subject,
+            LedgerEvidenceBatchRequest(
+                profile_id=PROFILE_ID,
+                sources=(str(path),),
+                source_directory=str(tmp_path),
+                direction=InvoiceKind.RECEIVED,
+            ),
+        )
+
+    assert refused.value.code.code == "REFUSED_PROFILE_ACCESS"
+    assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
+    assert subject.effects.effects[-1] is OperationEffect.UNKNOWN
+    assert not subject.operands.values
+
+
+def test_a_batch_result_document_cannot_claim_an_uncertain_effect() -> None:
+    """The refusal above exists because a stored result describes certain writes only."""
+    with pytest.raises(ValidationError, match="certain concrete writer outcomes"):
+        LedgerEvidenceBatchProjection(
+            profile_id=PROFILE_ID,
+            direction=InvoiceKind.RECEIVED,
+            run=LedgerEvidenceBatchSnapshot(items=(), unresolved=(), inference_pause=None),
+            write_count=1,
+            effect=OperationEffect.UNKNOWN,
+        )

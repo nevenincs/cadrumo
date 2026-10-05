@@ -172,6 +172,11 @@ def _execute_batch(
             before_item=before_read,
         )
     raise_if_admission_failed()
+    if writes.tracker.has_uncertain_write:
+        # The batch absorbs a failed row and carries on, so a custody write whose
+        # outcome is unknown surfaces here. A result document can only describe
+        # certain writes; this refuses before one is built.
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return LedgerEvidenceBatchExecutionResult(
         projection=LedgerEvidenceBatchProjection(
             profile_id=payload.profile_id,
@@ -212,8 +217,6 @@ async def _settle_ingestion(
     try:
         result = await run_with_ledger_commit_fence(work, tracker=writes.tracker, context=context, task_name=task_name)
         admission.raise_if_failed()
-        if writes.tracker.has_uncertain_write:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         if len(canonical_json_bytes(result.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     except BaseException:

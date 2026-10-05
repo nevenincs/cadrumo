@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7cfa5c3f17cb0dbf55810d30ab26ae9129f637c8f9914e5e2b5a609c1b5cc96'
+body_hash: 'sha256:9c0465e56c97f1d7ff1d928697743c759f9d1686d2204eb481d2ffdbb7a4c4e5'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -451,6 +451,12 @@ related:
 - `S12` `verify:` `ruff check, ruff format --check and ty on touched files; just check-types` -> `pass`
 - `S12` `verify:` `just check-import-boundaries` -> `fail`
 - `S12` `by:` `CADRUMO-GOOGLE-OATH`
+- `S13` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation.py`
+- `S13` `M` `src/cadrumo/application/ledger/tests/test_evidence_ingestion_operation.py`
+- `S13` `verify:` `pytest unit: evidence batch operation (13), with the uncertain-write refusal, the certain partial and none refusals and the complete batch` -> `pass`
+- `S13` `verify:` `pytest unit and integration: ledger evidence tests and evidence conformance cases (177)` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
+- `S13` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -516,3 +522,7 @@ related:
 - `S12` What counts as proof is an exact-type list in the composition: the provider's own refusals (permission, not found, conflict, quota), failures raised before any request (validation, missing client, ended sign-in, profile and terminal preconditions, disabled export), and nothing else. Network, unavailability, integrity and unclassified failures leave an admitted write unknown.
 - `S12` A boundary admitted as read-only is released on any refusal, because a read cannot have changed anything however it ended. This is why the probe that refuses on the missing client now settles with no effect; the two conformance expectations for that case were changed from unknown to none.
 - `S12` check-import-boundaries reported zero hard findings and all contracts kept, but its verdict was unavailable because another session changed the source tree while it ran.
+- `S13` This Step is outside the Google integration. It is here because the defect was observed while S02 was verified and the product owner's relayed instruction asked for it to be fixed.
+- `S13` The uncertain write is produced through the real commit fence: the synthetic store writes the bytes and then raises, which the tracker classifies as a write of unknown outcome. The result contract still rejects an unknown effect; a test pins that, since it is the reason the refusal has to come first.
+- `S13` The refusal is the access denial `OPERATION_DENIED` that the code already intended. It carries no remedy text of its own; whether an uncertain evidence write deserves a more specific refusal is a question for the ledger's owner and was not decided here.
+- `S13` The full type and import-boundary gates were not rerun for this two-line change; ty passed on both files.

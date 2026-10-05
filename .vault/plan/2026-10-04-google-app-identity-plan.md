@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:f72a57d7166a692889f748e204672a5479fecfc226f6b0655d1d497cadc469a9'
+body_hash: 'sha256:e4511a24c407ce8d85ea5f6891b7d3900c43fd610a121bc0569fd49cee9db962'
 ---
 
 # `google-app-identity` plan
@@ -111,7 +111,7 @@ proposed to the product owner at plan close.
 - [ ] `S10` - Run the live proof of every listed Sheets and Drive method under drive.file alone against an application-created workbook, or record it as pending verification; `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`.
 - [x] `S11` - Commit the publisher client file with the source and include it in every build, removing the ignore rule and both build exclusions, and confirm a built wheel and sdist carry it; `src/cadrumo/_data/google/oauth_client.json`.
 - [x] `S12` - Settle a definitive provider refusal under the Google configuration operation as a refusal with no effect applied, keeping UNKNOWN wherever the effect is ambiguous; `src/cadrumo/application/user_profile/google_configuration_executor.py`.
-- [ ] `S13` - Report an uncertain custody write during a ledger evidence batch as the designed refusal instead of a validation error; `src/cadrumo/application/ledger/evidence_ingestion_operation.py`.
+- [x] `S13` - Report an uncertain custody write during a ledger evidence batch as the designed refusal instead of a validation error; `src/cadrumo/application/ledger/evidence_ingestion_operation.py`.
 
 ## Parallelization
 
