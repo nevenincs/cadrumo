@@ -1032,7 +1032,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     def storage_env_var_names(cls) -> frozenset[str]:
         """Return path controls safe to carry across isolated process launch boundaries.
 
-        This is the product allowlist: both root variables and the settings field
+        This is the product allowlist: the primary root variable and the settings field
         of every operator-overridable taxonomy member. Development tool locations
         are not product controls; ``dev/`` reads them from
         :func:`~cadrumo.core.storage_environment.development_tool_env_var_names`.

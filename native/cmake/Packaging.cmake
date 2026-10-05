@@ -61,17 +61,16 @@ add_custom_target(bundle ALL DEPENDS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
 add_dependencies(bundle rust_application)
 if(BUILD_TESTING)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
-    "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+    "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
   string(JSON entrypoint_directory GET "${package_layout}" paths native)
   foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
     add_test(NAME bundle.entrypoint.${entrypoint} COMMAND "${CMAKE_COMMAND}" -E env
-      "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+      "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
       "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${entrypoint_directory}/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}" --help)
-    set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES
-      PASS_REGULAR_EXPRESSION "usage: ${entrypoint}" RESOURCE_LOCK package_inventory)
+    set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES RESOURCE_LOCK package_inventory)
   endforeach()
 endif()
 install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION .)

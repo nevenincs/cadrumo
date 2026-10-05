@@ -11,7 +11,7 @@ from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from .identity import identity
-from .layout import backend, load_layout
+from .layout import backend, distribution_target, load_layout
 
 
 def generate(destination: Path, number: int, date: str, tools: Path, channel: str = "stable") -> None:
@@ -19,8 +19,7 @@ def generate(destination: Path, number: int, date: str, tools: Path, channel: st
     version = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     layout = load_layout()
-    target = "windows-x86-64" if layout["platform"] == "windows-x64" else layout["platform"]
-    product = identity(target, channel)
+    product = identity(distribution_target(layout), channel)
     destination.mkdir(parents=True, exist_ok=True)
     metadata = {
         "product": PRODUCT_IDENTITY.display_name,

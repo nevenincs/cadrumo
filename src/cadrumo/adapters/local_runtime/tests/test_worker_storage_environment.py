@@ -30,7 +30,8 @@ def test_linux_worker_receives_only_declared_storage_controls_and_managed_temp(
     temporary_root = storage_root / "worker-temp"
     assert environment["PATH"] == "/usr/bin:/bin"
     assert environment["LANG"] == "C" and environment["LC_ALL"] == "C"
-    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "configured")
+    # The development root variable is not a product control; the pinned root replaces it.
+    assert "CADRUMO_STORAGE_ROOT" not in environment
     # The worker inherits the root it serves; it never re-resolves the parent's override.
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
     assert environment["CADRUMO_TEMP_DIR"] == "worker-temp"

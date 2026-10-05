@@ -28,6 +28,8 @@
     "CADRUMO_EXTERNAL_BIN_DIRS"
   ],
   "entrypoints": {
+    "aeat": "CADRUMO command line",
+    "cadrumo-mcp": "CADRUMO MCP server",
     "cadrumo-runtime": "CADRUMO local runtime"
   },
   "user_docs": {

@@ -9,11 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.config import AuthorityRootSettings, Settings
-from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
     STORAGE_ROOT,
-    TOOL_STORAGE_LOCATIONS,
     ChildEnvironmentProfile,
     StorageMode,
     StorageRootRefusal,
@@ -22,10 +20,11 @@ from cadrumo.core.storage_environment import (
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
-from dev.packaging.native.storage_vectors import storage_root_vectors
 
-from .layout import entrypoint_files, load_layout
+from .identity import identity
+from .layout import distribution_target, entrypoint_files, load_layout
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
+from .storage_vectors import storage_root_vectors
 
 CONTRACT_SCHEMA = 1
 
@@ -45,12 +44,11 @@ def _rust_option(value: str | None) -> str:
     return "None" if value is None else f"Some({_rust_string(value)})"
 
 
-def _authority_variable() -> str:
-    """The one host-inherited pin is the Settings-owned authority root."""
-    (variable,) = PROCESS_ENVIRONMENT.host_inherited
-    if variable.lower() not in AuthorityRootSettings.model_fields:
-        raise ValueError(f"Host-inherited pin is not the authority root setting: {variable}")
-    return variable
+def _require_authority_pin() -> None:
+    """The native host pins only the Settings-owned authority root beyond the pinned set."""
+    for variable in (*PROCESS_ENVIRONMENT.host_inherited, *PROCESS_ENVIRONMENT.windows_host_inherited):
+        if variable.lower() not in AuthorityRootSettings.model_fields:
+            raise ValueError(f"Host-inherited pin is not the authority root setting: {variable}")
 
 
 def _root_section() -> dict[str, Any]:
@@ -114,7 +112,7 @@ def _environment_section(fields: list[str]) -> dict[str, Any]:
         },
         "allowlist": {
             "product": sorted(product_env_var_names()),
-            "development": sorted(development_tool_env_var_names()),
+            "development": sorted({STORAGE_ROOT.development_variable, *development_tool_env_var_names()}),
         },
         "profiles": {
             ChildEnvironmentProfile.OPERATOR.value: {"passes_product_allowlist": True},
@@ -152,6 +150,7 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "    pub refusal: Option<&'static str>,",
         "}",
         f"pub const CONTRACT_SCHEMA: u32 = {contract['schema']};",
+        f"pub const BUILD_CHANNEL: &str = {_rust_string(contract['channel']['build'])};",
         f"pub const ROOT_VARIABLE: &str = {_rust_string(root['variable'])};",
         f"pub const DEVELOPMENT_ROOT_VARIABLE: &str = {_rust_string(root['development_variable'])};",
         f"pub const DEVELOPMENT_ROOT_PRECEDENCE: &[&str] = {_rust_strings(root['precedence']['development'])};",
@@ -206,9 +205,13 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
     return lines
 
 
-def generate(root: Path, destination: Path) -> None:
-    """Write C, Rust and inspection projections from their authored owners in one run."""
+def generate(root: Path, destination: Path, channel: str = "stable") -> None:
+    """Write C, Rust and inspection projections from their authored owners in one run.
+
+    ``channel`` is the release channel the identity projection validated for this build.
+    """
     layout = load_layout(root=root)
+    build_channel = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml").channel
     version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     if not version.startswith((root / ".python-version").read_text(encoding="utf-8").strip() + "."):
         raise ValueError("Exact CPython build must belong to the development minor")
@@ -229,6 +232,7 @@ def generate(root: Path, destination: Path) -> None:
         raise ValueError("Temporary storage must declare its Settings field")
     contract: dict[str, Any] = {
         "schema": CONTRACT_SCHEMA,
+        "channel": {"build": build_channel, "installed_directory": STORAGE_ROOT.channel_directory(build_channel)},
         "layout": layout,
         "python": version,
         "settings": fields,
@@ -241,25 +245,15 @@ def generate(root: Path, destination: Path) -> None:
         "vectors": [vector.as_contract() for vector in storage_root_vectors()],
         "runtime_exit": runtime_exit_section(),
     }
-    # Retained for the platform crate until it consumes the schema 1 constants; the
-    # tool-cache pair is a development location the packaged pywin32 cache still reads.
-    tool_cache_env, tool_cache_default = TOOL_STORAGE_LOCATIONS["XDG_CACHE_HOME"]
-    legacy = {
+    _require_authority_pin()
+    package_strings = {
         **{key.upper(): value for key, value in layout["paths"].items()},
-        "PRODUCT_NAME": PRODUCT_IDENTITY.python_package,
-        "STORAGE_ENV": STORAGE_ROOT.variable,
-        "STORAGE_ROOT_ENV": STORAGE_ROOT.development_variable,
-        "STORAGE_DEFAULT": contract["root"]["development_default"],
-        "AUTHORITY_ENV": _authority_variable(),
         "TEMPORARY_ENV": temporary.settings_field.upper(),
         "TEMPORARY_DEFAULT": temporary.relative_path().as_posix(),
-        "TOOL_CACHE_ENV": tool_cache_env,
-        "TOOL_CACHE_DEFAULT": tool_cache_default,
     }
     rust = [f"pub const ABI: u32 = {layout['abi']};"]
-    rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in legacy.items())
+    rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
     rust.append(f"pub const RESERVED_ENV: &[&str] = {_rust_strings(fields)};")
-    rust.append(f"pub const STORAGE_ENV_ALLOWLIST: &[&str] = {_rust_strings(sorted(product))};")
     rust.append(f"pub const PACKAGE_ENV_ALLOWLIST: &[&str] = {_rust_strings(layout['overrides'])};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
@@ -279,5 +273,6 @@ def generate(root: Path, destination: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
+    parser.add_argument("--channel", default="stable")
     args = parser.parse_args()
-    generate(Path(__file__).resolve().parents[3], args.destination)
+    generate(Path(__file__).resolve().parents[3], args.destination, args.channel)

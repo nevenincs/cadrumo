@@ -64,6 +64,10 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 string(JSON CADRUMO_PLATFORM GET "${package_layout}" platform)
 string(JSON CADRUMO_BACKEND GET "${package_layout}" backend)
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 include(CTest)
 add_subdirectory(native)
 include(native/cmake/Packaging.cmake)

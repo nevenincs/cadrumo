@@ -12,6 +12,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
     STORAGE_ROOT,
+    TOOL_STORAGE_LOCATIONS,
     StorageMode,
     development_tool_env_var_names,
     product_env_var_names,
@@ -34,7 +35,7 @@ def test_native_storage_allowlist_tracks_settings_taxonomy_and_tool_paths(tmp_pa
 
     contract = json.loads((destination / "contract.json").read_text(encoding="utf-8"))
     generated = (destination / "contract.rs").read_text(encoding="utf-8")
-    declaration = next(line for line in generated.splitlines() if line.startswith("pub const STORAGE_ENV_ALLOWLIST"))
+    declaration = next(line for line in generated.splitlines() if line.startswith("pub const PRODUCT_ENV_ALLOWLIST"))
     rust_values = declaration.partition("= &[")[2].partition("];")[0]
     observed = tuple(re.findall(r'"([^"]+)"', rust_values))
     expected = tuple(sorted(Settings.storage_env_var_names()))
@@ -81,6 +82,17 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
 
     assert contract["schema"] == 1
     assert "#define CADRUMO_CONTRACT_SCHEMA 1" in (tmp_path / "contract.h").read_text(encoding="utf-8")
+    assert contract["channel"] == {"build": "stable", "installed_directory": STORAGE_ROOT.product_directory}
+    assert _rust_strings(generated, "BUILD_CHANNEL") == ["stable"]
+    preview = tmp_path / "preview"
+    generate(REPO_ROOT, preview, "preview")
+    preview_contract = json.loads((preview / "contract.json").read_text(encoding="utf-8"))
+    assert preview_contract["channel"] == {
+        "build": "preview",
+        "installed_directory": STORAGE_ROOT.channel_directory("preview"),
+    }
+    with pytest.raises(ValueError, match="Unsupported release channel"):
+        generate(REPO_ROOT, tmp_path / "unknown", "nightly")
     root = contract["root"]
     assert root["variable"] == STORAGE_ROOT.variable
     assert root["precedence"] == {
@@ -105,8 +117,12 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     environment = contract["environment"]
     assert environment["pinned"] == [STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables]
     assert environment["allowlist"]["product"] == sorted(product_env_var_names())
-    assert environment["allowlist"]["development"] == sorted(development_tool_env_var_names())
+    assert environment["allowlist"]["development"] == sorted(
+        {STORAGE_ROOT.development_variable, *development_tool_env_var_names()}
+    )
     assert not set(environment["allowlist"]["product"]) & set(environment["allowlist"]["development"])
+    assert STORAGE_ROOT.development_variable not in environment["allowlist"]["product"]
+    assert STORAGE_ROOT.development_variable not in _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST")
     assert environment["profiles"] == {
         "operator": {"passes_product_allowlist": True},
         "strict": {"passes_product_allowlist": False},
@@ -130,13 +146,23 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert rust_vectors == [vector["name"] for vector in contract["vectors"]]
 
 
-def test_packaged_contract_carries_no_development_tool_location_beyond_the_interim_cache_pin(tmp_path: Path) -> None:
+def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) -> None:
     generate(REPO_ROOT, tmp_path)
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
-    leaked = {name for name in development_tool_env_var_names() if f'"{name}"' in generated}
-    # The platform crate still pins the pywin32 generated cache through this one
-    # development location until it consumes a contract-declared successor.
-    assert leaked == {"CADRUMO_TOOL_CACHE_DIR"}
+    installed_bases = {candidate.variable for rule in STORAGE_ROOT.installed_defaults for candidate in rule.candidates}
+    tool_names = development_tool_env_var_names() | (set(TOOL_STORAGE_LOCATIONS) - installed_bases)
+    assert not {name for name in tool_names if f'"{name}"' in generated}
+    for retired in ("TOOL_CACHE_ENV", "TOOL_CACHE_DEFAULT", "STORAGE_ENV_ALLOWLIST", "STORAGE_ROOT_ENV"):
+        assert f"pub const {retired}:" not in generated
+    locations = {
+        entry["category"]: entry for entry in json.loads((tmp_path / "contract.json").read_text())["locations"]
+    }
+    cache = locations[StorageCategory.PYWIN32_GENERATED_CACHE.value]
+    assert (cache["subpath"], cache["variable"], cache["override_policy"]) == (
+        STORAGE_TAXONOMY[StorageCategory.PYWIN32_GENERATED_CACHE].subpath,
+        None,
+        "fixed",
+    )
 
 
 _ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")

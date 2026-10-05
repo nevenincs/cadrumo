@@ -39,6 +39,12 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
     return shared
 
 
+def distribution_target(layout: dict[str, Any]) -> str:
+    """Return the canonical distribution target for a native platform mapping."""
+    platform = str(layout["platform"])
+    return "windows-x86-64" if platform == "windows-x64" else platform
+
+
 def entrypoint_files(layout: dict[str, Any]) -> dict[str, str]:
     """Map each declared console entrypoint to its package-relative executable in the native directory."""
     native = layout["paths"]["native"]

@@ -89,11 +89,13 @@ def test_blank_overrides_are_unset_and_relative_root_anchors_to_repository() -> 
 def test_isolated_launch_allowlist_carries_storage_controls_without_credentials() -> None:
     controls = Settings.storage_env_var_names()
     assert {
-        "CADRUMO_STORAGE_ROOT",
+        "CADRUMO_LOCAL_STORAGE_ROOT",
         "CADRUMO_TEMP_DIR",
         "CADRUMO_RUNTIME_SOCKET_DIR",
         "CADRUMO_OLLAMA_HOME_DIR",
     } <= controls
+    # The development root variable is honoured only in a checkout; children inherit the pinned root.
+    assert STORAGE_ROOT.development_variable not in controls
     assert "CADRUMO_SECRET_PASSPHRASE" not in controls
     assert "CADRUMO_CERTIFICATE_PASSWORD_SECRET" not in controls
     assert "CADRUMO_CLAVE_PERMANENTE_PASSWORD" not in controls
@@ -135,8 +137,9 @@ def test_allowlist_split_separates_product_controls_from_development_tools() -> 
         for location in STORAGE_TAXONOMY.values()
         if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE and location.settings_field
     }
-    assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT", "CADRUMO_WEBVIEW_DIR", "CADRUMO_TEMP_DIR"} <= product
-    assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT"}
+    assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_WEBVIEW_DIR", "CADRUMO_TEMP_DIR"} <= product
+    assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT"}
+    assert "CADRUMO_STORAGE_ROOT" not in product
     assert development == {variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()}
     assert "CADRUMO_TOOL_CACHE_DIR" in development
     assert not product & development
@@ -187,7 +190,6 @@ def test_operator_child_keeps_allowlisted_overrides_and_pins_the_root(tmp_path: 
     assert environment == {
         "PATH": "ambient-path",
         "SYSTEMROOT": "ambient-system-root",
-        "CADRUMO_STORAGE_ROOT": str(tmp_path / "shared"),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(root.resolve()),
         "CADRUMO_TEMP_DIR": "worker-temp",
         "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
@@ -210,7 +212,6 @@ def test_strict_child_carries_only_pins_and_host_inherited_values(tmp_path: Path
     assert environment == {
         "CADRUMO_LOCAL_STORAGE_ROOT": str(root.resolve()),
         "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "authority"),
-        "XDG_CACHE_HOME": str(tmp_path / "pinned-cache"),
         "TEMP": temporary,
         "TMP": temporary,
         "TMPDIR": temporary,
@@ -221,14 +222,19 @@ def test_strict_child_carries_only_pins_and_host_inherited_values(tmp_path: Path
 
 
 @pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
-def test_packaged_cache_pin_reaches_windows_children_only(tmp_path: Path, profile: ChildEnvironmentProfile) -> None:
-    received = {"XDG_CACHE_HOME": str(tmp_path / "pinned-cache")}
-    windows = child_environment(profile, tmp_path / "root", received=received, base={}, sys_platform="win32")
-    linux = child_environment(profile, tmp_path / "root", received=received, base={}, sys_platform="linux")
-    assert windows["XDG_CACHE_HOME"] == str(tmp_path / "pinned-cache")
-    assert "XDG_CACHE_HOME" not in linux
-    absent = child_environment(profile, tmp_path / "root", received={}, base={}, sys_platform="win32")
-    assert "XDG_CACHE_HOME" not in absent
+def test_packaged_pywin32_cache_resolves_beneath_the_root_without_a_host_pin(
+    tmp_path: Path, profile: ChildEnvironmentProfile
+) -> None:
+    location = storage_location(StorageCategory.PYWIN32_GENERATED_CACHE)
+    assert location.override_policy is StorageOverridePolicy.FIXED
+    assert location.settings_field is None
+    root = (tmp_path / "root").resolve()
+    assert root.joinpath(location.relative_path()) == root / "cache" / "pywin32" / "gen_py"
+    received = {"XDG_CACHE_HOME": str(tmp_path / "former-cache-pin")}
+    for sys_platform in ("win32", "linux"):
+        environment = child_environment(profile, root, received=received, base={}, sys_platform=sys_platform)
+        assert "XDG_CACHE_HOME" not in environment
+        assert environment[STORAGE_ROOT.variable] == str(root)
 
 
 def test_pinned_names_and_precedence_come_from_the_declaration() -> None:

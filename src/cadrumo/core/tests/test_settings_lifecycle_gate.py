@@ -383,6 +383,13 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
             "core/tests/test_storage_environment.py",
             "test_shared_root_relocates_settings_and_relative_refinements",
         ),
+        # Independent oracle for the pywin32 generated cache: the reviewed
+        # packaging patch documents this exact location, so the test pins it
+        # rather than echoing the declaration it checks.
+        (
+            "core/tests/test_storage_environment.py",
+            "test_packaged_pywin32_cache_resolves_beneath_the_root_without_a_host_pin",
+        ),
     },
 )
 

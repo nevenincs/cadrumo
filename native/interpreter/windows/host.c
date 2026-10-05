@@ -96,12 +96,12 @@ int wmain(int argc, wchar_t **argv) {
 #endif
     cadrumo_context *ctx = NULL;
     cadrumo_buffer error = {0};
-    wchar_t *paths[10] = {0};
+    wchar_t *paths[CADRUMO_PATH_KEYS] = {0};
     wchar_t library[32768];
     int result = 120;
     if (cadrumo_platform_abi() != CADRUMO_PLATFORM_ABI ||
         cadrumo_platform_create(CADRUMO_PLATFORM_ABI, &ctx, &error)) goto failure;
-    for (uint32_t i = 0; i < 10; ++i) {
+    for (uint32_t i = 0; i < CADRUMO_PATH_KEYS; ++i) {
         paths[i] = path(ctx, i);
         if (!paths[i]) goto failure;
     }
@@ -141,6 +141,6 @@ failure:
 done:
     cadrumo_platform_release(&error);
     cadrumo_platform_destroy(ctx);
-    for (int i = 0; i < 10; ++i) free(paths[i]);
+    for (int i = 0; i < CADRUMO_PATH_KEYS; ++i) free(paths[i]);
     return result;
 }

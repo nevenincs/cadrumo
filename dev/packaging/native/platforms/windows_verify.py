@@ -51,8 +51,10 @@ child = subprocess.check_output([sys.executable, '-c',
 assert json.loads(child) == [sys.executable, 1]
 user = pathlib.Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve()
 import win32com
-cache_root = pathlib.Path(os.environ['XDG_CACHE_HOME']).resolve()
-assert pathlib.Path(win32com.__gen_path__).resolve().is_relative_to(cache_root / 'pywin32' / 'gen_py')
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
+generated_cache = (user / storage_location(StorageCategory.PYWIN32_GENERATED_CACHE).relative_path()).resolve()
+assert pathlib.Path(win32com.__gen_path__).resolve() == generated_cache
 assert all(pathlib.Path(p).resolve().is_relative_to(root) for p in win32com.__path__)
 temporary_root = pathlib.Path(os.environ['TEMP']).resolve()
 assert pathlib.Path(tempfile.gettempdir()).resolve() == temporary_root
@@ -69,7 +71,7 @@ assert writes and all(pathlib.Path(p).resolve().is_relative_to(temporary_root) f
 print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': sys.version, 'origins': origins,
                   'child': json.loads(child), 'windows_version': windows_version_observation,
                   'python_audit_writes': writes, 'user_root': str(user),
-                  'temporary_root': str(temporary_root), 'cache_root': str(cache_root)}))
+                  'temporary_root': str(temporary_root), 'pywin32_generated_cache': str(generated_cache)}))
 """
 
 KDF_READY_PROBE = r"""
@@ -182,19 +184,24 @@ def verify_entrypoints(
     environment: dict[str, str],
     run: Callable[[list[str]], CommandResult],
 ) -> dict[str, Any]:
-    """Pass arguments through each console entrypoint and serve the packaged runtime."""
+    """Prove each console entrypoint equals its console script run by the interpreter, then serve the runtime."""
     observed: dict[str, Any] = {}
+    interpreter = destination / layout["paths"]["executable"]
     files = entrypoint_files(layout)
     for name, relative in files.items():
         executable = destination / relative
-        usage = run_command([str(executable), "--help"], cwd=cwd, environment=environment, timeout_seconds=90)
-        if usage.returncode != 0 or f"usage: {name}" not in usage.stdout:
-            raise AssertionError(f"Entrypoint {name} did not run its console script: {usage.stderr}")
-        refused = run_command(
-            [str(executable), "--unrecognized-option"], cwd=cwd, environment=environment, timeout_seconds=90
-        )
-        if refused.returncode != 2:
-            raise AssertionError(f"Entrypoint {name} did not forward its arguments: exit {refused.returncode}")
+        script = ["-c", f"import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint({name!r})"]
+        exits = {}
+        for label, arguments in (("help", ["--help"]), ("unrecognized_option", ["--unrecognized-option"])):
+            native = run_command([str(executable), *arguments], cwd=cwd, environment=environment, timeout_seconds=90)
+            reference = run_command(
+                [str(interpreter), *script, *arguments], cwd=cwd, environment=environment, timeout_seconds=90
+            )
+            if (native.returncode, native.stdout) != (reference.returncode, reference.stdout):
+                raise AssertionError(f"Entrypoint {name} differs from its console script for {label}: {native.stderr}")
+            exits[label] = native.returncode
+        if exits["help"] != 0 or exits["unrecognized_option"] == 0:
+            raise AssertionError(f"Entrypoint {name} did not forward its arguments: {exits}")
         # A declared entrypoint outside the native directory cannot locate its package root.
         displaced = destination / executable.name
         shutil.copy2(executable, displaced)
@@ -206,8 +213,9 @@ def verify_entrypoints(
             raise AssertionError(f"Displaced entrypoint {name} was not refused: exit {outside.returncode}")
         observed[name] = {
             "location": relative,
-            "usage": True,
-            "argument_refusal_exit": refused.returncode,
+            "matches_console_script": True,
+            "help_exit": exits["help"],
+            "argument_refusal_exit": exits["unrecognized_option"],
             "displaced_refusal_exit": outside.returncode,
         }
     runtime = (destination / files["cadrumo-runtime"]).resolve(strict=True)
@@ -240,7 +248,6 @@ def verify(
             environment.pop(name)
     storage_root = cwd / "storage"
     temporary_root = cwd / "temporary"
-    cache_root = cwd / "cache"
     environment.update(
         {
             "PYTHONHOME": str(cwd),
@@ -252,7 +259,9 @@ def verify(
             "CADRUMO_STORAGE_ROOT": str(cwd / "canonical-storage"),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
             "CADRUMO_TEMP_DIR": str(temporary_root),
-            "CADRUMO_TOOL_CACHE_DIR": str(cache_root),
+            # Neither the former tool-cache override nor an ambient XDG cache may place packaged state.
+            "CADRUMO_TOOL_CACHE_DIR": str(cwd / "hostile-tool-cache"),
+            "XDG_CACHE_HOME": str(cwd / "hostile-xdg-cache"),
         }
     )
     exe = destination / "python.exe"
@@ -354,8 +363,10 @@ def verify(
     after = {p.relative_to(destination).as_posix(): digest(p) for p in destination.rglob("*") if p.is_file()}
     if before != after:
         raise AssertionError("Interpreter modified its installed package")
-    if not storage_root.is_dir() or not temporary_root.is_dir() or not cache_root.is_dir():
+    if not storage_root.is_dir() or not temporary_root.is_dir():
         raise AssertionError("Native bootstrap did not prepare the configured storage overrides")
+    if (cwd / "hostile-tool-cache").exists() or (cwd / "hostile-xdg-cache").exists():
+        raise AssertionError("Packaged processes wrote to a development or ambient cache location")
     evidence.update(
         {
             "refusals": refused,

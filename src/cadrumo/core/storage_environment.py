@@ -212,9 +212,9 @@ PROCESS_ENVIRONMENT: Final[ProcessEnvironmentDeclaration] = ProcessEnvironmentDe
     namespace_prefix=PRODUCT_IDENTITY.environment_prefix,
     temporary_variables=("TEMP", "TMP", "TMPDIR"),
     host_inherited=("CADRUMO_AUTHORITY_ROOT",),
-    # The packaged interpreter's pywin32 initialisation reads this cache pin at
-    # import; children must keep it until the native contract declares its successor.
-    windows_host_inherited=("XDG_CACHE_HOME",),
+    # The packaged pywin32 cache resolves from the pinned root through its own
+    # taxonomy member, so the Windows host pins nothing beyond the shared set.
+    windows_host_inherited=(),
 )
 """The one declaration of child-process environment classes."""
 
@@ -481,13 +481,15 @@ def prepare_temporary_directory() -> Path:
 def product_env_var_names() -> frozenset[str]:
     """Return the operator overrides a product child may receive.
 
-    Both root variables plus the settings field of every operator-overridable
-    taxonomy member; ``FIXED`` members carry no variable.
+    The primary root variable plus the settings field of every
+    operator-overridable taxonomy member; ``FIXED`` members carry no variable.
+    The development root variable is honoured only in a checkout and is not a
+    product control.
     """
     from .storage_taxonomy import StorageOverridePolicy
     from .storage_taxonomy_locations import STORAGE_TAXONOMY
 
-    names = set(STORAGE_ROOT.precedence)
+    names = {STORAGE_ROOT.variable}
     names.update(
         location.settings_field.upper()
         for location in STORAGE_TAXONOMY.values()

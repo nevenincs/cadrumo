@@ -117,8 +117,8 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.DESKTOP_WEBVIEW,
         "webview",
         dormant_reason=(
-            "The native desktop host places its webview profile here through the generated native "
-            "contract; no Python module reads it."
+            "The native desktop host places its webview profile and window state here through its "
+            "storage projection query; no Python product module reads it."
         ),
         settings_field="cadrumo_webview_dir",
         # The renderer evicts its own cache; generic reclaim must not delete a live profile.
@@ -310,6 +310,19 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         "cache/corpus-search/corpus.sqlite",
         consumer_module="application/corpus_search/runtime.py",
         node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        StorageCategory.PYWIN32_GENERATED_CACHE,
+        "cache/pywin32/gen_py",
+        dormant_reason=(
+            "The packaged interpreter's reviewed pywin32 patch places win32com's generated COM cache "
+            "here beneath the pinned root; no Python product module reads it."
+        ),
+        # pywin32 regenerates and owns these files; no product retention policy bounds them.
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,

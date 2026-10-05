@@ -15,6 +15,9 @@ from typing import Any
 import httpx
 from PIL import Image
 
+from cadrumo.core.storage_environment import STORAGE_ROOT
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from dev._paths import REPO_ROOT
 
 from ..hashing import digest
@@ -91,9 +94,11 @@ def assemble_native(python: Path, packages: Path, native: Path, root: Path, cont
         before = digest(com_init)
         source = com_init.read_text(encoding="utf-8")
         old = "if not __frozen:\n    SetupEnvironment()"
+        # The native host always pins the root variable to the resolved absolute root.
+        generated_cache = storage_location(StorageCategory.PYWIN32_GENERATED_CACHE).relative_path().parts
         new = (
             "__path__.append(os.path.abspath(os.path.join(__path__[0], '..', 'win32comext')))\n"
-            "__gen_path__ = os.path.join(os.environ['XDG_CACHE_HOME'], 'pywin32', 'gen_py')"
+            f"__gen_path__ = os.path.join(os.environ[{STORAGE_ROOT.variable!r}], *{generated_cache!r})"
         )
         if source.count(old) != 1:
             raise ValueError("Unrecognized pywin32 environment initialization")

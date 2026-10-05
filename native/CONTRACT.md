@@ -115,9 +115,12 @@ executables, with their version-resource descriptions. Each name must be a
 other. The platform mapping supplies the executable suffix. CMake compiles
 the same host source once per entrypoint with the script name fixed at
 compile time, so `cadrumo-runtime.exe` cannot be redirected to other code by
-its arguments. Entrypoints ship in the native directory, for example
-`P/bin/cadrumo-runtime.exe`. The generated contract lists their file names; the
-platform library maps a declared entrypoint image in `P/bin/` back to `P` and
+its arguments. The declared entrypoints are `aeat`, `cadrumo-mcp` and
+`cadrumo-runtime`; they ship in the native directory as `P/bin/aeat.exe`,
+`P/bin/cadrumo-mcp.exe` and `P/bin/cadrumo-runtime.exe`. Consumers such as the
+desktop locate them through the generated inventory, never a spelled path.
+The generated contract lists their file names; the platform library maps a
+declared entrypoint image in `P/bin/` back to `P` and
 refuses one found anywhere else. Every other image, including `python.exe` and
 the desktop `cadrumo.exe`, keeps the package root as its own directory. Because
 `P/bin/` also holds the bundled DLLs, every host links with
@@ -130,9 +133,11 @@ script through `_cadrumo_bootstrap.run_entrypoint`. All arguments pass to the
 script; the host intercepts none. `sys.executable` remains `python.exe`,
 because runtime workers and the supervised KDF child relaunch it with
 interpreter arguments. Entrypoint executables are startup files, hashed by the
-package bootstrap before application code runs. CTest checks each staged entrypoint's
-usage output. Product ZIP verification forwards help and an unknown option
-through each entrypoint, refuses a copy displaced to the package root, then starts `cadrumo-runtime.exe` against an isolated
+package bootstrap before application code runs. CTest checks that each staged
+entrypoint's help exits successfully. Product ZIP verification requires each
+entrypoint's exit status and standard output for help and for an unknown option
+to equal `python.exe` running the same console script, refuses a copy displaced
+to the package root, then starts `cadrumo-runtime.exe` against an isolated
 storage root with hostile Python variables and completes the verified runtime
 handshake with the runtime's exact process image. The probe stops the runtime
 through its process scope; it registers no service and leaves no process.
@@ -152,7 +157,12 @@ defaults. A checkout keeps its repository-local default and an installed package
 uses the per-user, per-channel default of the platform mappings. A relative
 `CADRUMO_LOCAL_STORAGE_ROOT` anchors at the checkout in development and is
 refused when installed. Python resolves only the stable channel's default; a
-native package pins the root for its own channel before Python starts. No
+native package pins the root for its own channel before Python starts. The
+native host is installed when its package root holds the package manifest and
+in development when a checkout marker is above the executable; otherwise it
+refuses. It never reads the working directory. Installed Windows resolves the
+default through `FOLDERID_LocalAppData`, not the environment, and replays the
+generated storage-root vectors in the `platform.resolver` test. No
 storage is migrated: a tree that an earlier installed build created beneath a
 launch directory is neither read nor moved, and an operator who wants it sets
 `CADRUMO_LOCAL_STORAGE_ROOT` to it.
@@ -779,10 +789,6 @@ unless the run should use the default root, build `desktop-run`, and check:
   launch restores the window's size, position and maximized state.
 - A second launch brings the open window forward and exits with 0.
 
-## Native distribution definitions
-
-`native/cmake/distribution` packages an already assembled payload. Its shared
-identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
 ## Desktop single instance
 
 The desktop GUI holds one lock per user and channel, across installed versions and
@@ -846,6 +852,10 @@ access.
 
 macOS runs no desktop GUI and takes no lock.
 
+## Native distribution definitions
+
+`native/cmake/distribution` packages an already assembled payload. Its shared
+identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
 application ID is `md.neve.cadrumo`; the preview channel adds `.preview`. Upgrade
 UUIDs are deterministic per application/channel, target and machine installation
 scope. They do not change with the version. MSI product/package codes retain their

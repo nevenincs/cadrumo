@@ -17,5 +17,6 @@ uint32_t cadrumo_platform_prepare(cadrumo_context *ctx, cadrumo_buffer *error);
 void cadrumo_platform_release(cadrumo_buffer *buffer);
 void cadrumo_platform_destroy(cadrumo_context *ctx);
 /* Path keys: 0 package, 1 user root, 2 executable, 3 stdlib, 4 site-packages,
- * 5 native libraries, 6 authority, 7 secure storage, 8 temp, 9 cache. */
+ * 5 native libraries, 6 authority, 7 secure storage, 8 temp. */
+#define CADRUMO_PATH_KEYS 9
 #endif

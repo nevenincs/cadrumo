@@ -33,6 +33,7 @@ file(GLOB settings_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/cadrumo/c
   "${PROJECT_SOURCE_DIR}/src/cadrumo/core/storage*.py" "${PROJECT_SOURCE_DIR}/src/cadrumo/core/product_identity.py")
 add_custom_command(OUTPUT "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.generate "${CONTRACT_DIR}"
+    --channel "${CADRUMO_ID_CHANNEL}"
   DEPENDS ${settings_inputs} ${contract_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/generate.py"
     "${PROJECT_SOURCE_DIR}/dev/packaging/native/runtime_exit_reasons.py"
     "${PROJECT_SOURCE_DIR}/src/cadrumo/application/runtime/contracts.py"
