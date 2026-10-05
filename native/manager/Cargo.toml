@@ -11,6 +11,7 @@ publish = false
 fixture-test-mode = []
 
 [dependencies]
+cadrumo-platform = { path = "../platform" }
 serde = "1"
 serde_json = "1"
 

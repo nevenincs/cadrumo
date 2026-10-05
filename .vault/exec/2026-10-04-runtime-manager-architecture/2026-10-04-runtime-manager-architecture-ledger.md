@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:799693e8c1bb9e1939628142ed5553a49c81ddbc1b16d0bc62e933437de53694'
+body_hash: 'sha256:ba8f41afe92bccc307871ec46c2621f6db1d656b69e919653aca199f63e336de'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -193,6 +193,17 @@ related:
 - `S23` `verify:` `cargo clippy manager all-targets fixture-test-mode -D warnings` -> `pass`
 - `S23` `verify:` `cargo fmt manager check and git diff check` -> `pass`
 - `S23` `verify:` `vaultspec-core vault check all feature runtime-manager-architecture` -> `pass`
+- `S08` `M` `native/manager/Cargo.toml`
+- `S08` `M` `native/manager/Cargo.lock`
+- `S08` `M` `native/manager/src/supervision/environment.rs`
+- `S08` `M` `native/manager/src/supervision/launch.rs`
+- `S08` `A` `native/manager/tests/environment.rs`
+- `S08` `M` `native/manager/tests/supervision.rs`
+- `S08` `M` `native/manager/tests/fixture/runtime.rs`
+- `S08` `verify:` `cargo test --locked --manifest-path native/manager/Cargo.toml --features fixture-test-mode --lib --test environment --test supervision` -> `pass`
+- `S08` `verify:` `cargo clippy --locked --manifest-path native/manager/Cargo.toml --all-targets --features fixture-test-mode -- -D warnings` -> `pass`
+- `S08` `verify:` `cargo fmt --manifest-path native/manager/Cargo.toml -- --check` -> `pass`
+- `S08` `verify:` `cargo build --locked --manifest-path native/manager/Cargo.toml --release` -> `pass`
 
 ## Notes
 
@@ -207,3 +218,4 @@ related:
 - `S07` Part B closes the Step. Fixed a Part A Manager.cmake defect that split escaped LIB/INCLUDE semicolons. Fixture target dir is `CADRUMO_PATH_CARGO/manager-fixture` inside the declared cargo output. ProductName is the channel display name (CADRUMO Preview on preview). Signing gap: signed=true is validated only; no signing inventory exists in packaging. CompanyName omitted pending a publisher projection. Desktop packaging path not exercised (docs off).
 - `S11` POSIX/Linux paths compile-checked only (no Rust toolchain in WSL). Adds unix-only libc 0.2.190 (same as sibling crates). supervision::json made pub(crate) for reuse. Follow-ons added to the plan: gate supervisor restarts through the start claim, register manager .runtime records in the Python storage taxonomy, and record the session lock/claim/Quit grammar as a cross-version contract. Token-user/owner-only descriptor code duplicates native/platform desktop.rs; a shared helper needs the platform owner.
 - `S23` Windows verification only; no Linux compile check. Toolchain C:/Users/hello/.cargo/bin/cargo.exe; target build/b5-manager-cargo; generated contract and identity build/windows-x86-64/b1/generated. main.rs remains version-only; composition and B4 S04/S22/S24 contracts remain open. `run_with_permit` transfers the initial claim safely through pre-readiness retry.
+- `S08` Partial S08 checkpoint: canonical native/platform installed-default resolver and Strict child environment replace manager's duplicated allowlist. Only filtered output is lazily cached for restarts, authority is package-pinned, and diagnostics omit environment values. Final 85 affected tests and release checks passed on Windows in build/b5-manager-cargo with B1-generated contract/identity; executor completion 22caa0 and 7edfba. S08 stays open for bounded interpreter identity/version probes and shared Settings projection; production entrypoint composition and B4 shutdown/count/schema contracts remain absent.

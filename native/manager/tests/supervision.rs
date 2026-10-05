@@ -5,11 +5,14 @@
 //! are removed afterwards; every fixture process is ended during teardown.
 #![cfg(windows)]
 
+use cadrumo_manager::contract::{
+    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, NAMESPACE_PREFIX, PINNED_ENV,
+    RESERVED_ENV, ROOT_VARIABLE,
+};
 use cadrumo_manager::session::claim::StartClaim;
 use cadrumo_manager::session::ownership::{BootRecordLocator, Role, WaitReason, reserve_restart};
 use cadrumo_manager::session::quit::{QuitMarker, record_quit};
 use cadrumo_manager::supervision::adoption::{ForeignReason, InstalledVersion, InstalledVersions};
-use cadrumo_manager::supervision::environment::WINDOWS_ALLOWED;
 use cadrumo_manager::supervision::exit::{ExitReason, RuntimeExit};
 use cadrumo_manager::supervision::launch::LaunchTarget;
 use cadrumo_manager::supervision::restart::{RestartClass, RestartPolicy};
@@ -295,7 +298,7 @@ fn stop_drains_a_ready_runtime_over_the_channel() {
 }
 
 #[test]
-fn the_runtime_gets_the_supervised_arguments_and_only_the_allow_list_environment() {
+fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() {
     let root = Root::new(&["serve"]);
     let (_, outcome) = Case::default().run(&root, stop_on_ready(1));
     assert_eq!(outcome, SETTLED);
@@ -321,17 +324,33 @@ fn the_runtime_gets_the_supervised_arguments_and_only_the_allow_list_environment
         ]
     );
     let environment = launch["environment"].as_array().expect("environment");
+    assert_eq!(launch["pinned_root"].as_str(), Some(root_text.as_ref()));
     assert!(!environment.is_empty());
     for name in environment {
         let name = name.as_str().expect("variable name");
+        if !PINNED_ENV.contains(&name) {
+            assert!(
+                !CLEARED_NAMES.contains(&name) && !RESERVED_ENV.contains(&name),
+                "{name}"
+            );
+            assert!(
+                !CLEARED_PREFIXES
+                    .iter()
+                    .any(|prefix| name.starts_with(prefix)),
+                "{name}"
+            );
+            assert!(!name.starts_with(NAMESPACE_PREFIX), "{name}");
+        }
         assert!(
-            WINDOWS_ALLOWED
-                .iter()
-                .any(|allowed| allowed.eq_ignore_ascii_case(name)),
-            "{name} reached the runtime"
+            !HOST_INHERITED_ENV.contains(&name),
+            "fixtures inherit no authority pin"
         );
-        assert!(!name.to_ascii_uppercase().starts_with("CADRUMO_"), "{name}");
     }
+    assert!(
+        environment
+            .iter()
+            .any(|name| name.as_str() == Some(ROOT_VARIABLE))
+    );
 }
 
 #[test]

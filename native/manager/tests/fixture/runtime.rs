@@ -151,7 +151,8 @@ mod fixture {
         let environment: Vec<String> = env::vars_os()
             .map(|(name, _)| name.to_string_lossy().into_owned())
             .collect();
-        let record = json!({"pid": process::id(), "arguments": raw, "environment": environment});
+        let record = json!({"pid": process::id(), "arguments": raw, "environment": environment,
+            "pinned_root": env::var(cadrumo_manager::contract::ROOT_VARIABLE).ok()});
         for index in 0.. {
             let path = root.join(format!("fixture-launch-{index}"));
             match OpenOptions::new().write(true).create_new(true).open(&path) {

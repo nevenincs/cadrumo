@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:639f688c28c992ad86b4f6bd21f473a6417b9064d22142a4a1a1afa7f4d2e3f8'
+body_hash: 'sha256:27fe41c8da86087319579253a41e0a9d171cdabc7fa30807c140c2678b1ef4c4'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -26,6 +26,10 @@ PASS for S23. The supervisor reserves the cross-session start claim before backo
 ### manager-composition-pending | low | this checkpoint does not establish an operational manager
 
 The production `native/manager/src/main.rs` still accepts only `--version` and performs no lifecycle composition. S08/S10/S12/S13 and B4's ordered settle, exact operation counts and record grammar remain open. Windows fixtures establish this Step's claim behavior; Linux compilation and installed-package acceptance are not established here.
+
+### canonical-environment-checkpoint | low | S08 environment subset passes Windows review; composition remains pending
+
+2026-10-05 root review traced the seven-file manager-only change from B2's installed-default resolver through Strict environment construction to the actual fixture child. Developer/authority overrides are refused for managed locations; resolved root and selected-package authority are pinned. A review correction removed retention of raw ambient values: first spawn prepares and caches only canonical filtered output, preserving preparation timing, stable restarts and diagnostic omission. Final affected suite: 85 tests pass; all-target fixture clippy, formatting, release build and diff checks pass using `build/b5-manager-cargo` and the existing B1 generated inputs (executor completions `22caa0`, `7edfba`). No new high or critical finding in this subset. S08 verdict remains PENDING for bounded installed-interpreter probes and the shared Settings projection; no production-manager or Linux acceptance is claimed.
 
 ## Recommendations
 

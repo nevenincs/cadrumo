@@ -6,10 +6,15 @@ version = 4
 name = "cadrumo-manager"
 version = "0.1.0"
 dependencies = [
+ "cadrumo-platform",
  "libc",
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "cadrumo-platform"
+version = "0.1.0"
 
 [[package]]
 name = "itoa"
