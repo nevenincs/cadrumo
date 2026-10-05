@@ -116,6 +116,26 @@ Local tests cannot establish live provider acceptance of a changed application.
 Before publishing, use a designated Google account and a disposable Cadrumo
 profile containing synthetic data, from an interactive desktop terminal:
 
+For a source checkout, first select its published authority in that same
+PowerShell terminal. The development recipe sets the path for its own process;
+it cannot set the calling terminal's environment:
+
+```powershell
+Set-Location Y:\code\cadrumo-worktrees\tui
+just registry-publish-authority-if-authority-stale
+$env:CADRUMO_AUTHORITY_ROOT = Join-Path (Get-Location) '.authority'
+uv run --no-sync aeat config google status
+```
+
+Use your own checkout path in the first line. Continue only when the status
+command reaches the application successfully. `runtime_unavailable` is a
+separate runtime admission/startup failure, not an OAuth or Google Console
+failure. The CLI connects to the runtime; it does not start it. The runtime
+must serve the same storage root from the operator's interactive desktop.
+An installed distribution carries its authority and does not need this
+checkout override. For the commands below, a checkout uses
+`uv run --no-sync aeat` in place of bare `aeat`.
+
 1. Run `aeat config google login`. Confirm that the system browser opens and
    that consent requests only identity/email and files used by the app.
 2. Deny consent on one attempt and close the browser on another. Confirm no
