@@ -15,7 +15,10 @@ from cadrumo.application.auth.certificate_secret_backend import CertificateSecre
 from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
 from cadrumo.application.auth.protocols import BrowserSessionFactoryPort
 from cadrumo.application.auth.session_types import AeatSession
+from cadrumo.application.live.filed_data_ports import FiledEffectGuard
+from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.core.config import Settings
+from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -36,6 +39,13 @@ async def test_open_register_passes_the_pinned_authority_and_closes_both_scopes(
     expected_browser_session_factory = cast(BrowserSessionFactoryPort, object())
     expected_operator_scope_ports = cast(OperatorScopePorts, object())
 
+    @asynccontextmanager
+    async def expected_effect_guard() -> AsyncGenerator[None]:
+        yield
+
+    async def expected_session_write_reporter(effect: OperationEffect) -> None:
+        raise AssertionError(f"opening the register unexpectedly published a session effect: {effect}")
+
     async def fake_active_verified_session(
         *,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
@@ -43,6 +53,8 @@ async def test_open_register_passes_the_pinned_authority_and_closes_both_scopes(
         operation: str,
         operator_scope_ports: OperatorScopePorts,
         authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> tuple[AeatSession, Settings]:
         assert certificate_secret_backend_factory is expected_secret_backend_factory
         assert browser_session_factory is expected_browser_session_factory
@@ -50,6 +62,8 @@ async def test_open_register_passes_the_pinned_authority_and_closes_both_scopes(
         assert operator_scope_ports is expected_operator_scope_ports
         assert authority_operation is not None
         assert authority_operation is pinned_authority
+        assert effect_guard is expected_effect_guard
+        assert on_session_write is expected_session_write_reporter
         events.append("session-acquired")
         return session, settings
 
@@ -100,6 +114,8 @@ async def test_open_register_passes_the_pinned_authority_and_closes_both_scopes(
     async with adapter.open_register(
         operation="filed-register-pinned-authority-test",
         authority_operation=pinned_authority,
+        effect_guard=expected_effect_guard,
+        on_session_write=expected_session_write_reporter,
     ) as register_port:
         assert register_port.walk_timeout_ms == 4321
 

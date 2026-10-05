@@ -13,6 +13,8 @@ save/load roundtrip and revision-guarded mutation.
 See Also:
     :mod:`adapters.persistence.profile.foreign_assets`
         Sibling register adapter on the same storage kernel.
+
+Core types: :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

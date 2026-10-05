@@ -14,6 +14,8 @@ See Also:
         Typed register payload and its invariants.
     :mod:`adapters.persistence.profile.bienes_inversion`
         Sibling register adapter on the same storage kernel.
+
+Core types: :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

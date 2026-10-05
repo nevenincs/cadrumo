@@ -557,6 +557,8 @@ class TransactionCatalogueRepository:
         serializable batch that writes the catalogue and its related secure
         objects. This prevents a stale full-catalogue diff from deleting a
         concurrent addition or overwriting a concurrent edit to another row.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
         """
         from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
 

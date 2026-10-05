@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Event
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 from typing import override
 from uuid import uuid4
 
@@ -57,6 +57,32 @@ from ..worker_lease_transfer import read_worker_lease
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
+class _NativePeerError(Exception):
+    """An explicit native acquisition failure, portable across test platforms."""
+
+
+class _NativePeerProcess:
+    """Record native process handle acquisition without querying a synthetic PID."""
+
+    HANDLE = 4321
+    QUERY_RIGHTS = 0x400 | 0x100000
+
+    def __init__(self) -> None:
+        self.opened = 0
+        self.closed = 0
+
+    def open(self, rights: int, inherit: bool, process_id: int) -> int:
+        assert rights == self.QUERY_RIGHTS and not inherit
+        if process_id != 1234:
+            raise _NativePeerError("synthetic peer process absent")
+        self.opened += 1
+        return self.HANDLE
+
+    def close(self, handle: int) -> None:
+        assert handle == self.HANDLE and self.closed < self.opened
+        self.closed += 1
+
+
 class _Release:
     def __init__(self, failures: int = 0) -> None:
         self.failures = failures
@@ -78,6 +104,9 @@ class _Channel(WindowsRuntimeChannel):
         self.writes: list[bytes] = []
         self.read_failure: BaseException | None = None
         self.before_read: Callable[[], None] | None = None
+        self.native_peer = RuntimePeer(os_owner_id="synthetic-owner", process_id=1234)
+        self.incarnation_matches = True
+        self.peer_checks = 0
         for document in (
             RuntimeClientHello(
                 product_version="foreign" if foreign_version else "worker-test", storage_identity="a" * 64
@@ -91,7 +120,14 @@ class _Channel(WindowsRuntimeChannel):
     @property
     @override
     def peer(self) -> RuntimePeer:
-        return RuntimePeer(os_owner_id="synthetic-owner", process_id=1234)
+        return self.native_peer
+
+    @override
+    def verify_peer_process(self, process_handle: int) -> None:
+        assert process_handle == _NativePeerProcess.HANDLE
+        self.peer_checks += 1
+        if not self.incarnation_matches:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
 
     @override
     def read_exact(self, count: int, *, deadline: float) -> bytes:
@@ -164,6 +200,14 @@ class _Scope(WindowsProcessScope):
         self.timeouts: list[float] = []
         self.refuse_zero_timeout = False
         self.child = _Child()
+        self.native_member = True
+        self.membership_checks = 0
+
+    @override
+    def contains_process(self, process_handle: int) -> bool:
+        assert process_handle == _NativePeerProcess.HANDLE
+        self.membership_checks += 1
+        return self.native_member and self.launched and not self.release.released
 
     @override
     def launch(
@@ -223,6 +267,15 @@ class _Fixture:
         self.endpoints = tuple(_Endpoint(channel) for channel in self.channels)
         self.scope = _Scope()
         self.authorization = _Authorization()
+        self.native_process = _NativePeerProcess()
+        api = ModuleType("win32api")
+        api.__dict__.update(OpenProcess=self.native_process.open, CloseHandle=self.native_process.close)
+        constants = ModuleType("win32con")
+        constants.__dict__.update(PROCESS_QUERY_INFORMATION=0x400, SYNCHRONIZE=0x100000)
+        errors = ModuleType("pywintypes")
+        errors.__dict__["error"] = _NativePeerError
+        for module in (api, constants, errors):
+            monkeypatch.setitem(sys.modules, module.__name__, module)
         pending = iter(self.endpoints)
         monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform="win32", executable=sys.executable))
         monkeypatch.setattr(profile_worker, "version", lambda _: "worker-test")
@@ -247,6 +300,9 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
     worker = fixture.open()
     try:
         assert worker.identity == fixture.identity
+        assert fixture.native_process.opened == fixture.native_process.closed == 2
+        assert [channel.peer_checks for channel in fixture.channels] == [1, 1]
+        assert fixture.scope.membership_checks == 2
         assert all(endpoint.release.released for endpoint in fixture.endpoints)
         assert fixture.scope.launched and not fixture.scope.release.released
         assert all(not channel.release.released for channel in fixture.channels)
@@ -254,6 +310,31 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
         worker.close()
     assert fixture.scope.release.released
     assert all(channel.release.released for channel in fixture.channels)
+
+
+@pytest.mark.parametrize("channel_index", [0, 1], ids=["control", "operation"])
+@pytest.mark.parametrize("failure", ["owner", "process", "incarnation", "membership"])
+def test_native_peer_refusal_contains_unreturned_worker_and_releases_query_handles(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, channel_index: int, failure: str
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    channel = fixture.channels[channel_index]
+    if failure == "owner":
+        channel.native_peer = RuntimePeer(os_owner_id="foreign-owner", process_id=1234)
+    elif failure == "process":
+        channel.native_peer = RuntimePeer(os_owner_id="synthetic-owner", process_id=9876)
+    elif failure == "incarnation":
+        channel.incarnation_matches = False
+    else:
+        fixture.endpoints[channel_index].before_accept = lambda: setattr(fixture.scope, "native_member", False)
+    with pytest.raises(RuntimeRefusalError) as caught:
+        fixture.open()
+    assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+    assert fixture.native_process.opened == fixture.native_process.closed
+    assert fixture.native_process.opened == channel_index + int(failure in {"incarnation", "membership"})
+    assert fixture.scope.release.released
+    assert all(endpoint.release.released for endpoint in fixture.endpoints)
+    assert all(accepted.release.released for accepted in fixture.channels[: channel_index + 1])
 
 
 @pytest.mark.parametrize("failed_listener", [0, 1])

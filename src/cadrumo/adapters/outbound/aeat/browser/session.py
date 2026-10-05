@@ -25,6 +25,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
+from .....core.errors.hierarchy import InternalInvariantError
+
 if TYPE_CHECKING:
     # playwright is the optional `browser` extra; keep its types out of module
     # load so this module imports without it. The only runtime use,
@@ -157,7 +159,7 @@ class BrowserSession:
                 )
                 browser = self._browser
                 if browser is None:
-                    raise RuntimeError("Chromium launch completed without an owned browser")
+                    raise InternalInvariantError("Chromium launch completed without an owned browser")
                 context_kwargs = self._build_context_kwargs(
                     storage_state=storage_state,
                     provisioner=provisioner,
@@ -285,7 +287,7 @@ class BrowserSession:
             browser = context.browser
             if browser is None:
                 await context.close()
-                raise RuntimeError("Chromium context has no browser owner")
+                raise InternalInvariantError("Chromium context has no browser owner")
             return browser
         except Exception as exc:
             logger.error(

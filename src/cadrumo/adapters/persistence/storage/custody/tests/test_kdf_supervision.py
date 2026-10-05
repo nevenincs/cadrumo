@@ -17,6 +17,7 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings, override_settings
+from ......core.pid_liveness import pid_is_alive
 from .._kdf_attestation import (
     expected_kdf_worker_limits,
     kdf_worker_platform,
@@ -430,11 +431,7 @@ time.sleep(30)
             assert os.getpgid(descendant_pid) == parent.pid
         _terminate_process_tree(native_parent, job)
         deadline = time.monotonic() + 2.0
-        while True:
-            try:
-                os.kill(descendant_pid, 0)
-            except ProcessLookupError:
-                break
+        while pid_is_alive(descendant_pid):
             if time.monotonic() >= deadline:
                 raise AssertionError("OS containment left the real worker descendant alive")
             await asyncio.sleep(0.02)

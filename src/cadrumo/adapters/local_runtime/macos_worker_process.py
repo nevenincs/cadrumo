@@ -12,7 +12,6 @@ runtime and guardian were both lost abruptly.
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import json
 import math
 import os
@@ -30,6 +29,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.descriptor_write import write_all
+from ...core.hashing import sha256_hex
 from .containment_commands import ContainmentCommand, ContainmentCommandResult, run_containment_command_sync
 from .macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
 from .macos_process import (
@@ -80,7 +80,7 @@ def macos_worker_scope_key(storage_root: Path) -> str:
         canonical = storage_root.resolve(strict=True)
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
-    return hashlib.sha256(os.fsencode(canonical)).hexdigest()[:16]
+    return sha256_hex(os.fsencode(canonical))[:16]
 
 
 def macos_worker_label(*, scope_key: str, worker_id: UUID) -> str:

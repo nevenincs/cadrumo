@@ -40,6 +40,7 @@ from .....core.async_cleanup import (
     await_cancellation_complete,
     close_async_resources,
 )
+from .....core.errors.hierarchy import InternalInvariantError
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
@@ -129,7 +130,7 @@ class BrowserRuntimeResourceScope:
     def own(self, owner: AsyncCloseable) -> None:
         """Retain a started runtime before the caller can use it."""
         if self._closed:
-            raise RuntimeError("browser resource scope is closed")
+            raise InternalInvariantError("browser resource scope is closed")
         self._owners.append(owner)
 
     async def close(self) -> None:
@@ -440,7 +441,7 @@ async def _start_playwright(settings: Settings | None = None) -> Playwright:
                 )
             raise
         if started is None:
-            raise RuntimeError("Playwright startup completed without an owned runtime")
+            raise InternalInvariantError("Playwright startup completed without an owned runtime")
         return started
     except Exception as exc:
         raise BrowserError(

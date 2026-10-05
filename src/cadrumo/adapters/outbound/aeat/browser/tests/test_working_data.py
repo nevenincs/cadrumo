@@ -1,5 +1,6 @@
 """Configured Chromium working roots preserve isolation and bounded lifetime."""
 
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
+from ......application.provisioning_browser import playwright_browsers_root, probe_playwright_browser
 from ......core.config import Settings, override_settings
 from ..errors import BrowserError
 from ..factory import create_browser_session
@@ -17,6 +19,20 @@ from ..profile import Profile
 from ..session import BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def test_provisioned_binary_cache_survives_private_storage_isolation(tmp_path: Path) -> None:
+    """Direct drivers and product probes retain the same provisioned assets."""
+    binary_root = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
+    assert binary_root.is_absolute()
+    assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) == binary_root
+    for name in ("first", "second"):
+        storage_root = tmp_path / name
+        settings = Settings(cadrumo_local_storage_root=storage_root)
+        assert playwright_browsers_root(settings=settings) == binary_root
+        assert settings.cadrumo_chromium_data_root == storage_root / "chromium-data"
+        assert not binary_root.is_relative_to(storage_root)
+        assert probe_playwright_browser(settings=settings).available
 
 
 @pytest.mark.parametrize("override", [None, "", "custom-browser-data", "absolute"])
@@ -68,6 +84,7 @@ async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
             processes = await cdp.send("SystemInfo.getProcessInfo")
             await cdp.detach()
             browser_pid = next(process["id"] for process in processes["processInfo"] if process["type"] == "browser")
+            assert Path(psutil.Process(browser_pid).exe()).is_relative_to(settings.cadrumo_playwright_browsers_dir)
             profile_arg = next(
                 arg for arg in psutil.Process(browser_pid).cmdline() if arg.startswith("--user-data-dir=")
             )

@@ -73,7 +73,11 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
 
 
 def build_workflow_gate_ports(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> WorkflowGatePorts:
-    """Compose workflow-gate persistence capabilities for one profile bucket."""
+    """Compose workflow-gate persistence capabilities for one profile bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     normalized_bucket_id = bucket_id.strip()
     objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return WorkflowGatePorts(

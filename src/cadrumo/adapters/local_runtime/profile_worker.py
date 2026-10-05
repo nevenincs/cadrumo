@@ -233,8 +233,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._operation_channel = operation_channel
         if operation_channel.peer != channel.peer:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        if isinstance(self._scope, LinuxProcessScope | MacosProcessScope):
-            self._verify_native_peer(operation_channel)
+        self._verify_native_peer(operation_channel)
         deadline = time.monotonic() + 10
         accept_runtime_handshake(
             operation_channel,

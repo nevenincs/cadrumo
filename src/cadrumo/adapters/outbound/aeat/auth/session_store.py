@@ -30,7 +30,7 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
-from .....core.errors.hierarchy import AuthError, pydantic_validation_boundary
+from .....core.errors.hierarchy import AuthError, InternalInvariantError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -79,7 +79,7 @@ class DeferredSessionWrites:
     def publish(self) -> None:
         """Apply final provider states while the caller holds current COMMIT authority."""
         if self._published:
-            raise RuntimeError("deferred auth session writes already published")
+            raise InternalInvariantError("deferred auth session writes already published")
         self._published = True
         token = _DEFERRED_WRITES.set(None)
         try:
@@ -102,7 +102,7 @@ _DEFERRED_WRITES: ContextVar[DeferredSessionWrites | None] = ContextVar(
 def defer_writes() -> Generator[DeferredSessionWrites]:
     """Isolate provider saves and deletes during remote authentication."""
     if _DEFERRED_WRITES.get() is not None:
-        raise RuntimeError("nested deferred auth session writes are unsupported")
+        raise InternalInvariantError("nested deferred auth session writes are unsupported")
     stage = DeferredSessionWrites()
     token = _DEFERRED_WRITES.set(stage)
     try:

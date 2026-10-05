@@ -15,6 +15,7 @@ import tempfile
 import threading
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,8 +31,10 @@ from playwright.async_api import BrowserContext, Playwright, Route, async_playwr
 from playwright.async_api import Error as PlaywrightError
 
 from ......application.auth.protocols import BrowserContextProvisioner, BrowserSessionFactoryPort
+from ......core.async_cleanup import await_cancellation_complete, close_async_resources
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_PATH, AEAT_CERTIFICATE_PROTECTED_URL
+from ......core.errors.hierarchy import InternalInvariantError
 from ..evasion import PlaywrightStealthEvasion
 from ..factory import DefaultBrowserSession
 from ..profile import Profile
@@ -463,6 +466,16 @@ class _BoundaryTrustingBrowserSession(BrowserSession):
         return context_kwargs
 
 
+@dataclass(slots=True)
+class _BoundaryRuntimeOwner:
+    """Retain the real driver until startup failure cleanup has completed."""
+
+    playwright: Playwright
+
+    async def close(self) -> None:
+        await self.playwright.stop()
+
+
 async def open_real_browser_session(
     *,
     boundary: LocalHttpBoundary,
@@ -481,20 +494,36 @@ async def open_real_browser_session(
     need a display server that a headless host does not have. That request is
     the provider's own contract and is pinned by the provider's unit tests.
     """
-    playwright = await async_playwright().start()
-    session = _BoundaryTrustingBrowserSession(
-        playwright=playwright,
-        settings=settings.model_copy(
-            update={
-                "cadrumo_browser_headless": True,
-                "cadrumo_proxy_url": boundary.proxy_url,
-                "cadrumo_proxy_bypass": boundary.loopback_host,
-            }
-        ),
-        profile=Profile(name=profile_name),
-        evasion_strategy=RoutedStealthEvasion(boundary),
-    )
-    return playwright, session
+    playwright: Playwright | None = None
+    manager = async_playwright()
+
+    async def start_owned() -> None:
+        nonlocal playwright
+        playwright = await manager.start()
+
+    try:
+        await await_cancellation_complete(start_owned(), task_name="cadrumo-boundary-playwright-start")
+        if playwright is None:
+            raise InternalInvariantError("Boundary Playwright startup completed without an owned runtime")
+        session = _BoundaryTrustingBrowserSession(
+            playwright=playwright,
+            settings=settings.model_copy(
+                update={
+                    "cadrumo_browser_headless": True,
+                    "cadrumo_proxy_url": boundary.proxy_url,
+                    "cadrumo_proxy_bypass": boundary.loopback_host,
+                }
+            ),
+            profile=Profile(name=profile_name),
+            evasion_strategy=RoutedStealthEvasion(boundary),
+        )
+        return playwright, session
+    except BaseException:
+        if playwright is not None:
+            await close_async_resources(
+                _BoundaryRuntimeOwner(playwright), task_name="cadrumo-boundary-playwright-start-cleanup"
+            )
+        raise
 
 
 __all__ = [

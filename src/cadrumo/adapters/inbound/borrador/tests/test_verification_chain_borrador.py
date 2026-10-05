@@ -65,6 +65,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -138,7 +139,14 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
     Supplies zero values for the retenciones bindings (no prior-period filings
     in the corpus scenario) and SimplificadaModalidad (casilla 0168 = S → 0).
     """
+    declared_bindings = {binding.id for binding in _registry_snapshot_m100(year).revision.bindings}
     return {
+        # Only editions declaring the Art. 81.1 profile aggregate receive it.
+        **{
+            binding: value
+            for binding, value in M100_NO_DESCENDANT_MATERNIDAD_BINDINGS.items()
+            if binding in declared_bindings
+        },
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero for a childless profile.
@@ -149,6 +157,11 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         # negative general base carried in from earlier ejercicios.
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        # Unmarried individual fixture: M100's 0245/0246/0247 profile facts
+        # are supplied explicitly, just as the profile resolver supplies them.
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 

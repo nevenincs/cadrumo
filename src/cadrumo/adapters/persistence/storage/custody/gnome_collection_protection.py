@@ -95,7 +95,8 @@ def _owner_uid() -> int:
 
 
 def _directory_flags() -> int:
-    if sys.platform == "linux":
+    if os.name == "posix":
+        _require(sys.platform == "linux", AutomationCustodyCode.UNAVAILABLE)
         return os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
     raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 

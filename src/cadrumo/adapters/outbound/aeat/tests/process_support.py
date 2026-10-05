@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Awaitable
 
 import pytest
 
@@ -49,6 +50,37 @@ DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS = 10.0
 #: Poll interval. Short enough that a fast teardown is not charged the full
 #: interval, long enough not to spin the event loop against the OS.
 _POLL_INTERVAL_SECONDS = 0.1
+
+
+async def wait_for_task_readiness[T](
+    readiness: Awaitable[object],
+    owner_task: asyncio.Task[T],
+    *,
+    after: str,
+    timeout_seconds: float = 20.0,
+) -> None:
+    """Bound readiness while preserving an owner's early exception.
+
+    The caller retains ownership of ``owner_task`` and must cancel and join it
+    in ``finally`` when readiness or subsequent assertions fail.
+    """
+    ready_task = asyncio.ensure_future(readiness)
+    try:
+        done, _pending = await asyncio.wait(
+            (ready_task, owner_task),
+            timeout=timeout_seconds,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if owner_task in done:
+            await owner_task
+            pytest.fail(f"Owner exited before readiness after {after}")
+        if ready_task not in done:
+            pytest.fail(f"Owner did not reach readiness after {after}")
+        await ready_task
+    finally:
+        if not ready_task.done():
+            ready_task.cancel()
+        await asyncio.gather(ready_task, return_exceptions=True)
 
 
 async def wait_for_process_exit(
@@ -80,4 +112,4 @@ async def wait_for_process_exit(
     pytest.fail(f"Playwright driver process {pid} remained alive after {after}")
 
 
-__all__ = ["DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS", "wait_for_process_exit"]
+__all__ = ["DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS", "wait_for_process_exit", "wait_for_task_readiness"]

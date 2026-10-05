@@ -22,7 +22,7 @@ Design notes:
   is ~20 minutes (the extra 2 minutes is safety margin).
 * ``authenticate()`` uses the configured browser-session factory. The
   authenticator owns and deterministically closes every session it creates.
-* ``reauthenticate()`` is single-shot. Callers cap retries at ONE
+* Callers can close the provider and authenticate again. They cap retries at ONE
   per downstream call-site; a second consecutive failure raises
   :class:`AeatSessionExpiredError` upwards rather than loop.
 """
@@ -203,8 +203,7 @@ class AeatAuthenticator:
     * Playwright browser-context construction with the cert wired
       through (via an injectable browser session factory).
     * Login-assertion verification.
-    * Session lifecycle: ``authenticate``, ``reauthenticate``,
-      ``close``.
+    * Session lifecycle: ``authenticate`` and ``close``.
 
     Use as an async context manager::
 
@@ -331,9 +330,7 @@ class AeatAuthenticator:
         async with self._lifecycle.work(), self._lock:
             if self.active_session is not None:
                 raise AeatLoginAssertionError(
-                    "AeatAuthenticator already has an active session; "
-                    "call close() or reauthenticate() before "
-                    "authenticating again",
+                    "AeatAuthenticator already has an active session; call close() before authenticating again",
                     translated_message="adapters.auth.authenticator.errors.already_active",
                 )
             if self._browser_session is not None or self._context is not None:
@@ -440,8 +437,7 @@ class AeatAuthenticator:
         Returns:
             A frozen :class:`AeatLoginAssertion`. Negative results
             (``is_valid=False``) are returned as records, not raised
-            — callers may invoke :meth:`reauthenticate` once and
-            re-verify.
+            — callers may close, authenticate once and re-verify.
 
         Raises:
             AeatSessionExpiredError: When the session's idle
@@ -462,7 +458,7 @@ class AeatAuthenticator:
             )
 
         # Snapshot-and-register the context under the lock so that
-        # close() / reauthenticate() cannot null it out mid-navigation.
+        # close() cannot null it out mid-navigation.
         # The lifecycle barrier prevents registration while any close caller
         # is queued or tearing down owned browser resources.
         async with self._lifecycle.work(), self._lock:
@@ -623,7 +619,7 @@ class AeatAuthenticator:
 
         After every registered close caller returns, the authenticator is
         re-usable (the browser session and context are nulled).
-        ``reauthenticate()`` depends on this re-use path.
+        A later :meth:`authenticate` call uses this re-use path.
         """
         context_closed = False
         browser_session_closed = False

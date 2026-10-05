@@ -24,7 +24,11 @@ def justificante_capture_snapshot_repository(
     *,
     objects: SecureObjectRepository,
 ) -> SecureSnapshotRepository[JustificanteCaptureSnapshot]:
-    """Return the secure repository holding one bucket's justificante captures."""
+    """Return the secure repository holding one bucket's justificante captures.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=JustificanteCaptureSnapshot,

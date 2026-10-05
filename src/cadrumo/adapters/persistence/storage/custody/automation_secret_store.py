@@ -15,6 +15,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationSecretStore,
     NativeSecretBackend,
 )
+from .....core.errors.hierarchy import CadrumoError
 from .automation_secret_target import require_automation_secret_target
 from .zeroise import zeroise
 
@@ -39,7 +40,7 @@ class _WindowsCredentialApi(Protocol):
     def delete(self, target: str) -> None: ...
 
 
-class _WindowsCredentialError(Exception):
+class _WindowsCredentialError(CadrumoError):
     """Retain only a native error code for internal status mapping."""
 
     def __init__(self, winerror: int) -> None:
@@ -47,7 +48,7 @@ class _WindowsCredentialError(Exception):
         super().__init__()
 
 
-class _InvalidWindowsCredentialError(Exception):
+class _InvalidWindowsCredentialError(CadrumoError):
     """A native record does not satisfy the local credential-blob contract."""
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from html import escape
 
 from ......core.config import Settings
+from ..._html import parse_html
 
 PATHS = Settings.external_constants().aeat.sede_paths
 
@@ -54,9 +55,7 @@ for _title in (
 
 def consultation_documents(landing: str) -> dict[str, str]:
     """Attach current consultation controls to an existing synthetic identity page."""
-    from bs4 import BeautifulSoup
-
-    soup = BeautifulSoup(landing, "lxml")
+    soup = parse_html(landing)
     destinations = {
         "Mis Actividades Económicas": PATHS.censal_actividades_entry,
         "Mi Situación Tributaria": PATHS.censal_situacion_tributaria,

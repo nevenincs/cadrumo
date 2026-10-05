@@ -25,7 +25,11 @@ from ....application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeRequest, RuntimeSessionRequest
-from ....application.runtime.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SUBMISSION_PAYLOAD_MAX_BYTES
+from ....application.runtime.submission_payload import (
+    SUBMISSION_PAYLOAD_CHUNK_BYTES,
+    SUBMISSION_PAYLOAD_MAX_BYTES,
+    SubmissionPayloadDescriptor,
+)
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....core.hashing import sha256_hex
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
@@ -127,6 +131,7 @@ def test_large_submission_streams_exact_bytes_after_readiness(value: str, final_
     def serve(channel: MemoryChannel, hello: RuntimeServerHello) -> None:
         begin = read_document(channel, RuntimeRequest, deadline=time.monotonic() + 10).root
         assert isinstance(begin, RuntimeOperationSubmitPayload)
+        assert isinstance(begin.descriptor, SubmissionPayloadDescriptor)
         assert begin.request_id == request.request_id
         assert begin.profile_id == request.profile_id and begin.session_id == request.session_id
         assert begin.definition_id == request.definition_id and begin.subject_ref == request.subject_ref

@@ -83,7 +83,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("header_disposition", "str(header_projection.disposition)"),
         ),
     ),
-    "m303_carry_ingress:_resolve_result_disposition:M303CarryIngressError:2": _contract(
+    "m303_carry_ingress:_require_local_filing_disposition:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
         (
             ("source_kind", "str(envelope.source_kind)"),

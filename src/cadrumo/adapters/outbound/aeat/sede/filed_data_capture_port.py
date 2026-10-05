@@ -1,4 +1,7 @@
-"""Concrete Sede binding for the application filed-data acquisition port."""
+"""Concrete Sede binding for the application filed-data acquisition port.
+
+Source acquisition is scoped by the requested :class:`ModeloRevision`.
+"""
 
 from __future__ import annotations
 
@@ -383,7 +386,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
     ) -> DeferredFiledObservations:
-        """Stage source artefacts during remote acquisition for a later commit fence."""
+        """Stage :class:`ModeloRevision` source artefacts for a later commit fence."""
         staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
 
         def stage(

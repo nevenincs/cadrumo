@@ -1,4 +1,7 @@
-"""Validated transaction date routing and bounded out-of-window read projections."""
+"""Validated transaction date routing and bounded out-of-window read projections.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

@@ -11,11 +11,9 @@ def upsert_activity_row(self: ProrrataRegisterRepository, row: ProrrataActivityR
 
     def _apply(current: ProrrataRegister) -> ProrrataRegister:
         retained = tuple(
-
-                existing
-                for existing in current.activity_rows
-                if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
-
+            existing
+            for existing in current.activity_rows
+            if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
         )
         return ProrrataRegister(
             entries=current.entries, sector_definitions=current.sector_definitions, activity_rows=(*retained, row)
