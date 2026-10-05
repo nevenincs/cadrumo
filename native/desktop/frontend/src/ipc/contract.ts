@@ -77,6 +77,7 @@ export type HostErrorCode =
   | "desktop_unavailable"
   | "webview_failed"
   | "unsupported_platform"
+  | "instance_lock_foreign"
   | "panic";
 
 /** `Operation` in `native/application/src/error/application.rs`. */
@@ -146,7 +147,11 @@ export type LogRecord = {
   source: LogSource;
   /** The timestamp as written; empty when the line carried none. */
   timestamp: string;
-  /** `timestamp` parsed to Unix milliseconds, or null when unparseable. */
+  /**
+   * Unix milliseconds in UTC for host records. Always null for Python file
+   * records: their line records local wall time with no offset, so it names
+   * no single instant.
+   */
   timestampMs: number | null;
   level: LogLevel | null;
   logger: string | null;
@@ -169,8 +174,10 @@ export type LogSourceState = {
 };
 
 /**
- * One delivery on a subscription's channel; at most ten per second. The first
- * batch carries up to 5,000 records of backlog from a 10,000-record ring.
+ * One delivery on a subscription's channel; at most ten per second. A new
+ * subscription starts from up to 5,000 records of backlog in a 10,000-record
+ * ring. Each batch holds at most 5,000 records and about 1 MiB of serialized
+ * records, so a large backlog arrives over several batches, in `seq` order.
  */
 export type LogBatch = {
   records: LogRecord[];
@@ -467,8 +474,10 @@ export interface HostCommands {
   };
   /**
    * Starts a session of `kind`, replacing one that already exited. Refuses
-   * `session_unavailable` while a live session of that kind exists and
-   * `invalid_arguments` for a size outside 2 to 1000.
+   * `session_unavailable` while a live session of that kind exists, and
+   * when the page that sent the request was reloaded or replaced before the
+   * session started, in which case any session it started is settled first.
+   * Refuses `invalid_arguments` for a size outside 2 to 1000.
    */
   terminal_open: {
     args: Authorized<TerminalOpenArguments>;
@@ -509,7 +518,10 @@ export interface HostCommands {
   /**
    * Hands the URL to the system's handler. Accepts an `https://` URL with a
    * non-empty host and no user information, or a `mailto:` URL with an
-   * address part. The text must be at most 8,192 printable ASCII characters
+   * address part, no fragment, and only the header fields `subject`, `body`,
+   * `cc` and `bcc`, each written `name=value` with the name unencoded (any
+   * other field, such as `attach` or `to`, is refused). The text must be at
+   * most 8,192 printable ASCII characters
    * without a backslash, and the scheme lowercase. Everything else is
    * refused with `invalid_arguments`; a handler that cannot start rejects
    * with `spawn_failed`.
@@ -518,6 +530,10 @@ export interface HostCommands {
     args: Authorized<{ url: string }>;
     result: null;
   };
+  /**
+   * Refuses with `output_limit` when the clipboard text exceeds 1 MiB in
+   * UTF-8; the text is never truncated.
+   */
   shell_clipboard_read: {
     args: Authorized;
     result: ClipboardText;

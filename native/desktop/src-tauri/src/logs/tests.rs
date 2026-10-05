@@ -1,9 +1,9 @@
 use super::{
-    LogHub,
+    LogHub, Poller, TICK,
     format::Level,
     host,
-    record::{BACKLOG, Entry, LogBatch, SourceKind},
-    tail::{LINE_BYTES, SETTLE, Tail},
+    record::{BACKLOG, BATCH_BYTES, Entry, LogBatch, SourceKind},
+    tail::{self, LINE_BYTES, SETTLE, Tail},
 };
 use cadrumo_application::{
     diagnostics::Diagnostics,
@@ -314,15 +314,46 @@ fn channel() -> (Channel<LogBatch>, Frames) {
     (channel, frames)
 }
 
-fn start(hub: &Arc<LogHub>) {
-    let poller = Arc::downgrade(hub);
-    std::thread::spawn(move || LogHub::run(poller));
+/// Runs the poller on its own thread until the hub is dropped.
+fn start(poller: Poller) -> std::thread::JoinHandle<()> {
+    std::thread::spawn(move || poller.run())
+}
+
+fn hub(log: PathBuf, diagnostics: Arc<Diagnostics>) -> (LogHub, Poller) {
+    LogHub::new(log, FORMAT, diagnostics)
 }
 
 fn subscribe(hub: &LogHub) -> (u64, Frames) {
     let (channel, frames) = channel();
-    let subscribed = hub.subscribe(Box::new(move |batch| channel.send(batch).is_ok()));
+    let subscribed = hub.subscribe(Arc::new(move |batch| channel.send(batch).is_ok()));
     (subscribed.subscription, frames)
+}
+
+fn records_of(frames: &[(Instant, serde_json::Value)]) -> Vec<serde_json::Value> {
+    frames
+        .iter()
+        .flat_map(|(_, batch)| batch["records"].as_array().unwrap().clone())
+        .collect()
+}
+
+fn messages_of(records: &[serde_json::Value]) -> Vec<String> {
+    records
+        .iter()
+        .map(|record| record["message"].as_str().unwrap().to_owned())
+        .collect()
+}
+
+/// Waits until a frame satisfies `done`, or fails after `limit`.
+fn wait_for(
+    frames: &Frames,
+    limit: Duration,
+    done: impl Fn(&[(Instant, serde_json::Value)]) -> bool,
+) {
+    let deadline = Instant::now() + limit;
+    while !done(&frames.lock().unwrap()) {
+        assert!(Instant::now() < deadline, "no such frame within {limit:?}");
+        std::thread::sleep(Duration::from_millis(10));
+    }
 }
 
 #[test]
@@ -336,30 +367,25 @@ fn backlog_spans_rotations_in_order() {
         let text: String = range.map(line).collect();
         append(&scratch.0.join(file), text.as_bytes());
     }
-    let hub = Arc::new(LogHub::new(
-        scratch.log(),
-        FORMAT,
-        Arc::new(Diagnostics::default()),
-    ));
-    // The last record of the log file settles once the file is quiet; the
-    // backlog is taken when the subscription starts.
-    let start = Instant::now();
-    hub.tick(start);
-    hub.tick(start + SETTLE);
+    let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    // The subscription starts before anything was read; its backlog is taken
+    // at its first delivery. The last record settles once the file is quiet.
     let (_, frames) = subscribe(&hub);
-    hub.tick(start + SETTLE * 2);
+    let start = Instant::now();
+    poller.tick(start);
+    poller.tick(start + SETTLE);
     let frames = frames.lock().unwrap();
-    assert_eq!(frames.len(), 1);
+    assert_eq!(frames.len(), 2);
+    assert_eq!(
+        messages_of(frames[1].1["records"].as_array().unwrap()),
+        ["rec-011999"]
+    );
     let records = frames[0].1["records"].as_array().unwrap();
     assert_eq!(records.len(), BACKLOG);
-    let expected: Vec<String> = (12_000 - BACKLOG..12_000)
+    let expected: Vec<String> = (11_999 - BACKLOG..11_999)
         .map(|i| format!("rec-{i:06}"))
         .collect();
-    let received: Vec<&str> = records
-        .iter()
-        .map(|r| r["message"].as_str().unwrap())
-        .collect();
-    assert_eq!(received, expected);
+    assert_eq!(messages_of(records), expected);
     let first = &records[0];
     assert_eq!(first["source"], "python");
     assert_eq!(first["timestamp"], "2026-10-04 12:00:00,000");
@@ -373,13 +399,9 @@ fn backlog_spans_rotations_in_order() {
 fn a_flood_is_delivered_at_most_ten_batches_a_second_and_losses_are_counted() {
     let scratch = Scratch::new("flood");
     append(&scratch.log(), line(0).as_bytes());
-    let hub = Arc::new(LogHub::new(
-        scratch.log(),
-        FORMAT,
-        Arc::new(Diagnostics::default()),
-    ));
+    let (hub, poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
     let (subscription, frames) = subscribe(&hub);
-    start(&hub);
+    start(poller);
     let path = scratch.log();
     let writer = std::thread::spawn(move || {
         let mut file = OpenOptions::new().append(true).open(path).unwrap();
@@ -451,9 +473,9 @@ fn live_pty_bytes_never_reach_a_batch_while_host_events_do() {
     let marker = format!("PTY-MARKER-{}", std::process::id());
     let scratch = Scratch::new("pty");
     let diagnostics = Arc::new(Diagnostics::default());
-    let hub = Arc::new(LogHub::new(scratch.log(), FORMAT, diagnostics.clone()));
+    let (hub, poller) = hub(scratch.log(), diagnostics.clone());
     let (_, frames) = subscribe(&hub);
-    start(&hub);
+    start(poller);
     let pair = native_pty_system()
         .openpty(PtySize {
             rows: 24,
@@ -539,6 +561,291 @@ fn live_pty_bytes_never_reach_a_batch_while_host_events_do() {
     assert_eq!(host[1]["process"]["role"], "tui");
     assert_eq!(host[1]["process"]["pid"], host[0]["process"]["pid"]);
     assert!(host.iter().all(|record| record["timestampMs"].is_u64()));
+}
+
+const TRACEBACK: &str = "Traceback (most recent call last):\n  File \"cadrumo/probe.py\", line 10, in run\n    raise ValueError(value)\nValueError: \t\"quoted\" value\n";
+
+/// Writes records with a traceback each until the file holds `bytes`, and
+/// returns how many records it holds.
+fn traceback_log(path: &Path, bytes: usize) -> usize {
+    let mut text = String::with_capacity(bytes + 4096);
+    let mut count = 0;
+    while text.len() < bytes {
+        text.push_str(&line(count));
+        text.push_str(TRACEBACK);
+        count += 1;
+    }
+    append(path, text.as_bytes());
+    count
+}
+
+#[test]
+fn subscribing_returns_while_a_large_first_read_runs_on_the_poller() {
+    let scratch = Scratch::new("large");
+    // Larger than the first read's window, so the read is as long as it gets.
+    let count = traceback_log(&scratch.log(), 24 * 1024 * 1024);
+    // The first open of a freshly written file can wait on a virus scanner;
+    // one open here keeps that out of the bound below.
+    std::io::Read::read(&mut File::open(scratch.log()).unwrap(), &mut [0; 1024]).unwrap();
+    let (hub, poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    let io = poller.tail.io.clone();
+    start(poller);
+    let began = Instant::now();
+    let (_, frames) = subscribe(&hub);
+    let subscribed = began.elapsed();
+    // Once the poller has opened the files, the commands and the page-load
+    // hook take the shared lock while it reads.
+    while io_of(&io).1 == 0 {
+        assert!(began.elapsed() < Duration::from_secs(30), "no poll began");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    let other = Instant::now();
+    let (second, _) = subscribe(&hub);
+    hub.unsubscribe(second).unwrap();
+    hub.clear_subscriptions();
+    let (_, frames_after_clear) = subscribe(&hub);
+    let locked = other.elapsed();
+    let read_pending = frames_after_clear.lock().unwrap().is_empty();
+    wait_for(&frames_after_clear, Duration::from_secs(120), |frames| {
+        !frames.is_empty()
+    });
+    let first_batch = began.elapsed();
+    eprintln!(
+        "large: {count} records; subscribe {subscribed:?}, lock users {locked:?}, first batch {first_batch:?}"
+    );
+    assert!(
+        read_pending,
+        "the first read finished before the lock users"
+    );
+    assert!(
+        subscribed < Duration::from_millis(100),
+        "subscribe took {subscribed:?}"
+    );
+    assert!(
+        locked < Duration::from_millis(100),
+        "lock users waited {locked:?}"
+    );
+    assert!(frames.lock().unwrap().is_empty(), "a cleared subscription");
+    // The backlog ends at the newest settled record, contiguous and in order.
+    let last = format!("rec-{:06}", count - 1);
+    wait_for(&frames_after_clear, Duration::from_secs(60), |frames| {
+        messages_of(&records_of(frames)).contains(&last)
+    });
+    let received = messages_of(&records_of(&frames_after_clear.lock().unwrap()));
+    let first: usize = received[0][4..].parse().unwrap();
+    let expected: Vec<String> = (first..count).map(|i| format!("rec-{i:06}")).collect();
+    assert_eq!(received, expected);
+    assert!(received.len() >= BACKLOG);
+}
+
+#[test]
+fn no_batch_exceeds_the_byte_cap_and_a_large_backlog_spreads_over_paced_batches() {
+    let scratch = Scratch::new("bytes");
+    // Each control character in a traceback becomes six bytes of JSON.
+    let heavy: String = format!("{}\n", "\u{1}".repeat(1_000)).repeat(60);
+    let mut text = String::new();
+    for index in 0..40 {
+        text.push_str(&line(index));
+        if index % 2 == 0 {
+            text.push_str(&heavy);
+        } else {
+            text.push_str(&TRACEBACK.repeat(400));
+        }
+    }
+    append(&scratch.log(), text.as_bytes());
+    let (hub, poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    let sizes: Arc<Mutex<Vec<(Instant, usize, serde_json::Value)>>> = Arc::default();
+    let into = sizes.clone();
+    let records = Channel::<LogBatch>::new(move |body| {
+        let InvokeResponseBody::Json(json) = body else {
+            panic!("log batches are JSON");
+        };
+        into.lock().unwrap().push((
+            Instant::now(),
+            json.len(),
+            serde_json::from_str(&json).unwrap(),
+        ));
+        Ok(())
+    });
+    hub.subscribe(Arc::new(move |batch| records.send(batch).is_ok()));
+    start(poller);
+    let last = "rec-000039".to_owned();
+    let deadline = Instant::now() + Duration::from_secs(60);
+    loop {
+        let sizes = sizes.lock().unwrap();
+        let frames: Vec<(Instant, serde_json::Value)> = sizes
+            .iter()
+            .map(|(at, _, batch)| (*at, batch.clone()))
+            .collect();
+        if messages_of(&records_of(&frames)).contains(&last) {
+            break;
+        }
+        drop(sizes);
+        assert!(Instant::now() < deadline, "the backlog never completed");
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    let sizes = sizes.lock().unwrap();
+    let total: usize = sizes.iter().map(|(_, size, _)| size).sum();
+    eprintln!(
+        "bytes: {} batches, {total} bytes, largest {}",
+        sizes.len(),
+        sizes.iter().map(|(_, size, _)| *size).max().unwrap()
+    );
+    assert!(total > 4 * BATCH_BYTES, "too small to need spreading");
+    for (_, size, _) in sizes.iter() {
+        assert!(*size <= BATCH_BYTES, "a batch of {size} bytes");
+    }
+    // Batches that stopped at the cap are mostly full.
+    let filled = sizes
+        .iter()
+        .filter(|(_, size, _)| *size > BATCH_BYTES / 2)
+        .count();
+    assert!(filled * 2 >= sizes.len(), "batches are needlessly small");
+    let frames: Vec<(Instant, serde_json::Value)> = sizes
+        .iter()
+        .map(|(at, _, batch)| (*at, batch.clone()))
+        .collect();
+    let records = records_of(&frames);
+    let expected: Vec<String> = (0..40).map(|i| format!("rec-{i:06}")).collect();
+    assert_eq!(messages_of(&records), expected);
+    assert!(
+        records
+            .windows(2)
+            .all(|pair| pair[1]["seq"].as_u64().unwrap() == pair[0]["seq"].as_u64().unwrap() + 1)
+    );
+    assert!(frames.iter().all(|(_, batch)| batch["dropped"] == 0));
+    let heavy_detail = records[0]["detail"].as_str().unwrap();
+    assert_eq!(heavy_detail.matches('\u{1}').count(), 60_000);
+    for pair in sizes.windows(2) {
+        assert!(
+            pair[1].0.duration_since(pair[0].0) >= Duration::from_millis(90),
+            "batches closer than the pacing interval"
+        );
+    }
+}
+
+fn io_of(io: &tail::Io) -> (u64, u64) {
+    use std::sync::atomic::Ordering::Relaxed;
+    (io.listings.load(Relaxed), io.opens.load(Relaxed))
+}
+
+#[test]
+fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_current_backlog() {
+    let scratch = Scratch::new("idle");
+    let base = scratch.log();
+    let rotated = |index: u32| scratch.0.join(format!("cadrumo.log.{index}"));
+    append(&base, (0..100).map(line).collect::<String>().as_bytes());
+    let (hub, poller) = hub(base.clone(), Arc::new(Diagnostics::default()));
+    let io = poller.tail.io.clone();
+    let poller = start(poller);
+    std::thread::sleep(TICK * 5);
+    assert_eq!(io_of(&io), (0, 0), "read before any subscription");
+
+    let (subscription, frames) = subscribe(&hub);
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000099".to_owned())
+    });
+    let active = io_of(&io);
+    assert!(active.0 > 0 && active.1 > 0);
+    hub.unsubscribe(subscription).unwrap();
+    std::thread::sleep(TICK * 3);
+    let idle = io_of(&io);
+    // Rotations and new records while nothing is subscribed.
+    append(&base, (100..150).map(line).collect::<String>().as_bytes());
+    fs::rename(&base, rotated(1)).unwrap();
+    append(&base, (150..200).map(line).collect::<String>().as_bytes());
+    fs::rename(rotated(1), rotated(2)).unwrap();
+    fs::rename(&base, rotated(1)).unwrap();
+    append(&base, (200..250).map(line).collect::<String>().as_bytes());
+    std::thread::sleep(TICK * 10);
+    assert_eq!(io_of(&io), idle, "files touched without a subscription");
+
+    let (_, frames) = subscribe(&hub);
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000249".to_owned())
+    });
+    assert!(io_of(&io).1 > idle.1);
+    let expected: Vec<String> = (0..250).map(|i| format!("rec-{i:06}")).collect();
+    assert_eq!(messages_of(&records_of(&frames.lock().unwrap())), expected);
+    // The poller ends with the hub.
+    drop(hub);
+    poller.join().unwrap();
+}
+
+#[test]
+fn a_frame_the_shell_could_not_deliver_ends_the_subscription() {
+    use crate::shell::channel::{Deliveries, interceptor};
+    use std::str::FromStr;
+    use tauri::{
+        Manager, Webview, WebviewWindowBuilder,
+        ipc::JavaScriptChannelId,
+        test::{MockRuntime, mock_builder, mock_context, noop_assets},
+    };
+    let diagnostics = Arc::new(Diagnostics::default());
+    let app = mock_builder()
+        .channel_interceptor(interceptor(diagnostics.clone()))
+        .manage(Deliveries::default())
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let webview: &Webview<MockRuntime> = window.as_ref();
+    let channel = |id: &str| {
+        JavaScriptChannelId::from_str(id)
+            .unwrap()
+            .channel_on::<MockRuntime, LogBatch>(webview.clone())
+    };
+    let scratch = Scratch::new("delivery");
+    append(&scratch.log(), line(0).as_bytes());
+    let (hub, mut poller) = hub(scratch.log(), diagnostics);
+    let failing = hub
+        .subscribe(super::channel_sink(
+            webview.clone(),
+            channel("__CHANNEL__:7"),
+        ))
+        .subscription;
+    let healthy = hub
+        .subscribe(super::channel_sink(
+            webview.clone(),
+            channel("__CHANNEL__:8"),
+        ))
+        .subscription;
+    let start = Instant::now();
+    poller.tick(start);
+    // A frame of channel 7 fails in the webview; channel 8's is delivered.
+    app.state::<Deliveries>().record("main", 7);
+    poller.tick(start + SETTLE);
+    assert!(
+        hub.unsubscribe(failing).is_err(),
+        "the failed subscription ended"
+    );
+    assert!(hub.unsubscribe(healthy).is_ok());
+}
+
+#[test]
+fn a_probe_reports_the_state_before_any_poll() {
+    let scratch = Scratch::new("probe");
+    let (hub, _poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    assert_eq!(
+        hub.subscribe(Arc::new(|_| true)).state.kind,
+        SourceKind::Missing
+    );
+    append(&scratch.log(), line(0).as_bytes());
+    assert_eq!(
+        hub.subscribe(Arc::new(|_| true)).state.kind,
+        SourceKind::Available
+    );
+    let (refused, _poller) = LogHub::new(
+        scratch.log(),
+        "%(message)s %(message)s",
+        Arc::new(Diagnostics::default()),
+    );
+    let state = refused.subscribe(Arc::new(|_| true)).state;
+    assert_eq!(
+        (state.kind, state.failure.map(|f| f.code)),
+        (SourceKind::Unreadable, Some(ErrorCode::EnvironmentFailed))
+    );
 }
 
 #[cfg(feature = "live-package-tests")]
@@ -850,13 +1157,16 @@ for index in range(total):
         }));
 
         // A later subscriber's backlog spans the rotations in the same order.
-        let hub = LogHub::new(log, &package.format, Arc::new(Diagnostics::default()));
+        let (hub, mut poller) = LogHub::new(log, &package.format, Arc::new(Diagnostics::default()));
         let (_, frames) = subscribe(&hub);
-        hub.tick(Instant::now() + SETTLE);
+        // Paced ticks until the last record settled and every batch is out.
+        let start = Instant::now();
+        for tick in 0..20 {
+            poller.tick(start + SETTLE * tick);
+        }
         let frames = frames.lock().unwrap();
-        let backlog: Vec<String> = frames
-            .iter()
-            .flat_map(|(_, batch)| batch["records"].as_array().unwrap().clone())
+        let backlog: Vec<String> = records_of(&frames)
+            .into_iter()
             .filter(|record| {
                 record["logger"]
                     .as_str()

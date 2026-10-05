@@ -6,6 +6,10 @@ publish = false
 
 [features]
 live-package-tests = []
+# Only for the packaged end-to-end test build: admits a single
+# --remote-debugging-port argument in WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
+# Never enabled for a distributed build.
+webview2-remote-debugging = []
 
 [[bin]]
 name = "cadrumo"

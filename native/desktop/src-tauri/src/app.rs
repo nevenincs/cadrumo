@@ -107,6 +107,9 @@ pub fn run(launch: Launch) -> Result<i32> {
             Operation::Webview,
         ));
     }
+    // Before the console detaches, so the refusal still reaches it.
+    #[cfg(windows)]
+    shell::webview_environment::refuse_overrides()?;
     #[cfg(windows)]
     cadrumo_platform::desktop::detach_console();
     let diagnostics = launch.diagnostics.clone();
@@ -118,7 +121,8 @@ pub fn run(launch: Launch) -> Result<i32> {
             ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
         })?;
     let token = ShellToken::mint()?;
-    let script = token.script(&shell::origins(context.config(), window))?;
+    let origins = shell::origins(context.config(), window);
+    let script = token.script(&origins)?;
     let handler = dispatch(
         vec![
             terminal::commands(),
@@ -137,6 +141,7 @@ pub fn run(launch: Launch) -> Result<i32> {
         .plugin(shell::clipboard_plugin());
     let state = Arc::new(TerminalState::new(launch));
     let setup_diagnostics = diagnostics.clone();
+    let navigation_diagnostics = diagnostics.clone();
     let app = builder
         .manage(state.clone())
         .invoke_handler(handler)
@@ -148,9 +153,21 @@ pub fn run(launch: Launch) -> Result<i32> {
                 })?;
                 tauri::WebviewWindowBuilder::from_config(app.handle(), config)
                     .and_then(|builder| {
+                        // WebView2 raises this for the top frame only, so the
+                        // documentation frame navigates freely.
                         builder
                             .data_directory(data_directory)
                             .initialization_script(script)
+                            .on_navigation(move |url| {
+                                let allowed = shell::navigation::allowed(&origins, url);
+                                if !allowed {
+                                    navigation_diagnostics.failure(ApplicationError::new(
+                                        ErrorCode::InvalidArguments,
+                                        Operation::Webview,
+                                    ));
+                                }
+                                allowed
+                            })
                             .build()
                     })
                     .map_err(|error| {

@@ -5,6 +5,8 @@
 //! reader and writer, and only then reports `exited`, so the exit frame never
 //! overtakes output. Settlement requests a stop, kills the child and waits a
 //! bounded time for the finisher; workers that miss the deadline stay owned.
+//! A frame the sink cannot deliver means nothing observes the session any
+//! more, so the session stops itself the same way.
 use super::{
     credit::{Admission, Credit},
     frame::Frame,
@@ -69,19 +71,50 @@ pub struct Program {
 
 type Master = Arc<Mutex<Option<Box<dyn MasterPty + Send>>>>;
 
+type Killer = Box<dyn ChildKiller + Send + Sync>;
+
 /// State shared between the session handle and its workers.
-#[derive(Default)]
 struct Shared {
     credit: Credit,
     input_stopped: AtomicBool,
     stop_requested: AtomicBool,
     exited: AtomicBool,
     write_error: Mutex<Option<ApplicationError>>,
+    /// Terminates the child when a worker abandons the session.
+    killer: Mutex<Killer>,
 }
 
 impl Shared {
+    fn new(killer: Killer) -> Self {
+        Self {
+            credit: Credit::default(),
+            input_stopped: AtomicBool::new(false),
+            stop_requested: AtomicBool::new(false),
+            exited: AtomicBool::new(false),
+            write_error: Mutex::new(None),
+            killer: Mutex::new(killer),
+        }
+    }
+
     fn write_error(&self) -> MutexGuard<'_, Option<ApplicationError>> {
         self.write_error.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Stops the session from inside a worker after its output could not be
+    /// delivered: input and output stop and a running child is terminated.
+    /// The finisher then reports the session as terminated and joins every
+    /// worker, so the registry settles it without waiting.
+    fn abandon(&self, diagnostics: &Diagnostics) {
+        if self.stop_requested.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        self.input_stopped.store(true, Ordering::Release);
+        self.credit.stop();
+        if !self.exited.load(Ordering::Acquire)
+            && let Err(error) = self.killer.lock().unwrap_or_else(|e| e.into_inner()).kill()
+        {
+            diagnostics.failure(failure(ErrorCode::CleanupFailed).caused_by(error));
+        }
     }
 }
 
@@ -112,9 +145,11 @@ fn end_of_output(error: &std::io::Error) -> bool {
     cfg!(unix) && error.raw_os_error() == Some(5)
 }
 
-fn deliver(sink: &Sink, frame: Frame<'_>, diagnostics: &Diagnostics) {
+/// Sends one frame; a frame that cannot be delivered abandons the session.
+fn deliver(sink: &Sink, frame: Frame<'_>, shared: &Shared, diagnostics: &Diagnostics) {
     if let Err(error) = frame.encode().and_then(|bytes| sink(bytes)) {
         diagnostics.failure(error);
+        shared.abandon(diagnostics);
     }
 }
 
@@ -155,7 +190,7 @@ impl Session {
         let process = diagnostics.start(pid, program.role);
         let mut killer = child.clone_killer();
         let master: Master = Arc::new(Mutex::new(Some(pair.master)));
-        let shared = Arc::new(Shared::default());
+        let shared = Arc::new(Shared::new(child.clone_killer()));
         let (deliver_workers, workers) = mpsc::sync_channel::<Workers>(1);
         let finisher = {
             let shared = shared.clone();
@@ -186,9 +221,9 @@ impl Session {
                     let write_error = shared.write_error().clone();
                     if !shared.credit.stopped() {
                         for error in [&wait_error, &write_error].into_iter().flatten() {
-                            deliver(&sink, Frame::Failed(error), &diagnostics);
+                            deliver(&sink, Frame::Failed(error), &shared, &diagnostics);
                         }
-                        deliver(&sink, Frame::Exited { code }, &diagnostics);
+                        deliver(&sink, Frame::Exited { code }, &shared, &diagnostics);
                     }
                     let phase = match (&wait_error, stopped) {
                         (Some(_), _) => ProcessPhase::Failed,
@@ -223,7 +258,7 @@ impl Session {
             settled: false,
             diagnostics: diagnostics.clone(),
         };
-        deliver(&sink, Frame::Started { pid }, &diagnostics);
+        deliver(&sink, Frame::Started { pid }, &shared, &diagnostics);
         let mut spawned = Workers::default();
         let outcome = (|| {
             let input_shared = shared.clone();
@@ -266,6 +301,7 @@ impl Session {
                                         deliver(
                                             &sink,
                                             Frame::Data(&buffer[..count]),
+                                            &output_shared,
                                             &output_diagnostics,
                                         );
                                     }
@@ -275,7 +311,12 @@ impl Session {
                                 Err(error) => {
                                     let error = failure(ErrorCode::ReadFailed).caused_by(error);
                                     if !credit.stopped() {
-                                        deliver(&sink, Frame::Failed(&error), &output_diagnostics);
+                                        deliver(
+                                            &sink,
+                                            Frame::Failed(&error),
+                                            &output_shared,
+                                            &output_diagnostics,
+                                        );
                                     }
                                     output_diagnostics.failure(error);
                                     break;

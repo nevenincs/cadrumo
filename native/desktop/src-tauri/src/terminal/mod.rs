@@ -14,7 +14,10 @@ use serde::Deserialize;
 use session::{Program, SETTLE_TIMEOUT, Session, Sink, failure};
 use std::{
     ffi::OsString,
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{
+        Arc, Mutex, MutexGuard,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Instant,
 };
 use tauri::{Manager, Runtime, plugin::TauriPlugin, webview::PageLoadEvent};
@@ -216,8 +219,64 @@ impl<S: Settle> Registry<S> {
     }
 }
 
+/// Counts top-frame documents: a new document starting to load ends the
+/// previous one, whose channels nothing receives any more.
+#[derive(Default)]
+pub struct Documents(AtomicU64);
+
+impl Documents {
+    pub fn current(&self) -> u64 {
+        self.0.load(Ordering::SeqCst)
+    }
+
+    fn replace(&self) {
+        self.0.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn still(&self, document: u64) -> Result<()> {
+        if self.current() == document {
+            Ok(())
+        } else {
+            Err(failure(ErrorCode::SessionUnavailable))
+        }
+    }
+}
+
+/// Opens `kind` on behalf of `document`, the document current when the
+/// request arrived. A request from a document that has since been replaced
+/// is refused, and a session started while its document was being replaced
+/// is settled before the refusal: nothing could receive its frames, and it
+/// would otherwise hold its kind against the new document.
+fn open_for<S: Settle>(
+    registry: &Mutex<Registry<S>>,
+    documents: &Documents,
+    document: u64,
+    kind: Kind,
+    start: impl FnOnce() -> Result<S>,
+) -> Result<u64> {
+    let lock = || {
+        registry
+            .lock()
+            .map_err(|_| failure(ErrorCode::LockPoisoned))
+    };
+    let id = {
+        let mut registry = lock()?;
+        documents.still(document)?;
+        registry.open(kind, start)?
+    };
+    if let Err(refused) = documents.still(document) {
+        // The replacing document's own settlement may have closed it already.
+        return match lock()?.close(id) {
+            Err(error) if error.code != ErrorCode::SessionUnavailable => Err(error),
+            _ => Err(refused),
+        };
+    }
+    Ok(id)
+}
+
 pub struct TerminalState {
     pub launch: Launch,
+    documents: Documents,
     registry: Mutex<Registry<Session>>,
 }
 
@@ -225,6 +284,7 @@ impl TerminalState {
     pub fn new(launch: Launch) -> Self {
         Self {
             launch,
+            documents: Documents::default(),
             registry: Mutex::new(Registry::default()),
         }
     }
@@ -235,9 +295,14 @@ impl TerminalState {
             .map_err(|_| failure(ErrorCode::LockPoisoned))
     }
 
-    pub fn open(&self, kind: Kind, cols: u16, rows: u16, sink: Sink) -> Result<u64> {
+    /// The current top-frame document, for [`TerminalState::open`].
+    pub fn document(&self) -> u64 {
+        self.documents.current()
+    }
+
+    pub fn open(&self, kind: Kind, cols: u16, rows: u16, sink: Sink, document: u64) -> Result<u64> {
         let program = Program::for_kind(&self.launch, kind)?;
-        self.registry()?.open(kind, || {
+        open_for(&self.registry, &self.documents, document, kind, || {
             Session::start(program, cols, rows, sink, self.launch.diagnostics.clone())
         })
     }
@@ -266,12 +331,15 @@ impl TerminalState {
     }
 
     /// A new top-frame document cannot reach the previous document's
-    /// channels, so its sessions are settled; the shell opens new ones.
+    /// channels, so its sessions are settled; the shell opens new ones. The
+    /// document count moves first, so an open still in flight for the
+    /// previous document is refused rather than left without a receiver.
     pub fn page_load(&self, event: PageLoadEvent) {
-        if event == PageLoadEvent::Started
-            && let Err(error) = self.stop()
-        {
-            self.launch.diagnostics.failure(error);
+        if event == PageLoadEvent::Started {
+            self.documents.replace();
+            if let Err(error) = self.stop() {
+                self.launch.diagnostics.failure(error);
+            }
         }
     }
 }

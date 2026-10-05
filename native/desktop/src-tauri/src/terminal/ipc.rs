@@ -2,7 +2,7 @@ use super::{
     Kind, TerminalState,
     session::{INPUT_LIMIT, Sink, failure},
 };
-use crate::app::Commands;
+use crate::{app::Commands, shell::channel::Deliveries};
 use cadrumo_application::{
     diagnostics::{Diagnostics, Snapshot},
     error::application::{ErrorCode, Result},
@@ -10,9 +10,12 @@ use cadrumo_application::{
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::{
-    Runtime, State,
+    Manager, Runtime, State, Webview,
     http::HeaderMap,
-    ipc::{Channel, InvokeBody, InvokeResponseBody, Request},
+    ipc::{
+        Channel, CommandArg, CommandItem, Invoke, InvokeBody, InvokeError, InvokeResponseBody,
+        Request,
+    },
 };
 
 /// The session a raw-body `terminal_write` addresses.
@@ -68,25 +71,72 @@ pub fn written(body: &InvokeBody, headers: &HeaderMap) -> Result<(u64, Vec<u8>)>
     Ok((session, bytes))
 }
 
-#[tauri::command]
-pub async fn terminal_open(
-    state: State<'_, Arc<TerminalState>>,
-    kind: Kind,
-    cols: u16,
-    rows: u16,
-    frames: Channel,
-) -> Result<Opened> {
-    let sink: Sink = Arc::new(move |frame| {
+/// The frame sink of one session's channel. A frame the interceptor could
+/// not deliver to the webview fails the send, which stops the session.
+pub fn frame_sink<R: Runtime>(webview: Webview<R>, frames: Channel) -> Sink {
+    Arc::new(move |frame| {
         frames
             .send(InvokeResponseBody::Raw(frame))
-            .map_err(|e| failure(ErrorCode::WriteFailed).caused_by(e))
-    });
-    blocking(&state, move |state| {
-        state
-            .open(kind, cols, rows, sink)
-            .map(|session| Opened { session })
+            .map_err(|e| failure(ErrorCode::WriteFailed).caused_by(e))?;
+        match webview.try_state::<Deliveries>() {
+            Some(deliveries) if deliveries.failed(webview.label(), frames.id()) => {
+                Err(failure(ErrorCode::WriteFailed))
+            }
+            _ => Ok(()),
+        }
     })
-    .await
+}
+
+const OPEN: &str = "terminal_open";
+
+/// `terminal_open{kind, cols, rows, frames}`. Written against the invoke
+/// itself rather than as a command function, because the requesting document
+/// must be read when the request arrives: a command function's body, and
+/// even its argument parsing, runs later on the async runtime, after a reload
+/// could already have replaced that document.
+fn terminal_open<R: Runtime>(invoke: Invoke<R>) -> bool {
+    let Invoke {
+        message,
+        resolver,
+        acl,
+    } = invoke;
+    let parsed = (|| -> std::result::Result<_, InvokeError> {
+        let argument = |key| CommandItem {
+            plugin: None,
+            name: OPEN,
+            key,
+            message: &message,
+            acl: &acl,
+        };
+        let state: State<'_, Arc<TerminalState>> = CommandArg::from_command(argument("state"))?;
+        let state = state.inner().clone();
+        let document = state.document();
+        let kind: Kind = CommandArg::from_command(argument("kind"))?;
+        let cols: u16 = CommandArg::from_command(argument("cols"))?;
+        let rows: u16 = CommandArg::from_command(argument("rows"))?;
+        let frames: Channel = CommandArg::from_command(argument("frames"))?;
+        let sink = frame_sink(message.webview(), frames);
+        Ok((state, document, kind, cols, rows, sink))
+    })();
+    match parsed {
+        Ok((state, document, kind, cols, rows, sink)) => {
+            resolver.respond_async(async move {
+                tauri::async_runtime::spawn_blocking(move || {
+                    record(
+                        &state.launch.diagnostics,
+                        state.open(kind, cols, rows, sink, document),
+                    )
+                })
+                .await
+                .map_err(|_| failure(ErrorCode::Panic))
+                .and_then(|opened| opened)
+                .map(|session| Opened { session })
+                .map_err(InvokeError::from)
+            });
+        }
+        Err(error) => resolver.invoke_error(error),
+    }
+    true
 }
 
 #[tauri::command]
@@ -142,15 +192,41 @@ pub fn diagnostics_snapshot(state: State<'_, Arc<TerminalState>>, after: u64) ->
     state.launch.diagnostics.snapshot(after)
 }
 
-pub fn commands<R: Runtime>() -> Commands<R> {
-    crate::app::commands![
-        terminal_open,
+pub const NAMES: &[&str] = &[
+    OPEN,
+    "terminal_write",
+    "terminal_ack",
+    "terminal_resize",
+    "terminal_close",
+    "diagnostics_snapshot",
+];
+
+/// Routes every terminal command, without the shell token check the host
+/// composes around it.
+pub fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
+    fn typed<R: Runtime>(
+        handler: impl Fn(Invoke<R>) -> bool + Send + Sync + 'static,
+    ) -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
+        handler
+    }
+    let generated = typed::<R>(tauri::generate_handler![
         terminal_write,
         terminal_ack,
         terminal_resize,
         terminal_close,
         diagnostics_snapshot
-    ]
+    ]);
+    move |invoke: Invoke<R>| {
+        if invoke.message.command() == OPEN {
+            terminal_open(invoke)
+        } else {
+            generated(invoke)
+        }
+    }
+}
+
+pub fn commands<R: Runtime>() -> Commands<R> {
+    Commands::new(NAMES, Box::new(handler()))
 }
 
 #[cfg(test)]

@@ -2,28 +2,86 @@ use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation},
 };
-use std::sync::Arc;
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, Mutex},
+};
 use tauri::{
-    Runtime, Webview,
+    Manager, Runtime, Webview,
     ipc::{CallbackFn, InvokeResponseBody},
 };
+
+/// Channels whose frames could not be delivered to their webview.
+///
+/// The interceptor consumes every frame, so a channel's `send` succeeds even
+/// when evaluating the frame in the webview failed. A failure is recorded here
+/// under the webview label and the channel's callback id, which is
+/// `Channel::id()` on the Rust side. The shell plugin manages one instance;
+/// any thread can query it.
+#[derive(Default)]
+pub struct Deliveries {
+    failed: Mutex<BTreeSet<(String, u32)>>,
+}
+
+impl Deliveries {
+    fn failed_set(&self) -> std::sync::MutexGuard<'_, BTreeSet<(String, u32)>> {
+        self.failed.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub(crate) fn record(&self, webview: &str, callback: u32) {
+        self.failed_set().insert((webview.to_owned(), callback));
+    }
+
+    /// Whether a frame for channel `callback` of webview `webview` failed to
+    /// be delivered since the previous query for that channel. The query
+    /// clears the mark, so a channel's owner asks once per check.
+    pub fn failed(&self, webview: &str, callback: u32) -> bool {
+        self.failed_set().remove(&(webview.to_owned(), callback))
+    }
+}
 
 /// Delivers every channel frame by evaluating it in the shell document.
 ///
 /// Tauri otherwise parks large frames in a per-webview queue that any frame of
 /// the webview can drain with the ACL-exempt channel fetch command, using
-/// sequential ids. Consuming every frame here keeps that queue empty.
+/// sequential ids. Consuming every frame here keeps that queue empty, even
+/// when evaluation fails: such a frame is reported to diagnostics and marked
+/// in the managed [`Deliveries`] rather than parked for a fetch.
 pub fn interceptor<R: Runtime>(
     diagnostics: Arc<Diagnostics>,
 ) -> impl Fn(&Webview<R>, CallbackFn, usize, &InvokeResponseBody) -> bool + Send + Sync + 'static {
     move |webview, callback, index, body| {
-        let delivered = script(callback, index, body)
-            .map_err(|e| failure().caused_by(e))
-            .and_then(|script| webview.eval(script).map_err(|e| failure().caused_by(e)));
-        if let Err(error) = delivered {
-            diagnostics.failure(error);
-        }
+        deliver(
+            webview.try_state::<Deliveries>().as_deref(),
+            &diagnostics,
+            webview.label(),
+            callback,
+            index,
+            body,
+            |script| webview.eval(script),
+        );
         true
+    }
+}
+
+/// Evaluates one frame's script and records a failure against its channel.
+fn deliver<E: std::error::Error + Send + Sync + 'static>(
+    deliveries: Option<&Deliveries>,
+    diagnostics: &Diagnostics,
+    webview: &str,
+    callback: CallbackFn,
+    index: usize,
+    body: &InvokeResponseBody,
+    evaluate: impl FnOnce(String) -> Result<(), E>,
+) {
+    let delivered = script(callback, index, body)
+        .map_err(|e| failure().caused_by(e))
+        .and_then(|script| evaluate(script).map_err(|e| failure().caused_by(e)));
+    if let Err(error) = delivered {
+        if let Some(deliveries) = deliveries {
+            deliveries.record(webview, callback.0);
+        }
+        diagnostics.failure(error);
     }
 }
 
@@ -77,6 +135,52 @@ mod tests {
             .unwrap(),
             "window.__TAURI_INTERNALS__.runCallback(7, { message: {\"a\":1}, index: 4 })"
         );
+    }
+
+    #[test]
+    fn a_failed_evaluation_marks_its_channel_once_and_is_reported() {
+        let diagnostics = Diagnostics::default();
+        let deliveries = Deliveries::default();
+        let body = InvokeResponseBody::Raw(vec![1]);
+        let mut evaluated = None;
+        deliver(
+            Some(&deliveries),
+            &diagnostics,
+            "main",
+            CallbackFn(9),
+            2,
+            &body,
+            |script| {
+                evaluated = Some(script);
+                Err(std::io::Error::other("the webview is gone"))
+            },
+        );
+        assert_eq!(
+            evaluated.as_deref(),
+            Some(script(CallbackFn(9), 2, &body).unwrap().as_str())
+        );
+        assert_eq!(diagnostics.snapshot(0).events.len(), 1);
+        assert!(!deliveries.failed("main", 8));
+        assert!(!deliveries.failed("other", 9));
+        assert!(deliveries.failed("main", 9));
+        assert!(!deliveries.failed("main", 9), "the query clears the mark");
+        // A delivered frame marks nothing and reports nothing.
+        deliver(
+            Some(&deliveries),
+            &diagnostics,
+            "main",
+            CallbackFn(9),
+            3,
+            &body,
+            |_| Ok::<(), std::io::Error>(()),
+        );
+        assert!(!deliveries.failed("main", 9));
+        assert_eq!(diagnostics.snapshot(0).events.len(), 1);
+        // Without a managed record the failure still reaches diagnostics.
+        deliver(None, &diagnostics, "main", CallbackFn(9), 4, &body, |_| {
+            Err(std::io::Error::other("the webview is gone"))
+        });
+        assert_eq!(diagnostics.snapshot(0).events.len(), 2);
     }
 
     fn fetch_first_queued(builder: tauri::Builder<MockRuntime>) -> Result<(), serde_json::Value> {

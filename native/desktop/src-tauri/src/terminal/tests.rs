@@ -3,15 +3,24 @@ use super::{
     frame::{Decoded, Frame, decode},
     session::size,
 };
-use cadrumo_application::error::application::{ApplicationError, Operation};
+use crate::shell::channel::Deliveries;
+use cadrumo_application::{
+    child::ChildConfiguration,
+    diagnostics::Diagnostics,
+    error::application::{ApplicationError, Operation},
+    process::status::{ProcessPhase, ProcessRole},
+};
 use std::{
+    path::PathBuf,
     str::FromStr,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
+    time::Duration,
 };
 use tauri::{
-    WebviewWindowBuilder,
-    ipc::{InvokeResponseBody, JavaScriptChannelId},
-    test::{MockRuntime, mock_builder, mock_context, noop_assets},
+    Manager, WebviewWindowBuilder,
+    ipc::{CallbackFn, InvokeBody, InvokeResponseBody, JavaScriptChannelId},
+    test::{INVOKE_KEY, MockRuntime, get_ipc_response, mock_builder, mock_context, noop_assets},
+    webview::InvokeRequest,
 };
 
 #[test]
@@ -213,13 +222,7 @@ fn frames_travel_as_raw_channel_bodies_in_send_order() {
 /// The mock runtime discards the scripts, so this measures the host side only.
 #[test]
 fn the_channel_interceptor_consumes_a_terminal_flood_without_queueing() {
-    use cadrumo_application::diagnostics::Diagnostics;
-    use tauri::{
-        http::{HeaderMap, HeaderValue},
-        ipc::CallbackFn,
-        test::{INVOKE_KEY, get_ipc_response},
-        webview::InvokeRequest,
-    };
+    use tauri::http::{HeaderMap, HeaderValue};
     let diagnostics = Arc::new(Diagnostics::default());
     let app = mock_builder()
         .channel_interceptor(crate::shell::channel::interceptor(diagnostics.clone()))
@@ -279,6 +282,285 @@ fn the_channel_interceptor_consumes_a_terminal_flood_without_queueing() {
             "frame {id} was left in the fetch queue"
         );
     }
+}
+
+/// A reload that lands while an open is starting its session: the session is
+/// settled and the open refused, so the new document can open that kind.
+#[test]
+fn an_open_for_a_replaced_document_is_refused_and_its_session_settled() {
+    let settles = Arc::new(AtomicBool::new(true));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let registry = Mutex::new(Registry::default());
+    let documents = Documents::default();
+    let first = documents.current();
+
+    // The current document opens normally.
+    let opened = open_for(
+        &registry,
+        &documents,
+        first,
+        Kind::Tui,
+        scripted(&settles, &attempts),
+    )
+    .unwrap();
+    registry.lock().unwrap().close(opened).unwrap();
+    attempts.store(0, Ordering::SeqCst);
+
+    // The reload begins while the session starts, as a page load's count
+    // moves while its settlement waits for the registry this open holds.
+    let started = AtomicUsize::new(0);
+    let refused = open_for(&registry, &documents, first, Kind::Python, || {
+        started.fetch_add(1, Ordering::SeqCst);
+        documents.replace();
+        scripted(&settles, &attempts)()
+    })
+    .unwrap_err();
+    assert_eq!(refused.code, ErrorCode::SessionUnavailable);
+    assert_eq!(started.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        attempts.load(Ordering::SeqCst),
+        1,
+        "the session was settled"
+    );
+    assert!(registry.lock().unwrap().occupied().is_empty());
+
+    // A request stamped before the reload starts nothing.
+    let never = || -> Result<Scripted> { panic!("a stale request started a session") };
+    let stale = open_for(&registry, &documents, first, Kind::Python, never).unwrap_err();
+    assert_eq!(stale.code, ErrorCode::SessionUnavailable);
+
+    // The new document opens the kind the stale request would have held.
+    let current = documents.current();
+    assert_ne!(current, first);
+    open_for(
+        &registry,
+        &documents,
+        current,
+        Kind::Python,
+        scripted(&settles, &attempts),
+    )
+    .unwrap();
+    assert_eq!(registry.lock().unwrap().occupied(), [Kind::Python]);
+}
+
+/// A session that misses its settlement bound stays owned, and the open
+/// reports the settlement failure rather than the refusal.
+#[test]
+fn a_stale_session_that_cannot_settle_stays_owned() {
+    let stuck = Arc::new(AtomicBool::new(false));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let registry = Mutex::new(Registry::default());
+    let documents = Documents::default();
+    let first = documents.current();
+    let error = open_for(&registry, &documents, first, Kind::Tui, || {
+        documents.replace();
+        scripted(&stuck, &attempts)()
+    })
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::CleanupFailed);
+    assert_eq!(registry.lock().unwrap().occupied(), [Kind::Tui]);
+    stuck.store(true, Ordering::SeqCst);
+    assert!(registry.lock().unwrap().close_all().is_empty());
+}
+
+/// A launch whose sessions cannot start: every path is absolute and the
+/// interpreter does not exist, so an open that is wrongly admitted fails to
+/// spawn rather than starting a process.
+fn unit_launch() -> crate::environment::Launch {
+    let directory = std::env::temp_dir();
+    let executable = directory.join("cadrumo-unit-absent-interpreter.exe");
+    assert!(!executable.exists());
+    crate::environment::Launch {
+        child: ChildConfiguration::new(executable, directory.clone(), Default::default()).unwrap(),
+        working_directory: directory.clone(),
+        webview: directory.clone(),
+        diagnostics: Arc::new(Diagnostics::default()),
+        home: directory.clone(),
+        package_root: directory.clone(),
+        docs_root: directory.clone(),
+        docs_manifest: directory.join("manifest.json"),
+        log_file: directory.join("cadrumo.log"),
+        log_format: String::new(),
+        output_language: "en".into(),
+    }
+}
+
+fn open_request(frames: &str) -> InvokeRequest {
+    InvokeRequest {
+        cmd: "terminal_open".into(),
+        callback: CallbackFn(0),
+        error: CallbackFn(1),
+        url: if cfg!(windows) {
+            "http://tauri.localhost"
+        } else {
+            "tauri://localhost"
+        }
+        .parse()
+        .unwrap(),
+        body: InvokeBody::Json(
+            serde_json::json!({"kind": "tui", "cols": 80, "rows": 24, "frames": frames}),
+        ),
+        headers: Default::default(),
+        invoke_key: INVOKE_KEY.to_owned(),
+    }
+}
+
+/// The real `terminal_open` handler reads the requesting document when the
+/// request arrives. Its open is held at the registry until the reload has
+/// begun, and is then refused without starting anything.
+#[test]
+fn terminal_open_answers_for_the_document_that_sent_it() {
+    let state = Arc::new(TerminalState::new(unit_launch()));
+    let (dispatched_out, dispatched) = std::sync::mpsc::channel();
+    let dispatched_out = Mutex::new(dispatched_out);
+    let handler = ipc::handler();
+    let app = mock_builder()
+        .manage(state.clone())
+        .invoke_handler(move |invoke| {
+            let handled = handler(invoke);
+            dispatched_out.lock().unwrap().send(()).unwrap();
+            handled
+        })
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let held = state.registry.lock().unwrap();
+    let reply = std::thread::scope(|scope| {
+        let request = scope.spawn(|| get_ipc_response(&window, open_request("__CHANNEL__:21")));
+        dispatched.recv().unwrap();
+        state.documents.replace();
+        drop(held);
+        request.join().unwrap()
+    });
+    let refused = reply.unwrap_err();
+    assert_eq!(refused["code"], "session_unavailable", "{refused}");
+    assert!(state.registry.lock().unwrap().occupied().is_empty());
+    // Malformed arguments are refused at dispatch.
+    let mut malformed = open_request("__CHANNEL__:22");
+    malformed.body = InvokeBody::Json(serde_json::json!({"kind": "tui"}));
+    assert!(get_ipc_response(&window, malformed).is_err());
+    assert!(get_ipc_response(&window, open_request("not a channel")).is_err());
+}
+
+/// Only the start of a new top-frame document replaces the current one.
+#[test]
+fn a_page_load_start_replaces_the_document() {
+    let state = TerminalState::new(unit_launch());
+    let first = state.document();
+    state.page_load(tauri::webview::PageLoadEvent::Finished);
+    assert_eq!(state.document(), first);
+    state.page_load(tauri::webview::PageLoadEvent::Started);
+    let second = state.document();
+    assert_ne!(second, first);
+    state.page_load(tauri::webview::PageLoadEvent::Started);
+    assert_ne!(state.document(), second);
+}
+
+/// Every terminal command name reaches a handler: the composed names and the
+/// routed commands agree.
+#[test]
+fn every_terminal_command_name_is_routed() {
+    let app = mock_builder()
+        .invoke_handler(ipc::handler())
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let call = |name: &str| {
+        let mut request = open_request("__CHANNEL__:1");
+        request.cmd = name.into();
+        get_ipc_response(&window, request).unwrap_err().to_string()
+    };
+    for name in ipc::NAMES {
+        let reply = call(name);
+        assert!(!reply.contains("not found"), "{name}: {reply}");
+    }
+    let unknown = call("terminal_unknown");
+    assert!(unknown.contains("not found"), "{unknown}");
+}
+
+/// A frame the interceptor failed to deliver fails the sink once, through the
+/// managed delivery record the interceptor writes.
+#[test]
+fn the_frame_sink_fails_when_its_channel_was_not_delivered() {
+    let app = mock_builder()
+        .manage(Deliveries::default())
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let webview: &tauri::Webview<MockRuntime> = window.as_ref();
+    let frames = JavaScriptChannelId::from_str("__CHANNEL__:31")
+        .unwrap()
+        .channel_on::<MockRuntime, InvokeResponseBody>(webview.clone());
+    let sink = ipc::frame_sink(webview.clone(), frames);
+    sink(vec![0, b'a']).unwrap();
+    // Failures of another webview or another channel do not concern it.
+    app.state::<Deliveries>().record("other", 31);
+    app.state::<Deliveries>().record("main", 32);
+    sink(vec![0, b'b']).unwrap();
+    app.state::<Deliveries>().record("main", 31);
+    assert_eq!(
+        sink(vec![0, b'c']).unwrap_err().code,
+        ErrorCode::WriteFailed
+    );
+}
+
+/// A system program that keeps writing output until it is stopped.
+fn chatty_program() -> Program {
+    let environment = std::env::vars_os().collect();
+    let directory = std::env::temp_dir();
+    let (executable, arguments): (PathBuf, &[&str]) = if cfg!(windows) {
+        let root = std::env::var_os("SystemRoot").expect("SystemRoot");
+        (
+            PathBuf::from(root).join("System32").join("cmd.exe"),
+            &["/d", "/c", "ping", "-n", "60", "127.0.0.1"],
+        )
+    } else {
+        (
+            PathBuf::from("/bin/sh"),
+            &["-c", "while :; do echo output; sleep 1; done"],
+        )
+    };
+    Program {
+        executable,
+        arguments: arguments.iter().map(OsString::from).collect(),
+        directory,
+        environment,
+        role: ProcessRole::Console,
+    }
+}
+
+/// When frames stop reaching the webview the session stops itself: the child
+/// is terminated and every worker joined without anyone closing it.
+#[test]
+fn a_session_whose_frames_cannot_be_delivered_stops_itself() {
+    let diagnostics = Arc::new(Diagnostics::default());
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let counted = attempts.clone();
+    let sink: Sink = Arc::new(move |_| {
+        counted.fetch_add(1, Ordering::SeqCst);
+        Err(failure(ErrorCode::WriteFailed))
+    });
+    let mut session = Session::start(chatty_program(), 80, 24, sink, diagnostics.clone()).unwrap();
+    let began = Instant::now();
+    while session.live() && began.elapsed() < Duration::from_secs(10) {
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(
+        !session.live(),
+        "the session kept running without a receiver"
+    );
+    session.stop().unwrap();
+    let snapshot = diagnostics.snapshot(0);
+    assert_eq!(snapshot.processes.len(), 1);
+    assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+    // The refused started frame ends delivery; later output is discarded.
+    assert_eq!(attempts.load(Ordering::SeqCst), 1);
 }
 
 #[cfg(feature = "live-package-tests")]

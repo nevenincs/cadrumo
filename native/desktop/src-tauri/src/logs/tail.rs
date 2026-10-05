@@ -13,7 +13,7 @@
 //! platform's default sharing, so it never blocks a writer's rename.
 use super::{
     format::LinePattern,
-    record::{Entry, LogSourceState, SourceKind},
+    record::{BATCH_BYTES, Entry, LogSourceState, SourceKind},
 };
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
 use std::{
@@ -33,6 +33,10 @@ const FINGERPRINT: usize = 1024;
 const READ_BYTES: u64 = 4 * 1024 * 1024;
 /// Bytes read across the existing files on the first poll, newest first.
 const INITIAL_BYTES: u64 = 16 * 1024 * 1024;
+// A record's JSON is at most six bytes per byte of its line and detail (a
+// control character becomes `\u00XX`), plus field names; one record always
+// fits in a batch.
+const _: () = assert!(6 * (LINE_BYTES + DETAIL_BYTES) + LINE_BYTES < BATCH_BYTES);
 /// A record whose file has not grown for this long is complete.
 pub const SETTLE: Duration = Duration::from_millis(250);
 /// Identified files kept beyond those present, so a file missed during a
@@ -207,6 +211,16 @@ pub struct Tail {
     current: Option<u64>,
     deferred: u32,
     next_id: u64,
+    #[cfg(test)]
+    pub io: std::sync::Arc<Io>,
+}
+
+/// Directory listings and file opens a tail made, counted where it makes them.
+#[cfg(test)]
+#[derive(Default)]
+pub struct Io {
+    pub listings: std::sync::atomic::AtomicU64,
+    pub opens: std::sync::atomic::AtomicU64,
 }
 
 struct Opened {
@@ -235,61 +249,29 @@ impl Tail {
             current: None,
             deferred: 0,
             next_id: 0,
+            #[cfg(test)]
+            io: Default::default(),
         }
+    }
+
+    /// Why the configured line format cannot be followed, if it cannot.
+    pub fn refusal(&self) -> Option<ApplicationError> {
+        self.pattern.as_ref().err().cloned()
+    }
+
+    /// Forgets every file and record in progress, so the next poll starts
+    /// like the first: from a bounded window at the end of the files.
+    pub fn reset(&mut self) {
+        self.tracked.clear();
+        self.polls = 0;
+        self.failing = 0;
+        self.reported = None;
+        self.current = None;
+        self.deferred = 0;
     }
 
     fn state(&self, kind: SourceKind, failure: Option<ApplicationError>) -> LogSourceState {
-        LogSourceState {
-            kind,
-            detail: self.file.display().to_string(),
-            failure,
-        }
-    }
-
-    /// The log file and its numbered rotations that exist now, oldest first.
-    /// Only regular files directly in the log directory qualify.
-    fn files(&self) -> io::Result<Vec<PathBuf>> {
-        let directory = self
-            .file
-            .parent()
-            .ok_or_else(|| io::Error::other("log file"))?;
-        let base = self
-            .file
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| io::Error::other("log file"))?;
-        let mut files = Vec::new();
-        for entry in fs::read_dir(directory)? {
-            let entry = entry?;
-            let name = entry.file_name();
-            let Some(name) = name.to_str() else {
-                continue;
-            };
-            let index = if name == base {
-                0
-            } else {
-                match name
-                    .strip_prefix(base)
-                    .and_then(|rest| rest.strip_prefix('.'))
-                    .filter(|digits| {
-                        (1..=6).contains(&digits.len())
-                            && digits.bytes().all(|b| b.is_ascii_digit())
-                    })
-                    .and_then(|digits| digits.parse::<u32>().ok())
-                {
-                    Some(index) if index > 0 => index,
-                    _ => continue,
-                }
-            };
-            match entry.file_type() {
-                Ok(kind) if kind.is_file() => files.push((index, entry.path())),
-                Ok(_) => {}
-                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                Err(error) => return Err(error),
-            }
-        }
-        files.sort_by_key(|file| std::cmp::Reverse(file.0));
-        Ok(files.into_iter().map(|(_, path)| path).collect())
+        state(&self.file, kind, failure)
     }
 
     /// Reads what was appended since the previous poll and returns the
@@ -451,20 +433,19 @@ impl Tail {
         (out, state)
     }
 
-    /// Lists the log file and its rotations, oldest first, and opens each.
     fn observe(&self) -> io::Result<Observation> {
-        let files = match self.files() {
-            Ok(files) => files,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Vec::new(),
-            Err(error) => return Err(error),
-        };
-        Ok(files
-            .into_iter()
-            .map(|path| {
-                let file = open(&path);
-                (path, file)
-            })
-            .collect())
+        #[cfg(test)]
+        self.io
+            .listings
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let observation = observe(&self.file);
+        #[cfg(test)]
+        if let Ok(files) = &observation {
+            self.io
+                .opens
+                .fetch_add(files.len() as u64, std::sync::atomic::Ordering::Relaxed);
+        }
+        observation
     }
 
     /// The tracked file whose identifying bytes begin `prefix`; the longest
@@ -488,6 +469,92 @@ impl Tail {
             self.tracked.truncate(keep);
         }
     }
+}
+
+fn state(file: &Path, kind: SourceKind, failure: Option<ApplicationError>) -> LogSourceState {
+    LogSourceState {
+        kind,
+        detail: file.display().to_string(),
+        failure,
+    }
+}
+
+/// The source state from listing and opening the files, without reading
+/// past their identifying bytes. Unlike a poll, it reports a single failed
+/// open at once.
+pub fn probe(file: &Path) -> LogSourceState {
+    let failed = |error: io::Error| {
+        state(
+            file,
+            SourceKind::Unreadable,
+            Some(unreadable().caused_by(error)),
+        )
+    };
+    match observe(file) {
+        Err(error) => failed(error),
+        Ok(files) if files.is_empty() => state(file, SourceKind::Missing, None),
+        Ok(files) => match files.into_iter().find_map(|(_, opened)| opened.err()) {
+            Some(error) => failed(error),
+            None => state(file, SourceKind::Available, None),
+        },
+    }
+}
+
+/// The log file and its numbered rotations that exist now, oldest first.
+/// Only regular files directly in the log directory qualify.
+fn files(file: &Path) -> io::Result<Vec<PathBuf>> {
+    let directory = file.parent().ok_or_else(|| io::Error::other("log file"))?;
+    let base = file
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| io::Error::other("log file"))?;
+    let mut files = Vec::new();
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else {
+            continue;
+        };
+        let index = if name == base {
+            0
+        } else {
+            match name
+                .strip_prefix(base)
+                .and_then(|rest| rest.strip_prefix('.'))
+                .filter(|digits| {
+                    (1..=6).contains(&digits.len()) && digits.bytes().all(|b| b.is_ascii_digit())
+                })
+                .and_then(|digits| digits.parse::<u32>().ok())
+            {
+                Some(index) if index > 0 => index,
+                _ => continue,
+            }
+        };
+        match entry.file_type() {
+            Ok(kind) if kind.is_file() => files.push((index, entry.path())),
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    files.sort_by_key(|file| std::cmp::Reverse(file.0));
+    Ok(files.into_iter().map(|(_, path)| path).collect())
+}
+
+/// Lists the log file and its rotations, oldest first, and opens each.
+fn observe(file: &Path) -> io::Result<Observation> {
+    let files = match files(file) {
+        Ok(files) => files,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Vec::new(),
+        Err(error) => return Err(error),
+    };
+    Ok(files
+        .into_iter()
+        .map(|path| {
+            let file = open(&path);
+            (path, file)
+        })
+        .collect())
 }
 
 type Observation = Vec<(PathBuf, io::Result<Option<(File, Vec<u8>, u64)>>)>;

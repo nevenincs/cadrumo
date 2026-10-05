@@ -276,6 +276,7 @@ const WAIT_TIMEOUT: u32 = 0x102;
 const INFINITE: u32 = u32::MAX;
 const EVENT_ALL_ACCESS: u32 = 0x001F_0003;
 const ERROR_FILE_NOT_FOUND: i32 = 2;
+const ERROR_INVALID_HANDLE: i32 = 6;
 /// How long a second instance waits for each acknowledgement before it
 /// checks the lock again.
 const ACKNOWLEDGEMENT_ROUND: Duration = Duration::from_millis(500);
@@ -591,7 +592,20 @@ fn claim_in_session(family: &str, session: u32, patience: Duration) -> io::Resul
         inherit: 0,
     };
     let (activate_name, acknowledge_name) = session_names(&name, session);
-    let mutex = open_owned(Kind::Mutex, &format!("{name}.lock"), &attributes, &user)?;
+    // An object of another type under the lock name, such as an event another
+    // account created first, makes the mutex create fail with
+    // ERROR_INVALID_HANDLE; that is refused like an object owned by another
+    // account.
+    let mutex =
+        open_owned(Kind::Mutex, &format!("{name}.lock"), &attributes, &user).map_err(|error| {
+            match error.raw_os_error() {
+                Some(ERROR_INVALID_HANDLE) => io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "an object of another type holds the instance name",
+                ),
+                _ => error,
+            }
+        })?;
     let deadline = Instant::now() + patience;
     let mut absent_since = None;
     loop {
@@ -1223,6 +1237,7 @@ mod tests {
             &format!("{base}.lock"),
             &format!("D:P(A;;GA;;;{})", user.text),
         );
-        assert!(claim_elsewhere(&family_b, Duration::from_secs(1)).is_err());
+        let error = claim_elsewhere(&family_b, Duration::from_secs(1)).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied, "{error}");
     }
 }

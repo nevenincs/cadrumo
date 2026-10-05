@@ -4,7 +4,8 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Opera
 use tauri::{Manager, Runtime};
 use tauri_plugin_clipboard_manager::Clipboard;
 
-/// Largest text the shell may place on the clipboard, in UTF-8 bytes.
+/// Largest text the shell may place on or take from the clipboard, in UTF-8
+/// bytes.
 pub const TEXT_LIMIT: usize = 1024 * 1024;
 
 fn unavailable() -> ApplicationError {
@@ -21,11 +22,24 @@ pub fn admit(text: &str) -> Result<()> {
     Ok(())
 }
 
+/// Clipboard text over the limit is refused rather than truncated: a partial
+/// paste would run as if it were complete.
+fn bounded(text: String) -> Result<String> {
+    if text.len() > TEXT_LIMIT {
+        return Err(ApplicationError::new(
+            ErrorCode::OutputLimit,
+            Operation::Webview,
+        ));
+    }
+    Ok(text)
+}
+
 pub fn read<R: Runtime>(app: &impl Manager<R>) -> Result<String> {
     app.try_state::<Clipboard<R>>()
         .ok_or_else(unavailable)?
         .read_text()
         .map_err(|e| ApplicationError::new(ErrorCode::ReadFailed, Operation::Webview).caused_by(e))
+        .and_then(bounded)
 }
 
 pub fn write<R: Runtime>(app: &impl Manager<R>, text: String) -> Result<()> {
@@ -54,6 +68,21 @@ mod tests {
         assert_eq!(
             admit(&"a".repeat(TEXT_LIMIT + 1)).unwrap_err().code,
             ErrorCode::InvalidArguments
+        );
+    }
+
+    #[test]
+    fn read_text_over_one_mebibyte_is_refused_not_truncated() {
+        let exact = "a".repeat(TEXT_LIMIT);
+        assert_eq!(bounded(exact.clone()).unwrap(), exact);
+        assert_eq!(bounded(String::new()).unwrap(), "");
+        // A multi-byte character that crosses the limit counts in bytes.
+        let crossing = format!("{}\u{e1}", "a".repeat(TEXT_LIMIT - 1));
+        assert_eq!(crossing.chars().count(), TEXT_LIMIT);
+        assert_eq!(bounded(crossing).unwrap_err().code, ErrorCode::OutputLimit);
+        assert_eq!(
+            bounded("a".repeat(TEXT_LIMIT + 1)).unwrap_err().code,
+            ErrorCode::OutputLimit
         );
     }
 

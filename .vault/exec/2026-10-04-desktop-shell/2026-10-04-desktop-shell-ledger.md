@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:564755ab5d93ae6855b6f7fec0a352ddafd0ce90d635c4c33b9c9e863c3e7b64'
+body_hash: 'sha256:e768faf41a36312f623661dcdc50cc54dd0d843ec0adbe08d433b68097c687f7'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -375,6 +375,38 @@ related:
 - `S19` `verify:` `contract patch of only the single-instance hunks: git apply --cached --check against a temporary index read from HEAD 4376485759` -> `pass`
 - `S19` `verify:` `private namespace probe on Windows 11 26200: a foreign-SID boundary is refused with error 5; the namespace survives its creator while another process holds a namespace handle, and once none does a new CreatePrivateNamespace makes a separate namespace` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
+- `S06` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S06` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S06` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S06` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (full desktop crate, logsfix snapshot)` -> `pass`
+- `S06` `verify:` `cargo test --locked -- --test-threads=1 (non-live, 121 tests)` -> `pass`
+- `S06` `verify:` `cargo test --features live-package-tests logs::tests::live (copied smoke kit package)` -> `pass`
+- `S06` `verify:` `mutation checks (sync first poll, lock across read, no byte cap, poll while idle, no tail reset, ignored delivery failure, size without seq; each killed by its test)` -> `pass`
+- `S06` `by:` `high-tier implementation executor (logsfix)`
+- `S04` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S04` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (desktop, working tree incl. logs)` -> `pass`
+- `S04` `verify:` `cargo test --locked -- --test-threads=1 (desktop non-live, 122 tests)` -> `pass`
+- `S04` `verify:` `cargo test --locked --features live-package-tests terminal::tests::live:: (11 tests, copied smoke package)` -> `pass`
+- `S04` `verify:` `mutation checks: post-check, pre-check, page-load count, sink delivery check, session abandon all caught by their tests` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+- `S07` `M` `native/desktop/src-tauri/src/shell/channel.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/clipboard.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/external.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/navigation.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/webview_environment.rs`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests[,webview2-remote-debugging] -- -D warnings (desktop)` -> `pass`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop non-live, 122 tests)` -> `pass`
+- `S07` `verify:` `tsc --noEmit and prettier --check src/ipc/contract.ts (frontend)` -> `pass`
+- `S07` `verify:` `mutation checks: channel record, navigation port and user info, env list, case and argument rules, mailto headers, clipboard byte bound all caught` -> `pass`
+- `S19` `M` `native/desktop/src-tauri/src/main.rs`
+- `S19` `M` `native/application/src/error/application.rs`
+- `S19` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S19` `verify:` `cargo test --locked shell::single_instance (desktop, PowerShell mutex and event squatters)` -> `pass`
+- `S19` `verify:` `cargo test --locked --lib [--features webview2] (platform, 21 tests)` -> `pass`
+- `S19` `verify:` `cargo test --locked (application)` -> `pass`
+- `S19` `verify:` `mutation checks: foreign mapping off and platform type conversion off both caught` -> `pass`
+- `S19` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -431,3 +463,14 @@ related:
 - `S11` Mutable-root rows state the declared per-OS, per-channel default; the committed native host still resolves the root from its working directory until the uncommitted native platform resolver lands
 - `S11` Minimum WebView2 runtime recorded as required interfaces only; no runtime version measured; no automated packaged window test exists
 - `S19` S19 Global names kept: private namespace cross-session visibility undocumented and unverifiable from this session-0 shell; residual denial of service by another standard account recorded in native/CONTRACT.md
+- `S06` Review fixes logs-ui-thread, log-batch-bytes, log-idle-polling and the log-sink part of interceptor-failure-invisible; subscribe returns a probe state (list and 1 KiB open) before the first poll, the first batch carries the polled state
+- `S06` An idle hub clears its ring and tail; the next subscription re-reads the 16 MiB window, so host records older than the diagnostics ring are not replayed
+- `S06` frontend/src/ipc/contract.ts:178 still says the first batch carries the whole backlog; a large backlog now spans several paced batches (outside this lane's write scope, shapes unchanged)
+- `S06` Checks ran on build/logsfix-desktop-host/snap with the worktree native/platform and a contract regenerated by the worktree generator; not committed
+- `S04` reload-orphan-session: `terminal_open` now reads the top-frame document count at dispatch, before its arguments are parsed on the async runtime; a dispatch-versus-poll mutation was caught in two runs but the test cannot force that interleaving deterministically
+- `S04` interceptor-failure-invisible: a frame whose eval failed fails the terminal sink through shell::channel::Deliveries and the session stops itself; eval fails only once the webview or event loop is gone, so a reload is covered by the document count, not by this signal
+- `S07` no-top-navigation-policy: wry 0.57.0 src/webview2/mod.rs:740-760 hooks only CoreWebView2 NavigationStarting (top frame); FrameNavigationStarting is not subscribed, so the docs frame is unaffected; tauri-runtime-wry 2.12.1 src/lib.rs:4820-4826 admits a URI it cannot parse, a residual
+- `S07` webview2-ambient-overrides: refused set taken from strings in the webview2-com-sys 0.39.1 loader and runtime 154.0.4258.53 EmbeddedBrowserWebView.dll; HKLM/HKCU `Software\Policies\Microsoft\Edge\WebView2` policy values carry the same overrides and are not checked; the webview2-remote-debugging feature is not yet wired into the S10 package build
+- `S07` `open_external:` ShellExecute now runs on a blocking worker without COM initialization, as tauri-plugin-opener 2.7.0 does; a DelegateExecute handler needing an STA is unverified until S10
+- `S07` clipboard reads over 1 MiB and wiring of the env refusal and navigation handler in app::run are not unit-reachable; the decision functions are tested
+- `S19` platform cargo clippy -D warnings fails on five pre-existing `missing_safety_doc` findings in native/platform/src/lib.rs:411-514, untouched here; desktop.rs has none

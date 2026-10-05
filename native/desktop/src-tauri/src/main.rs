@@ -96,6 +96,7 @@ fn main() {
             match error.code {
                 ErrorCode::InvalidArguments => 64,
                 ErrorCode::DesktopUnavailable => 69,
+                ErrorCode::InstanceLockForeign => 77,
                 _ => 1,
             }
         }

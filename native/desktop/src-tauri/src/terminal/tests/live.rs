@@ -331,7 +331,9 @@ async fn python_kind_is_a_repl_in_home_with_the_pinned_storage_root() {
     let (home, storage) = (launch.home.clone(), launch.working_directory.clone());
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
-    let id = state.open(Kind::Python, 1000, 40, sink).unwrap();
+    let id = state
+        .open(Kind::Python, 1000, 40, sink, state.document())
+        .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
     screen.until(">>> ");
@@ -376,7 +378,9 @@ async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
     let storage = launch.working_directory.clone();
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
-    let id = state.open(Kind::Tui, 120, 40, sink).unwrap();
+    let id = state
+        .open(Kind::Tui, 120, 40, sink, state.document())
+        .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
     screen.until_raw(b"\x1b[?1049h");
@@ -436,7 +440,9 @@ async fn console_kind_is_the_absolute_platform_shell_with_package_bin_first() {
 
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
-    let id = state.open(Kind::Console, 1000, 40, sink).unwrap();
+    let id = state
+        .open(Kind::Console, 1000, 40, sink, state.document())
+        .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
     screen.until("PS ");
@@ -706,13 +712,7 @@ async fn ipc_commands_write_raw_and_json_bodies_ack_resize_and_close() {
     let forward = Mutex::new(frames_out);
     let app = mock_builder()
         .manage(state.clone())
-        .invoke_handler(tauri::generate_handler![
-            ipc::terminal_open,
-            ipc::terminal_write,
-            ipc::terminal_ack,
-            ipc::terminal_resize,
-            ipc::terminal_close
-        ])
+        .invoke_handler(ipc::handler())
         .channel_interceptor(move |_, _, index, body| {
             if let InvokeResponseBody::Raw(bytes) = body {
                 forward
@@ -904,8 +904,12 @@ async fn a_page_load_settles_every_kind_and_new_sessions_replace_them() {
     let state = TerminalState::new(launch);
     let (python_sink, python_frames) = collector();
     let (tui_sink, tui_frames) = collector();
-    let python = state.open(Kind::Python, 120, 40, python_sink).unwrap();
-    let tui = state.open(Kind::Tui, 120, 40, tui_sink).unwrap();
+    let python = state
+        .open(Kind::Python, 120, 40, python_sink, state.document())
+        .unwrap();
+    let tui = state
+        .open(Kind::Tui, 120, 40, tui_sink, state.document())
+        .unwrap();
     let python_control = Registered(&state, python);
     let mut python_screen = Screen::new(python_frames, &python_control);
     python_screen.until(">>> ");
@@ -928,7 +932,9 @@ async fn a_page_load_settles_every_kind_and_new_sessions_replace_them() {
         );
     }
     let (sink, frames) = collector();
-    let reopened = state.open(Kind::Python, 120, 40, sink).unwrap();
+    let reopened = state
+        .open(Kind::Python, 120, 40, sink, state.document())
+        .unwrap();
     assert!(reopened > tui);
     let control = Registered(&state, reopened);
     let mut screen = Screen::new(frames, &control);

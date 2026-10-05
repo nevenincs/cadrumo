@@ -22,6 +22,7 @@ pub enum ErrorCode {
     DesktopUnavailable,
     WebviewFailed,
     UnsupportedPlatform,
+    InstanceLockForeign,
     Panic,
 }
 
@@ -68,6 +69,7 @@ impl ApplicationError {
             ErrorCode::DesktopUnavailable => "No interactive desktop is available; use --headless",
             ErrorCode::WebviewFailed => "The application window could not be created",
             ErrorCode::UnsupportedPlatform => "Desktop operation is not available on this platform",
+            ErrorCode::InstanceLockForeign => "Another account holds the application lock",
             ErrorCode::Panic => "An unexpected application failure occurred",
         };
         Self {

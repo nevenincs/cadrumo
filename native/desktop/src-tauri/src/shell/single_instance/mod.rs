@@ -214,8 +214,24 @@ fn admitted(
         Err(e) if e.kind() == std::io::ErrorKind::TimedOut => {
             Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Launch).caused_by(e))
         }
+        Err(e) if foreign(&e) => Err(ApplicationError::new(
+            ErrorCode::InstanceLockForeign,
+            Operation::Launch,
+        )
+        .caused_by(e)),
         Err(e) => Err(unavailable().caused_by(e)),
     }
+}
+
+/// Whether a claim failed because another account placed an object under
+/// one of the lock's names first. On Windows the names are predictable, and
+/// the platform refuses an object this user does not own, cannot open with
+/// full access, or that has another type under the lock name, as permission
+/// denied. On Linux that kind means the runtime directory is open to other
+/// accounts, which is a different refusal.
+#[cfg(any(windows, target_os = "linux"))]
+fn foreign(error: &std::io::Error) -> bool {
+    cfg!(windows) && error.kind() == std::io::ErrorKind::PermissionDenied
 }
 
 #[cfg(not(any(windows, target_os = "linux")))]
@@ -391,7 +407,82 @@ mod tests {
         let timed_out = admitted(Err(std::io::ErrorKind::TimedOut.into()), &mut quiet);
         assert_eq!(timed_out.err().unwrap().code, ErrorCode::TimedOut);
         let refused = admitted(Err(std::io::ErrorKind::PermissionDenied.into()), &mut quiet);
-        assert_eq!(refused.err().unwrap().code, ErrorCode::DesktopUnavailable);
+        let expected = if cfg!(windows) {
+            ErrorCode::InstanceLockForeign
+        } else {
+            ErrorCode::DesktopUnavailable
+        };
+        assert_eq!(refused.err().unwrap().code, expected);
+        let failed = admitted(Err(std::io::ErrorKind::Other.into()), &mut quiet);
+        assert_eq!(failed.err().unwrap().code, ErrorCode::DesktopUnavailable);
+    }
+
+    /// Holds an object under the lock name from a separate Windows PowerShell
+    /// process, as another account that created it first would, until the
+    /// returned process ends.
+    #[cfg(windows)]
+    fn squat(family: &str, object: &str) -> Running {
+        const SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+$sid = [Security.Principal.WindowsIdentity]::GetCurrent().User
+$name = "Global\$($env:CADRUMO_SQUAT_FAMILY).desktop.$($sid.Value).lock"
+$created = $false
+if ($env:CADRUMO_SQUAT_OBJECT -eq 'mutex') {
+    # This user may only wait on it: no full access, as when another account
+    # created it and granted nothing more.
+    $security = New-Object Security.AccessControl.MutexSecurity
+    $security.AddAccessRule((New-Object Security.AccessControl.MutexAccessRule(
+        $sid, [Security.AccessControl.MutexRights]::Synchronize,
+        [Security.AccessControl.AccessControlType]::Allow)))
+    $held = New-Object Threading.Mutex($false, $name, [ref]$created, $security)
+} else {
+    $held = New-Object Threading.EventWaitHandle($false,
+        [Threading.EventResetMode]::ManualReset, $name, [ref]$created)
+}
+if (-not $created) { throw "the name already existed" }
+[Console]::Out.WriteLine('squatting')
+[Console]::Out.Flush()
+[void][Console]::In.ReadLine()
+$held.Dispose()
+"#;
+        let root = std::env::var_os("SystemRoot").expect("SystemRoot");
+        let powershell =
+            PathBuf::from(root).join(r"System32\WindowsPowerShell\v1.0\powershell.exe");
+        let mut child = Running(
+            Command::new(powershell)
+                .args(["-NoProfile", "-NonInteractive", "-Command", SCRIPT])
+                .env("CADRUMO_SQUAT_FAMILY", family)
+                .env("CADRUMO_SQUAT_OBJECT", object)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .unwrap(),
+        );
+        let mut line = String::new();
+        BufReader::new(child.0.stdout.take().unwrap())
+            .read_line(&mut line)
+            .unwrap();
+        assert_eq!(line.trim(), "squatting", "the squatter did not start");
+        child
+    }
+
+    /// An object another account placed under the lock name first refuses the
+    /// launch as held by another account, not as a missing desktop, whether
+    /// this user cannot open it fully or it is not a mutex at all.
+    #[cfg(windows)]
+    #[test]
+    fn a_lock_name_another_account_holds_refuses_the_launch_as_foreign() {
+        for object in ["mutex", "event"] {
+            let family = unique_family(&format!("squat-{object}"));
+            let squatter = squat(&family, object);
+            let refused = admit_with(&Mode::Gui, || Ok(family.clone()))
+                .err()
+                .unwrap_or_else(|| panic!("{object}: the launch was admitted"));
+            assert_eq!(refused.code, ErrorCode::InstanceLockForeign, "{object}");
+            assert_eq!(refused.operation, Operation::Launch);
+            drop(squatter);
+        }
     }
 
     #[test]

@@ -10,13 +10,17 @@ use tauri::Url;
 const LIMIT: usize = 8192;
 const HTTPS: &str = "https://";
 const MAILTO: &str = "mailto:";
+/// The only `mailto:` header fields a link may set. Others, such as `attach`
+/// or `to`, would let a link choose files or recipients the text does not show.
+const MAIL_FIELDS: [&str; 4] = ["subject", "body", "cc", "bcc"];
 
 fn refused() -> ApplicationError {
     ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
 }
 
 /// Admits an absolute `https:` URL with a host and no user information, or a
-/// `mailto:` URL with an address part, and returns its parsed form.
+/// `mailto:` URL with an address part, at most the header fields `subject`,
+/// `body`, `cc` and `bcc` and no fragment, and returns its parsed form.
 ///
 /// The text must be printable ASCII without a backslash, as a browser
 /// serializes a link: whitespace, controls and bidirectional marks that the
@@ -40,10 +44,28 @@ pub fn admit(raw: &str) -> Result<Url> {
                 && url.username().is_empty()
                 && url.password().is_none()
         }
-        "mailto" => raw.len() > MAILTO.len() && raw.starts_with(MAILTO),
+        "mailto" => {
+            raw.starts_with(MAILTO)
+                && !url.path().is_empty()
+                && url.fragment().is_none()
+                && url.query().is_none_or(mail_fields)
+        }
         _ => false,
     };
     if admitted { Ok(url) } else { Err(refused()) }
+}
+
+/// Whether every `mailto:` header is `name=value` with an admitted name. The
+/// name is compared as written, case-insensitively, so a percent-encoded name
+/// is refused rather than decoded.
+fn mail_fields(query: &str) -> bool {
+    query.split('&').all(|field| {
+        field.split_once('=').is_some_and(|(name, _)| {
+            MAIL_FIELDS
+                .iter()
+                .any(|admitted| name.eq_ignore_ascii_case(admitted))
+        })
+    })
 }
 
 /// Hands an admitted URL to the system's registered handler. The `BROWSER`
@@ -67,6 +89,9 @@ mod tests {
             "https://xn--bcher-kva.example/",
             "mailto:someone@example.com",
             "mailto:someone@example.com?subject=Cadrumo%20help",
+            "mailto:a@example.com,b@example.com?subject=s&body=b&cc=c@example.com&bcc=d@example.com",
+            "mailto:someone@example.com?Subject=Hello&BODY=",
+            "mailto:someone@example.com?cc=a@example.com&cc=b@example.com",
         ] {
             let url = admit(raw).unwrap_or_else(|e| panic!("{raw}: {e}"));
             assert!(matches!(url.scheme(), "https" | "mailto"), "{raw}");
@@ -107,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn user_information_and_malformed_authorities_are_refused() {
+    fn user_information_malformed_authorities_and_mail_headers_are_refused() {
         for raw in [
             "https://user@example.com/",
             "https://user:secret@example.com/",
@@ -119,10 +144,24 @@ mod tests {
             "https://",
             "https://?q",
             "mailto:",
+            "mailto:?subject=no%20address",
+            "mailto:someone@example.com?attach=C:/Users/me/secret.txt",
+            "mailto:someone@example.com?subject=a&attachment=x",
+            "mailto:someone@example.com?to=other@example.com",
+            "mailto:someone@example.com?%73ubject=encoded",
+            "mailto:someone@example.com?subject",
+            "mailto:someone@example.com?subject=a&",
+            "mailto:someone@example.com?",
+            "mailto:someone@example.com#part",
+            "mailto:someone@example.com?in-reply-to=%3Cid%3E",
             "HTTPS://example.com/",
             "Mailto:someone@example.com",
         ] {
-            assert!(admit(raw).is_err(), "{raw}");
+            assert_eq!(
+                admit(raw).unwrap_err().code,
+                ErrorCode::InvalidArguments,
+                "{raw}"
+            );
         }
     }
 

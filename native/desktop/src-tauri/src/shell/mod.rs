@@ -3,10 +3,13 @@ mod clipboard;
 mod external;
 mod interrupts;
 mod menu;
+pub mod navigation;
 pub mod single_instance;
 pub mod token;
 #[cfg(windows)]
 pub mod webview;
+#[cfg(windows)]
+pub mod webview_environment;
 pub mod window_state;
 
 use crate::{app::Commands, docs, environment::Launch};
@@ -65,11 +68,13 @@ fn desktop_environment(
     }
 }
 
-/// Runs on the main thread, where the shell's handler dispatch is
-/// initialized for COM.
+/// Resolving and starting the system handler can block, so the launch runs
+/// off the main thread, as Tauri's own opener plugin launches URLs from its
+/// asynchronous commands.
 #[tauri::command]
-fn open_external(url: String) -> Result<()> {
-    external::open(&external::admit(&url)?)
+async fn open_external(url: String) -> Result<()> {
+    let url = external::admit(&url)?;
+    blocking(move || external::open(&url)).await
 }
 
 #[tauri::command]
@@ -153,6 +158,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             single_instance::verify(app.config())?;
             app.manage(Shell { output_language });
             app.manage(popups);
+            app.manage(channel::Deliveries::default());
             Ok(())
         })
         .on_window_ready(move |window| {

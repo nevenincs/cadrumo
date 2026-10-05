@@ -844,7 +844,7 @@ The names are predictable: the family is public, and any local account can look 
 another account's SID. Another local account can therefore create any of these
 objects first, from any session and without a privilege. A claimant refuses such an
 object, since it cannot open it with full access or does not own it, so the GUI
-launch exits with 69 and `desktop_unavailable` while the other account keeps a
+launch exits with 77 and `instance_lock_foreign` while the other account keeps a
 handle to the object open. Nothing reaches that account: no request, no
 acknowledgement and no handle to the user's own objects. The headless CLI
 passthrough is unaffected. Administrators and `SYSTEM` can deny the GUI in other
