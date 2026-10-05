@@ -23,6 +23,10 @@ from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransport
 from ...adapters.local_runtime.server import RuntimeTransportServer
 from ...adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ...adapters.local_runtime.windows_login import windows_login_inventory
+from ...adapters.local_runtime.windows_token_elevation import (
+    current_process_token_elevation_type,
+    supervised_elevation_refused,
+)
 from ...application.runtime.contracts import (
     RuntimeExitReason,
     RuntimeRefusalCode,
@@ -32,6 +36,7 @@ from ...application.runtime.contracts import (
 )
 from ...application.runtime.login import RuntimeLoginInventory
 from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
+from ...core.child_console import isolate_child_consoles
 from ...core.config import load_settings, override_settings
 from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
@@ -62,6 +67,26 @@ def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Name
     )
     options = parser.parse_args(arguments)
     return options
+
+
+def _accept_console_interrupts() -> None:
+    """Clear an inherited Windows "ignore Ctrl+C" flag so a console stop reaches the drain."""
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # A NULL handler with FALSE restores normal Ctrl+C processing for this
+    # process. A launcher that started it in a new process group, or that
+    # itself ignored Ctrl+C, would otherwise leave every console stop unseen.
+    if not kernel32.SetConsoleCtrlHandler(None, False):
+        _LOGGER.warning("runtime could not restore console Ctrl+C processing")
+
+
+def _supervised_token_refused() -> bool:
+    if sys.platform != "win32":
+        return False
+    return supervised_elevation_refused(current_process_token_elevation_type())
 
 
 def _configure_runtime_logging(root: Path) -> None:
@@ -234,9 +259,12 @@ def _run_runtime_owner(
 def run(arguments: list[str] | None = None) -> int:
     """Run one user/root owner with independent profile admission; return its exit reason code."""
     options = parse_runtime_arguments(arguments)
+    _accept_console_interrupts()
     stop = RuntimeStop()
     if not options.supervised:
         return _run_runtime(options, stop, None)
+    # The manager's console stop must reach this process alone.
+    isolate_child_consoles()
     exit_code = int(RuntimeExitReason.UNEXPECTED_FAILURE)
     supervision: SupervisedRuntime | None = None
     try:
@@ -244,7 +272,12 @@ def run(arguments: list[str] | None = None) -> int:
         supervision = SupervisedRuntime(stop, SupervisorChannel(take_supervisor_streams(), logger=_LOGGER))
         route_diagnostics_to_redacted_logging(_LOGGER)
         supervision.start()
-        exit_code = _run_runtime(options, stop, supervision)
+        if _supervised_token_refused():
+            # Refused before the endpoint is claimed; the supervisor stands down on this reason.
+            _LOGGER.error("supervised runtime refused a full UAC-elevated token")
+            exit_code = int(RuntimeExitReason.ELEVATED_TOKEN_REFUSED)
+        else:
+            exit_code = _run_runtime(options, stop, supervision)
     except Exception as error:
         # The supervisor receives only the reason code; the redacted log keeps the cause.
         _LOGGER.error("supervised runtime ended by an unexpected failure", exc_info=error)

@@ -7,6 +7,8 @@ Modes:
   the grandchild is still alive.
 - ``failure``: run the runtime entrypoint supervised with an owner that fails
   unexpectedly.
+- ``elevated``: run the runtime entrypoint supervised from a token that reads
+  as fully elevated, with an owner that records whether it was reached.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.adapters.local_runtime.tests.process_support import fixture_environment, native_python
+from cadrumo.adapters.local_runtime.windows_token_elevation import WindowsTokenElevationType
 from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.core.logging import get_logger
 from cadrumo.entrypoints.runtime import main as runtime_main
@@ -119,12 +122,31 @@ def _failure(arguments: list[str]) -> None:
     raise SystemExit(runtime_main.run(arguments))
 
 
+def _elevated(root: Path, arguments: list[str]) -> None:
+    def recording_owner(
+        _options: argparse.Namespace,
+        _stop: RuntimeStop,
+        _previous: Mapping[signal.Signals, object],
+        _supervision: SupervisedRuntime | None,
+    ) -> RuntimeExitReason:
+        (root / "owner-reached").write_text("reached", encoding="ascii")
+        return RuntimeExitReason.SUPERVISOR_STOP
+
+    # No test host can be given a full elevated token on demand, so the native
+    # read is replaced in this disposable process; the refusal routing is real.
+    vars(runtime_main)["current_process_token_elevation_type"] = lambda: WindowsTokenElevationType.FULL
+    vars(runtime_main)["_run_runtime_owner"] = recording_owner
+    raise SystemExit(runtime_main.run(arguments))
+
+
 def main() -> None:
     mode, root = sys.argv[1], Path(sys.argv[2])
     if mode == "streams":
         asyncio.run(_streams(root))
     elif mode == "failure":
         _failure(sys.argv[3:])
+    elif mode == "elevated":
+        _elevated(root, sys.argv[3:])
     else:
         raise ValueError("unknown supervised stream fixture mode")
 

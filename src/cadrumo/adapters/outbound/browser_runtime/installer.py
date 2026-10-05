@@ -12,6 +12,7 @@ import subprocess
 import sys
 
 from ....application.provisioning_browser import playwright_browsers_root
+from ....core.child_console import child_console_creation_flags
 from ....core.config import load_settings
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
@@ -43,6 +44,7 @@ def run_browser_installer(timeout_s: float) -> int:
             timeout=timeout_s,
             check=False,
             env=environment,
+            creationflags=child_console_creation_flags(),
         )
     except subprocess.TimeoutExpired as exc:
         raise TimeoutError(f"browser install exceeded {timeout_s:.0f}s") from exc

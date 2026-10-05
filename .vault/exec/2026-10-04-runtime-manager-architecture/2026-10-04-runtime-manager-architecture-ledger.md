@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b7549b4efbe03ef926a1f78ce446ea3f902fff3d18f64231cd2fd9e78666bd7'
+body_hash: 'sha256:853cc1724fd57a40bc130ff46a6de35a6e21ef17ba3d823edbc416bf6b9b3bd9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -125,6 +125,27 @@ related:
 - `S07` `verify:` `windows_manifest check on built exe; dumpbin DependentLoadFlags 0x800 and GUI subsystem` -> `pass`
 - `S07` `verify:` `image tests fail on a scratch build without 0x800 or windows_subsystem` -> `pass`
 - `S07` `verify:` `identity pytest 69 passed 2 skipped; ruff; ty` -> `pass`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/browser_runtime/installer.py`
+- `S05` `A` `src/cadrumo/core/child_console.py`
+- `S05` `A` `src/cadrumo/adapters/local_runtime/windows_token_elevation.py`
+- `S05` `A` `src/cadrumo/core/tests/test_child_console.py`
+- `S05` `A` `src/cadrumo/adapters/local_runtime/tests/test_windows_token_elevation.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/kdf_console_fixture.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_child_console.py`
+- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/console_interrupt_fixture.py`
+- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/test_console_interrupt.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/supervised_streams_fixture.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S05` `verify:` `console interrupt and supervised runtime pytest 12 passed` -> `pass`
+- `S05` `verify:` `focused child-console, elevation, KDF console pytest 29 passed 1 skipped` -> `pass`
+- `S05` `verify:` `Ctrl+C negative control (re-enable removed keeps serving)` -> `pass`
+- `S05` `verify:` `ruff check and format --check; ty win32 linux darwin on touched files` -> `pass`
+- `S05` `verify:` `just check-module-reachability` -> `pass`
+- `S05` `verify:` `just check-types` -> `fail`
+- `S05` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -134,3 +155,4 @@ related:
 - `S02` Integration residue (8 failures, 3 errors in automation approval, password rotation, refusal detail, projection pages, operation secret, modelo lifecycle) sits in modules carrying another writer's uncommitted custody and operations edits and touches no symbol this Step changed; not provable against HEAD in the shared tree. Heartbeat reports `hosted_profiles` as an upper bound for in-flight operations; exact counts added as a follow-on Step. Windows plain-interpreter dev launcher does not pass pipes through its relaunch; supervised mode targets the packaged single-process host.
 - `S03` Import gate failed on stale `import_load_targets` metadata (another writer's uncommitted file), a mid-run tree change and two other workers' test files. Boot record registered as a taxonomy member only (no .runtime directory path definition, which would pull installation.json into scope); creation time is platform-native and can exceed 2^53 on Windows (the manager parses it as u64); package directory is null outside an installed package. Taxonomy files committed with only this Step's hunks.
 - `S07` Part A only (crate, standalone Manager.cmake not yet included, identity projection of `manager_id` and `manager_name` with one owner for the Background Services suffix). Step stays open for Part B: include point after `add_subdirectory(application),` packaging declaration shared with the desktop S13 mechanism, assemble/verify/signing inventory, Windows version resource. No platform/application crate dependency until a Step needs it.
+- `S05` check-types failures are in other writers' operations, aggregation and `server_connection_handling` files. Import gate: two foreign private imports and stale `import_load_targets` metadata (shared, held by another writer; needs just generate-import-load-targets to include `core.child_console` and `local_runtime.windows_token_elevation).` A full elevated token is not available on this host; the refusal is proven by a faked token read. The supervised flag reaches spawners through `core.process_binding.ProcessScopedBinding.` Finding for the manager: a runtime launched without -I on Windows relaunches through subprocess.run on the same console, so a Ctrl+C kills it without draining; the manager must launch the packaged single-process host.

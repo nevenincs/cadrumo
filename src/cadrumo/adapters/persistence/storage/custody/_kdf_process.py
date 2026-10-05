@@ -10,6 +10,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
+from .....core.child_console import child_console_creation_flags
 from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
@@ -100,6 +101,9 @@ def worker_command(
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.lpAttributeList = {"handle_list": [request_handle, result_handle]}
         common["startupinfo"] = startupinfo
+        # A supervised runtime's stop is a console Ctrl+C; its own console keeps
+        # the worker out of that event so the runtime alone decides its end.
+        common["creationflags"] = child_console_creation_flags()
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
         descriptor_bound = os.sysconf("SC_OPEN_MAX")

@@ -456,3 +456,24 @@ async def test_an_unexpected_failure_reports_only_its_reason_code(
         assert "LookupError" in _log_text(tmp_path)
     finally:
         await _end(process)
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(sys.platform != "win32", reason="only a Windows token carries a UAC elevation type")
+async def test_a_fully_elevated_token_is_refused_before_the_runtime_owner_starts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CADRUMO_LOG_DIR", str(tmp_path / "logs"))
+    arguments = ("--storage-root", str(tmp_path), "--storage-identity", "0" * 64, "--expected-version", "synthetic")
+    process = await launch_fixture(_STREAMS_FIXTURE, "elevated", str(tmp_path), *arguments, "--supervised")
+    try:
+        output, errors = await _remaining_output(process)
+        exit_code = await asyncio.wait_for(process.wait(), timeout=_STARTUP_TIMEOUT_SECONDS)
+        assert exit_code == RuntimeExitReason.ELEVATED_TOKEN_REFUSED
+        assert output == b'{"type":"stopping","reason":72}\n'
+        assert errors == b""
+        # The owner that claims the endpoint was never reached.
+        assert not (tmp_path / "owner-reached").exists()
+        assert "refused a full UAC-elevated token" in _log_text(tmp_path)
+    finally:
+        await _end(process)
