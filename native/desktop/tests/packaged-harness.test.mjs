@@ -24,6 +24,7 @@ import {
   waitFor,
 } from "./packaged/session.mjs";
 import { startStandin } from "./packaged/standin.mjs";
+import { canonicalFailure } from "./packaged/sign-in.mjs";
 import {
   CREDIT_WINDOW,
   FAIL,
@@ -42,8 +43,55 @@ import {
 } from "./packaged/verdicts.mjs";
 
 const cleanups = [];
+test("canonical failure evidence retains identifiers and excludes payloads", () => {
+  const secret = "SECRET_TOKEN";
+  assert.deepEqual(
+    canonicalFailure(
+      JSON.stringify({
+        schema_version: "2",
+        command: "config.login",
+        message: secret,
+        error: {
+          code: "REFUSED",
+          message: secret,
+          context: { reason: "CREDENTIAL_REJECTED", password: secret },
+        },
+      }),
+      [secret],
+    ),
+    {
+      schema: "2",
+      command: "config.login",
+      code: "REFUSED",
+      reason: "CREDENTIAL_REJECTED",
+    },
+  );
+  assert.deepEqual(
+    canonicalFailure(
+      JSON.stringify({
+        error: {
+          code: secret,
+          context: { reason: "untrusted payload\n" + secret },
+        },
+      }),
+      [secret],
+    ),
+    {},
+  );
+  assert.deepEqual(canonicalFailure("x".repeat(65537)), {});
+  assert.deepEqual(canonicalFailure("not json"), {});
+});
 after(async () => {
-  for (const cleanup of cleanups.reverse()) await cleanup();
+  const failures = [];
+  for (const cleanup of cleanups.reverse()) {
+    try {
+      await cleanup();
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  if (failures.length)
+    throw new AggregateError(failures, "stand-in cleanup failed");
 });
 
 /** A Chromium on a DevTools port, showing a stand-in shell, connected through the harness. */
@@ -66,18 +114,53 @@ async function openWindow(variant) {
     { stdio: "ignore", windowsHide: true },
   );
   const exited = new Promise((done) => browser.on("exit", done));
+  let session;
   cleanups.push(async () => {
-    browser.kill();
-    await Promise.race([exited, sleep(10000)]);
-    await standin.close();
-    rmSync(profile, {
-      recursive: true,
-      force: true,
-      maxRetries: 5,
-      retryDelay: 200,
+    const failures = [];
+    const attempt = async (release) => {
+      try {
+        await release();
+      } catch (error) {
+        failures.push(error);
+      }
+    };
+    await attempt(async () => {
+      if (session) {
+        const control = await session.browser.newBrowserCDPSession();
+        await control.send("Browser.close").catch(() => undefined);
+      }
     });
+    await attempt(async () => {
+      const stopped = await Promise.race([
+        exited.then(() => true),
+        sleep(5000).then(() => false),
+      ]);
+      if (!stopped) {
+        browser.kill();
+        assert.equal(
+          await Promise.race([
+            exited.then(() => true),
+            sleep(10000).then(() => false),
+          ]),
+          true,
+          "stand-in browser must exit",
+        );
+      }
+    });
+    await attempt(() => session?.browser.close());
+    await attempt(() => standin.close());
+    await attempt(() =>
+      rmSync(profile, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+        retryDelay: 500,
+      }),
+    );
+    if (failures.length)
+      throw new AggregateError(failures, "stand-in releases failed");
   });
-  const session = await connect({
+  session = await connect({
     endpoint: await devtoolsEndpoint(port),
     shellOrigins: [standin.shellOrigin],
     docsOrigin: standin.docsOrigin,

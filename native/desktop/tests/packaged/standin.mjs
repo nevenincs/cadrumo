@@ -296,7 +296,13 @@ export async function startStandin({ variant = "refusing" } = {}) {
     shellUrl: `${shellOrigin}/index.html`,
     close: () =>
       Promise.all(
-        servers.map((server) => new Promise((done) => server.close(done))),
+        servers.map(
+          (server) =>
+            new Promise((done) => {
+              server.close(done);
+              server.closeAllConnections();
+            }),
+        ),
       ),
   };
 }

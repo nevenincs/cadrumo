@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c0e0f7be1482aacce1b0b6cfdd254cd07f93eb44413f5aa4b182fb8fd5ec918'
+body_hash: 'sha256:f7e1b88fe9d0f59b23bd4ea35ce5ae08e0de091b1e5d163ea5158cfb5028b062'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -468,6 +468,17 @@ related:
 - `S16` `verify:` `git diff check desktop src-tauri` -> `pass`
 - `S16` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
 - `S16` `verify:` `cmake --build build/windows-x86-64/e2e-desktop --config Release --target desktop-packaged-host` -> `pass`
+- `S10` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S10` `M` `native/desktop/tests/packaged.test.mjs`
+- `S10` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S10` `M` `native/desktop/tests/packaged/standin.mjs`
+- `S10` `A` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S10` `A` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S10` `A` `native/desktop/tests/packaged/sign-in.mjs`
+- `S10` `verify:` `node --test native/desktop/tests/packaged-harness.test.mjs (final reviewed source, CADRUMO_CMAKE_BINARY_DIR=build/windows-x86-64/e2e-desktop)` -> `pass`
+- `S10` `verify:` `node --check native/desktop/tests/packaged.test.mjs and changed packaged modules` -> `pass`
+- `S10` `verify:` `ruff check native/desktop/tests/packaged/runtime_fixture.py` -> `pass`
+- `S10` `verify:` `prettier --check changed packaged JavaScript` -> `pass`
 
 ## Notes
 
@@ -542,3 +553,4 @@ related:
 - `S17` Browser boundary fixtures verify presentation, not native package acceptance. Isolated build/d2-desktop uses ports 15370/15371. S16/S10 retain native/platform and packaged acceptance; S12 retains manager-start integration; S09 retains live desktop-host smoke. Canonical S18 translations reused, and 26 now-consumed keys removed from awaiting-consumer declaration.
 - `S16` Windows host checkpoint only: S16 stays open for authoritative GNOME observer capability and packaged CLI/UI acceptance. Exact tested snapshot and generated contract at build/s16-desktop-host; logs test-all.log test-sign-in.log clippy.log. SHA256 of all seven changed files matched tested snapshot. Runner reaps its direct aeat child; current login/status/logout leaves connect to existing runtime and spawn no descendants. No descendant containment proof. Non-Windows sign-in conservatively unsupported pending backend capability.
 - `S16` Acceptance preparation found the host used unsupported leaf --json; corrected to the canonical root --format json before config. Built test host SHA256 e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687. S16 remains open pending real interactive packaged sign-in and non-Windows capability acceptance.
+- `S10` Prepared real packaged profile/runtime/sign-in/status/logout checks, secret-isolation observation, palette exact-result navigation, localized Home and docs appearance flows. Actual acceptance not run: agent is Session 0; user agreed to run prepared command in active desktop. First harness regression exposed EPERM profile teardown and left handles open; corrected graceful browser close, all-release cleanup and bounded retries. Final 20 tests pass, zero failures; build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log. These regression tests use stand-in pages and establish harness assertions only. S10 remains open; fresh full package and documentation sequence gate are still in progress.

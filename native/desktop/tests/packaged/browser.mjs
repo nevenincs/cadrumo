@@ -91,8 +91,14 @@ export function instrument(config) {
           limit(list, 500, {
             at: Date.now(),
             type,
-            key: event.key ?? "",
-            code: event.code ?? "",
+            key:
+              event.target?.type === "password"
+                ? "<password-key>"
+                : (event.key ?? ""),
+            code:
+              event.target?.type === "password"
+                ? "<password-key>"
+                : (event.code ?? ""),
             ctrl: !!event.ctrlKey,
             button: event.button ?? null,
             trusted: event.isTrusted,
@@ -300,7 +306,7 @@ export function instrument(config) {
           for (const [key, value] of Object.entries(parsed))
             if (key !== "token" && key !== "text")
               args[key] = typeof value === "string" ? text(value, 200) : value;
-          entry.args = args;
+          entry.args = entry.cmd === "sign_in_submit" ? null : args;
           if (typeof args.session === "number") entry.session = args.session;
         }
       } catch {
@@ -344,7 +350,12 @@ export function instrument(config) {
     const json = (response.headers.get("content-type") || "").startsWith(
       "application/json",
     );
-    if (json && (!entry.ok || entry.cmd === "terminal_open")) {
+    if (
+      json &&
+      (!entry.ok ||
+        entry.cmd === "terminal_open" ||
+        entry.cmd === "sign_in_submit")
+    ) {
       try {
         const value = await response.clone().json();
         if (entry.ok && entry.cmd === "terminal_open") {
@@ -353,6 +364,12 @@ export function instrument(config) {
             channelOf(entry.channel).session = entry.session;
             sessions[entry.session] = entry.channel;
           }
+        } else if (entry.ok && entry.cmd === "sign_in_submit") {
+          entry.answer = {
+            kind: text(value?.kind, 40),
+            ...(value?.code ? { code: text(value.code, 80) } : {}),
+            retryAfterSeconds: value?.retryAfterSeconds ?? null,
+          };
         } else entry.code = text(value?.code ?? "unknown", 60);
       } catch {
         entry.code = "unreadable";

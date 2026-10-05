@@ -23,6 +23,8 @@ import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
 import { hostRefusals, refusalProbe, tokenCheck } from "./packaged/probes.mjs";
 import { packagedHost, packagedHostPaths } from "./packaged/host.mjs";
+import { SignInFixture } from "./packaged/sign-in.mjs";
+import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
   DesktopInput,
   descendants,
@@ -182,6 +184,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
   let hostPid = null;
   let projected = null;
   let webviewPids = [];
+  let signIn = null;
 
   const record = async (kind, id, title, run) => {
     let outcome;
@@ -258,6 +261,21 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     );
     summary.webview = projected.webview;
     evidence("projection.json", projected);
+
+    signIn = new SignInFixture({
+      config,
+      env: hostEnvironment(config).env,
+      contract: JSON.parse(
+        readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
+      ),
+      results,
+    });
+    const fixture = await check(
+      "sign-in-fixture",
+      "canonical profile creation and explicitly owned packaged runtime",
+      () => signIn.start(),
+    );
+    if (fixture.verdict !== PASS) return;
 
     // The test build admits only a single remote debugging port --------------
     await check(
@@ -403,6 +421,13 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         });
       },
     );
+
+    const authenticated = await check(
+      "canonical-sign-in",
+      "real password form signs in through the packaged CLI",
+      () => signIn.signIn(session, input, hostPid),
+    );
+    if (authenticated.verdict !== PASS) return;
 
     // Terminals -------------------------------------------------------------
     await check(
@@ -583,6 +608,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     await results.screenshot(page, "04-search");
     if (localized) await visit(localized.entry);
     await visit(shown);
+    await docsUiChecks({ session, check, visit, shown, localized, docsOrigin });
     const shellState = (await session.frames())[0];
     evidence("docs-visits.json", docsVisits);
     await check(
@@ -1477,6 +1503,17 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         text: original.value.text,
       });
 
+    await check(
+      "canonical-sign-out",
+      "global sign-out uses the packaged CLI and preserves remaining access",
+      () => signIn.signOut(session),
+    );
+    await check(
+      "sign-in-secret-isolation",
+      "passwords stay out of arguments, logs, diagnostics and the docs frame",
+      () => signIn.isolation(session, input, projected),
+    );
+
     // Close with a paused session ------------------------------------------------
     await quiet("python", 1000);
     await session.shell(() => window.__s10.hold());
@@ -1593,6 +1630,14 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         if (!(await exited(host.exit, 15000))) host.child.kill();
       }
     }
+    if (signIn)
+      await check(
+        "sign-in-fixture-cleanup",
+        "test-owned runtime and exact-profile keychain entry are settled",
+        async () => {
+          return signIn.stop();
+        },
+      );
     input.close();
     const counts = results.finish({
       startedAt,

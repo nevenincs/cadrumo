@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ce514a06a7591377068f08bf815c8ef358fd2411fc9a4abc58978329967e1da'
+body_hash: 'sha256:8bda2a3acfd1a5ea6f4f8ea538b1735615754231f2126b00fb6539507aa11875'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -136,6 +136,12 @@ Verdict PENDING for full S16: the host conservatively reports non-Windows sign-i
 ### packaged-cli-argument-correction | low | Canonical JSON selection fixed before interactive acceptance
 
 2026-10-05 acceptance preparation found that the S16 host invoked an unsupported leaf `--json` argument. The host now passes the canonical root `--format json` before `config <leaf>`, retaining stdin-only secrets and the verified executable/environment. The earlier unit evidence did not exercise the real CLI parser. The separate WebView2 test host builds successfully from the corrected source; SHA256 `e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687`, log `build/windows-x86-64/e2e-desktop/host-build.log`. Full S16/S10 verdict remains PENDING until the current package is driven from an interactive desktop.
+
+### interactive-acceptance-harness | low | Harness corrections verified; product E2E remains pending
+
+2026-10-05 root reviewed the S10 extension across actual CLI profile creation, manually owned contained runtime, production handshake, raw password form, shared status/logout parity, live argv/log/docs isolation and narrow fixture cleanup. No runtime-session override, service or bridge is installed. Setup failures cannot report cleanup PASS. Typed CLI error evidence is bounded and scrubbed. Three real frontend flows now check palette selection against the exact authenticated docs reply, localized Home and appearance handback.
+
+The first final-source harness regression reproduced an EPERM browser-profile teardown failure after 19 assertions passed. Root verified and terminated only that test process tree. The correction closes the browser gracefully, attempts every release even after individual errors and bounds cleanup retries; reviewed rerun passes 20 tests, exit 0 (`build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log`). Formatting, syntax, Ruff and diff checks pass. These are harness/stand-in checks, not product acceptance. S10/S16 remain PENDING for the full package on the interactive desktop; the user has agreed to run the prepared command. Manager-backed S12 also remains pending production manager composition and B4 shutdown/count/schema contracts.
 
 ## Recommendations
 
