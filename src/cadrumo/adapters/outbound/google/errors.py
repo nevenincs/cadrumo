@@ -29,6 +29,7 @@ class GoogleAuthPreconditionCondition(StrEnum):
     PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
     PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
+    CONSENT_GRANTED = "google.auth.consent.granted"
     REFRESH_CREDENTIAL_ISSUED = "google.auth.refresh_credential.issued"
     SIGN_IN_CLIENT_BOUND = "google.auth.sign_in_client.bound"
     GRANT_ACTIVE = "google.auth.grant.active"
@@ -83,11 +84,12 @@ class GoogleAuthClientRevokedError(GoogleAuthError):
 
 
 class GoogleAuthSignInRequiredError(GoogleAuthError):
-    """Raised when a profile's stored Google sign-in can no longer be used.
+    """Raised when a profile has no Google sign-in it can use.
 
-    Covers a grant Google reports as revoked or expired, and a stored token
-    that does not belong to the client this installation signs in with. The
-    remedy is the same in every case: sign in again.
+    Covers a grant Google reports as revoked or expired, a stored token that
+    does not belong to the client this installation signs in with, and a
+    consent that was declined. The remedy is the same in every case: sign
+    in again.
     """
 
 

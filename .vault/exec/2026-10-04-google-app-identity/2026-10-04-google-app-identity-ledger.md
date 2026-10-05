@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:41d9713249a30864d1071e91fa8ecd2172e7e61d1663cae79471692f63dd22c3'
+body_hash: 'sha256:87103e4f70f4e9c84f1d881d6d591f05fd367cb60d9b640be6e5d7ffd3f46ab1'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -483,6 +483,19 @@ related:
 - `S02` `M` `src/cadrumo/domain/transactions/models.py`
 - `S10` `M` `.vault/audit/2026-10-05-google-app-identity-audit.md`
 - `S09` `verify:` `pytest documented-command and educational-docs conformance (367 passed)` -> `pass`
+- `S12` `M` `src/cadrumo/adapters/outbound/google/oauth_flow.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_flow.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `S12` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S12` `verify:` `pytest user_profile, google configuration composition, google and storage adapters (1206 passed)` -> `pass`
+- `S12` `verify:` `pytest registered-executor conformance and error registry, google and spreadsheet cases (70 passed)` -> `pass`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S12` `verify:` `just check-import-boundaries` -> `pass`
+- `S12` `verify:` `just check-locales` -> `fail`
 
 ## Notes
 
@@ -569,3 +582,6 @@ related:
 - `S10` Review finding live-proof-commit-subject (low): the subject of commit 0e779076a5 says the export is proven against Google. It is not; the live run has no passing result. The commit was not rewritten because other sessions have committed above it.
 - `S10` Review finding environment-template-leftovers (low) was resolved outside this plan in d4afc04204, and the technical articles were rewritten outside this plan in b2eb275594.
 - `S09` Defect of this Step, reported by another session after the review (audit finding removed-commands-cited-as-live, medium): the upgrade table cited the five removed commands with the executable in front, and the documented-command gate resolves every such citation against the live CLI, so the page failed that gate from 73a64eda93 on. S09 had not run that gate. The removed commands are now named without the executable and the five rows retranslated.
+- `S12` Reopened a second time by the re-review (audit finding grant-after-completed-exchange, high): a completed token exchange was acknowledged as writing nothing, so a refusal after it settled as no effect while Google held a grant. The exchange is now accounted as a change and such a refusal settles as partial.
+- `S12` Also fixed here (audit finding declined-consent-reported-as-unreachable, medium): a declined consent was reported as an unreachable endpoint, failed, effect unknown. It is now the sign-in-required refusal with its own message and settles with no effect.
+- `S12` just check-locales fails on the repository-wide backlog (23205 inventory violations, 4781 cells to review). Its only findings on the new key are the word Google missing from the spelling dictionary in es, ca and hu, the same finding every existing Google message carries; missing and needs-repair counts are zero.

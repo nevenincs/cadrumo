@@ -25,6 +25,10 @@ format or type gates and no live run against Google exists.
 Verdict as returned: revision required, on one high finding. The fixes are
 recorded under each finding.
 
+The same reviewer re-reviewed the fixes in `8fa0aee6c9..5ded641487` and again
+returned revision required, on the finding grant-after-completed-exchange. It
+confirmed the stored-root fix and the tests of both commits.
+
 ## Findings
 
 ### refusal-effect-accounting | high | A lost answer during consent or token exchange settled the sign-in as no effect
@@ -92,6 +96,38 @@ catalogue checks but not this gate.
 Resolved: the removed commands are named without the executable, as the same
 section already names the commands whose output changed, and the five rows
 were retranslated in the Spanish, Catalan and Hungarian catalogues.
+
+### grant-after-completed-exchange | high | A refusal raised after Google had answered the token exchange still settled as no effect
+
+Found by the re-review of commit `8fa0aee6c9`, which otherwise confirmed that
+a lost answer now stays unknown. The token exchange was acknowledged as a
+boundary that writes nothing, so once it completed it left no trace in the
+effect accounting. A sign-in refused afterwards (a missing scope, a missing
+identity claim, no refresh token, a root folder that could not be created)
+settled as having changed nothing, while Google held a grant for the account.
+
+Resolved by reopening S12 a second time: the exchange is admitted and
+acknowledged as a change (`src/cadrumo/adapters/outbound/google/oauth_flow.py`,
+`AdmittedInstalledAppFlow.fetch_token`), so a refusal after it settles as a
+partial effect. A test drives the real flow against a local token endpoint
+that answers without a refresh token and asserts the boundaries it reported.
+
+### declined-consent-reported-as-unreachable | medium | Declining on Google's consent page failed as an unreachable endpoint with an unknown effect
+
+Found while verifying the finding above, by running the real flow with the
+redirect Google sends for a declined request. Every failure of the local
+consent server was translated to the network failure, so a declined consent
+settled as failed, effect unknown, with a message about the endpoint being
+unreachable. It is a definitive answer that no authorization code and
+therefore no grant was issued.
+
+Resolved: the declined answer is now the sign-in-required refusal with its own
+message in the four catalogue languages and the condition
+`google.auth.consent.granted`, and the operation accepts it as proof that
+nothing was applied (`src/cadrumo/adapters/outbound/google/oauth_flow.py`,
+`_raise_local_server_error`). The locale audit reports the three translated
+messages only for the word Google being absent from its spelling dictionary,
+as it does for every existing Google message.
 
 ## Recommendations
 

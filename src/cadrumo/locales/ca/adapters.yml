@@ -79,6 +79,9 @@ adapters:
         browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
           OAuth al navegador.
         client_config_refused: La configuració del client Google OAuth ha estat rebutjada.
+        consent_declined: S'ha rebutjat el consentiment de Google, de manera que no
+          s'ha iniciat la sessió ni s'ha desat res. Torna a executar `aeat config
+          google login` i aprova la sol·licitud.
         email_claim_missing: L'id_token de Google s'ha comprovat però no inclou la
           reclamació email.
         endpoint_unreachable: L'endpoint OAuth de Google no és accessible.

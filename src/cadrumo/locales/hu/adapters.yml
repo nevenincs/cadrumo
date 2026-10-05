@@ -77,6 +77,9 @@ adapters:
         browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta
           az OAuth-hozzájárulási URL megnyitását.
         client_config_refused: A Google OAuth ügyfélkonfigurációját elutasították.
+        consent_declined: 'A Google hozzájárulási kérését elutasították, ezért nem
+          történt bejelentkezés, és semmi sem lett elmentve. Futtasd újra: `aeat config
+          google login`, és hagyd jóvá a kérést.'
         email_claim_missing: A Google id_token ellenőrzése sikeres volt, de nem tartalmaz
           e-mail-igényt.
         endpoint_unreachable: A Google OAuth-végpont nem érhető el.

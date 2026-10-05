@@ -46,6 +46,7 @@ from .errors import (
     GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
     google_auth_no_action_verdict,
 )
@@ -66,6 +67,11 @@ _CONSENT_WAIT_TIMEOUT_SECONDS = 300
 # host name would depend on local name resolution, which another program or
 # a hosts-file entry can point elsewhere.
 _LOOPBACK_HOST = "127.0.0.1"
+
+# The authorization response's error code for a request the resource owner or
+# the authorization server denied (RFC 6749 section 4.1.2.1). No authorization
+# code accompanies it, so no grant was issued and nothing was exchanged.
+_CONSENT_DECLINED = "access_denied"
 
 
 class _CanonicalTokenExchange(Protocol):
@@ -334,15 +340,17 @@ def _run_local_server(
     class AdmittedInstalledAppFlow(InstalledAppFlow):
         def fetch_token(self, **kwargs: object) -> Mapping[str, object]:
             """Renew after the human wait, just before the canonical token exchange."""
+            # A completed exchange means Google holds a grant for this client,
+            # whatever is refused afterwards, so it is accounted as a change.
             if before_handoff is not None:
-                before_handoff("oauth.token-exchange")
+                before_handoff("oauth.token-exchange", writes=True)
             # CAST-RATIONALE-GOOGLE-OAUTH-FETCH: locked Flow.fetch_token accepts
             # arbitrary OAuth session kwargs and returns its token mapping;
             # the local InstalledAppFlow stub omits this inherited method.
             delegate = cast(_CanonicalTokenExchange, super())
             token = delegate.fetch_token(**kwargs)
             if acknowledged is not None:
-                acknowledged("oauth.token-exchange")
+                acknowledged("oauth.token-exchange", writes=True)
             return token
 
     flow_type = InstalledAppFlow if _oauth_handoffs_absent(before_handoff, acknowledged) else AdmittedInstalledAppFlow
@@ -404,6 +412,17 @@ def _run_local_server(
 
 def _raise_local_server_error(exc: Exception) -> NoReturn:
     """Translate upstream local-server OAuth failures into the Google auth hierarchy."""
+    if getattr(exc, "error", None) == _CONSENT_DECLINED:
+        raise GoogleAuthSignInRequiredError(
+            "the Google consent was declined",
+            translated_message="adapters.google.oauth_flow.errors.consent_declined",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.CONSENT_GRANTED,
+                facts={"consent_granted": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
+        ) from exc
     message = str(exc).lower()
     if "browser" in message or "webbrowser" in message:
         raise GoogleAuthBrowserOpenError(

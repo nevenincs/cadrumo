@@ -74,6 +74,8 @@ adapters:
         browser_launcher_refused: The operating system browser launcher refused to
           open the OAuth consent URL.
         client_config_refused: The Google OAuth client configuration was refused.
+        consent_declined: The Google consent was declined, so nothing was signed in
+          or saved. Run `aeat config google login` again and approve the request.
         email_claim_missing: The Google id_token was checked but carries no email
           claim.
         endpoint_unreachable: The Google OAuth endpoint is unreachable.

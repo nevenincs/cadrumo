@@ -117,6 +117,12 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
+    "oauth_flow:_raise_local_server_error:GoogleAuthSignInRequiredError:the Google consent was declined": _contract(
+        GoogleAuthPreconditionCondition.CONSENT_GRANTED,
+        (("consent_granted", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
     "oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused: {value}": _contract(
         GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
         (("browser_launcher_available", "False"),),

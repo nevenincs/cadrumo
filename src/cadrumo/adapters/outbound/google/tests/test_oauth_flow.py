@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import ast
+import http.client
 import inspect
 import subprocess
 import sys
 import textwrap
+import webbrowser
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Thread
 from typing import TYPE_CHECKING, cast
 from urllib.parse import parse_qs, urlsplit
 
@@ -27,6 +30,7 @@ from ..errors import (
     GoogleAuthNonInteractiveError,
     GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
+    GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
 from ..oauth_flow import (
@@ -40,6 +44,7 @@ from ..oauth_flow import (
     run_login_flow,
 )
 from ..records import REQUIRED_SCOPES, OAuthClient
+from .token_endpoint_server import token_endpoint
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
@@ -324,3 +329,107 @@ def test_consent_redirect_is_received_on_the_loopback_ip_literal() -> None:
     assert flow.redirect_uri is not None
     redirect = urlsplit(flow.redirect_uri)
     assert redirect.scheme == "http" and redirect.hostname == "127.0.0.1" and redirect.port
+
+
+class _BrowserStandIn:
+    """Stands in for the person at the browser: answers the consent and follows Google's redirect."""
+
+    def __init__(self, answer: str) -> None:
+        self.answer = answer
+        self.visits: list[Thread] = []
+
+    def open(self, url: str, new: int = 0, autoraise: bool = True) -> bool:
+        query = parse_qs(urlsplit(url).query)
+        redirect = urlsplit(query["redirect_uri"][0])
+        host, port, state = redirect.hostname, redirect.port, query["state"][0]
+        assert host is not None and port is not None
+
+        def follow_redirect() -> None:
+            connection = http.client.HTTPConnection(host, port, timeout=10)
+            try:
+                connection.request("GET", f"/?state={state}&{self.answer}")
+                connection.getresponse().read()
+            finally:
+                connection.close()
+
+        visit = Thread(target=follow_redirect, daemon=True)
+        visit.start()
+        self.visits.append(visit)
+        return True
+
+
+def test_a_completed_token_exchange_is_accounted_as_a_change_before_a_later_refusal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Once Google has answered the exchange a grant exists, even if the sign-in is then refused.
+
+    The real flow runs against a local token endpoint that answers without a
+    refresh token. The sign-in is refused, and the boundaries it reported show
+    the exchange acknowledged as a write first, so the operation cannot settle
+    the refusal as having changed nothing.
+    """
+    browser = _BrowserStandIn("code=synthetic-authorization-code")
+    monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
+    # The local endpoint is plain HTTP; the client library refuses that unless told it is a test transport.
+    monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
+    boundaries: list[str] = []
+
+    with token_endpoint(
+        status=200, body={"access_token": "synthetic-access-value", "token_type": "Bearer", "expires_in": "3600"}
+    ) as endpoint:
+        # A stored client may only name Google's token endpoint; the copy points the
+        # real exchange at the local one without weakening that rule.
+        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        with pytest.raises(GoogleAuthValidationError) as refused:
+            oauth_flow._run_local_server(
+                client,
+                before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
+                acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
+            )
+        for visit in browser.visits:
+            visit.join(timeout=10)
+
+        assert [request["grant_type"] for request in endpoint.grant_requests] == [["authorization_code"]]
+        assert endpoint.grant_requests[0]["code"] == ["synthetic-authorization-code"]
+
+    assert refused.value.translated_message == "adapters.google.oauth_flow.errors.refresh_token_missing"
+    assert boundaries == [
+        "before:oauth.browser-consent:False",
+        "before:oauth.token-exchange:True",
+        "done:oauth.token-exchange:True",
+        "done:oauth.browser-consent:False",
+    ]
+
+
+def test_a_declined_consent_is_refused_with_both_boundaries_still_open(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Declining on Google's page is a refusal that names itself, not an unreachable endpoint.
+
+    The real flow receives the redirect Google sends for a declined request.
+    No authorization code arrives, so no token request is made, and the
+    refusal is of a kind the operation accepts as proof that nothing was
+    granted.
+    """
+    browser = _BrowserStandIn("error=access_denied")
+    monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
+    monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
+    boundaries: list[str] = []
+
+    with token_endpoint(status=200, body={"access_token": "synthetic-access-value"}) as endpoint:
+        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        with pytest.raises(GoogleAuthSignInRequiredError) as refused:
+            oauth_flow._run_local_server(
+                client,
+                before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
+                acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
+            )
+        for visit in browser.visits:
+            visit.join(timeout=10)
+
+        assert endpoint.grant_requests == []
+
+    error = refused.value
+    assert error.code.code == "REFUSED_GOOGLE_SIGN_IN_REQUIRED"
+    assert error.translated_message == "adapters.google.oauth_flow.errors.consent_declined"
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None and verdict.failed_condition_id == "google.auth.consent.granted"
+    assert boundaries == ["before:oauth.browser-consent:False", "before:oauth.token-exchange:True"]

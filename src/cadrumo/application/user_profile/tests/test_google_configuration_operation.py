@@ -299,6 +299,12 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         ("partial-write-not-applied", OperationEffect.PARTIAL),
         # An ambiguous write stays unknown even after an earlier change landed.
         ("partial-uncertain", OperationEffect.UNKNOWN),
+        # Google issued a grant, then the sign-in was refused for a reason that
+        # proves nothing further was applied: the grant is still there.
+        ("granted-not-applied", OperationEffect.PARTIAL),
+        # The consent was declined: both sign-in boundaries are open and the
+        # answer proves that no grant was issued and nothing was exchanged.
+        ("declined-not-applied", OperationEffect.NONE),
         ("acknowledged", OperationEffect.UPDATED),
     ],
 )
@@ -325,7 +331,13 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
         if mode.startswith("partial"):
             commit(lambda: True, changed=lambda value: value)
         if mode.startswith("read"):
-            before_handoff("oauth.token-exchange")
+            before_handoff("oauth.browser-consent")
+        elif mode.startswith("declined"):
+            before_handoff("oauth.browser-consent")
+            before_handoff("oauth.token-exchange", writes=True)
+        elif mode.startswith("granted"):
+            before_handoff("oauth.token-exchange", writes=True)
+            acknowledged("oauth.token-exchange", writes=True)
         elif mode.endswith(("uncertain", "write-not-applied")) or mode == "acknowledged":
             before_handoff("files.create", writes=True)
             assert not fence.inside  # actual provider call belongs here

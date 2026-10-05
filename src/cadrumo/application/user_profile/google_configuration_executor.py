@@ -166,8 +166,10 @@ class _GoogleConfigurationEffectTracker:
         An admitted boundary is released only when the refusal itself proves
         that nothing was applied on the provider's side; otherwise it stays
         pending and the effect stays unknown. How the boundary was admitted
-        is not proof: a consent or a token exchange is admitted without a
-        write and can still leave a grant behind when its answer is lost. An
+        is not proof: a browser consent is admitted without a write and can
+        still leave a grant behind when its answer is lost. A change the
+        provider already acknowledged, such as a completed token exchange,
+        is never undone by a later refusal: the effect is then partial. An
         interrupted local save is never released.
         """
         if provider_write_not_applied:

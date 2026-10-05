@@ -69,6 +69,7 @@ type GoogleConfigurationMessageKey = Literal[
     "adapters.google.oauth_flow.errors.profile_state_unresolved",
     "adapters.google.oauth_flow.errors.scope_missing",
     "adapters.google.oauth_flow.errors.refresh_token_missing",
+    "adapters.google.oauth_flow.errors.consent_declined",
     "adapters.google.oauth_flow.errors.oauthlib_not_importable",
     "adapters.google.oauth_flow.errors.client_config_refused",
     "adapters.google.oauth_flow.errors.loopback_bind_failed",
@@ -95,6 +96,7 @@ _DYNAMIC_CODES: dict[str, frozenset[str]] = {
     ),
     "adapters.google.oauth_flow.errors.non_interactive": frozenset({"REFUSED_GOOGLE_NON_INTERACTIVE"}),
     "adapters.google.oauth_flow.errors.refresh_token_missing": frozenset({"REFUSED_GOOGLE_VALIDATION"}),
+    "adapters.google.oauth_flow.errors.consent_declined": frozenset({"REFUSED_GOOGLE_SIGN_IN_REQUIRED"}),
     "adapters.google.oauth_flow.errors.profile_state_unresolved": frozenset({"REFUSED_GOOGLE_PROFILE_UNBOUND"}),
     **{
         f"adapters.google.oauth_flow.errors.{key}": frozenset({"AUTH_GOOGLE_SCOPE_INSUFFICIENT"})
