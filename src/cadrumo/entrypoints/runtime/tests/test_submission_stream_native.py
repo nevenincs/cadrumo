@@ -539,7 +539,8 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
                     action="operation_start",
                     operation_id=operation_id,
                 ),
-                deadline=time.monotonic() + 10,
+                # The acknowledgement waits behind the executor's first step.
+                deadline=time.monotonic() + 30,
             )
             assert isinstance(started, RuntimeOperationAcknowledged), started
             deadline = time.monotonic() + 30

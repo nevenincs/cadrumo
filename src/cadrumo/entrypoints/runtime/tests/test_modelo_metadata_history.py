@@ -272,7 +272,10 @@ def _observe(
             session_id=session_id,
             observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=16),
         ),
-        deadline=time.monotonic() + 5,
+        # A profile worker answers an observation only between executor steps,
+        # and a first calculation holds it for several seconds, so the budget
+        # covers one whole operation rather than one idle exchange.
+        deadline=time.monotonic() + 30,
     )
     assert isinstance(reply, RuntimeOperationObserved), reply
     assert isinstance(reply.observation, OperationObservationSuccessV1), reply
