@@ -348,7 +348,7 @@ class _Context:
         raise AssertionError("invoice creation does not consume secrets")
 
     @property
-    def financial_operand(self) -> Never:
+    def typed_financial_operand(self) -> Never:
         raise AssertionError("invoice creation does not consume financial submissions")
 
     @property

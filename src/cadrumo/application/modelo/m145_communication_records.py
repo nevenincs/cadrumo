@@ -88,6 +88,7 @@ _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 _LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 _M145_COMMUNICATION_EVENT_ACTOR = M145_COMMUNICATION_SERVICE_OWNER
 _M145_FAMILY_SITUATION_ROLE = "modelo_145_perceptor_situacion_familiar"
+_M145_COMPLEMENTARY_PAGE_ROLE = "modelo_145_pagina_complementaria"
 _LOGGER = get_logger(__name__)
 
 M145CommunicationRecordId = Hex64Str
@@ -642,7 +643,7 @@ def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
     stripped = value.strip()
     if not stripped:
         # Optional text can carry an explicit blank wire token (DR145 page 2).
-        # Required fields and every declared constraint are checked separately.
+        # Required fields and role-specific value constraints are checked separately.
         if casilla.data_type == "text" and not casilla.required:
             return None
         return "value must not be blank"
@@ -653,6 +654,15 @@ def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
 def _constraint_issue(casilla: CasillaDefinition, value: str) -> str | None:
     if casilla.constraints is None:
         return None
+    if casilla.semantic_role == _M145_COMPLEMENTARY_PAGE_ROLE and casilla.data_type == "text" and not casilla.required:
+        # DR145 v2.0 row 2 is one byte: blanco or "C". The optional marker's
+        # enum constrains its present token; an explicit ordinary-page blank
+        # has the same meaning as absence. Keep the raw wire token here so
+        # tabs, multiple spaces and padded "C" cannot pass and fail at export.
+        if value in {"", " "}:
+            return None
+    else:
+        value = value.strip()
     text_issue = casilla.constraints.violates_text(value)
     if text_issue is not None:
         return text_issue
@@ -846,7 +856,7 @@ def _m145_value_issues(
                 casilla=casilla,
             ),
         )
-    constraint_issue = _constraint_issue(casilla, value.strip())
+    constraint_issue = _constraint_issue(casilla, value)
     if constraint_issue is not None:
         issues.append(
             _issue(

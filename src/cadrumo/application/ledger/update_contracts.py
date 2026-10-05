@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
@@ -126,6 +127,7 @@ class LedgerUpdatePatch(BaseModel):
 
     @field_validator("currency")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_currency(cls, value: str | None) -> str | None:
         if value is None:
             return None

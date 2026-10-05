@@ -1,9 +1,13 @@
-"""Compose pinned verification gates and evidence advisories before publication."""
+"""Compose pinned verification gates and evidence advisories before publication.
+
+Evaluate a :class:`CalculationRevision` against its :class:`TaxpayerProfile`
+and retain evidence references from :class:`CasillaObservation` values.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -83,7 +87,7 @@ if TYPE_CHECKING:
 
 
 def optional_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
-    """Preserve the first occurrence of each declared observation reference."""
+    """Preserve each :class:`CasillaObservation` reference's first occurrence."""
     refs = tuple(
         dict.fromkeys(
             str(ref).strip()
@@ -104,6 +108,8 @@ def cuota_less_without_base_findings(
     blocking_finding_observer: Callable[[ModeloVerificationFinding, str, str], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a row whose declared category can only ever contribute a base it lacks.
+
+    Inspect the source transactions consumed by the target :class:`CalculationRevision`.
 
     A cuota-less category -- exempt, zero-rated, not-subject, intra-community
     supply, export -- carries no cuota BY LAW. The base is therefore the row's
@@ -260,13 +266,17 @@ def collect_verification_gate_findings(
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile,
     ledger_membership_ports: LedgerMembershipPorts,
+    evaluated_at: datetime | None = None,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
     list[CasillaId],
     dict[int, ModeloPreconditionFailure],
 ]:
-    """Compose pinned registry, profile, ledger, and cross-period findings before publication."""
+    """Compose :class:`CalculationRevision` findings against a :class:`TaxpayerProfile`.
+
+    Pin registry, ledger, and cross-period evidence before publication.
+    """
     findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
         collect_revision_verification_findings(
             work_unit=work_unit,
@@ -309,6 +319,7 @@ def collect_verification_gate_findings(
             history_repository=iva_compensation_history_repository,
             operation=operation,
             subject_leaf_key="modelo.work.verify",
+            evaluated_at=evaluated_at,
         )
     except ModeloIvaWalletReconciliationBlocked as exc:
         finding = iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)

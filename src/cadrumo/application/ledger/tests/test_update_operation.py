@@ -20,6 +20,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
+@pytest.mark.parametrize("value", ["eur", " EUR ", "12A"])
+def test_currency_patch_refuses_noncanonical_text_instead_of_rewriting_it(value: str) -> None:
+    """An edit names the exact stored token; domain normalization is not transport policy."""
+    with pytest.raises(ValidationError):
+        contracts.LedgerUpdatePatch(currency=value)
+
+
 def _transaction() -> LedgerTransactionProjection:
     return LedgerTransactionProjection.model_validate(
         {

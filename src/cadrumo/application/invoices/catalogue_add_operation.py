@@ -11,6 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -203,7 +204,7 @@ def _invoice_add_category(
     if category_input is None:
         return None
     if category_catalogue is None:
-        raise RuntimeError("IVA category catalogue was not resolved for a supplied category")
+        raise InternalInvariantError("IVA category catalogue was not resolved for a supplied category")
     category = next(
         (token for token in category_catalogue.all_categories if str(token) == category_input.strip()),
         None,
@@ -224,7 +225,7 @@ def _invoice_add_class(
     if class_input is None:
         return None
     if class_catalogue is None:
-        raise RuntimeError("invoice-class catalogue was not resolved for a supplied class")
+        raise InternalInvariantError("invoice-class catalogue was not resolved for a supplied class")
     invoice_class = next(
         (token for token in class_catalogue.invoice_class_choices if str(token) == class_input.strip()),
         None,

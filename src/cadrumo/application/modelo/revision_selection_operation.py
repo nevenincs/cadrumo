@@ -1,4 +1,8 @@
-"""Registered, profile-bound selection of a persisted modelo calculation revision."""
+"""Registered, profile-bound selection of a persisted modelo calculation revision.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 

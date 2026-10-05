@@ -1,4 +1,7 @@
-"""Registered profile-bound context read for a guided Modelo amendment."""
+"""Registered profile-bound context read for a guided Modelo amendment.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,7 @@
-"""Recorded, exact-profile preview of one authenticated censal read."""
+"""Recorded, exact-profile preview of one authenticated censal read.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

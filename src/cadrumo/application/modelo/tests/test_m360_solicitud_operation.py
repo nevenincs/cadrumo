@@ -235,3 +235,10 @@ def test_the_request_takes_exactly_the_fields_its_action_needs() -> None:
         )
     with pytest.raises(pydantic.ValidationError):
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove")
+
+
+@pytest.mark.parametrize("year", [1999, 2100])
+def test_a_solicitud_cannot_select_a_year_outside_the_shared_filing_window(year: int) -> None:
+    """The request cannot accept a year that its persisted period refuses."""
+    with pytest.raises(pydantic.ValidationError):
+        Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=year)

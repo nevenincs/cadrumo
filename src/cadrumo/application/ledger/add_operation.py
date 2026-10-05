@@ -119,7 +119,7 @@ class LedgerAddExecutor:
                         operation,
                     )
                 except SourceJurisdictionRequiredError as refusal:
-                    return await refuse(refusal, code=refusal.code)
+                    return await refuse(refusal, code=refusal.jurisdiction_code)
                 except (TransactionValidationError, ValidationError, ValueError) as error:
                     return await refuse(error)
 

@@ -629,24 +629,26 @@ def _date_inputs_for_ids[InputId: str](inputs: _ModeloInputs, input_ids: set[Inp
         value = inputs.get(binding_id)
         if value is None:
             continue
-        if isinstance(value, date):
-            date_inputs[binding_id] = value
-            continue
-        if isinstance(value, str):
-            try:
-                parsed = _parse_iso8601_date(value)
-            except ValueError as exc:
-                raise _ModeloBuilderError(
-                    translated_message="application.filing.build_draft.errors.date_binding_not_iso",
-                    context={"binding_id": binding_id, "supplied_value": value},
-                ) from exc
-            if parsed is None:
-                raise _ModeloBuilderError(
-                    translated_message="application.filing.build_draft.errors.date_binding_not_iso",
-                    context={"binding_id": binding_id, "supplied_value": value},
-                )
-            date_inputs[binding_id] = parsed
+        date_inputs[binding_id] = _calendar_date_input(binding_id, value)
     return date_inputs
+
+
+def _calendar_date_input(input_id: str, value: object) -> date:
+    """Share one calendar-date refusal between calculation and filing values."""
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    refusal = _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.date_binding_not_iso",
+        context={"binding_id": input_id, "supplied_value": value},
+    )
+    if isinstance(value, str):
+        try:
+            parsed = _parse_iso8601_date(value)
+        except ValueError as exc:
+            raise refusal from exc
+        if parsed is not None:
+            return parsed
+    raise refusal
 
 
 def _decimal_inputs_for_ids[InputId: str](
@@ -899,6 +901,8 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
         return _boolean_input(binding_id, value)
     if family == "decimal":
         return _decimal_input(binding_id, value)
+    if family == "date":
+        return None if value is None else _calendar_date_input(binding_id, value)
     raise _ModeloBuilderError(
         translated_message="application.filing.build_draft.errors.binding_family_has_no_input_channel",
         context={

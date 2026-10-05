@@ -29,7 +29,11 @@ def validate_declarations_catalogue_joins(
     filings: tuple[ModeloRecord, ...],
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...],
 ) -> None:
-    """Refuse any contradictory join before safe rows are projected."""
+    """Refuse any contradictory join before safe rows are projected.
+
+    Parameter types: ``revisions`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``filings`` (:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`).
+    """
     unit_by_id = {unit.work_unit_id: unit for unit in units}
     revision_by_id = {revision.calculation_revision_id: revision for revision in revisions}
     filing_by_id = {record.filing_record_id: record for record in filings}

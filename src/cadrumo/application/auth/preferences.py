@@ -1,4 +1,7 @@
-"""Profile-owned authentication intent, shared by configuration and live reads."""
+"""Profile-owned authentication intent, shared by configuration and live reads.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

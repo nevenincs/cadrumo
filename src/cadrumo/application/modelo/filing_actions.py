@@ -379,7 +379,16 @@ def file_modelo_revision(
         operation=operation,
     )
 
+    now = clock or _utc_now()
+    _require_filing_clock_ordered(
+        now,
+        target=target,
+        work_unit=work_unit,
+        revisions=revisions,
+        filing_catalogue=filing_baseline,
+    )
     _require_filing_preconditions(
+        evaluated_at=now,
         work_unit=work_unit,
         target=target,
         workflow_profile=workflow_profile,
@@ -389,14 +398,6 @@ def file_modelo_revision(
         profile=profile,
     )
 
-    now = clock or _utc_now()
-    _require_filing_clock_ordered(
-        now,
-        target=target,
-        work_unit=work_unit,
-        revisions=revisions,
-        filing_catalogue=filing_baseline,
-    )
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
@@ -514,6 +515,7 @@ def _require_filing_clock_ordered(
 
 def _require_filing_preconditions(
     *,
+    evaluated_at: datetime,
     work_unit: WorkUnit,
     target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
@@ -546,6 +548,7 @@ def _require_filing_preconditions(
         history_repository=ports.iva_compensation_history_repository,
         operation=operation,
         subject_leaf_key="modelo.work.file",
+        evaluated_at=evaluated_at,
     )
     require_cross_period_clean_state(
         work_unit,

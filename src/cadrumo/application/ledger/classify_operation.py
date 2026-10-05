@@ -1,4 +1,7 @@
-"""Execute and register one exact-profile manual ledger classification."""
+"""Execute and register one exact-profile manual ledger classification.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

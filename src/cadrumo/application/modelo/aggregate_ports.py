@@ -1,4 +1,7 @@
-"""Exact-profile catalogue and withholding capabilities for modelo aggregation."""
+"""Exact-profile catalogue and withholding capabilities for modelo aggregation.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

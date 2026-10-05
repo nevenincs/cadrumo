@@ -133,7 +133,10 @@ def build_manual_classification_patch(
     operation: PinnedAuthorityOperation,
     catalogue: TransactionCatalogue,
 ) -> ManualLedgerTransactionPatch:
-    """Rebuild the typed canonical patch under the selected registry authority."""
+    """Rebuild the typed canonical patch under the selected registry authority.
+
+    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+    """
     if not isinstance(current, Transaction):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     patch_values: dict[str, object] = {}

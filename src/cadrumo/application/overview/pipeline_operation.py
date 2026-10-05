@@ -1,4 +1,7 @@
-"""Registered cross-domain pipeline inspection under whole-profile authority."""
+"""Registered cross-domain pipeline inspection under whole-profile authority.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+"""
 
 from __future__ import annotations
 

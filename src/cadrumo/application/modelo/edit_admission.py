@@ -12,6 +12,8 @@ Core types:
 See Also:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
         The registry declaration supplying casillas, formulas, bindings and layout metadata.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
 """
 
 from __future__ import annotations

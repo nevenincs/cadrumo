@@ -9,10 +9,15 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.retenciones_bindings import (
+    RetencionesAggregationFact,
+    RetencionesAggregationProvider,
+)
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -110,6 +115,8 @@ def _render_rows_for_record(
     ):
         # A projection-owned page whose families produced no content is omitted.
         return ()
+    rows = record_render_rows(record, binding_values, casilla_values)
+    _require_m180_row_casillas(record, registry_snapshot, binding_values, rows)
     return tuple(
         (
             row,
@@ -120,8 +127,42 @@ def _render_rows_for_record(
                 occurrence=occurrence,
             ),
         )
-        for occurrence, row in enumerate(record_render_rows(record, binding_values, casilla_values), 1)
+        for occurrence, row in enumerate(rows, 1)
     )
+
+
+def _require_m180_row_casillas(
+    record: ExportRecordDefinition,
+    registry_snapshot: RegistrySnapshot,
+    binding_values: dict[tuple[BindingId, int | None], object],
+    rows: tuple[RecordRenderRow, ...],
+) -> None:
+    """Enforce the selected M180 casillas on each emitted official type-2 row.
+
+    The design's prose mandates the property province (positions 321-322),
+    which the casilla declares required even when the PDF's silent validation
+    column leaves its wire field optional. M180's unconditional requirements
+    do not describe M190's clave-dependent fields, so this guard stays scoped.
+    Binding targets and requiredness come from the same pinned revision.
+    """
+    if registry_snapshot.modelo.id != Modelo("180") or record.repeat != "binding_rows":
+        return
+    required_casilla_ids = frozenset(casilla.id for casilla in registry_snapshot.revision.casillas if casilla.required)
+    required_binding_ids = frozenset(
+        binding.id
+        for binding in registry_snapshot.revision.bindings
+        if isinstance(binding.provider, RetencionesAggregationProvider)
+        and binding.provider.fact is RetencionesAggregationFact.ROW_FIELD
+        and binding.provider.target_casilla_id in required_casilla_ids
+    )
+    binding_fields = _record_binding_fields(record)
+    for row_index in sorted({row.row_index for row in rows if row.row_index is not None}):
+        _require_populated_row_bindings(
+            binding_fields,
+            binding_values,
+            row_index=row_index,
+            registry_required_binding_ids=required_binding_ids,
+        )
 
 
 def _render_record_bytes(
@@ -249,6 +290,7 @@ def _require_populated_row_bindings(
     binding_values: dict[tuple[BindingId, int | None], object],
     *,
     row_index: int,
+    registry_required_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> None:
     """Refuse an emitted row that omits a registry-required binding field.
 
@@ -256,14 +298,18 @@ def _require_populated_row_bindings(
     omitted required binding can reach the parser as a blank byte range after
     a write.  Requiredness belongs to the declaration, not to parser recovery:
     a conditional absence must be declared optional before the renderer may
-    leave its slot untouched.
+    leave its slot untouched. Model-specific semantic guards may also supply
+    bindings whose target casillas require a value in every emitted row.
     """
     missing = tuple(
         field.id
         for field in binding_fields
-        if field.required
+        if (field.required or field.binding in registry_required_binding_ids)
         and field.binding is not None
-        and not _is_active_binding_value(binding_values.get((field.binding, row_index)))
+        and (
+            (value := binding_values.get((field.binding, row_index))) is None
+            or (isinstance(value, str) and not value.strip())
+        )
     )
     if missing:
         raise FilingExportValidationError(

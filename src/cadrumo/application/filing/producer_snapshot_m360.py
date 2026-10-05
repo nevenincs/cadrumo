@@ -1,8 +1,8 @@
 """Typed Modelo 360 producer facts: the solicitud header, the parties and the account holder.
 
 Modelo 360 is the solicitud de devolución del IVA of an empresario establecido en el
-territorio de aplicación del Impuesto for VAT borne in another Member State, and of one
-established in Canarias, Ceuta o Melilla for VAT borne in that territorio (Orden
+territorio de aplicación del Impuesto for IVA borne in another Member State, and of one
+established in Canarias, Ceuta o Melilla for IVA borne in that territorio (Orden
 EHA/789/2010 art. 1.2). Its record design (DR360, página 1) asks the
 header facts below in its own fixed positions; every width and code set here is the one
 DR360 prints for that position.
@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
+from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -54,7 +55,6 @@ _Text148 = Annotated[str, _text(148)]
 _Digits5 = Annotated[str, StringConstraints(pattern=r"^\d{5}$")]
 _Digits10 = Annotated[str, StringConstraints(pattern=r"^\d{10}$")]
 _Email = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100, pattern=r"^[^@\s]+@[^@\s]+$")]
-_CountryCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")]
 _CurrencyCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
 
 #: DR360 Nota 3: Greece is written ``EL`` in these positions, never its ISO ``GR``.
@@ -121,7 +121,7 @@ class Modelo360SolicitudFacts(BaseModel):
 
     nivel_calidad_datos: M360NivelCalidadDatos
     #: ISO 3166-1 alpha-2 of the Member State the solicitud is addressed to.
-    pais_destino: _CountryCode
+    pais_destino: CountryCodeAlpha2 = Field(pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
     causa_presentacion: M360CausaPresentacion
     #: Required exactly when the solicitud modifies an earlier one (Nota 4).
     numero_registro_declaracion_anterior: _Text16 | None = None
@@ -194,7 +194,7 @@ class Modelo360DireccionExtranjero(BaseModel):
     city: _Text30 | None = None
     postal_code: Annotated[str, _text(10)] | None = None
     region: _Text30 | None = None
-    country_code: _CountryCode | None = None
+    country_code: CountryCodeAlpha2 | None = Field(default=None, pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -286,7 +286,7 @@ class Modelo360ProfileFacts(BaseModel):
     """Everything modelo 360's página 1 header cites that no other snapshot fact answers.
 
     A solicitante established in the territorio de aplicación del Impuesto -- común or
-    foral -- asks for VAT borne in OTHER Member States (Orden EHA/789/2010 art. 1.2: "con
+    foral -- asks for IVA borne in OTHER Member States (Orden EHA/789/2010 art. 1.2: "con
     excepción de las realizadas en dicho territorio"), so such a solicitud cannot be
     addressed to Spain. Canarias, Ceuta and Melilla claimants may address Spain.
     """
@@ -306,7 +306,7 @@ class Modelo360ProfileFacts(BaseModel):
         in_territorio = self.solicitante.establecimiento.ambito is not M360AmbitoEstablecimiento.CANARIAS_CEUTA_MELILLA
         if in_territorio and self.solicitud.pais_destino == _SPAIN:
             raise ValueError(
-                "a solicitante established in the territorio de aplicacion asks modelo 360 for VAT borne "
+                "a solicitante established in the territorio de aplicacion asks modelo 360 for IVA borne "
                 "in another Member State, never in Spain",
             )
         return self

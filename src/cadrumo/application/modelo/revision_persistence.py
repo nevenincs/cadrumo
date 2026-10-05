@@ -1199,7 +1199,7 @@ def require_approved_verification_report(
     catalogue: VerificationReportCatalogue,
     operation: PinnedAuthorityOperation,
 ) -> VerificationReport:
-    """Bind a filing to the exact current granting report for its revision."""
+    """Bind a filing to the current granting report for its :class:`CalculationRevision`."""
     report = catalogue.get(approved_verification_report_id)
     granting_reports = tuple(
         candidate

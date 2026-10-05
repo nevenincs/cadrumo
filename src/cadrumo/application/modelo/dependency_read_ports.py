@@ -1,4 +1,7 @@
-"""Explicit profile and persistence capabilities for dependency inspection."""
+"""Explicit profile and persistence capabilities for dependency inspection.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

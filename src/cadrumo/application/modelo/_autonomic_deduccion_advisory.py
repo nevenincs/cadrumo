@@ -33,7 +33,7 @@ See Also:
     :func:`~application.modelo.profile_binding.madrid_nacimiento_adopcion_candidate_weighted_count`
         Shared candidate-count primitive: evaluates only the per-descendant
         window/cohabitation condition, independent of the unit's determinability.
-    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo.verification_revision_findings.collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 / Convenio LOB advisories using the same
         non-blocking mechanism.

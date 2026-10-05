@@ -279,7 +279,7 @@ def _field_value(
         case CasillaFieldKind.BINDING:
             return _binding_field_value(field, binding_values, row_index)
         case CasillaFieldKind.HEADER:
-            return _header_field_value(field, headers)
+            return _header_field_value(field, headers, modelo=draft.modelo)
         case CasillaFieldKind.PROJECTION:
             return projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
@@ -344,10 +344,29 @@ def projection_field_value(
         raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
 
 
-def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
+def _header_field_value(
+    field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object], *, modelo: str | None = None
+) -> object:
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)
+    if (
+        modelo == Modelo("369")
+        and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
+        and "aeat-dr-369-2021" in field.source_refs
+    ):
+        # DR369 v1.1 requires the slot itself, with [blank | constant "C"].
+        # No amendment evidence describes an ordinary return; neither that
+        # absence nor a false complementaria fact means a missing wire byte.
+        if field.data_type != "text" or field.length != 1:
+            raise FilingExportValidationError("Modelo 369 complementaria requires a one-byte text slot")
+        if field.producer_key not in headers:
+            raise FilingExportValidationError("Modelo 369 complementaria requires an amendment producer fact")
+        if value is True:
+            return "C"
+        if value is False or value is None:
+            return " "
+        raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
         raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
     if isinstance(value, bool) and field.data_type == "text":

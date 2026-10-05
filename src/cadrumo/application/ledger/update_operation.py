@@ -1,4 +1,7 @@
-"""Registered exact-profile correction of one canonical ledger transaction."""
+"""Registered exact-profile correction of one canonical ledger transaction.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

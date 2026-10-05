@@ -1,4 +1,7 @@
-"""Supervised execution stages for the registered spreadsheet operations."""
+"""Supervised execution stages for the registered spreadsheet operations.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

@@ -160,7 +160,10 @@ def validate_typed_binding_value(
     operation: PinnedAuthorityOperation,
     effective_date: date | None,
 ) -> ModeloTypedBindingValue:
-    """Validate one raw value against its pinned declaration and official constraints."""
+    """Validate one raw value against its pinned declaration and official constraints.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     contract = binding.value
     if contract.channel is BindingValueChannel.ROW_SET:
         raise ModeloBindingValueContractUnsupportedError()

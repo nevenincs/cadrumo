@@ -15,6 +15,7 @@ from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -132,7 +133,10 @@ def _registered():
 
 
 def test_public_projection_keeps_cli_fields_and_omits_private_record_detail() -> None:
-    first = _history_entry(event_id="a" * 64)
+    reference = RegistrySnapshotRef(modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1t")
+    first = _history_entry(event_id="a" * 64).model_copy(
+        update={"calculation_revision_id": "c" * 64, "registry_snapshot_ref": reference, "advisory_count": 2}
+    )
     second = _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
     projection = ModeloReconciliationListProjection(
         profile_id=_PROFILE,
@@ -151,14 +155,28 @@ def test_public_projection_keeps_cli_fields_and_omits_private_record_detail() ->
         "event_id",
         "bucket_id",
         "work_unit_id",
+        "calculation_revision_id",
+        "registry_snapshot_ref",
         "source_kind",
         "source_path",
         "verdict",
         "diff_count",
+        "advisory_count",
         "actor",
         "reconciled_at",
     }
     assert dumped["reconciliations"][0]["source_path"] == first.source_path
+    assert dumped["reconciliations"][0]["calculation_revision_id"] == "c" * 64
+    assert dumped["reconciliations"][0]["registry_snapshot_ref"] == {
+        "modelo": "303",
+        "revision_id": "2026-y-siguientes",
+        "modelo_year": 2026,
+        "period": "1T",
+    }
+    assert dumped["reconciliations"][0]["advisory_count"] == 2
+    assert dumped["reconciliations"][1]["calculation_revision_id"] is None
+    assert dumped["reconciliations"][1]["registry_snapshot_ref"] is None
+    assert dumped["reconciliations"][1]["advisory_count"] == 0
     assert "diffs" not in dumped["reconciliations"][0]
     assert len(dumped["reconciliations"]) == 2
 

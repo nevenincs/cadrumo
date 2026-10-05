@@ -427,6 +427,8 @@ class WithholdingSourceResolver:
         :meth:`resolve` and the per-modelo aggregate report both read through
         here, so the report projects exactly the rows the calculation
         materialises rather than a window of its own choosing.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
         """
         if not _revision_declares_withholding_scalar(revision):
             return None

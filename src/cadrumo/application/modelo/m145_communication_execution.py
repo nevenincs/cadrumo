@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.error_codes import scrub_error_context
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now
@@ -97,7 +98,7 @@ class _WriteGate:
         self._released.wait()
         if not self._allowed:
             self._loop.call_soon_threadsafe(self.finished.set)
-            raise RuntimeError("M145 repository mutation was not admitted by its operation fence")
+            raise InternalInvariantError("M145 repository mutation was not admitted by its operation fence")
         try:
             result = commit()
         except BaseException:
@@ -184,7 +185,7 @@ class _TrackedM145EventRepository(BucketEventHistoryRepositoryProtocol):
     ) -> BucketEventHistoryCatalogue:
         repository = self._repository
         if not isinstance(repository, _RevisionGuardedM145EventAppender):
-            raise RuntimeError("M145 export requires a revision-guarded event-history repository")
+            raise InternalInvariantError("M145 export requires a revision-guarded event-history repository")
         return self._gate.enter(lambda: repository.append_guarded(appender, attempts=attempts))
 
     @override

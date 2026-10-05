@@ -6,6 +6,8 @@ builds a form, reruns a calculation, or invents a result for an unreadable row.
 See Also:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
         The stored calculation head carrying values, provenance and lifecycle facts.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

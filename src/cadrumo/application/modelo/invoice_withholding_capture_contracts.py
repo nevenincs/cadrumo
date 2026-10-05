@@ -1,4 +1,7 @@
-"""Typed request, port and result contracts for invoice withholding capture."""
+"""Typed request, port and result contracts for invoice withholding capture.
+
+Core types: :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+"""
 
 from __future__ import annotations
 

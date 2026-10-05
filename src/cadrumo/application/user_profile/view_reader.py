@@ -1,4 +1,7 @@
-"""Build bounded, revision-pinned pages from the current encrypted profile record."""
+"""Build bounded, revision-pinned pages from the current encrypted profile record.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

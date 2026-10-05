@@ -221,6 +221,8 @@ def read_workbench_calendar_inputs(
     reads bind: the profile as of the year and the ledger's own derivations
     from ``invoice_source_ports``, so the workbench and the CLI reach the same
     verdict for the same records.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     try:
         taxpayer = projection_for_taxpayer(

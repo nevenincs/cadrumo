@@ -10,6 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.bienes_inversion.register import (
@@ -59,7 +60,7 @@ def _missing_disposal_part(error: BienInversionDisposalIncompleteError) -> Liter
         return "year"
     if error.missing == "regime":
         return "regime"
-    raise RuntimeError("capital-goods disposal refusal named an unsupported missing field")
+    raise InternalInvariantError("capital-goods disposal refusal named an unsupported missing field")
 
 
 class BienesInversionOperationExecutor:

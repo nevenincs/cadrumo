@@ -407,6 +407,8 @@ def build_casilla_formula_help(
 
     A matching observation contributes its stored operands and result; a missing
     or mismatched observation leaves the static formula arithmetic available.
+
+    Parameter types: ``observation`` (:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`).
     """
     formula = None if casilla.formula is None else formulas.get(str(casilla.formula))
     if formula is None:

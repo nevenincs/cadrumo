@@ -8,6 +8,7 @@ from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
@@ -66,7 +67,7 @@ class CommittedProrrataMutation:
     prior_ejercicio: int | None = None
 
 
-class ProrrataPreflightRefusalError(Exception):
+class ProrrataPreflightRefusalError(CadrumoError):
     """Known validation refusal raised before the mutation's write section."""
 
     reason: _ProrrataRefusalReason
@@ -219,7 +220,7 @@ def whole_seed_refusal_reason(reason: ProrrataWholeSeedUnavailableReason) -> _Pr
     try:
         return mapping[reason]
     except KeyError:
-        raise RuntimeError("whole-entity seed refusal returned an unknown finite reason") from None
+        raise InternalInvariantError("whole-entity seed refusal returned an unknown finite reason") from None
 
 
 def _preflight_sector_declaration(payload: BaseModel) -> SectorDefinition:
@@ -275,7 +276,7 @@ def _preflight_whole_seed(
     if not isinstance(payload, _requests.ProrrataSeedRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if calculation_action_ports_factory is None:
-        raise RuntimeError("whole-entity prorrata seed has no observation source capability")
+        raise InternalInvariantError("whole-entity prorrata seed has no observation source capability")
     return None
 
 
@@ -295,7 +296,7 @@ def _perform_sector_declaration(
         None,
     )
     if actual is None:
-        raise RuntimeError("prorrata sector write returned no matching definition")
+        raise InternalInvariantError("prorrata sector write returned no matching definition")
     return CommittedProrrataMutation(register=register, sector_definition=actual)
 
 
@@ -317,7 +318,7 @@ def _perform_election(
     )
     actual = register.entry_for(entry.ejercicio, sector_id=entry.sector_id)
     if actual is None:
-        raise RuntimeError("prorrata entry write returned no matching ejercicio/sector row")
+        raise InternalInvariantError("prorrata entry write returned no matching ejercicio/sector row")
     return CommittedProrrataMutation(register=register, entry=actual)
 
 
@@ -337,14 +338,14 @@ def _perform_whole_seed(
     context: OperationExecutorContext,
 ) -> CommittedProrrataMutation:
     if calculation_action_ports_factory is None:
-        raise RuntimeError("whole-entity prorrata seed has no observation source capability")
+        raise InternalInvariantError("whole-entity prorrata seed has no observation source capability")
     calculation_ports = calculation_action_ports_factory(
         bucket_id=str(payload.profile_id),
         operation=context.authority_operation,
     )
     observation_repository = calculation_ports.observation_repository
     if not callable(getattr(observation_repository, "load_prior_m303_settlement_snapshot", None)):
-        raise RuntimeError("whole-entity prorrata seed has no source-snapshot capability")
+        raise InternalInvariantError("whole-entity prorrata seed has no source-snapshot capability")
     commit = service.seed_whole_carried(
         payload.ejercicio,
         observation_repository=cast(ProrrataPriorSettlementSnapshotRepositoryProtocol, observation_repository),
@@ -391,7 +392,7 @@ def _perform_sector_settlement(
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
     if not isinstance(prepared, RegistrySnapshotRef):
-        raise RuntimeError("sector settlement preflight did not retain its pinned producing coordinate")
+        raise InternalInvariantError("sector settlement preflight did not retain its pinned producing coordinate")
     register, entry = service.settle_sector(
         payload.ejercicio,
         payload.sector_id,

@@ -1,4 +1,7 @@
-"""Immutable worker capabilities for the one canonical local quickfile chain."""
+"""Immutable worker capabilities for the one canonical local quickfile chain.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

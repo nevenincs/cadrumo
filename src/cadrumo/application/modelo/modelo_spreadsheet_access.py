@@ -1,4 +1,7 @@
-"""Resolve the pinned filing and provider access needed by spreadsheet operations."""
+"""Resolve the pinned filing and provider access needed by spreadsheet operations.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

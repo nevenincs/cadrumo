@@ -1,4 +1,7 @@
-"""Canonical request-to-command resolution for manual ledger additions."""
+"""Canonical request-to-command resolution for manual ledger additions.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +10,7 @@ from decimal import Decimal
 from typing import NamedTuple, overload
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import CadrumoError
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.parsing.dates import require_iso8601_date
 from ...core.prorrata_exclusions import Art104TresExclusion
@@ -31,7 +35,7 @@ from .models import ManualLedgerTransactionCommand
 from .source_jurisdiction import SourceJurisdictionOutcome, resolve_source_jurisdiction
 
 
-class SourceJurisdictionRequiredError(Exception):
+class SourceJurisdictionRequiredError(CadrumoError):
     """Signal that a taxpayer jurisdiction fact must be supplied before writing."""
 
     def __init__(
@@ -40,8 +44,9 @@ class SourceJurisdictionRequiredError(Exception):
         message: str,
     ) -> None:
         """Store the validation code and the existing operator-facing prompt."""
-        self.code: LedgerAddSourceJurisdictionCode = code
+        self.jurisdiction_code: LedgerAddSourceJurisdictionCode = code
         self.message = message
+        super().__init__(message)
 
 
 class _ResolvedLedgerAddRegistryFacts(NamedTuple):

@@ -222,8 +222,8 @@ def test_a_side_effect_free_command_is_provisioned_only_its_derived_caches(tmp_p
 
     reading = _created_directories(reading_root)
     assert caches, "the taxonomy must declare caches for this to measure anything"
-    assert caches <= reading
-    assert all(path == "cache" or path.startswith("cache/") for path in reading), sorted(reading)
+    expected = caches | {parent.as_posix() for cache in caches for parent in Path(cache).parents if parent != Path(".")}
+    assert reading == expected
     assert _created_directories(writing_root) > reading
 
 

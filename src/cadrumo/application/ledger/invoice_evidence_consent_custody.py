@@ -6,6 +6,7 @@ import asyncio
 from concurrent.futures import Future
 from threading import Lock, get_ident
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ..operations.owner import OperationExecutorContext
 
@@ -37,7 +38,7 @@ class InvoiceEvidenceConsentCustody:
 
     def _require_worker_thread(self) -> None:
         if get_ident() == self._loop_thread_id:
-            raise RuntimeError("consent-ledger save custody must run from a worker thread")
+            raise InternalInvariantError("consent-ledger save custody must run from a worker thread")
 
     async def _save_section(self, started: Future[None]) -> None:
         try:
@@ -59,7 +60,7 @@ class InvoiceEvidenceConsentCustody:
         self._require_worker_thread()
         with self._lock:
             if self._active:
-                raise RuntimeError("consent-ledger save custody is already active")
+                raise InternalInvariantError("consent-ledger save custody is already active")
             self._active = True
         started: Future[None] = Future()
         try:
@@ -75,7 +76,7 @@ class InvoiceEvidenceConsentCustody:
         self._require_worker_thread()
         with self._lock:
             if not self._active or self._outcome is None or self._session is None:
-                raise RuntimeError("consent-ledger save custody was not entered")
+                raise InternalInvariantError("consent-ledger save custody was not entered")
             outcome = self._outcome
             session = self._session
         try:

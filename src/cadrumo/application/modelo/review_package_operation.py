@@ -330,7 +330,10 @@ def build_modelo_review_package_build_definition(
     export_ports_factory: ModeloExportPortsFactory,
     repositories: VerificationRepositoryBundleFactory,
 ) -> OperationDefinition:
-    """Register one irreversible, secure-reference package publication."""
+    """Register one irreversible, secure-reference package publication.
+
+    Parameter types: ``profile_resolver`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
 
     def build() -> ModeloReviewPackageBuildExecutor:
         return ModeloReviewPackageBuildExecutor(

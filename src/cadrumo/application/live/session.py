@@ -23,6 +23,7 @@ from contextlib import AbstractAsyncContextManager, nullcontext
 
 from ...core.access_gate.gate import AeatAccessGate
 from ...core.config import Settings, load_settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -89,7 +90,7 @@ async def ensure_live_authenticated_session(
         )
         if staged.has_changes:
             if on_session_write is None:
-                raise RuntimeError("guarded live session publication needs an effect receipt")
+                raise InternalInvariantError("guarded live session publication needs an effect receipt")
             async with effect_guard():
                 await on_session_write(OperationEffect.UNKNOWN)
                 staged.publish()

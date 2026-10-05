@@ -160,7 +160,10 @@ class ModeloFilingRecordListEntryProjection(BaseModel):
 
     @classmethod
     def from_record(cls, record: ModeloRecord) -> ModeloFilingRecordListEntryProjection:
-        """Copy only the stable list payload fields from a canonical receipt."""
+        """Copy only the stable list payload fields from a canonical receipt.
+
+        Parameter types: ``record`` (:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`).
+        """
         return cls(
             filing_record_id=record.filing_record_id,
             work_unit_id=record.work_unit_id,

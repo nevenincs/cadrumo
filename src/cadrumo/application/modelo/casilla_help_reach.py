@@ -145,7 +145,10 @@ def build_casilla_help_reach(
     boxes: PrintedBoxes,
     box_text: Callable[[str], str],
 ) -> tuple[tuple[str, ...], bool, ModeloHelpReachV1 | None]:
-    """Return immediate dependents, result status, and the deterministic result route."""
+    """Return immediate dependents, result status, and the deterministic result route.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     graph = _dependents(snapshot.revision.formulas)
     feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
     selected = declaration_result_casillas(str(snapshot.modelo.id), snapshot.revision)

@@ -53,7 +53,10 @@ class PinnedRevisionedTransactionRepository:
         return self.repository.partition_by_date_range(start, end)
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Refuse an unrevisioned whole-catalogue write."""
+        """Refuse an unrevisioned whole-catalogue write.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         _ = catalogue
         raise self._unpinned_write()
 
@@ -62,7 +65,10 @@ class PinnedRevisionedTransactionRepository:
         catalogue: TransactionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Refuse an unrevisioned write with secure objects."""
+        """Refuse an unrevisioned write with secure objects.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         _ = catalogue, extra_writes
         raise self._unpinned_write()
 
@@ -87,7 +93,10 @@ class PinnedRevisionedTransactionRepository:
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Commit only against the pinned revision."""
+        """Commit only against the pinned revision.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         if expected_revision_id != self.revision_id:
             raise LedgerPersistenceConflictError(f"ledger {self.action} attempted to write against another snapshot")
         self.repository.save_if_revision_with_secure_object_writes(

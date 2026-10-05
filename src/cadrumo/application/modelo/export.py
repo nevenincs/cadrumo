@@ -513,21 +513,25 @@ def envelope_stamped_software_identity(
     """
     if export_layout is None:
         return None
-    if export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None:
+    if _envelope_requires_product_identity(export_layout):
         return product_software_identity
     if _stamps_development_mock_identity(export_layout):
         return product_software_identity
     return None
 
 
-def _renders_envelope_prefix(export_layout: ExportLayoutDefinition | None) -> bool:
-    """Whether the renderer composes an envelope prefix that takes the identity as input.
+def _envelope_requires_product_identity(export_layout: ExportLayoutDefinition | None) -> bool:
+    """Whether the declared envelope has a product identity input slot.
 
     A layout stamping the identity through fact-bound literals already carries
     the bytes, so the renderer is not handed an identity it has no slot for.
     """
     return export_layout is not None and (
-        export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None
+        export_layout.auxiliary_envelope_header is not None
+        or (
+            export_layout.filing_envelope is not None
+            and export_layout.filing_envelope.product_identity_requirement is not None
+        )
     )
 
 
@@ -1516,7 +1520,7 @@ def _persist_exported_draft(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=software_identity if _renders_envelope_prefix(export_layout) else None,
+            product_software_identity=software_identity if _envelope_requires_product_identity(export_layout) else None,
             schema_provider=schema_provider,
             mutation_writer=mutation_writer,
         )
@@ -1924,6 +1928,7 @@ def _resolve_modelo_exportprior_domiciliation(
 def _prepare_modelo_export(
     command: ModeloExportCommand,
     *,
+    evaluated_at: datetime,
     active_bucket_id: str,
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
@@ -1980,6 +1985,7 @@ def _prepare_modelo_export(
         observation_repository=export_ports.observation,
         history_repository=export_ports.iva_compensation_history,
         operation=operation,
+        evaluated_at=evaluated_at,
     )
     _require_modelo_export_clean_state(
         work_unit=work_unit,
@@ -2070,6 +2076,7 @@ def export_modelo_revision(
     # late publication — and never after cleartext financial bytes exist.
     _export_sink(command).require_writable()
 
+    now = clock or _utc_now()
     prepared = _prepare_modelo_export(
         command,
         active_bucket_id=active_bucket_id,
@@ -2077,6 +2084,7 @@ def export_modelo_revision(
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
         operation=operation,
+        evaluated_at=now,
     )
     work_unit = prepared.work_unit
     revision = prepared.revision
@@ -2086,7 +2094,6 @@ def export_modelo_revision(
     prior_domiciliation_provenance = prepared.prior_domiciliation_election
     amendment_evidence = prepared.amendment_evidence
 
-    now = clock or _utc_now()
     export_period, approved = _approve_export_draft(
         work_unit=work_unit,
         revision=revision,

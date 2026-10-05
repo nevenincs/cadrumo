@@ -23,6 +23,7 @@ import pydantic
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -127,7 +128,7 @@ class OwnAccountProjection(BaseModel):
     label: str
     holding: OwnAccountHolding
     masked_iban: str
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     sepa_marca: str = Field(min_length=1, max_length=1)
     has_swift_bic: bool
     has_bank_block: bool

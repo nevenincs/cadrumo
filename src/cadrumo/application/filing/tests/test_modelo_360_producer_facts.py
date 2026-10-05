@@ -97,7 +97,7 @@ def test_the_prorrata_communication_rides_only_a_modificacion() -> None:
     assert _solicitud(prorrata=False).comunicacion_prorrata_definitiva is False
 
 
-@pytest.mark.parametrize("code", ["GR", "gr", "GRC", "E"])
+@pytest.mark.parametrize("code", ["GR", "gr", "GRC", "E", "de", "12", "ÉS", " DE "])
 def test_a_country_outside_the_design_alphabet_is_refused(code: str) -> None:
     """DR360 Nota 3: two upper-case ISO letters, and Greece is ``EL``."""
     with pytest.raises(ValidationError):
@@ -110,7 +110,7 @@ def test_a_country_outside_the_design_alphabet_is_refused(code: str) -> None:
     "ambito", [M360AmbitoEstablecimiento.TERRITORIO_COMUN, M360AmbitoEstablecimiento.HACIENDA_FORAL]
 )
 def test_a_solicitante_established_in_the_territorio_cannot_address_spain(ambito: M360AmbitoEstablecimiento) -> None:
-    """Orden EHA/789/2010 art. 1.2: VAT borne in the Community "con excepción de las realizadas en dicho territorio"."""
+    """Orden EHA/789/2010 art. 1.2: IVA borne in the Community "con excepción de las realizadas en dicho territorio"."""
     with pytest.raises(ValidationError, match="never in Spain"):
         _profile(solicitud=_solicitud(pais_destino="ES"), ambito=ambito)
 

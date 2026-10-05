@@ -1,4 +1,7 @@
-"""Atomic replacement of a profile's declared descendant family."""
+"""Atomic replacement of a profile's declared descendant family.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

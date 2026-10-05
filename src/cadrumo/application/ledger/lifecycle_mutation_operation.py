@@ -1,4 +1,7 @@
-"""Exact-profile registered mutations of ledger lifecycle and review state."""
+"""Exact-profile registered mutations of ledger lifecycle and review state.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

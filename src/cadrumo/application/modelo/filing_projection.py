@@ -120,7 +120,10 @@ class ModeloFilingRecordSnapshot(BaseModel):
 
     @classmethod
     def from_record(cls, record: ModeloRecord) -> Self:
-        """Capture the writer's returned receipt without another storage read."""
+        """Capture the writer's returned receipt without another storage read.
+
+        Parameter types: ``record`` (:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`).
+        """
         return cls.model_validate_json(
             canonical_json_bytes(
                 record.model_dump(mode="json")

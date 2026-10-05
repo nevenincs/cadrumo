@@ -1,4 +1,8 @@
-"""Register modelo lifecycle operations using their canonical writers and public contracts."""
+"""Register modelo lifecycle operations using their canonical writers and public contracts.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

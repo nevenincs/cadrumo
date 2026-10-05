@@ -659,7 +659,7 @@ def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> 
         executor_type=LedgerImportExecutor,
         build=lambda: LedgerImportExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

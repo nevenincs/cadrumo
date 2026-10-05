@@ -1,4 +1,8 @@
-"""Shared indexes for one canonical Modelo work-form projection."""
+"""Shared indexes for one canonical Modelo work-form projection.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

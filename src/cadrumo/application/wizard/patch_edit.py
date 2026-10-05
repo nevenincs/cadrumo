@@ -1,4 +1,7 @@
-"""Atomic application judge for a scripted wizard profile patch."""
+"""Atomic application judge for a scripted wizard profile patch.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

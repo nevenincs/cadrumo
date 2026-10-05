@@ -1,4 +1,7 @@
-"""Registered exact-profile Sede register listing and discovery reads."""
+"""Registered exact-profile Sede register listing and discovery reads.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

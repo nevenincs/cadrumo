@@ -1,4 +1,7 @@
-"""Capture registered exact-profile filing histories within worker-owned custody."""
+"""Capture registered exact-profile filing histories within worker-owned custody.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 

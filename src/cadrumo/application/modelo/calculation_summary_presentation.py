@@ -35,10 +35,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.filing.software_identity import (
-    AeatSoftwareIdentityGrade,
-    development_mock_software_identity,
-)
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from .calculation_report import (
@@ -288,12 +285,9 @@ def _sections(report: ModeloCalculationReport, *, chrome: _Chrome) -> tuple[Calc
 
 def _software_identity_notice(grade: AeatSoftwareIdentityGrade | None, *, chrome: _Chrome) -> str:
     if grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
-        mock = development_mock_software_identity()
-        return chrome.text(
-            IDENTITY_DEVELOPMENT_MOCK_LOCALE_KEY,
-            program=mock.program_identifier,
-            developer_tax_id=mock.developer_tax_id,
-        )
+        # The embedded report certifies the grade, not current registry identity
+        # values. Standalone verification must reconstruct only those facts.
+        return chrome.raw(IDENTITY_DEVELOPMENT_MOCK_LOCALE_KEY)
     if grade is AeatSoftwareIdentityGrade.REVIEWED:
         return chrome.raw(IDENTITY_REVIEWED_LOCALE_KEY)
     return chrome.raw(IDENTITY_NONE_LOCALE_KEY)

@@ -1,4 +1,7 @@
-"""Resolve revision mutations against the execution profile's persisted scope."""
+"""Resolve revision mutations against the execution profile's persisted scope.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 

@@ -102,7 +102,10 @@ def build_inspection_only_form(
     aeat_data_imported_at: datetime | None,
     notes: tuple[tuple[tuple[str, str | None], ...], bool],
 ) -> ModeloWorkForm:
-    """Show every casilla read-only in official box order when no usable layout exists."""
+    """Show every casilla read-only in official box order when no usable layout exists.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     fields = sorted(
         (
             project_casilla_field(casilla_id, context, None).model_copy(

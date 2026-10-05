@@ -52,7 +52,9 @@ from .operation_definition import OperationDefinition
 from .persistence.events import (
     OperationNoticeEvent,
 )
-from .persistence.financial_operand_custody import OperationTypedFinancialOperandCustodyRepository
+from .persistence.financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyRepository,
+)
 from .persistence.journal import (
     OperationEventStream,
     OperationJournal,
@@ -303,7 +305,17 @@ class OperationSupervisor(
                 "financial_requirement": requirement,
                 "revision": requirement.invocation_revision,
                 "updated_at": now,
-                "events": (),
+                "event_cursor": snapshot.event_cursor + 1,
+                "events": (
+                    OperationNoticeEvent(
+                        identity=snapshot.identity,
+                        revision=requirement.invocation_revision,
+                        sequence=snapshot.event_cursor + 1,
+                        timestamp=now,
+                        code="operation.financial_operand.awaiting",
+                        notice_code="operation.financial_operand.awaiting",
+                    ),
+                ),
             }
         )
         await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)

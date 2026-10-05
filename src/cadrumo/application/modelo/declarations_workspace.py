@@ -1,4 +1,8 @@
-"""Compose safe declaration rows from coherent preloaded catalogues."""
+"""Compose safe declaration rows from coherent preloaded catalogues.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 

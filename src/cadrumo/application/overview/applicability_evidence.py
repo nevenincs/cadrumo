@@ -17,6 +17,8 @@ inputs vary by year:
 
 The composition root binds both to its stores once per read; the builders only
 ask for the years they evaluate, and each year is derived at most once.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations
@@ -107,6 +109,8 @@ def loaded_invoice_source_ports(catalogue: InvoiceCatalogue | None) -> InvoiceSo
     ``None`` means the host bound no invoice store. The resolver then reports
     the catalogue as unreadable, so every ledger derivation is unknown rather
     than an empty ledger read as a ledger without operations.
+
+    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`).
     """
     return InvoiceSourceResolverPorts(catalogue_reader=_CatalogueAlreadyRead(catalogue))
 
@@ -145,6 +149,8 @@ def bind_filing_year_applicability_evidence(
 
     Returns:
         Evidence that derives each year on first use.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     ports = InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReadOnce(invoice_source_ports.catalogue_reader))
 

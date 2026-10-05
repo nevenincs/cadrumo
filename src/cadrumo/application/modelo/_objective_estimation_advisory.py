@@ -10,7 +10,7 @@ fact thresholds and emits non-blocking
 threshold.
 
 See Also:
-    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`:
+    :func:`~application.modelo.verification_revision_findings.collect_revision_verification_findings`:
         Verification collector that appends these advisories after predicate and
         reduction-advisory checks.
     :class:`TaxpayerProfile`:

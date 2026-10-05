@@ -1,4 +1,7 @@
-"""The actual calculation write and its atomically selected parent snapshot."""
+"""The actual calculation write and its atomically selected parent snapshot.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+"""
 
 from __future__ import annotations
 

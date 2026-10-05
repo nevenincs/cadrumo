@@ -40,7 +40,10 @@ if TYPE_CHECKING:
 
 
 def iva_selected_scope_evidence_issues(target: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
-    """Select the persisted IVA evidence failures retained by this revision."""
+    """Select the persisted IVA evidence failures retained by this revision.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     return tuple(
         issue
         for issue in target.source_issues
@@ -67,6 +70,8 @@ def unrecordable_deduction_documents(
     Only authorities no production supporting-document writer records get a
     terminal refusal. Missing rows and unresolved authorities keep the general
     finding; removing a row never erases its persisted evidence failure.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     transaction_ids = selected_scope_transaction_ids(target)
     if not transaction_ids:
@@ -92,7 +97,10 @@ def general_selected_scope_evidence_issues(
     target: CalculationRevision,
     unrecordable_transaction_ids: tuple[str, ...],
 ) -> tuple[CalculationSourceIssue, ...]:
-    """Keep evidence failures outside the separately refused unrecordable rows."""
+    """Keep evidence failures outside the separately refused unrecordable rows.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     unrecordable_source_refs = frozenset(
         f"{LEDGER_TRANSACTION_SOURCE_REF_PREFIX}{transaction_id}" for transaction_id in unrecordable_transaction_ids
     )
@@ -111,6 +119,8 @@ def iva_selected_scope_evidence_finding(
     """Return the blocking finding for persisted selected-scope IVA evidence failures.
 
     Rows named in ``unrecordable_transaction_ids`` are left to their own finding.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     issues = general_selected_scope_evidence_issues(target, unrecordable_transaction_ids)
     if not issues:
@@ -183,7 +193,10 @@ def append_iva_selected_scope_evidence_finding(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append specific and general IVA evidence refusals without dropping persisted issues."""
+    """Append specific and general IVA evidence refusals without dropping persisted issues.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     documents = unrecordable_deduction_documents(target, transaction_repository)
     unrecordable_transaction_ids = tuple(document.transaction.transaction_id for document in documents)
     for document in documents:
@@ -222,7 +235,10 @@ def append_iva_selected_scope_evidence_finding(
 def iva_compensation_annual_source_evidence_finding(
     target: CalculationRevision,
 ) -> ModeloVerificationFinding | None:
-    """Return the blocking finding for missing or stale required M390 partition evidence."""
+    """Return the blocking finding for missing or stale required M390 partition evidence.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     issues = tuple(
         issue
         for issue in target.source_issues
@@ -247,7 +263,10 @@ def append_iva_compensation_annual_source_evidence_finding(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append the annual compensation evidence finding when its source remains unresolved."""
+    """Append the annual compensation evidence finding when its source remains unresolved.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     finding = iva_compensation_annual_source_evidence_finding(target)
     if finding is None:
         return
@@ -264,7 +283,10 @@ def append_iva_compensation_annual_source_evidence_finding(
 
 
 def selected_scope_transaction_ids(target: CalculationRevision) -> set[str]:
-    """Read exact ledger references retained by selected-scope evidence failures."""
+    """Read exact ledger references retained by selected-scope evidence failures.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     transaction_ids = {
         issue.source_ref.removeprefix(LEDGER_TRANSACTION_SOURCE_REF_PREFIX)
         for issue in iva_selected_scope_evidence_issues(target)

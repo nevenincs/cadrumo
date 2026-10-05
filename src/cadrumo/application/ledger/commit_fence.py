@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable
 from datetime import date
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
@@ -114,7 +115,7 @@ class LedgerCommitAttemptTracker:
             attempt.refuse()
         if not attempt.wait_for_authority():
             attempt.finished.set()
-            raise RuntimeError("ledger writer was not authorized by its operation fence")
+            raise InternalInvariantError("ledger writer was not authorized by its operation fence")
         failure: BaseException | None = None
         try:
             write()
@@ -176,7 +177,10 @@ class TrackedLedgerTransactionRepository:
         return self._repository.partition_by_date_range(start, end)
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Fence the actual catalogue save behind commit authority."""
+        """Fence the actual catalogue save behind commit authority.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(lambda: self._repository.save(catalogue))
 
     def save_with_secure_object_writes(
@@ -184,7 +188,10 @@ class TrackedLedgerTransactionRepository:
         catalogue: TransactionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Fence the atomic catalogue and related-object write."""
+        """Fence the atomic catalogue and related-object write.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(lambda: self._repository.save_with_secure_object_writes(catalogue, extra_writes))
 
     def replace_if_current_with_secure_object_writes(
@@ -222,7 +229,10 @@ class RevisionGuardedTrackedLedgerTransactionRepository(TrackedLedgerTransaction
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Fence whole-catalogue CAS at its actual persistence call."""
+        """Fence whole-catalogue CAS at its actual persistence call.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(
             lambda: self._revisioned_repository.save_if_revision_with_secure_object_writes(
                 catalogue,

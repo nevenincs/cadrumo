@@ -32,7 +32,10 @@ if TYPE_CHECKING:
 
 
 def m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
-    """Select the revision’s declared OSS aggregation bindings."""
+    """Select the revision’s declared OSS aggregation bindings.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     return tuple(
         binding for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.LEDGER_OSS_AGGREGATION
     )
@@ -44,7 +47,10 @@ def m369_source_issue_finding(
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding | None:
-    """Project an OSS routing or missing-evidence source issue."""
+    """Project an OSS routing or missing-evidence source issue.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     unrouted_issues = tuple(
         issue
         for issue in target.source_issues
@@ -72,6 +78,9 @@ def m369_unresolved_oss_source_finding(
     source issue, while resolved candidates remain in the positive source-
     provenance trace. This preserves a real zero-valued invoice line while
     refusing both a silent claimed-zero catalogue and a line outside the form.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     if str(work_unit.modelo) != Modelo("369").value:
         return None

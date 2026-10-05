@@ -222,7 +222,10 @@ class FiledDataCapturePort(Protocol):
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
     ) -> DeferredFiledObservations:
-        """Fetch source rows and bytes without any local artefact persistence."""
+        """Fetch source rows and bytes without any local artefact persistence.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+        """
         ...
 
 

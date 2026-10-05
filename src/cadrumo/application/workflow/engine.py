@@ -224,7 +224,7 @@ class WorkflowEngine:
         # obligation has been resolved carries a ``run_id`` that
         # matches the final :class:`WorkflowResult.run_id`. When no
         # obligation is known yet (e.g. ``SiteHealthError`` from the
-        # deadline stage of an open-ended ``run_next`` call)
+        # deadline stage before the obligation has been resolved)
         # the ``-`` placeholders are expected and match the
         # placeholders in the final result.
         self._run_tax_id: str | None = None
@@ -252,8 +252,9 @@ class WorkflowEngine:
             profile: The :class:`TaxpayerProfile` to run for.
             modelo: Target modelo identifier.
             period: Target period identifier.
-            fail_on_warning: See :meth:`run_next`.
-            today: See :meth:`run_next`.
+            fail_on_warning: Treat draft validation warnings as blocking findings.
+            today: Reference date for deadlines and certificate validity;
+                defaults to the current date in Madrid.
             resumed_from: Optional prior workflow ``run_id`` that this
                 invocation continues. When set, the produced
                 :class:`WorkflowResult` carries the linkage so callers

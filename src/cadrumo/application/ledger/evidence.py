@@ -52,7 +52,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
@@ -460,7 +460,7 @@ def _locate_expected_record(
     return record_index, record
 
 
-class PurchaseInvoiceEvidenceSnapshotConflictError(Exception):
+class PurchaseInvoiceEvidenceSnapshotConflictError(CadrumoError):
     """The target evidence row changed after a result-safety preflight."""
 
 

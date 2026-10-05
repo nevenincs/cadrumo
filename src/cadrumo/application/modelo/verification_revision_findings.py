@@ -70,7 +70,12 @@ def append_revision_advisory_findings(
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> None:
-    """Append the selected revision’s model advisories without changing grant semantics."""
+    """Append the selected revision’s model advisories without changing grant semantics.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``profile``
+    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     fact_coordinate = date(work_unit.filing_year, 12, 31)
     modelo_fact_context = ModeloFactResolutionContext(
         authority=operation,
@@ -136,7 +141,10 @@ def resolve_verification_snapshot(
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
     operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot | None:
-    """Read the selected authority or retain its exact blocking refusal and precondition."""
+    """Read the selected authority or retain its exact blocking refusal and precondition.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     from ...domain.calculations.registry.errors import (
         RegistrySnapshotError,
         RegistryValidationError,
@@ -224,7 +232,11 @@ def append_oss_verification_finding(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append unresolved OSS source evidence to the current revision findings."""
+    """Append unresolved OSS source evidence to the current revision findings.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     oss_source_finding = m369_unresolved_oss_source_finding(
         work_unit=work_unit,
         target=target,
@@ -267,7 +279,12 @@ def append_registry_predicate_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append registry predicates with their exact blocking preconditions."""
+    """Append registry predicates with their exact blocking preconditions.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``predicate_profile``
+    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     findings.extend(
         evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
@@ -299,7 +316,12 @@ def append_unresolved_outcome_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append unresolved calculation outcomes and their required operator preconditions."""
+    """Append unresolved calculation outcomes and their required operator preconditions.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``predicate_profile``
+    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     findings.extend(
         m210_unresolved_outcome_findings(
             target.unresolved_outcomes,
@@ -361,6 +383,9 @@ def collect_revision_verification_findings(
     Registry-authored predicates are evaluated after required-input checks.
     ADVISORY findings are returned beside blocking findings so the report can
     expose non-silent under-declaration warnings without changing the grant rule.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`), ``profile``
+    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     findings: list[ModeloVerificationFinding] = []
     resolved_casilla_ids: list[CasillaId] = []
@@ -456,7 +481,10 @@ def profile_with_art109_period_evidence(
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> TaxpayerProfile:
-    """Add the work unit’s grounded period-income evidence to the retained profile."""
+    """Add the work unit’s grounded period-income evidence to the retained profile.
+
+    Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     coverage = _derive_art109_coverage(
         work_unit,
         transaction_repository=transaction_repository,

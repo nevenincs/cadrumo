@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.filing_year import FilingYear
 from ...core.iban import mask_iban
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -114,7 +115,7 @@ class Modelo360SolicitudRequest(BaseModel):
 
     profile_id: UUID
     action: Modelo360SolicitudAction
-    filing_year: int | None = Field(default=None, ge=2000, le=2100)
+    filing_year: FilingYear | None = None
     facts: Modelo360ProfileFacts | None = None
     own_account_id: OwnAccountId | None = None
     representante_account: Modelo360RepresentanteAccountInput | None = None
@@ -135,7 +136,7 @@ class Modelo360SolicitudProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    filing_year: int
+    filing_year: FilingYear
     pais_destino: str = Field(min_length=2, max_length=2)
     causa_presentacion: M360CausaPresentacion
     titular_en_calidad_de: M360TitularEnCalidadDe

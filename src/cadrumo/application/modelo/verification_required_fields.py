@@ -74,7 +74,11 @@ def append_required_casilla_findings(
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
     clave_scope: PerceptorClaveScope | None = None,
 ) -> None:
-    """Append required-value findings and exact preconditions in registry casilla order."""
+    """Append required-value findings and exact preconditions in registry casilla order.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     revision_keys = set(target.input_values_by_casilla_id)
     row_values = target.row_binding_values or {}
     # Where the registry scopes a modelo's per-record casillas by clave, each
@@ -137,6 +141,9 @@ def detail_row_template_casilla_is_satisfied(
     calculate refuses as scalar inputs, so verify never demands one of them.
     Modelo 349 additionally proves its rows are present, since its operador and
     rectificacion records are the return's whole content.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     if not casilla.section:
         return False
@@ -194,7 +201,11 @@ def required_manual_casilla_resolved(
     scoped: bool,
     clave_scope: PerceptorClaveScope | None,
 ) -> bool:
-    """Resolve scoped rows exclusively, then ordinary template and scalar values."""
+    """Resolve scoped rows exclusively, then ordinary template and scalar values.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
     if clave_scope is not None and scoped and (value_binding is not None):
         return not rows_missing_scoped_casilla(
             clave_scope, casilla_id=casilla.id, value_binding=value_binding, row_binding_values=row_values

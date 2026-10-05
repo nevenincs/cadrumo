@@ -222,7 +222,10 @@ def load_active_taxpayer_profile(
 
 
 def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSchemaDefinition) -> TaxpayerProfile:
-    """Apply canonical taxpayer readiness to an explicitly captured profile record."""
+    """Apply canonical taxpayer readiness to an explicitly captured profile record.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
     values: dict[str, str] = dict(record_to_path_values(record))
     if not values.get(_TAX_ID_PATH):
         _require_active_profile_tax_id(

@@ -138,7 +138,10 @@ class RevisionGuardedTransactionCatalogueCoCommitWriterProtocol(
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Atomically persist only if the full loaded snapshot still matches."""
+        """Atomically persist only if the full loaded snapshot still matches.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         ...
 
 

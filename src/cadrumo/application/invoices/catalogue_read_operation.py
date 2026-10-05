@@ -1,4 +1,7 @@
-"""Recorded invoice inspection under exact-profile, whole-period authority."""
+"""Recorded invoice inspection under exact-profile, whole-period authority.
+
+Core types: :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+"""
 
 from __future__ import annotations
 

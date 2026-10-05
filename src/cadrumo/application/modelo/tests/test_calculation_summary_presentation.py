@@ -15,6 +15,8 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import override_locales_root
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_report import CalculationReportValueState
@@ -38,6 +40,27 @@ from ._calculation_report_fixture import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NBSP = "\u00a0"
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+def test_development_notice_is_reconstructible_without_registry_authority(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    report, _ = build_fixture_report(operation, report_language=language)
+    report = report.model_copy(
+        update={
+            "header": report.header.model_copy(
+                update={"software_identity_grade": AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK}
+            )
+        }
+    )
+    with outside_governed_fact_validation():
+        presentation = build_calculation_summary_presentation(
+            report, csv_sha256="c" * 64, signing_key_fingerprint="d" * 64, brand="CADRUMO"
+        )
+    assert presentation.software_identity_notice
+    assert "{program}" not in presentation.software_identity_notice
+    assert "{developer_tax_id}" not in presentation.software_identity_notice
 
 
 @pytest.mark.parametrize(

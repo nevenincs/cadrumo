@@ -49,7 +49,10 @@ def append_model_specific_findings(
     iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Append cross-model and detail-row verification findings in one place."""
+    """Append cross-model and detail-row verification findings in one place.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     findings.extend(
         m303_m349_intracom_reconcile_findings(
             work_unit=work_unit,
@@ -110,7 +113,10 @@ def append_readable_model_findings(
     repos: VerificationRepositoryBundle,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Skip model checks only after an explicit registry-snapshot refusal."""
+    """Skip model checks only after an explicit registry-snapshot refusal.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     registry_snapshot_refused = any(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )

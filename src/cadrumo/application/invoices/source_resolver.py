@@ -16,6 +16,8 @@ be represented as registry
 bindings, the repeated-record row bindings (the Modelo 347 declarado records),
 Modelo 349 detail rows, transaction ids, and source provenance emitted through
 one resolver envelope.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations

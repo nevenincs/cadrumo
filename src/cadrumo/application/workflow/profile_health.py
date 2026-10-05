@@ -641,7 +641,10 @@ def assess_profile_record_health(
     label: str,
     operation: PinnedAuthorityOperation,
 ) -> ActiveProfileHealth:
-    """Judge one already-authorized record without resolving an ambient profile."""
+    """Judge one already-authorized record without resolving an ambient profile.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
     values = record_to_path_values(record)
     # Key COUNTS come from the compiled key catalogue, which is what the
     # progress projection is about. Which required fields are still MISSING is

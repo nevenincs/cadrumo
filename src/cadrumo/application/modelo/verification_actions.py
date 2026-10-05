@@ -272,6 +272,13 @@ def verify_modelo_revision_with_preconditions(
     )
     require_work_unit_calculation_unblocked(work_unit=work_unit, revision=target, action="verify", operation=operation)
 
+    now = clock or _utc_now()
+    # Finding collection can refresh persisted wallet authority.
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.VERIFY,
+        instants=verification_ordering_instants(revision=target, work_unit=work_unit),
+    )
     findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
         collect_verification_gate_findings(
             work_unit=work_unit,
@@ -290,6 +297,7 @@ def verify_modelo_revision_with_preconditions(
             operation=operation,
             work_profile=checked_profile,
             ledger_membership_ports=repos.ledger_membership_ports,
+            evaluated_at=now,
         )
     )
     # A registry-snapshot refusal already stands as a blocking finding, and
@@ -301,15 +309,6 @@ def verify_modelo_revision_with_preconditions(
         missing_required=missing_required_casilla_ids,
     )
 
-    now = clock or _utc_now()
-    # Before the workflow gate and every save below: each record this action
-    # rewrites takes ``now``, and a stamp earlier than those instants would
-    # persist catalogues their own loaders refuse.
-    require_lifecycle_clock_not_before(
-        now,
-        operation=ModeloLifecycleClockOperation.VERIFY,
-        instants=verification_ordering_instants(revision=target, work_unit=work_unit),
-    )
     report = build_verification_report(
         calculation_revision_id=calculation_revision_id,
         registry_snapshot_ref=target.registry_snapshot_ref,

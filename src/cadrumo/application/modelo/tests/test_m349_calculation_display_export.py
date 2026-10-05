@@ -257,6 +257,15 @@ def _records(
     return known, tuple((row.index, *row.values) for row in rows)
 
 
+def _record_values(block: FormRepeatingGroupBlock, row: tuple[object, ...]) -> dict[str, object]:
+    """Address saved cells by the registry's column identity, preserving row order."""
+    return {
+        str(column.casilla_id): value
+        for column, value in zip(block.columns, row[1:], strict=True)
+        if column.casilla_id is not None
+    }
+
+
 def test_saved_detail_rows_populate_the_real_form_and_make_the_optional_page_applicable(
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -300,6 +309,9 @@ def test_saved_detail_rows_populate_the_real_form_and_make_the_optional_page_app
     )
     assert page.applies is True
     assert block.rows_known and len(block.rows) == 1
+    assert block.column_casilla_ids == tuple(
+        None if column.casilla_id is None else str(column.casilla_id) for column in _operator_block(operation).columns
+    )
     assert dict(zip(block.column_casilla_ids, block.rows[0].values, strict=True)) == {
         "sustituto.nif": None,
         "sustituto.apellidos-razon-social": None,
@@ -327,8 +339,18 @@ def test_record_projection_uses_filing_replay_precedence_and_normalization(opera
             "row_casilla_values": {("op.base-imponible", 7): Decimal("999")},
         }
     )
-    known, rows = _records(snapshot, revision, _operator_block(operation))
-    assert known and rows == ((1, None, None, "DE", "123456789", "EU Trader", "E", Decimal("0")),)
+    block = _operator_block(operation)
+    known, rows = _records(snapshot, revision, block)
+    assert known and tuple(row[0] for row in rows) == (1,)
+    assert _record_values(block, rows[0]) == {
+        "sustituto.nif": None,
+        "sustituto.apellidos-razon-social": None,
+        "op.codigo-pais": "DE",
+        "op.nif-comunitario": "123456789",
+        "op.apellidos-razon-social": "EU Trader",
+        "op.clave-operacion": "E",
+        "op.base-imponible": Decimal("0"),
+    }
     replay = revision_detail_record_binding_inputs(
         revision=revision, modelo=str(unit.modelo), binding_record="operador"
     )
@@ -377,10 +399,19 @@ def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operat
             },
         }
     )
-    known, rows = _records(snapshot, revision, _operator_block(operation))
-    assert known and rows == (
-        (3, None, None, None, None, "First", None, Decimal("0")),
-        (9, None, None, None, None, "Second", None, Decimal("42.50")),
+    block = _operator_block(operation)
+    known, rows = _records(snapshot, revision, block)
+    assert known and tuple(row[0] for row in rows) == (3, 9)
+    empty = {
+        "sustituto.nif": None,
+        "sustituto.apellidos-razon-social": None,
+        "op.codigo-pais": None,
+        "op.nif-comunitario": None,
+        "op.clave-operacion": None,
+    }
+    assert tuple(_record_values(block, row) for row in rows) == (
+        {**empty, "op.apellidos-razon-social": "First", "op.base-imponible": Decimal("0")},
+        {**empty, "op.apellidos-razon-social": "Second", "op.base-imponible": Decimal("42.50")},
     )
     assert _records(snapshot, revision.model_copy(update={"row_binding_values": {}}), _operator_block(operation)) == (
         False,
@@ -400,11 +431,12 @@ def test_record_wide_text_does_not_inherit_a_numeric_placeholder(operation: Pinn
     revision = revision.model_copy(
         update={"casilla_values": {**revision.casilla_values, "sustituto.nif": Decimal("0")}}
     )
-    _, rows = _records(snapshot, revision, _operator_block(operation))
-    assert rows[0][1] is None
+    block = _operator_block(operation)
+    _, rows = _records(snapshot, revision, block)
+    assert _record_values(block, rows[0])["sustituto.nif"] is None
     revision = revision.model_copy(update={"input_values_by_casilla_id": {"sustituto.nif": "0"}})
-    _, rows = _records(snapshot, revision, _operator_block(operation))
-    assert rows[0][1] == "0"
+    _, rows = _records(snapshot, revision, block)
+    assert _record_values(block, rows[0])["sustituto.nif"] == "0"
 
 
 @pytest.mark.parametrize("raw", ("not-a-number", "NaN", "Infinity"))
@@ -471,8 +503,12 @@ def test_saved_per_row_casillas_are_not_overwritten_by_a_record_wide_scalar(
             "detail_rows": (),
         }
     )
-    known, rows = _records(snapshot, revision, _operator_block(operation))
-    assert known and [(row[0], row[-1]) for row in rows] == [(2, Decimal("0")), (5, Decimal("19.25"))]
+    block = _operator_block(operation)
+    known, rows = _records(snapshot, revision, block)
+    assert known and [(row[0], _record_values(block, row)["op.base-imponible"]) for row in rows] == [
+        (2, Decimal("0")),
+        (5, Decimal("19.25")),
+    ]
 
 
 def test_saved_projection_casillas_remain_visible_even_when_the_projection_owner_is_unknown(

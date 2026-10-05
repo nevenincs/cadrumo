@@ -54,7 +54,10 @@ class ModeloCalculationObservationSnapshot(BaseModel):
 
     @classmethod
     def from_observation(cls, observation: CasillaObservation) -> Self:
-        """Retain the canonical observation, including its scalar discriminator."""
+        """Retain the canonical observation, including its scalar discriminator.
+
+        Parameter types: ``observation`` (:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`).
+        """
         value = observation.value
         return cls(
             casilla_id=observation.casilla_id,
@@ -170,7 +173,10 @@ class ModeloCalculationSnapshot(BaseModel):
         work_unit: WorkUnit,
         operation: PinnedAuthorityOperation,
     ) -> Self:
-        """Project existing visibility and headline owners, then validate correlation."""
+        """Project existing visibility and headline owners, then validate correlation.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+        """
         snapshot = resolve_registry_snapshot_for_work_unit(
             work_unit, grade=RegistryAuthorityGrade.CALCULATION, operation=operation
         )

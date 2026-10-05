@@ -208,7 +208,11 @@ def build_modelo_lifecycle_advisories(
     workflow_profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
 ) -> ModeloLifecycleAdvisories:
-    """Capture canonical advisory facts before the operation releases authority."""
+    """Capture canonical advisory facts before the operation releases authority.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``workflow_profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     _require_advisory_revision_coordinate(work_unit, revision)
     require_calculation_revision_coordinates_current(revision, operation=operation)
 

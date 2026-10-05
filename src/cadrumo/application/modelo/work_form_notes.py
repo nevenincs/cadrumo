@@ -68,7 +68,10 @@ _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAtten
 def collect_note_sources(
     revision: CalculationRevision | None, diagnostics: tuple[CalculationSourceDiagnostic, ...] | None
 ) -> tuple[tuple[str, str | None], ...]:
-    """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones."""
+    """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     if diagnostics is not None:
         return tuple(
             (diagnostic.reason, None if diagnostic.casilla_id is None else str(diagnostic.casilla_id))

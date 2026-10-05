@@ -1,4 +1,7 @@
-"""Load one filing record and its work unit, both owned by the requesting profile."""
+"""Load one filing record and its work unit, both owned by the requesting profile.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 
