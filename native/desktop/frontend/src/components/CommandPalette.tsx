@@ -91,11 +91,14 @@ export function CommandPalette({
   searchDocs,
   openDoc,
   close,
+  fallbackFocus,
 }: {
   actions: readonly Action[];
   searchDocs: DocsSearch;
   openDoc: (url: string) => void;
   close: () => void;
+  /** Where focus goes when what the palette was opened from is gone. */
+  fallbackFocus?: () => void;
 }) {
   const t = useStrings();
   // Closing returns focus to where the palette was opened from, which may be
@@ -187,7 +190,9 @@ export function CommandPalette({
         aria-describedby={undefined}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          if (returnTo instanceof HTMLElement) returnTo.focus();
+          if (returnTo instanceof HTMLElement && returnTo.isConnected)
+            returnTo.focus();
+          else fallbackFocus?.();
           const action = chosen.current;
           chosen.current = null;
           action?.();
@@ -210,7 +215,11 @@ export function CommandPalette({
           >
             {/* The key that closes it is also the control that does. */}
             <DialogClose asChild>
-              <Button variant="ghost" size="xs" className="px-1">
+              <Button
+                variant="ghost"
+                size="xs"
+                className="min-w-control-xs px-1"
+              >
                 <span className="sr-only">{t("desktop.palette.close")}</span>
                 <Kbd>Esc</Kbd>
               </Button>

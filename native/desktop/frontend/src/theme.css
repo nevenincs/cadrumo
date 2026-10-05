@@ -12,6 +12,9 @@
    values written here are the alphas of shadows and scrims. */
 
 @custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
+/* The bottom panel at little more than its floor: what is inside gives up a
+   row to keep its content. */
+@custom-variant panel-short (@container panel (height < 11rem));
 
 @layer base {
   :root,

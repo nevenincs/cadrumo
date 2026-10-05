@@ -376,11 +376,11 @@ test("log records are reached, marked and given their menu by keyboard", async (
   // One tab stop: from the filter, Tab passes the bar's controls and lands
   // on the newest record.
   await rows.last().focus();
-  await expect(rows.last()).toHaveAttribute("data-current", "true");
+  await expect(rows.last()).toHaveAttribute("aria-current", "true");
   await target.keyboard.press("ArrowUp");
   await expect(rows.nth(count - 2)).toBeFocused();
-  await expect(rows.nth(count - 2)).toHaveAttribute("data-current", "true");
-  await expect(rows.last()).not.toHaveAttribute("data-current", "true");
+  await expect(rows.nth(count - 2)).toHaveAttribute("aria-current", "true");
+  await expect(rows.last()).not.toHaveAttribute("aria-current", "true");
   await target.keyboard.press("Home");
   await expect(rows.first()).toBeFocused();
   await target.keyboard.press("End");
@@ -397,7 +397,7 @@ test("log records are reached, marked and given their menu by keyboard", async (
     name: label("desktop.palette.actions"),
   });
   await expect(menu).toBeVisible();
-  await expect(rows.nth(count - 2)).toHaveAttribute("data-current", "true");
+  await expect(rows.nth(count - 2)).toHaveAttribute("aria-current", "true");
   await target.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(rows.nth(count - 2)).toBeFocused();
@@ -433,4 +433,162 @@ test("the menu stand-in follows the arrow keys and closes on Escape", async ({
   await expect(menu.getByRole("menuitem").first()).toBeFocused();
   await target.keyboard.press("Escape");
   await expect(menu).toBeHidden();
+});
+
+test("a view chosen in the palette from inside a terminal takes focus every time", async ({
+  page: target,
+}) => {
+  await open(target);
+  const palette = target.locator(".palette");
+  const choose = async (key: string) => {
+    await target.keyboard.press("Control+Shift+KeyK");
+    await palette.getByRole("combobox").fill(label(key));
+    await expect(palette.getByRole("option").first()).toContainText(label(key));
+    await target.keyboard.press("Enter");
+    await expect(palette).toHaveCount(0);
+  };
+  await target.locator('[data-terminal="console"] .xterm-screen').click();
+  // The view is shown by a state change that commits after the choice; focus
+  // has to wait for it. Repeated, because losing that race is intermittent.
+  for (let round = 0; round < 4; round++) {
+    await choose("desktop.rail.python");
+    await expect(
+      target.locator('[data-terminal="python"] textarea'),
+    ).toBeFocused();
+    await choose("desktop.rail.logs");
+    await expect(target.locator(".logview .filter-text")).toBeFocused();
+    await choose("desktop.rail.console");
+    await expect(
+      target.locator('[data-terminal="console"] textarea'),
+    ).toBeFocused();
+  }
+});
+
+test("chords work while the sign-in state is still being read", async ({
+  page: target,
+}) => {
+  // No dialog is on screen until the read answers, so nothing owns the
+  // keyboard above the shell.
+  await open(target, "loading");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await rail(target).getByRole("button").first().focus();
+  await target.keyboard.press("Control+KeyK");
+  await expect(target.locator(".palette")).toBeVisible();
+  await target.keyboard.press("Control+KeyK");
+  await expect(target.locator(".palette")).toHaveCount(0);
+  await target.keyboard.press("Control+Backquote");
+  await expect(target.locator("section.panel")).toBeHidden();
+});
+
+test("a chord sent from the documentation does not act under the sign-in dialog", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await expect(target.locator("#profile-password")).toBeFocused();
+  const page = target.frameLocator(".docs-frame").locator("body");
+  await expect(page).toContainText("Stand-in documentation");
+  // The documentation's bridge forwards the shell's chords; a page that has
+  // taken focus by itself can send one while the dialog is open.
+  await page.press("Control+Comma");
+  await page.press("Control+Shift+KeyT");
+  await target.waitForTimeout(300);
+  await expect(target.locator(".settings")).toHaveCount(0);
+  await expect(target.locator(".pane-tui")).toBeVisible();
+});
+
+test("a press outside a record's menu keeps what it pressed", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const rows = target.locator(".logview-list .record");
+  const menu = target.getByRole("menu");
+  await rows.nth(1).click({ button: "right" });
+  await expect(menu).toBeVisible();
+  const filter = target.locator(".logview .filter-text");
+  await filter.click();
+  await expect(menu).toBeHidden();
+  await target.keyboard.type("Idle");
+  await expect(filter).toHaveValue("Idle");
+  await filter.fill("");
+  // A right-click on another record closes this menu and opens that one.
+  await rows.nth(1).click({ button: "right" });
+  await expect(menu).toBeVisible();
+  await rows.nth(3).click({ button: "right" });
+  await target.waitForTimeout(400);
+  await expect(menu).toBeVisible();
+  await expect(rows.nth(3)).toHaveAttribute("aria-current", "true");
+});
+
+test("the log is one tab stop however many records have a detail", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000",
+  );
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const list = target.locator(".logview-list");
+  await expect(list.locator(".record").first()).toBeAttached();
+  const stops = await list.evaluate(
+    (element) =>
+      [...element.querySelectorAll<HTMLElement>("*")].filter(
+        (node) => node.tabIndex >= 0,
+      ).length,
+  );
+  expect(stops).toBe(1);
+});
+
+test("bringing in earlier records leaves the view on the record it was on", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
+  );
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const list = target.locator(".logview-list");
+  const rows = list.locator(".record");
+  await expect(rows).toHaveCount(400);
+  // Near the top of the drawn span, which asks for the span before it.
+  const before = await list.evaluate((element) => {
+    element.scrollTop = 40;
+    const edge = element.getBoundingClientRect().top;
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) => candidate.getBoundingClientRect().bottom > edge,
+    );
+    return {
+      seq: row?.dataset.seq ?? "",
+      top: (row?.getBoundingClientRect().top ?? 0) - edge,
+    };
+  });
+  await expect(rows).toHaveCount(800);
+  const after = await list.evaluate((element, seq) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = element.querySelector(`[data-seq="${seq}"]`);
+    return (row?.getBoundingClientRect().top ?? Number.NaN) - edge;
+  }, before.seq);
+  expect(Math.abs(after - before.top)).toBeLessThanOrEqual(2);
+});
+
+test("a chord pressed in the documentation focuses the view it shows", async ({
+  page: target,
+}) => {
+  await open(target);
+  const page = target.frameLocator(".docs-frame").locator("body");
+  await expect(page).toContainText("Stand-in documentation");
+  // The chord crosses the documentation's bridge, so the view it shows is
+  // not on screen yet when the shell hears of it.
+  for (let round = 0; round < 3; round++) {
+    await page.press("Control+Shift+Digit2");
+    await expect(
+      target.locator('[data-terminal="python"] textarea'),
+    ).toBeFocused();
+    await page.press("Control+Shift+Digit3");
+    await expect(target.locator(".logview .filter-text")).toBeFocused();
+  }
 });

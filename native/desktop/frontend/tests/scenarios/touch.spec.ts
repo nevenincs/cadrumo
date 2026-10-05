@@ -178,6 +178,17 @@ test("the palette and settings fit the screen", async ({ page: target }) => {
   expect(palette && palette.x >= 0 && palette.x + palette.width <= 390).toBe(
     true,
   );
+  // Its input and its close control are each a fingertip, once the palette
+  // has finished scaling in.
+  for (const control of ["input", "button"]) {
+    const part = target.locator(`.palette ${control}`).first();
+    await expect
+      .poll(async () => (await part.boundingBox())?.height, control)
+      .toBeGreaterThanOrEqual(FINGER);
+    expect((await part.boundingBox())?.width, control).toBeGreaterThanOrEqual(
+      FINGER,
+    );
+  }
   await target.keyboard.press("Escape");
   await target
     .getByRole("button", { name: label("desktop.rail.settings") })

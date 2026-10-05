@@ -14,7 +14,10 @@ const viewport = { width: 1440, height: 1050 };
 // place the scenario host and the documentation fixture exist.
 export default defineConfig({
   testDir: "./tests",
-  outputDir: buildPath("desktop_results"),
+  // Playwright empties this directory when a run starts, so it is the run's
+  // own: the benchmark, the catalogue screenshots and the packaged run keep
+  // theirs beside it.
+  outputDir: resolve(buildPath("desktop_results"), "browser"),
   reporter: [
     ["list"],
     [

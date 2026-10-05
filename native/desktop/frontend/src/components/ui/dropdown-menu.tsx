@@ -91,7 +91,12 @@ function DropdownMenuShortcut({
   return (
     <span
       data-slot="dropdown-menu-shortcut"
-      className={cn("ml-auto pl-6 text-sm text-faint", className)}
+      // On the highlighted item the surface is tinted, which faint text has
+      // no contrast to spare for.
+      className={cn(
+        "ml-auto pl-6 text-sm text-faint in-data-[highlighted]:text-muted-foreground",
+        className,
+      )}
       {...props}
     />
   );

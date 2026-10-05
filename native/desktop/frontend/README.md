@@ -177,9 +177,11 @@ a value, so a change of palette, density or type reaches everything at once.
 | Components  | `src/components/`           | The shell's own parts, built only from primitives                                           |
 | Composition | `src/App.tsx`, `src/shell/` | State, the action registry and the host port; the only layer that talks to a `Host`         |
 
-The linter holds the layers apart: a primitive imports no component, a
-component imports no composition, only the Tauri adapter imports
-`@tauri-apps/*`, and nothing in the product imports `src/dev/` or a story.
+The linter holds what can be held mechanically: a primitive imports no
+component and nothing of the shell or the host contract, only the Tauri adapter
+imports `@tauri-apps/*`, and nothing in the product imports `src/dev/` or a
+story. A component may read the shell's strings, metrics and types from
+`src/shell/`; it never imports `src/App.tsx`.
 
 Conventions a new component follows:
 
@@ -197,7 +199,9 @@ Conventions a new component follows:
   well as a surface, so no state rests on a tint alone.
 - **Icons** come from the one registry in `src/components/ui/icon.tsx`, by
   name. An icon-only control is an `IconButton`, which always has a name and a
-  tooltip.
+  tooltip. The one exception is a control repeated in every row of a list,
+  such as a log record's detail toggle: a named `Button`, since a tooltip for
+  each row would cost more than it tells.
 - **Focus** is the single outline declared in `src/theme.css`; a component
   may move it inward, never restyle it.
 - **Text** is a chrome string. Add it in English, Spanish, Catalan and

@@ -19,6 +19,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
+import type { MenuAnchor } from "./ContextMenu";
 import { useStrings } from "../shell/strings";
 
 export const LEVELS: readonly LogLevel[] = [
@@ -45,7 +46,7 @@ export const DEFAULT_FILTERS: RecordFilters = {
 
 /** Where a record's menu opens, and whether a pointer asked for it. */
 export type RecordMenuRequest = {
-  at: { x: number; y: number };
+  at: MenuAnchor;
   pointer: boolean;
   record: LogRecord;
   /** Every record the filters let through, not only the ones drawn. */
@@ -105,11 +106,10 @@ const Row = memo(function Row({
         `record level-${level} source-${record.source}`,
         // The current row carries an ink bar as well as the hover wash: its
         // faint text has no contrast to spare for a stronger surface.
-        "border-l-2 hover:bg-accent focus-visible:-outline-offset-2 data-[current]:border-ring data-[current]:bg-accent",
+        "border-l-2 hover:bg-accent focus-visible:-outline-offset-2 aria-[current=true]:border-ring aria-[current=true]:bg-accent",
         failed ? "border-destructive" : "border-transparent",
       )}
       data-seq={record.seq}
-      data-current={current || undefined}
       aria-current={current || undefined}
       tabIndex={tabStop ? 0 : -1}
       onFocus={() => onCurrent(record.seq)}
@@ -149,6 +149,8 @@ const Row = memo(function Row({
               variant="ghost"
               size="icon-xs"
               className="-my-1 ml-1 align-middle"
+              // Reached from its row, by Enter: the log stays one tab stop.
+              tabIndex={-1}
               aria-expanded={open}
               aria-label={detailsLabel}
               onClick={() => onToggle(record.seq)}
@@ -202,9 +204,12 @@ export const RecordList = memo(function RecordList({
   const [follow, setFollow] = useState(true);
   const [extent, setExtent] = useState(WINDOW);
   const [current, setCurrent] = useState<number | null>(null);
-  // How far the view was from the end when an earlier span was asked for, so
-  // it can be put back there once the span is in the document.
-  const fromEnd = useRef<number | null>(null);
+  // The record at the top of the view when an earlier span was asked for,
+  // and where it sat, so the view is put back on it once the span is in the
+  // document. New records may arrive in the same commit; it is still there.
+  const held = useRef<{ seq: string; top: number } | null>(null);
+  // The record the keyboard is on, to notice when it leaves the drawn span.
+  const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
 
   // Other filters are another view: it starts from the newest span again.
@@ -242,10 +247,31 @@ export const RecordList = memo(function RecordList({
 
   useLayoutEffect(() => {
     const el = list.current;
-    if (!el || fromEnd.current === null) return;
-    el.scrollTop = el.scrollHeight - fromEnd.current;
-    fromEnd.current = null;
+    const keep = held.current;
+    held.current = null;
+    if (!el || !keep) return;
+    const row = el.querySelector(`:scope > [data-seq="${keep.seq}"]`);
+    if (row)
+      el.scrollTop +=
+        row.getBoundingClientRect().top -
+        el.getBoundingClientRect().top -
+        keep.top;
   }, [extent]);
+
+  // The focused record can leave the drawn span as newer ones arrive. Focus
+  // then goes to the oldest record still drawn, without moving the view,
+  // rather than out of the log.
+  useLayoutEffect(() => {
+    const el = list.current;
+    const seq = focused.current;
+    if (!el || seq === null) return;
+    if (el.querySelector(`:scope > [data-seq="${seq}"]`)) return;
+    focused.current = null;
+    if (document.activeElement === document.body)
+      el.querySelector<HTMLElement>(":scope > .record")?.focus({
+        preventScroll: true,
+      });
+  }, [drawn]);
 
   useEffect(() => {
     if (shown && follow && list.current)
@@ -309,7 +335,7 @@ export const RecordList = memo(function RecordList({
         live.current.onMenu({
           at: pointer
             ? { x: event.clientX, y: event.clientY }
-            : { x: row.left + row.height, y: row.bottom },
+            : { x: row.left + row.height, y: row.top, height: row.height },
           pointer,
           record,
           visible: live.current.visible,
@@ -359,10 +385,7 @@ export const RecordList = memo(function RecordList({
 
   return (
     <div
-      // Where the panel is too short for the bar and a few records, as at a
-      // large text size in a small window, the whole view scrolls instead
-      // of the records being squeezed out.
-      className="logview @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background"
+      className="logview @container flex min-h-0 flex-1 flex-col bg-background"
       hidden={!shown}
       role="tabpanel"
       id="panel-logs"
@@ -370,11 +393,13 @@ export const RecordList = memo(function RecordList({
     >
       {/* One row where there is room. In a narrow panel: the filter, the
           level and Follow on a first row, and everything else on a second
-          that scrolls sideways, so the bar is never taller than two rows. */}
-      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center">
-        <div className="flex min-w-0 items-center gap-1.5 @4xl:contents">
+          that scrolls sideways, so the bar is never taller than two rows.
+          In a panel near its floor it is one row again, all of it scrolling
+          sideways, so the records keep their room. */}
+      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:overflow-x-auto panel-short:[scrollbar-width:none]">
+        <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents">
           <Input
-            className="filter-text min-w-24 flex-1 @4xl:w-field @4xl:flex-none"
+            className="filter-text min-w-24 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
             controlSize="sm"
             type="search"
             placeholder={t("desktop.logs.filter")}
@@ -385,7 +410,7 @@ export const RecordList = memo(function RecordList({
             }
           />
           <NativeSelect
-            className="min-w-0 shrink"
+            className="min-w-0 shrink panel-short:shrink-0"
             controlSize="sm"
             aria-label={t("desktop.logs.minimum_level")}
             value={filters.minLevel}
@@ -413,7 +438,7 @@ export const RecordList = memo(function RecordList({
             {t("desktop.logs.follow")}
           </Button>
         </div>
-        <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] @4xl:contents">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] @4xl:contents panel-short:contents">
           <div
             className="flex shrink-0 gap-1"
             role="group"
@@ -506,11 +531,21 @@ export const RecordList = memo(function RecordList({
         </Alert>
       )}
       <div
-        className="logview-list min-h-10 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text"
+        className="logview-list min-h-0 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text"
         ref={list}
         role="log"
         aria-live="off"
         onKeyDown={key}
+        onFocus={(event) => {
+          focused.current =
+            (event.target as HTMLElement).closest<HTMLElement>(".record")
+              ?.dataset.seq ?? null;
+        }}
+        onBlur={(event) => {
+          // Focus went somewhere on purpose; a record that is removed gives
+          // no such destination.
+          if (event.relatedTarget) focused.current = null;
+        }}
         onScroll={() => {
           const el = list.current;
           if (!el) return;
@@ -524,7 +559,18 @@ export const RecordList = memo(function RecordList({
             el.scrollTop < el.clientHeight &&
             extent < visible.length
           ) {
-            fromEnd.current = el.scrollHeight - el.scrollTop;
+            const edge = el.getBoundingClientRect().top;
+            for (const row of el.querySelectorAll<HTMLElement>(
+              ":scope > .record",
+            )) {
+              const box = row.getBoundingClientRect();
+              if (box.bottom <= edge) continue;
+              held.current = {
+                seq: row.dataset.seq ?? "",
+                top: box.top - edge,
+              };
+              break;
+            }
             setExtent(extent + WINDOW);
           }
         }}

@@ -372,13 +372,45 @@ test("a small window at twice the text size keeps every area inside it", async (
       main: box(".main-area")?.height ?? 0,
       panelBottom: box("section.panel")?.bottom ?? 0,
       list: box(".logview-list")?.height ?? 0,
+      newest: box(".logview-list .record:last-child")?.bottom ?? 0,
       window: window.innerHeight,
       scrolled: document.documentElement.scrollTop,
     };
   });
-  // Neither floor fits, so the two share the height: both stay on screen.
+  // Neither floor fits, so the two share the height: both stay on screen,
+  // and so does the newest record, which the log is following.
   expect(boxes.panelBottom).toBeLessThanOrEqual(boxes.window);
   expect(boxes.main).toBeGreaterThan(boxes.window / 3);
   expect(boxes.list).toBeGreaterThanOrEqual(40);
+  expect(boxes.newest).toBeLessThanOrEqual(boxes.window);
   expect(boxes.scrolled).toBe(0);
+});
+
+test("the smallest window keeps the newest record in view", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 520, height: 400 });
+  await open(target, "signed-in");
+  await openLogs(target);
+  await expect(target.locator(".logview-list .record").last()).toBeVisible();
+  const boxes = await target.evaluate(() => {
+    const box = (selector: string) =>
+      document.querySelector(selector)?.getBoundingClientRect();
+    return {
+      list: box(".logview-list"),
+      newest: box(".logview-list .record:last-child")?.bottom ?? 0,
+      view: document.querySelector(".logview"),
+      window: window.innerHeight,
+    };
+  });
+  // In a panel at its floor the log's bar is one row, so the records keep
+  // room; the list is the only thing in the view that scrolls.
+  expect(boxes.list?.height ?? 0).toBeGreaterThanOrEqual(40);
+  expect(boxes.list?.bottom ?? 0).toBeLessThanOrEqual(boxes.window);
+  expect(boxes.newest).toBeLessThanOrEqual(boxes.window);
+  expect(
+    await target
+      .locator(".logview")
+      .evaluate((view) => view.scrollHeight - view.clientHeight),
+  ).toBeLessThanOrEqual(1);
 });

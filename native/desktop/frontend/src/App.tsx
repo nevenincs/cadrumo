@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toast } from "@/components/ui/toast";
 import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
-import { ContextMenu } from "./components/ContextMenu";
+import { ContextMenu, type MenuAnchor } from "./components/ContextMenu";
 import { Icon, type IconName } from "@/components/ui/icon";
 import {
   DocsFrame,
@@ -81,6 +81,8 @@ const TOAST_MS = 2400;
 // A dragged splitter changes the layout on every pointer move; it is written
 // to storage once the changes have paused.
 const SAVE_DELAY_MS = 250;
+// How long a wish to focus a view waits for that view to be shown.
+const FOCUS_WISH_MS = 1000;
 const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
@@ -97,7 +99,7 @@ type Environment =
 
 type MenuEntry =
   (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
-type OpenMenu = { items: MenuEntry[]; at: { x: number; y: number } };
+type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
 
 const isSeparator = (item: MenuEntry): item is { separator: true } =>
   "separator" in item;
@@ -359,9 +361,46 @@ export function App({ host }: { host: Host }) {
     [host, say, t],
   );
 
-  const focusTerminal = useCallback((kind: TerminalKind) => {
-    requestAnimationFrame(() => terminals.current[kind]?.focus());
+  // Focus asked for a view that may not be on screen yet: showing it is a
+  // state change, and that commits later than the request does. The wish is
+  // kept and granted after the commit that shows the view, or dropped when
+  // none does in time.
+  const wanted = useRef<{
+    view: TerminalKind | "logs";
+    until: number;
+  } | null>(null);
+  const grantFocus = useCallback(() => {
+    const wish = wanted.current;
+    if (!wish) return;
+    if (performance.now() > wish.until) {
+      wanted.current = null;
+      return;
+    }
+    const target = document.querySelector<HTMLElement>(
+      wish.view === "logs"
+        ? ".logview .filter-text"
+        : `[data-terminal="${wish.view}"]`,
+    );
+    // Laid out means shown: a hidden pane's content has no offset parent.
+    if (!target || target.offsetParent === null) return;
+    if (wish.view === "logs") target.focus();
+    else if (terminals.current[wish.view])
+      terminals.current[wish.view]?.focus();
+    else return;
+    wanted.current = null;
   }, []);
+  useEffect(grantFocus);
+  const focusView = useCallback(
+    (view: TerminalKind | "logs") => {
+      wanted.current = { view, until: performance.now() + FOCUS_WISH_MS };
+      grantFocus();
+    },
+    [grantFocus],
+  );
+  const focusRail = useCallback(
+    () => document.querySelector<HTMLElement>(".rail [role=toolbar]")?.focus(),
+    [],
+  );
 
   const openTab = useCallback(
     (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
@@ -372,13 +411,9 @@ export function App({ host }: { host: Host }) {
       }
       if (maximized && maximized !== "panel") setMaximized(null);
       patch({ panelOpen: true, tab });
-      if (tab === "logs")
-        requestAnimationFrame(() =>
-          document.querySelector<HTMLElement>(".logview .filter-text")?.focus(),
-        );
-      else focusTerminal(tab);
+      focusView(tab);
     },
-    [layout.panelOpen, layout.tab, maximized, patch, focusTerminal],
+    [layout.panelOpen, layout.tab, maximized, patch, focusView],
   );
 
   const toggleMaximize = useCallback(
@@ -390,9 +425,9 @@ export function App({ host }: { host: Host }) {
       if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
       setMaximized(area);
-      if (area === "tui") focusTerminal("tui");
+      if (area === "tui") focusView("tui");
     },
-    [maximized, layout.tuiShown, layout.panelOpen, patch, focusTerminal],
+    [maximized, layout.tuiShown, layout.panelOpen, patch, focusView],
   );
 
   // The keyboard's way between the areas of the window, in the order they
@@ -414,7 +449,11 @@ export function App({ host }: { host: Host }) {
         ],
         [
           "tui",
-          tuiOn,
+          // Only where the pane holds something to focus: the way in while
+          // signed out, or a session.
+          tuiOn &&
+            (signInButton.current !== null ||
+              (!gated && status.tui.phase !== "unavailable")),
           () =>
             signInButton.current
               ? signInButton.current.focus()
@@ -423,21 +462,18 @@ export function App({ host }: { host: Host }) {
         [
           "panel",
           panelOn,
-          () =>
-            layout.tab === "logs"
-              ? document
-                  .querySelector<HTMLElement>(".logview .filter-text")
-                  ?.focus()
-              : terminals.current[layout.tab]?.focus(),
+          () => {
+            if (layout.tab === "logs")
+              document
+                .querySelector<HTMLElement>(".logview .filter-text")
+                ?.focus();
+            // Without a session there is no terminal to focus; its tab is.
+            else if (status[layout.tab].phase === "unavailable")
+              document.getElementById(`tab-${layout.tab}`)?.focus();
+            else terminals.current[layout.tab]?.focus();
+          },
         ],
-        [
-          "rail",
-          true,
-          () =>
-            document
-              .querySelector<HTMLElement>(".rail [role=toolbar]")
-              ?.focus(),
-        ],
+        ["rail", true, focusRail],
       ];
       const shown = stops.filter(([, on]) => on);
       const at = shown.findIndex(([area]) => area === focusedArea());
@@ -449,7 +485,15 @@ export function App({ host }: { host: Host }) {
           : (at + step + shown.length) % shown.length;
       shown[to]?.[2]();
     },
-    [layout.tuiShown, layout.panelOpen, layout.tab, maximized],
+    [
+      layout.tuiShown,
+      layout.panelOpen,
+      layout.tab,
+      maximized,
+      gated,
+      status,
+      focusRail,
+    ],
   );
 
   const paste = useCallback(
@@ -588,7 +632,7 @@ export function App({ host }: { host: Host }) {
           const shown = maximized ? true : !layout.tuiShown;
           if (maximized) setMaximized(null);
           patch({ tuiShown: shown });
-          if (shown) focusTerminal("tui");
+          if (shown) focusView("tui");
         },
       },
       {
@@ -812,7 +856,7 @@ export function App({ host }: { host: Host }) {
       cycleFocus,
       goHome,
       patch,
-      focusTerminal,
+      focusView,
       toggleMaximize,
       openTab,
       copy,
@@ -845,12 +889,26 @@ export function App({ host }: { host: Host }) {
 
   // What holds the keyboard above the shell. A modal surface owns it: no
   // chord reaches the shell from under one, except the palette's own, which
-  // closes the palette.
+  // closes the palette. The sign-in dialog is only on screen once the status
+  // read has answered. Chords pressed in the documentation arrive by its
+  // bridge and pass the same guard.
   const modal = useRef({ palette: false, other: false });
   modal.current = {
     palette: paletteOpen,
-    other: menu !== null || (gated && !signInDismissed),
+    other:
+      menu !== null || (gated && !signInDismissed && account.status !== null),
   };
+  const chordAllowed = useCallback(
+    (id: string) =>
+      !modal.current.other && (!modal.current.palette || id === "palette.open"),
+    [],
+  );
+  const runShortcut = useCallback(
+    (id: string) => {
+      if (chordAllowed(id)) runAction(id);
+    },
+    [chordAllowed, runAction],
+  );
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -861,19 +919,18 @@ export function App({ host }: { host: Host }) {
         : "chrome";
       const action = findAction(actionsRef.current, event, focus);
       if (!action) return;
-      if (modal.current.other) return;
-      if (modal.current.palette && action.id !== "palette.open") return;
+      if (!chordAllowed(action.id)) return;
       event.preventDefault();
       event.stopPropagation();
       action.run();
     };
     window.addEventListener("keydown", key, true);
     return () => window.removeEventListener("keydown", key, true);
-  }, []);
+  }, [chordAllowed]);
 
   // Menus: drawn by the operating system when the host can, otherwise here.
   const openMenu = useCallback(
-    (items: MenuEntry[], at: { x: number; y: number }, pointer: boolean) => {
+    (items: MenuEntry[], at: MenuAnchor, pointer: boolean) => {
       const run = (id: string | null) => {
         const chosen = items.find(
           (item) => !isSeparator(item) && item.id === id,
@@ -891,7 +948,10 @@ export function App({ host }: { host: Host }) {
                 enabled: item.enabled,
               },
         );
-        host.showMenu(plain, pointer ? undefined : at).then(run, (error) => {
+        // The host places a menu at a point: under the anchor, where it
+        // has a height.
+        const point = { x: at.x, y: at.y + (at.height ?? 0) };
+        host.showMenu(plain, pointer ? undefined : point).then(run, (error) => {
           // Where the host cannot draw a blocking native menu, the shell
           // draws this one and every later menu itself.
           if (isHostFailure(error) && error.code === "unsupported_platform") {
@@ -1276,7 +1336,7 @@ export function App({ host }: { host: Host }) {
             setDocsSearchReady(features.includes("search"));
           }}
           onTheme={setDocsTheme}
-          onShortcut={runAction}
+          onShortcut={runShortcut}
           onOpenExternal={(url) =>
             void host.openExternal(url).catch(() => undefined)
           }
@@ -1369,7 +1429,9 @@ export function App({ host }: { host: Host }) {
             </main>
             <section
               className={cn(
-                "panel @container/panel flex min-h-0 flex-col bg-chrome",
+                // A container in both dimensions: its content answers to its width
+                // and, in the log's bar, to its height.
+                "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
                 maximized === "panel" ? "flex-auto" : "flex-none",
               )}
               hidden={!panelVisible}
@@ -1533,10 +1595,14 @@ export function App({ host }: { host: Host }) {
               searchDocs={searchDocs}
               openDoc={openDoc}
               close={() => setPaletteOpen(false)}
+              fallbackFocus={focusRail}
             />
           )}
           {menu && (
             <ContextMenu
+              // Each menu is its own: it remembers where its own focus came
+              // from.
+              key={`${menu.at.x}:${menu.at.y}`}
               label={t("desktop.palette.actions")}
               items={menu.items.map((item) =>
                 isSeparator(item)
@@ -1568,7 +1634,7 @@ export function App({ host }: { host: Host }) {
             // TUI that has just started.
             onClosed={() => {
               if (signInButton.current) signInButton.current.focus();
-              else requestAnimationFrame(() => terminals.current.tui?.focus());
+              else focusView("tui");
             }}
           />
         </div>
