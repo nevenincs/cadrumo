@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bffad1c5384754f9afcb19cb112fbfd5541326f1baeac959b30381c81be1b0f8'
+body_hash: 'sha256:e1fddf00e085257190b0f764b1b7b90bfbd3fc12cfcc9b9629bcec24eee5c05d'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -358,6 +358,11 @@ related:
 - `S05` `verify:` `desktop-host-clippy` -> `pass`
 - `S05` `verify:` `desktop-host-test 111 passed, 2 known package-input failures (no docs/user, no aeat in the scratch package)` -> `pass`
 - `S05` `by:` `orchestrator`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `every new claim traced to committed native/desktop, native/platform, dev/packaging/native and src/cadrumo/core source` -> `pass`
+- `S11` `verify:` `git apply --cached --check of the S11-only patch against a temporary HEAD index` -> `pass`
+- `S11` `verify:` `npx prettier --check on the desktop tree` -> `pass`
+- `S11` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -410,3 +415,6 @@ related:
 - `S19` Linux session key is `XDG_SESSION_ID` or 'unnamed' when unset: two sessions that both lack it behave as one session
 - `S19` native/CONTRACT.md working copy is CRLF throughout (another writer); the section was inserted with CRLF and only the new section was added
 - `S19` Desktop checks used a contract regenerated from the worktree (build/s15-desktop-host/contract) because HEAD 9ed6b9fae7 docs tests need the media type table; platform checks used HEAD lib.rs with the s07-cmake contract.rs
+- `S11` Webview profile and window-state.json still live under the development tool cache (desktop-webview); the declared webview member `(CADRUMO_WEBVIEW_DIR)` is not consumed yet; the contract records the current location
+- `S11` Mutable-root rows state the declared per-OS, per-channel default; the committed native host still resolves the root from its working directory until the uncommitted native platform resolver lands
+- `S11` Minimum WebView2 runtime recorded as required interfaces only; no runtime version measured; no automated packaged window test exists

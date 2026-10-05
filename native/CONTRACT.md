@@ -64,9 +64,14 @@ selected artifact and does not establish a successful fresh `bundle` build.
 
 ## Platform mappings
 
-`P` means installed package root; `U` means the effective storage root selected
-by the existing Settings contract. OS-specific delivered-user defaults remain a
-storage-owner integration obligation; this interpreter does not invent them.
+`P` means installed package root; `U` means the effective storage root that the
+storage owner declares in `src/cadrumo/core/storage_environment.py`. An absolute
+`CADRUMO_LOCAL_STORAGE_ROOT` wins in every mode. Without it, a source checkout
+uses `var/storage` beneath the checkout and an installed package uses the
+per-user, per-channel default in the mutable-root row. The storage owner decides
+the mode by where the package tree lives, never by the working directory.
+`<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
+other, such as `cadrumo-preview`; the channel comes from the identity projection.
 
 | Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
@@ -74,7 +79,7 @@ storage-owner integration obligation; this interpreter does not invent them.
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
 | Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
-| Mutable root | Canonical Settings override or repository-local default; supplied explicitly for delivered-artifact tests | Same logical Settings owner; delivery default pending | Same logical Settings owner; delivery default deferred |
+| Mutable root | `%LOCALAPPDATA%\<name>`; checkout `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
 | Secure state | Existing Settings/taxonomy beneath the selected root | Same logical owner | Same logical owner |
 | Loader | Static bootstrap CRT; explicit absolute DLL load with restricted search, then registered bundle directories | Relative ELF RUNPATH for every transitive dependency; audit LD_* and libc floor | Relative install names and rpaths; signing and hardened-runtime validation |
 
@@ -143,14 +148,22 @@ it is not an implicit import root. This is environment isolation, not a sandbox.
 
 The native bootstrap projects canonical storage environment names and defaults.
 Python continues to own bucket routing, encryption, authorization and member
-defaults. Repository-local defaults and explicitly supplied storage overrides are
-preserved; no LocalAppData policy is introduced. Existing local storage is outside this foundation's scope. The
-host neither inspects nor migrates it; rollout transition policy remains deferred.
+defaults. A checkout keeps its repository-local default and an installed package
+uses the per-user, per-channel default of the platform mappings. A relative
+`CADRUMO_LOCAL_STORAGE_ROOT` anchors at the checkout in development and is
+refused when installed. Python resolves only the stable channel's default; a
+native package pins the root for its own channel before Python starts. No
+storage is migrated: a tree that an earlier installed build created beneath a
+launch directory is neither read nor moved, and an operator who wants it sets
+`CADRUMO_LOCAL_STORAGE_ROOT` to it.
 
 Package-only anchors are declared once. Existing taxonomy members remain owned
 by Python and are projected at build time. The native host clears inherited Python
-configuration and reserved Settings except the storage override allowlist generated
-by `Settings.storage_env_var_names()`. Package-owned `CADRUMO_EXTERNAL_BIN_DIRS`
+configuration and reserved Settings except the product allowlist that
+`Settings.storage_env_var_names()` returns: the primary root variable
+`CADRUMO_LOCAL_STORAGE_ROOT` and the settings field of each operator-overridable
+taxonomy member. The development root variable `CADRUMO_STORAGE_ROOT` and the
+development tool locations are not in it. Package-owned `CADRUMO_EXTERNAL_BIN_DIRS`
 accepts existing absolute directories for external executables. These directories
 affect child-process PATH, not DLL search. No development environment template is
 copied into the package.
@@ -331,7 +344,8 @@ both the CPython SDK extensions and every retained third-party extension identit
 
 `native/package-layout.json` declares the bundled user documentation under
 `user_docs`: its directory beneath `paths.docs`, the manifest name, the entry and
-search files of each language, and the language set. Each language must be one of
+search files of each language, the language set and the `media_types` table of
+files the documentation scheme serves. Each language must be one of
 the product's output languages, and English must be declared. `native/cmake/Docs.cmake`
 defines the `user_docs` target for the source build and the standalone desktop
 project; `bundle` and `desktop-host-build` depend on it.
@@ -352,12 +366,21 @@ its build, so staging can never accept an older root after a failed build.
 `dev/packaging/native/docs_stage.py` stages the published site layout: English at
 `P/docs/user/` and every other language at `P/docs/user/<lang>/`, where the owner's
 language switcher links. Sphinx build state (`.doctrees`, `.buildinfo`, `_sources`)
-and site-language directories nested in a source root are not copied. Staging refuses
-a language without its entry page or Pagefind module, a linked source entry, a
-non-portable path, a `script`, `link`, `img`, `source`, `iframe`, `embed`, `object`,
-`audio`, `video` or `track` resource that names an `http:`, `https:` or
-protocol-relative URL, an inline event-handler attribute and a `javascript:` URL.
-Each refusal names the reference, its page count and the first page.
+and site-language directories nested in a source root are not copied. Only files
+whose name `user_docs.media_types` types are copied, because the documentation
+scheme answers every other file with 404; staging prints what it left out.
+Staging refuses a language without its entry page or Pagefind module, an entry or
+search file the table does not type, a linked source entry and a non-portable
+path. In pages and stylesheets it refuses a loaded resource that names an
+`http:`, `https:` or protocol-relative URL, a reference inside the package to a
+file type the scheme does not serve, an inline event-handler attribute and a
+`javascript:` URL. Loaded resources are the `src`, `href`, `srcset`,
+`imagesrcset`, `data`, `poster`, `action` and `formaction` URLs of resource and
+form elements, a refresh `meta`, and `url()`, `src()`, `image-set()` and
+`@import` in stylesheets and `style` content. A followed `a` or `area` link may
+leave the package, because the desktop opens `https:` and `mailto:` links
+externally and refuses other schemes. Each refusal names the reference, its
+location count and the first page and line.
 
 `P/docs/user/manifest.json` is the documentation handler's input:
 
@@ -371,9 +394,11 @@ Each refusal names the reference, its page count and the first page.
 | `script_hashes` | CSP `sha256-<base64>` values of every executing inline `<script>`, hashed after HTML newline normalization; inert types such as `application/json` are omitted |
 | `files` | Every servable file relative to `P/docs/user/`, with its SHA-256; the manifest does not list itself |
 
-The handler is to serve only `files` members, check their digests and derive the
-documentation origin's CSP from `script_hashes`. It is not implemented yet. The
-desktop shell CSP in `src-tauri/tauri.conf.json.in` does not govern the documentation.
+The desktop host serves only `files` members and derives the documentation
+origin's CSP from `script_hashes`; [Desktop shell](#desktop-shell) describes the
+handler. It reads the manifest once at startup and does not rehash a file per
+request; the package checks below own the digests. The shell CSP does not govern
+the documentation.
 
 The package manifest does not list each documentation file. It lists
 `docs/user/manifest.json` with its hash and declares
@@ -394,6 +419,367 @@ Full checks accept the missing tree only because of that statement and refuse a
 statement that disagrees with the inventory or is absent. Payload validation refuses
 a desktop executable from a package without bundled documentation. The desktop
 project always depends on `user_docs`.
+
+## Desktop shell
+
+`cadrumo.exe` is a Tauri host in `native/desktop/src-tauri/` with a React shell in
+`native/desktop/frontend/`. Without arguments on an interactive desktop it opens
+one window. With arguments, after `--headless`, or without an interactive desktop
+it runs the installed CLI as a passthrough in the caller's directory. `--gui`
+forces the window: it exits with 69 and `desktop_unavailable` when no interactive
+desktop exists, and with 64 when other arguments follow it. On Windows an
+interactive desktop means a visible window station with an input desktop the
+process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`. macOS
+refuses the window with `unsupported_platform`. One window runs per user and
+channel; the [Desktop single instance](#desktop-single-instance) section records
+that contract.
+
+### Launch projection and storage root
+
+The host takes its package root from `CADRUMO_DESKTOP_PACKAGE_ROOT` when that is
+set and otherwise from its own directory. It checks the package manifest's
+platform and ABI against the generated contract and the interpreter against its
+manifest digest. It then runs the fixed query `src-tauri/src/python/environment.py`
+as `python.exe -I -c` with the caller's environment and working directory, a 30 s
+deadline, 1 MiB of standard output and 64 KiB of standard error. The output is
+parsed and never retained, because the environment can hold credentials.
+
+The query reports the child environment, the storage root, the log directory,
+log file, line format and rotation limits, the output language and the user's
+home directory. The child environment carries `CADRUMO_LOCAL_STORAGE_ROOT` set to
+the absolute root that `configured_storage_root()` resolved, and the query refuses
+with `storage_root_disagreement` when Settings resolves a different root. The host
+refuses a projection with a relative path, a log file outside the log directory,
+an empty line format, an output language that is not lowercase ASCII, a pin under
+a name outside the product allowlist, or an environment that does not carry
+exactly that root under that name. The
+host, every terminal kind and the CLI passthrough therefore share one root
+whatever their working directory. The host adds no storage, log or Settings
+variable of its own.
+
+The webview profile directory is `desktop-webview` beneath the cache directory
+the query reports, which is the development tool cache location
+(`U/development/cache/tools` by default). The
+storage taxonomy declares a `webview` member (`U/webview`, override
+`CADRUMO_WEBVIEW_DIR`) for this profile, and the host does not read it yet. The
+window state, `window-state.json`, lives in the same directory: the host restores
+each window's size, position and maximized state when the window is ready,
+shrunk and moved to lie within a current display, and on close writes the
+record to a temporary file, flushes it and renames it over the previous record.
+A missing or unreadable record means the configured defaults. No webview command
+reads or writes it.
+
+### Origins and the documentation scheme
+
+Origins are computed at startup from the window's `useHttpsScheme` setting, never
+stored:
+
+| Origin | Windows | Linux |
+| --- | --- | --- |
+| Shell | `http://tauri.localhost`, or `https://` with `useHttpsScheme` | `tauri://localhost` |
+| Documentation | `http://cadrumo-docs.localhost`, or `https://` likewise | `cadrumo-docs://localhost` |
+
+A Tauri development build also admits the `devUrl` origin as a shell origin.
+`native/desktop/scripts/configuration.mjs` writes the documentation origin of the
+target platform into the shell policy at build time, and the host recomputes both
+origins at startup. The host refuses to start unless the shell
+policy's `frame-src` is exactly the documentation origin.
+
+`src-tauri/src/docs/` serves the read-only `cadrumo-docs` scheme from
+`P/docs/user/`. It reads `manifest.json` once at startup and never walks or
+rehashes the tree; the package checks above own the digests. Each request is
+answered as follows:
+
+- Methods other than GET and HEAD receive 405 with `Allow: GET, HEAD`.
+- A host other than the scheme's own `localhost` receives 404. Wry hands every
+  `http(s)://cadrumo-docs.*` host to the handler, so the handler checks it.
+- A path with a backslash, a colon, an empty or dot segment, a control
+  character, a Windows reserved name or character, or a percent escape of `/`,
+  `\`, `.`, `%` or a control receives 400. A path ending in `/` names its
+  `index.html`.
+- A path absent from the manifest's `files`, a file name the media-type table
+  does not type, a link or reparse point, and a file resolving outside the
+  canonical root receive 404.
+- A served file carries its media type, `Content-Length`, the documentation
+  policy, `X-Content-Type-Options: nosniff` and `Cache-Control: no-cache`.
+  Refusals carry the same policy and `nosniff` with an empty body.
+
+A response sent before the policy is fixed carries
+`default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`.
+In a Tauri development build `CADRUMO_DESKTOP_DOCS_ROOT` may name a staged tree
+that carries its own `manifest.json`; other builds ignore it and serve only a
+tree inside the package.
+
+The media types come from `user_docs.media_types` in `native/package-layout.json`,
+which the generated contract carries. `names` matches a whole file name first;
+`extensions` then matches the text after the name's last dot. Both comparisons
+are exact and case-sensitive, and a name neither section types is not served.
+Staging reads the same table, so no file ships that the scheme would refuse.
+
+| Key | Media type |
+| --- | --- |
+| `pagefind-entry.json` | `application/json` |
+| `html` | `text/html; charset=utf-8` |
+| `css` | `text/css; charset=utf-8` |
+| `js`, `mjs` | `text/javascript; charset=utf-8` |
+| `json` | `application/json` |
+| `woff2` | `font/woff2` |
+| `svg` | `image/svg+xml` |
+| `png` | `image/png` |
+| `wasm` | `application/wasm` |
+| `pf_meta`, `pf_index`, `pf_fragment`, `pf_filter`, `pagefind` | `application/octet-stream` |
+
+### Content security policies
+
+The shell document's policy comes from `src-tauri/tauri.conf.json.in`, whose
+template frames nothing; the build replaces `frame-src 'none'` with the
+documentation origin:
+
+```text
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src <documentation origin>; base-uri 'self'; form-action 'none'
+```
+
+Every documentation response carries this policy, built from the manifest's
+`script_hashes` and every shell origin:
+
+```text
+default-src 'self'; script-src 'self' 'wasm-unsafe-eval' <script hashes>; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors <shell origins>
+```
+
+Pagefind instantiates WebAssembly from bytes and runs a same-origin classic
+worker, so `'wasm-unsafe-eval'` and `worker-src 'self'` appear on the
+documentation origin only. `connect-src 'self'` keeps documentation scripts away
+from the IPC fetch transport, and `frame-ancestors` lets only the shell frame the
+documentation.
+
+### Launch token and command dispatch
+
+Tauri treats every registered custom scheme as a local origin, and on Windows the
+webview runs initialization scripts in every frame, so capabilities cannot keep
+the documentation frame from IPC. The refusal is the host's own:
+
+- **Token.** The host mints 32 bytes from the operating system's random source
+  per launch and keeps their hexadecimal form in memory only. The type has no
+  debug, display or serialized form, so it cannot reach logs or responses.
+- **Top-frame gate.** The initialization script `src-tauri/src/shell/token.js`
+  returns at once unless `window.top === window` and `location.origin` is a shell
+  origin. Otherwise it defines a non-writable, non-configurable
+  `window.__CADRUMO_SHELL__` whose `token` getter returns the token once and
+  deletes itself.
+- **Dispatcher.** `src-tauri/src/app.rs` routes every app command through one
+  token check, so no command is registered without it. A JSON-object call
+  presents the `token` argument. Any other body presents the `x-cadrumo-token`
+  header: a raw body, or the JSON byte array that Tauri's postMessage fallback
+  makes of one. The comparison takes constant time for a token of the right
+  length. A mismatch is refused with `invalid_arguments` for the `webview`
+  operation and recorded in host diagnostics. Command names must be unique
+  across modules or the host refuses to start.
+- **No plugin commands.** The configuration grants no capability. The clipboard
+  plugin is registered for its Rust API only, and the opener is a Rust crate, so
+  the webview reaches neither except through token-checked app commands.
+
+### Channel interceptor
+
+`src-tauri/src/shell/channel.rs` delivers every channel frame, terminal frames
+and log batches alike, by evaluating
+`window.__TAURI_INTERNALS__.runCallback(<callback>, {message, index})` in the
+shell document. It consumes every frame. Tauri would otherwise keep larger frames
+in a per-webview queue that any frame of the webview could drain with the channel
+fetch command, which the access control exempts and which uses sequential ids. A
+frame that cannot be evaluated is recorded as a failure and dropped, never
+queued.
+
+These barriers do not depend on frame-level capability scoping. No automated
+test yet drives the packaged window from inside the documentation frame. If such
+a test shows any delivery to that frame, the documentation moves to a separate
+webview.
+
+### Terminal sessions
+
+`src-tauri/src/terminal/` keeps at most one live PTY session per kind:
+
+| Kind | Program | Starts in | Process role |
+| --- | --- | --- | --- |
+| `console` | Windows: `PowerShell\7\pwsh.exe` under `ProgramW6432` or `ProgramFiles`, else `System32\WindowsPowerShell\v1.0\powershell.exe` under `SystemRoot`, with `-NoLogo`; Linux: the account's login shell from `/etc/passwd` | User home | `console` |
+| `python` | `P/python.exe` with no arguments | User home | `repl` |
+| `tui` | `P/python.exe -m cadrumo.entrypoints.tui` | Storage root | `tui` |
+
+Every kind receives the same pinned child environment; `console` also gets
+`P/bin/` first on `PATH`. The shell program is resolved as an absolute path from
+fixed system locations, never through `PATH`. `console` and `python` refuse to
+start when the home directory is not an absolute directory or lies inside the
+storage root, so a relative write cannot land a plaintext file in custody. On
+Windows the host clears the inherited "ignore Ctrl+C" attribute before starting
+any terminal child, so Ctrl+C reaches it.
+
+| Command | Arguments | Result and refusals |
+| --- | --- | --- |
+| `terminal_open` | `token`, `kind`, `cols`, `rows`, `frames` (a channel) | `{session}`. Ids increase for the host's lifetime. A live session of the kind is refused with `session_unavailable`; an exited one is settled and replaced. |
+| `terminal_write` | Raw body of at most 64 KiB, or a JSON byte array of at most 65,536 items; headers `x-cadrumo-token` and `x-cadrumo-session` (decimal id) | Accepted into a queue of 8 writes. A full queue is refused with `queue_full`, which is not recorded as a failure, and the shell retries. |
+| `terminal_ack` | `token`, `session`, `offset` | Cumulative data-byte offset. A stale offset changes nothing; an offset past the delivered bytes is `invalid_arguments`; a replaced or closed id is `session_unavailable`. |
+| `terminal_resize` | `token`, `session`, `cols`, `rows` | Each dimension 2 to 1000, else `invalid_arguments`. |
+| `terminal_close` | `token`, `session` | `{}` once the session has settled. Otherwise the kill failure or `cleanup_failed`, and the session stays owned. |
+| `diagnostics_snapshot` | `token`, `after` | Host diagnostics after a cursor. |
+
+One channel per session carries every frame, so `exited` always follows the last
+`data` frame. Each frame is one tag byte followed by its payload:
+
+| Tag | Frame | Payload |
+| --- | --- | --- |
+| 0 | `data` | PTY output, 1 to 8192 bytes |
+| 1 | `started` | UTF-8 JSON `{"pid": number}` |
+| 2 | `exited` | UTF-8 JSON `{"code": number \| null}` |
+| 3 | `failed` | UTF-8 JSON `{"error": {"code", "operation", "message"}}` |
+
+Only `data` payload bytes count toward acknowledgements. The reader reads the
+PTY in chunks of at most 8 KiB and stops reading once 512 KiB are
+unacknowledged, so the child blocks on its own write and no byte is dropped. It
+resumes when fewer than 128 KiB remain unacknowledged; a paused reader rechecks
+at least every 50 ms, and a stop request releases it at once.
+
+A finisher thread owns each child. After the child exits it closes the PTY,
+joins the reader and writer, sends any `failed` frames and then `exited`. A
+session stopped by the host sends no further frames. Settling kills a running
+child and waits up to 3 s for the finisher; a session that misses the deadline
+stays owned and its failure is returned. A window close request settles every
+kind under one shared 3 s deadline and attempts each kind even when another
+fails. A failure keeps the window open and is recorded. The start of a
+shell-document load settles every session, and host exit settles again. PTY
+bytes never enter host diagnostics or the log view.
+
+### Log aggregation
+
+`src-tauri/src/logs/` merges two sources, polled every 100 ms. `source` is an
+open enumeration:
+
+- `python`: the log file the query reports (`cadrumo.log` in the log directory)
+  and its numbered rotations, which Python writes through its secret-scrubbing
+  filter. The
+  line format comes from the query, so the host holds no copy of it.
+  Continuation lines such as tracebacks become the record's `detail`, up to
+  64 KiB. A record completes after its file has been quiet for 250 ms. Python
+  records carry the raw `asctime` with `timestampMs` and `process` null, because
+  that time has no UTC offset.
+- `host`: the host's diagnostics events, logged as `desktop`, with an RFC 3339
+  UTC timestamp, a level and the process role and pid where the event has one.
+  Captured child output is never requested, so terminal bytes cannot appear.
+
+The reader identifies a file by its first 1 KiB, not its name, and keeps a read
+offset per file, so late, skipped, partial or racing rotations lose and repeat
+nothing. It opens a file only for one read with default sharing, so a writer's
+rename is never blocked, and it never infers a process exit from a file event.
+The first poll reads at most 16 MiB across the existing files, newest first; a
+poll reads at most 4 MiB per file. Lines longer than 16 KiB are truncated and
+bytes are decoded as lossy UTF-8. Nothing is written, truncated, rotated or
+deleted, and no record is persisted.
+
+The source state is `available` when the file or a rotation was read and
+`missing` when no log file exists yet. It is `unreadable`, with a failure, when
+the log directory cannot be listed, the line format cannot be parsed, or reading
+fails in two polls in a row; one failure can be a racing rotation. Its `detail`
+names the log file.
+
+`logs_subscribe` (`token`, `records` channel) returns `{subscription, state}`. The
+ring holds 10,000 records, and a subscription's first batch carries at most the
+newest 5,000.
+Each subscription then receives at most one batch per 100 ms and none when
+nothing changed. A batch is `{records, dropped, state}`, where `dropped` counts
+records the ring overwrote before this subscription saw them. At most 8
+subscriptions exist; a ninth evicts the oldest. A shell-document load ends every
+subscription. `logs_unsubscribe` (`token`, `subscription`) refuses an unknown id
+with `invalid_arguments`.
+
+The host also writes its own diagnostics events to `cadrumo-native.jsonl` in the
+log directory, rotated by the same Settings limits.
+
+### Shell commands
+
+| Command | Arguments | Result and refusals |
+| --- | --- | --- |
+| `desktop_environment` | `token` | `{outputLanguage, docs: {origin, languages: [{code, entry}]}}`, with each entry as a URL on the documentation origin, in manifest language order. |
+| `open_external` | `token`, `url` | Opens the URL with the system's registered handler. Only lowercase `https://` with a host and no user information, or `mailto:` with an address, written as printable ASCII without a backslash and at most 8192 bytes; anything else is `invalid_arguments`. |
+| `shell_clipboard_read` | `token` | `{text}`. |
+| `shell_clipboard_write` | `token`, `text` | At most 1 MiB of UTF-8, else `invalid_arguments`. |
+| `shell_context_menu` | `token`, `items`, optional `x` and `y` | `{chosen}`: the id of the enabled item chosen, or null when the menu closed without a choice. |
+
+`shell_context_menu` takes 1 to 64 items, each `{id, label, enabled, shortcut?}`
+or `{separator: true}`, with at least one action. Ids, labels and shortcuts are
+at most 128, 256 and 64 characters without control characters, and ids are
+unique. The host names each native item `ctx/<popup>/<id>` and doubles every `&`
+so labels show literally. `x` and `y` come together, as a logical position in
+shell CSS pixels within 1,000,000 of the origin; without them the menu opens at
+the cursor. One popup is open at a time, and a second request is refused with
+`session_unavailable`. The command is asynchronous because the Windows popup
+blocks until the menu closes. A sentinel queued on the main thread afterwards
+resolves a dismissal to null after any pending menu event. Other platforms
+refuse it with `unsupported_platform`.
+
+### WebView2 requirements
+
+The installed WebView2 runtime must expose `ICoreWebView2_22`, which lets iframe
+and worker requests reach a custom scheme, and `ICoreWebView2Settings3`, which
+can turn off browser accelerator keys. This contract states the interfaces, not
+a runtime version. When each webview is ready the host probes both through the
+platform crate (`native/platform/src/desktop.rs`). It then turns off the default
+context menus and the browser accelerator keys (reload, print, find, zoom and
+developer tools) and reads both settings back. A missing interface is refused as
+`unsupported_platform` and any other failure as `webview_failed`, both for the
+`webview` operation. The host records the failure in its diagnostics and ends
+with exit status 1.
+
+### Runtime and sign-in dependency
+
+The desktop holds no runtime connection and no runtime authority. The TUI tab
+runs the TUI process and shows only its output, including the reason the TUI
+writes on standard error and its exit when no runtime admits it. Starting or
+reaching a runtime manager and the sign-in host commands are not implemented:
+the desktop starts, stops and authenticates nothing.
+
+### Desktop build and test procedure
+
+The desktop is a standalone CMake project. Configure `native/desktop` in its own
+binary directory with `CADRUMO_NATIVE_CONTRACT` naming the generated
+`contract.json` of a configured source build, and `CADRUMO_DESKTOP_PACKAGE_ROOT`
+naming an assembled package such as `stage/<Config>/app/`. Set
+`CADRUMO_DEV_PYTHON` when the checkout's development interpreter is not found.
+Package assembly does not stage `cadrumo.exe` yet, so the host runs from its
+Cargo output and finds the package through `CADRUMO_DESKTOP_PACKAGE_ROOT`.
+
+| Target | Operation |
+| --- | --- |
+| `desktop-frontend-install` | `npm ci` in the frontend |
+| `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
+| `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
+| `user_docs` | Build and stage the user documentation, as above |
+| `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; record the executable in `generated/desktop-<Config>.json` |
+| `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |
+| `desktop-host-clippy` | Clippy on all targets with warnings denied |
+| `desktop-headless-test` | Byte-for-byte CLI passthrough parity with the package interpreter, under a hostile Python environment |
+| `desktop-paths-test`, `desktop-configuration-test` | Build-path and generated Tauri configuration checks |
+| `desktop-run` | Start the built `cadrumo.exe` against `CADRUMO_DESKTOP_PACKAGE_ROOT` |
+
+`node --test native/desktop/tests/shell-token.test.mjs` checks the top-frame gate
+of the token script.
+
+The window cannot be checked without an interactive desktop. A process in
+Windows Session 0, where services and service-hosted runners and agents run, has
+no visible window station, so the host selects the CLI passthrough and `--gui` exits
+with 69. A person therefore runs the window smoke from an interactive logon
+session. Set `CADRUMO_LOCAL_STORAGE_ROOT` to a disposable absolute directory first
+unless the run should use the default root, build `desktop-run`, and check:
+
+- The window opens on the documentation index in the output language, and a
+  documentation search returns results.
+- The Console tab shows a PowerShell prompt in the home directory and the Python
+  tab shows `>>>`. The TUI pane shows the TUI, or its refusal line and exit when
+  no runtime admits it.
+- The Logs tab lists host events and Python records and no terminal text.
+- F5, Ctrl+R, Ctrl+P and F12 change nothing, and right-click opens no browser
+  menu in either the shell or the documentation.
+- An `https:` link in the documentation opens in the system browser.
+- Closing the window ends `cadrumo.exe` and every terminal child, and the next
+  launch restores the window's size, position and maximized state.
+- A second launch brings the open window forward and exits with 0.
 
 ## Native distribution definitions
 
