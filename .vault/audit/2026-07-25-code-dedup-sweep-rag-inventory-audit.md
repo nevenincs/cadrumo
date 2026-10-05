@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#code-dedup-sweep'
 date: '2026-07-25'
-modified: '2026-10-03'
-body_hash: 'sha256:091b8b9dcf7a57765ab937e3f7ffd8d1416011b06874b7a22062a32f3156ff90'
+modified: '2026-10-05'
+body_hash: 'sha256:0a9348deb45d03789ba3a5a75dc5db88aff39cf9a957e2a84dc9ac10e66ee9bd'
 related:
   - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
   - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
@@ -395,7 +395,7 @@ REACHABILITY MEASURED, NOT GUESSED. Every real call site was instrumented via a 
 
 FOURTH GATE BLIND SPOT, and the most elegantly inverted one yet. the retired test exists to forbid exactly this pattern and misses it TWO ways: it iterates `production_ast_items(...)`, so test-local copies are structurally invisible; and `_is_cent_quantize_call` REQUIRES a `rounding=ROUND_HALF_UP` keyword, so a bare wrong-mode `quantize(Decimal("0.01"))` is invisible EVEN IN PRODUCTION. The gate catches the correct-mode duplicate and is blind to the incorrect-mode one - it forbids the safe spelling and permits the dangerous one. Remediation: widen it to test modules AND to the missing-keyword shape, with an anti-tautology proof planting a bare-mode call.
 
-NO PRODUCTION MONEY BUG: four production bare-mode cent-quantize sites exist and all are non-euro - _run_telemetry.py:239 and diagnostics_run_health.py:365 and :577 (mean_duration_ms), _projection.py:781 (pct_change).
+NO PRODUCTION MONEY BUG: four production bare-mode cent-quantize sites exist and all are non-euro - diagnostics_run_health.py:365 and :577 (mean_duration_ms), _projection.py:781 (pct_change).
 
 OPEN FOLLOW-UP, out of scope and not touched: 45 test-side bare-mode cent-quantize sites remain, several shaping tax figures under the same latent class - test_modelo_151_beckham_cuota_continuity.py:94 and :97, test_modelo_202_cuota_base_ejercicio_anterior_continuity.py:299, test_modelo_190_111_reconciliation_continuity.py:261, five sites in test_modelo_210_irnr_continuity.py, and test_e2e_ledger_m303_recargo_cross_period.py. Worth one dispatch alongside the gate widening.
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
-modified: '2026-10-03'
-body_hash: 'sha256:ebb62e23d193a68f81076aaf5272ca9251ed8e0e40b3efcfb44b1b38b558e68e'
+modified: '2026-10-05'
+body_hash: 'sha256:562e9bd9d66813982ec49243a762aafaa473bb0a269d336ebb7e94b506f96860'
 related: []
 ---
 
@@ -138,10 +138,10 @@ module and callable offenders.
 
 ### follow-up-mcp-build-server-size-budget | low | MCP server builder below pinned budget
 
-Reviewed the 2026-07-05 ratchet follow-up that hoisted the optional telemetry
+Reviewed the 2026-07-05 ratchet follow-up that hoisted the optional sink
 forwarder out of `build_server`. The server still constructs the same
 persona-scoped tool list, meta/floor/grounding tools, prompt handlers, resource
-handlers, confirmation routes, faithfulness gate, and telemetry rows; only the
+handlers, confirmation routes, and faithfulness gate; only the
 thin optional sink forwarding helper moved to module scope. The `build_server`
 callable line count dropped from 355 to 337, below its pinned 341-line budget.
 Ruff passed, and the real MCP server integration tests covering meta-tools,
@@ -247,9 +247,7 @@ mixin without changing field names, defaults, validators, environment variable
 names, or the central `Settings` facade. `Settings` still exposes the moved
 fields through inheritance and `Settings.env_var_names()`. The `config.py` line
 count dropped from 1329 to 1259, below its 1281-line budget. Ruff passed, a
-settings smoke check passed, and the focused settings/state-root suite passed
-after excluding the pre-existing `.env.example` telemetry-field alignment gap
-inventoried in `var/log/core-config-integration-fields-split-20260705.log`.
+settings smoke check passed, and the focused settings/state-root suite passed.
 The codebase-size gate rerun no longer reports `core/config.py`, but remains red
 on the other known module and callable offenders.
 

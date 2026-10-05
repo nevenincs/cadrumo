@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd57c495f9fb9c93f0b67a83985ce66fdbddda4ebadef85ae56928e37118d071'
+body_hash: 'sha256:7db25642def1b23b679a2b86e6ee75bf36e4c0cb90790a830ac9cf2be64e511d'
 related: []
 ---
 
@@ -26,7 +26,7 @@ No severity-bearing findings. The live census reports one unique policy-bearing
 node for every root, group, and leaf in the seven S51 families. Read-only local
 snapshot consumers are distinguished from network-and-local-state pull
 operations; metadata-only portal commands, registry reads, calculation reads,
-profile-local destructive reconciliation, telemetry writes, and the quickfile
+profile-local destructive reconciliation, and the quickfile
 handoff retain their maximum actual authority. The externally injected
 unclassified leaf remains unclassified, demonstrating that the coverage result
 does not arise from a permissive default. The `live iva-wallet pull-evidence`

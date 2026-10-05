@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-call-latency'
 date: '2026-07-17'
-modified: '2026-09-26'
-body_hash: 'sha256:fd13d0d77859fa9412e87714ae3588e56abb13ca6c58cdef458cd63c7bc7bbb7'
+modified: '2026-10-05'
+body_hash: 'sha256:b78047beedcbc8473caf17d03f1afa6b598873df24ad04541e24f423f233fccd'
 related:
   - "[[2026-07-17-mcp-call-latency-research]]"
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
@@ -101,7 +101,7 @@ Layered: D2 and D1's build stamp land in the release-cohort build (the
 packaging surface already assembles the data wheels and manifest); the runtime
 verdict/compiled caches land in the registry loader/authority behind the
 existing fingerprint computation; D4 restructures only the MCP server's
-dispatch layer — the per-verb command functions, gates, telemetry, and
+dispatch layer — the per-verb command functions, gates, and
 envelope builders are already importable in-process. The distribution
 campaign's installed oracles re-measure the projected end-state table (reads
 and simple writes sub-second in server mode, heaviest calculation ~1.5

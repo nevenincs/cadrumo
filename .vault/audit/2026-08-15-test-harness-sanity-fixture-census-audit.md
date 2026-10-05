@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-15'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:bfa73ba9a6d3bfb6455c310041143af6a6339c3c41c3242d4997ca4c95b19e23'
+body_hash: 'sha256:5362e54e4a3b166a00a476827b4064240ce9b7d461db12b8c73810196adb49ba'
 related:
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
   - "[[2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit]]"
@@ -139,14 +139,6 @@ Grounding: `uvx vaultspec-rag search "MANUAL_INPUT binding source kind unrouted 
 - **Visibility boundary:** `src/cadrumo/tests/` package-level, cross-package reach by design (a canonical shared-fixture home, not a narrow module-private helper).
 - **Nominated owner:** the retired test.
 - **Note:** this is architecturally different from every other cluster in this census — a fixture FACTORY preserving per-site axes as parameters is the correct shape when scope/autouse/lifecycle genuinely vary per site, versus the plain-function shape correct when the body is identical and only a data value varies. Worth citing as the worked precedent the ADR's "fixture equality is only a candidate signal" consideration describes.
-
-### run_loopback_server / stop_loopback_server | census | 3 telemetry sites, shared start/stop plumbing only
-
-- **Decorator form / scope / autouse:** N/A.
-- **Names:** `run_loopback_server(handler_class) -> (server, thread, events)`; `stop_loopback_server(server, thread) -> None`.
-- **Constraints:** binds ephemeral port `0` so parallel xdist workers cannot collide; each consuming suite keeps its OWN handler class (the module's own docstring states "the recorded event shape genuinely differs between them") — deliberately narrow consolidation of only the identical bind/serve/shutdown boilerplate, not the handler logic.
-- **Teardown:** `stop_loopback_server` always called from the caller's `finally`, per its own docstring, bounded by a 3-second join timeout so a wedged handler surfaces as a failure rather than hanging the suite.
-- **Nominated owner:** `src/cadrumo/tests/loopback_recording_server.py`.
 
 ### release_cohort | census | 4-source consolidation with wall-clock nondeterminism retired
 
@@ -409,23 +401,17 @@ Every checked step S111-S144 was classified by an independent read-only pass as 
 
 **EVIDENCE GAPS, carried forward:** no empirical check of on-disk records written before the enum gate existed (the no-legacy posture argues none should exist, but that was not verified against real storage), and no check for out-of-tree tooling calling `apply_fact_changes` directly. The determination is a static code reading, which is what the step asked for, and it did not require the test suite — so the torn tree did not affect it.
 
-### two half-landed relocations | live-defect FIXED | both were committed broken on main, not in-flight edits
+### half-landed relocation | live-defect FIXED | committed broken on main, not an in-flight edit
 
-Found while testing whether the tree had quiesced enough to satisfy `S138`. Tree-wide collection was failing, and the first instinct — "peers are mid-edit, wait" — was **wrong on inspection**: `git status` showed both owning files committed and clean, and their mtimes were 100 minutes and 3 hours old. Nobody was editing them. They were abandoned broken. **A torn tree is not self-evidently someone's live work; check before deferring to it.**
+Found while testing whether the tree had quiesced enough to satisfy `S138`. Tree-wide collection was failing, and the first instinct — "peers are mid-edit, wait" — was **wrong on inspection**: `git status` showed the owning files committed and clean, and their mtimes were hours old. Nobody was editing them. They were abandoned broken. **A torn tree is not self-evidently someone's live work; check before deferring to it.**
 
-Both are the same defect class — a relocation that moved a symbol and updated some consumers but not all, against the standing requirement that a relocation lands in ONE commit with every consumer.
+This is a relocation defect: a symbol was removed while some consumers still imported it, against the standing requirement that a relocation lands in ONE commit with every consumer.
 
-**1. Telemetry loopback plumbing.** `run_loopback_server` / `stop_loopback_server` had correctly moved to their canonical home `src/cadrumo/tests/loopback_recording_server.py`, and `core/telemetry/tests/test_http_sink.py` plus `application/tests/test_diagnostics_telemetry.py` were migrated. `core/telemetry/tests/test_producers.py` was left importing the OLD private names from `test_http_sink` — a test module reaching into a sibling test module's privates, which is what made the breakage possible at all.
-
-Fixed by pointing `test_producers.py` at the canonical home. That exposed the real coupling: it called `_run_loopback_server()` with no argument, because the old private wrapper defaulted to `test_http_sink`'s own handler class, while the canonical takes the handler explicitly. **The handler could not simply be imported across, because that would reinstate the exact test-module-to-test-module import that broke.** Checked whether the shipped design allows a shared handler: `loopback_recording_server.py`'s docstring deliberately declines to own handler classes because "the recorded event shape genuinely differs between suites" — and that claim is **true**, verified by reading all four: the two diagnostics suites record `{path, body}`, while both suites in the telemetry package assert on `content_type` and record `{path, content_type, body}`.
-
-So the two suites that share a shape got one definition, in a package-local home: **`src/cadrumo/core/telemetry/tests/_telemetry_endpoint_support.py::RecordingTelemetryEndpoint`**, imported by both. No fourth copy of the handler, no cross-suite private import, and the shipped module's per-suite-handler rationale left intact because it is correct for the suites it describes. Verified: `ruff` clean, `core/telemetry/tests` 42 passed.
-
-**2. `_json_object` in the LLM-vision evidence support.** the retired test had `_json_object` deleted while keeping its sibling `_json_array`, breaking `llm/tests/test_llm_vision_classifier.py` and `llm/tests/test_evidence_draft_vision.py`, which both import it. **Confirmed committed, not in-flight:** `git status` clean on all three, and HEAD's consumer already imports a name HEAD's support module already does not define — so the broken pair is what landed.
+**`_json_object` in the LLM-vision evidence support.** the retired test had `_json_object` deleted while keeping its sibling `_json_array`, breaking `llm/tests/test_llm_vision_classifier.py` and `llm/tests/test_evidence_draft_vision.py`, which both import it. **Confirmed committed, not in-flight:** `git status` clean on all three, and HEAD's consumer already imports a name HEAD's support module already does not define — so the broken pair is what landed.
 
 Restored beside `_json_array`, implemented to match the canonical `entrypoints/cli/tests/_cli_json_support.py::_json_object` exactly — `STR_KEYED_MAPPING_ADAPTER.validate_python(value)`, the core type-narrowing primitive — rather than the looser `assert isinstance` shape `_json_array` uses, so the two `_json_object` definitions in the tree cannot diverge in behaviour. **Deliberately NOT consolidated onto the canonical:** `cadrumo.llm.tests` importing `cadrumo.entrypoints.cli.tests._cli_json_support` would be a cross-package private reach, which the architecture boundary forbids. The pre-existing cross-package import from `llm/tests` into `application/ledger/tests` is left as found — not this change's to fix, and noted here so it is not mistaken for something this change introduced.
 
-**`S138` remains blocked, and the reason is now measured rather than asserted.** Collection errors across four runs this session: 67 → 4 → 3 → (after these two fixes) 7. The rise at the end is not a regression from these fixes — both symbols cleared the error list — but a peer landing an in-flight relocation of `cadrumo.entrypoints.mcp`, which took out seven suites across `command_search`, `modelo`, `operator_surface` and `cli`. The tree has not been collectable once this session. **`S138` asks for a failure-set diff from a quiesced tree, and there has been no quiesced tree to take one from.**
+**`S138` remains blocked, and the reason is now measured rather than asserted.** Collection errors across four runs this session: 67 → 4 → 3 → (after this fix) 7. The rise at the end is not a regression from this fix — the symbol cleared the error list — but a peer landing an in-flight relocation of `cadrumo.entrypoints.mcp`, which took out seven suites across `command_search`, `modelo`, `operator_surface` and `cli`. The tree has not been collectable once this session. **`S138` asks for a failure-set diff from a quiesced tree, and there has been no quiesced tree to take one from.**
 
 ### `S137` key-provider and session teardown | proven-negative | 15 suspects, zero leaks, and the sweep deliberately stops short of a 30-site hygiene churn
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#data-output-standardization'
 date: '2026-07-14'
-modified: '2026-10-03'
-body_hash: 'sha256:bff8efe1239c5af4683210fde4a3aeaa907127c5c0125f4154234ae5bbef46a8'
+modified: '2026-10-05'
+body_hash: 'sha256:bafe3599702f00df0f67a9962b6b7fbab20da5172465962157f7799307ceea50'
 related:
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-07-13-data-output-standardization-research]]'
@@ -39,7 +39,7 @@ default in `config.py` and `_config_integration_fields.py`, but these are inert
 placeholders: `Settings._resolve_output_dirs_under_storage_root` iterates
 `_STATE_ROOT_DERIVED_DIRS` and re-roots each unset field under
 `cadrumo_local_storage_root`. The table is comprehensive — it covers the state
-substrate, telemetry logs, caches (`cache/*`), durable outputs, AND the
+substrate, logs, caches (`cache/*`), durable outputs, AND the
 integration-mixin fields (`financial/transactions|invoices|attachments`,
 `financial/usage-ratios.json`, `audit/registry/parity`) — so no output dir
 escapes to site-packages on an installed run. The S02 vestigial-field deletions

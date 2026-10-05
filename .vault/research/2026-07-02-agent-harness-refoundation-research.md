@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-10-03'
-body_hash: 'sha256:bdd23116ebb5af7b299002e327e78f4061b3bb4c08479ea5c9eda9caa45b3f89'
+modified: '2026-10-05'
+body_hash: 'sha256:d5ff9d263f74dc6190549084317d962e949e23fd768e4a0cabbd2a77a9309db5'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
@@ -123,7 +123,7 @@ live serving path.
 - **The faithfulness check is NOT wired.** `faithfulness_check`
   (`_faithfulness.py:54-78`) is never imported by the server; it exists
   only for tests/eval. No PostToolUse path exists.
-- **Zero telemetry.** No per-call logging, latency, session id, or
+- **No per-call record.** No per-call logging, latency, session id, or
   trajectory record; the subprocess wrapper discards everything but the
   JSON envelope.
 - **No real client handshake has ever run**, in test or otherwise:
@@ -224,7 +224,7 @@ exists.
 **Console gap summary.** Missing: live CONFIRM enforcement with a
 user-elicitation mechanism; a wired faithfulness path; corpus/semantic
 search tools; per-verb tool schemas; MCP prompts/resources carrying the
-operating layer; per-verb persona scope; session telemetry; life-situation
+operating layer; per-verb persona scope; life-situation
 skills; and any real-client or model-in-the-loop test surface.
 
 ### Thread B — MCP operating-console patterns, skill delivery, and measurement practice
@@ -281,8 +281,7 @@ research answer.
   registry/legal grounding).
 - Frameworks: LangSmith (trajectory eval, OTel ingestion), MLflow,
   DeepEval/Confident AI (self-hostable — fits the on-host posture best).
-- Operating cadence: a data flywheel — capture live trajectories + session
-  telemetry, route failures to expert (tax-professional) annotation,
+- Operating cadence: a data flywheel — capture live trajectories, route failures to expert (tax-professional) annotation,
   promote each failure into a golden regression scenario. The existing
   replay corpus is the offline gate; live capture feeds it. Re-run
   model-in-the-loop eval on every rule/persona/skill change and on model
@@ -508,8 +507,7 @@ the operating law it serves. Concretely:
    unsupported); wire the faithfulness check into the serving path with
    its hard block at the export/record boundary; keep never-live-submit
    as "no such tool exists" — the strongest form.
-6. **Make it operable and measured.** Session telemetry (per-call
-   trajectory records, session ids, latency); a real-client handshake
+6. **Make it operable and measured.** A real-client handshake
    test; a self-hostable model-in-the-loop trajectory eval whose hard
    invariants are zero live-submit attempts and zero faithfulness
    violations at handoff, run on every change to rules/skills/prompts/

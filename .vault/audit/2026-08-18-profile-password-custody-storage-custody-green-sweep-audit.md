@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f26a3ffb05f1b92e08324d9c2f17e30b5d2055045df97f37e20ec2c97af54ca'
+body_hash: 'sha256:4e19a5049dc39ecba7d22e14e20cbedcfc77017780893e204d8eaa478e3cbfeb'
 related: []
 ---
 
@@ -340,9 +340,9 @@ another's capsule through the real unlock and restore authorities.
 What remains is coverage-shaped rather than security-shaped, and should not be
 described as a hole. A table of runtime repositories asserts each refuses both
 an absent session and a route mismatch, and that table is hand-maintained with
-no completeness gate: two profile-scoped stores, the LLM run telemetry and the
-LLM consent ledger, do not appear in it. They are protected anyway, because
-protection is structural -- they are untested, not unguarded. A completeness
+no completeness gate: one profile-scoped store, the
+LLM consent ledger, does not appear in it. It is protected anyway, because
+protection is structural -- it is untested, not unguarded. A completeness
 gate deriving the expected set from the resolver's consumers would close the
 difference between "we tested the ones we listed" and "we tested every one that
 exists".

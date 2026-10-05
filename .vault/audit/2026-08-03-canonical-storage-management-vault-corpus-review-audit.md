@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:591daa1387619d9b5333535ac7e032f0474d9e3f4934f6fa59df3861ddc4b329'
+body_hash: 'sha256:cc392c5a65c95d04928ebfeb55645742c92f753cf8312d7ccdba2004066273b5'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-self-duplication-review-audit]]'
@@ -102,8 +102,8 @@ inverted.** When first measured at `c16bb9a0ae` those two families were genuinel
 open, and this audit said so. They are now both closed in code: all eight Family 2
 members are declared (`AUDIT_LIVE`, the three `iva-remote-state` segments, the
 `iva-wallet` segment, both submissions nested segments, the attachments manifests
-directory), and all five Family 4 filename-template grammars are declared
-(`llm_usage_record`, `llm_run_telemetry_record`, `auth_acquisition_lock`,
+directory), and all four Family 4 filename-template grammars are declared
+(`llm_usage_record`, `auth_acquisition_lock`,
 `validation_verdict_cache_entry`, `llm_cache_entry`). The residual under this
 criterion is zero names, not twelve and not twenty.
 

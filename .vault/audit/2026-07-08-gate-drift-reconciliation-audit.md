@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#gate-drift-reconciliation'
 date: '2026-07-08'
-modified: '2026-10-03'
-body_hash: 'sha256:2e2eabaa960ef2ef68581ec4807f1990298bf4ddc5aa2fe2309231d3301a91f9'
+modified: '2026-10-05'
+body_hash: 'sha256:6ec89e57c084e16817d19f72bc2765ad5188af39dc0fe8561fe8bb8ac77132c2'
 related:
   - "[[2026-07-03-repo-health-triage-audit]]"
 ---
@@ -53,7 +53,7 @@ The vault carries 10 plans with at least one open step and 5 recently completed 
 
 ### reconciliation-tracked-vs-untracked | high | most red is owned WIP; a distinct untracked residue needs new Steps
 
-A five-agent sonnet reconciliation fleet (RAG + rg + plan-doc + git-log grounded) mapped each failure cluster to plan ownership. Owned/in-flight (do not fix early): the `_iva_ledger.py` / `_models.py` / `ledger_add` complexity growth is `iva-prorrata-complexity` W02.P03.S21; the single biggest complexity offender `entrypoints/mcp/_server.py::build_server` (455 lines, budget 341) is `mcp-protocol-hardening` P04.S15. Closed but resolvable now: the `prorrata_register` `__all__` gaps (iva-prorrata-complexity, trivial). The `arch-remediation-gates-ratchet` program is fully closed (12/12) and owns none of the current red. Genuinely UNTRACKED (no owning open Step): the `application -> adapters` prorrata layering inversion (named in `.importlinter` and the importlinter-test-carveout ADR "for the prorrata campaign to resolve" but no Step owns it); the `_prorrata_regularizacion` / `_calculation_source_staging` docstring-core-struct links (absent from the docstring-google-style 994-row checklist, scaffolded before these modules existed); `_loader.py` line-budget, the `_validate_verification_predicates.py` D411, a `cli.diagnostics.telemetry.bad_tier` surplus-kwarg, 3 unreachable diagnostics modules; the two Sphinx nitpicky xref failures (`weakref.finalize`, `rtoml.TomlParsingError`, traced to unrelated commits); the CLI-reference regeneration; and the storage-bucket fixture regression below.
+A five-agent sonnet reconciliation fleet (RAG + rg + plan-doc + git-log grounded) mapped each failure cluster to plan ownership. Owned/in-flight (do not fix early): the `_iva_ledger.py` / `_models.py` / `ledger_add` complexity growth is `iva-prorrata-complexity` W02.P03.S21; the single biggest complexity offender `entrypoints/mcp/_server.py::build_server` (455 lines, budget 341) is `mcp-protocol-hardening` P04.S15. Closed but resolvable now: the `prorrata_register` `__all__` gaps (iva-prorrata-complexity, trivial). The `arch-remediation-gates-ratchet` program is fully closed (12/12) and owns none of the current red. Genuinely UNTRACKED (no owning open Step): the `application -> adapters` prorrata layering inversion (named in `.importlinter` and the importlinter-test-carveout ADR "for the prorrata campaign to resolve" but no Step owns it); the `_prorrata_regularizacion` / `_calculation_source_staging` docstring-core-struct links (absent from the docstring-google-style 994-row checklist, scaffolded before these modules existed); `_loader.py` line-budget, the `_validate_verification_predicates.py` D411, 3 unreachable diagnostics modules; the two Sphinx nitpicky xref failures (`weakref.finalize`, `rtoml.TomlParsingError`, traced to unrelated commits); the CLI-reference regeneration; and the storage-bucket fixture regression below.
 
 ### outputschema-false-gap-correction | medium | the "36 unregistered OutputSchema leaves" is stale test-fixture debt, not a production gap
 

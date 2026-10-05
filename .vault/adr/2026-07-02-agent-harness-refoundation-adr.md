@@ -13,8 +13,8 @@ related:
 supersedes:
   - '2026-06-30-agent-harness-adr'
   - '2026-07-01-agent-harness-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:3efeeaa54efae06ad315b4f11005b86c39626e27d04a1e53bf916afc9f9bf665'
+modified: '2026-10-05'
+body_hash: 'sha256:a75d65e7f26ab5294eec0abc219a16bbea373ea9c967df42f20810c99e4ee8b8'
 ---
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
@@ -177,7 +177,7 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *External SaaS trajectory eval:* rejected — it ships trajectories (and the figures in them) off-host, against the on-host posture.
 
-**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. Session telemetry — per-call trajectory records with session ids — is persisted locally. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
+**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
 
 ### R8 — Distribution
 
@@ -218,7 +218,7 @@ A high-level layering; no code accompanies this ADR. Notably, **the CLI surface 
 - **Operating-layer channels.** Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo/_data/agent/` source.
 - **Skill metadata and situation skills.** Lift each skill's selection predicate into the structured `applies_when` frontmatter field; author the six WHEN-layer skills, `regularizar-atrasos` first over the already-built backlog/recargo surface.
 - **Gate wiring.** Wire the CONFIRM tier to elicitation with the degradation matrix; wire faithfulness into the serving path with the handoff hard block; add the per-verb handoff deny rules over the family-granular persona scope.
-- **Live eval and telemetry.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the local per-call telemetry records, the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
+- **Live eval.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
 - **Packaging.** Assemble and sign the `.mcpb` Desktop Extension behind the `cadrumo[agent]` extra, `stdio` transport.
 
 ## Rationale
@@ -245,7 +245,7 @@ model harness must control non-determinism, cost, and latency, and the R9
 scrubbing boundary needs its own conformance gate so raw evidence bytes cannot
 enter model context.
 
-**Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the telemetry flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.
+**Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.
 
 ## Amendment 2026-09-26: shared application execution beneath all entrypoints
 

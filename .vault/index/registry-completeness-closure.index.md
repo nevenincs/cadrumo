@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3e8cd77f4b6a87b7bd61fda5cdd6f55ae2699c626bd781e186607f5e0207bcd'
+body_hash: 'sha256:affef1be6b59ac785ed76320b87637b0b6591cfd4e0025258b939b07cf3c738b'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -149,7 +149,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-adr` - `registry-completeness-closure` adr: `one derived release predicate for shipped registry completeness` | (**status:** `accepted`)
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr` - `registry-completeness-closure` adr: `S33 two-channel filing export proof` | (**status:** `accepted`)
-- `2026-10-05-registry-completeness-closure-native-and-communication-proof-adr` - `registry-completeness-closure` adr: `native and communication proof` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-adr` - `registry-completeness-closure` adr: `Prove existing communication and native XML exports through their production owners` | (**status:** `proposed`)
 
 ### audit
 
@@ -284,4 +284,4 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-research` - `registry-completeness-closure` research: `shipped corpus closure boundary`
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-research` - `registry-completeness-closure` research: `S33 two-channel filing export proof research`
-- `2026-10-05-registry-completeness-closure-native-and-communication-proof-research` - `registry-completeness-closure` research: `native and communication proof`
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-research` - `registry-completeness-closure` research: `Production proof boundaries for communication and native XML export`

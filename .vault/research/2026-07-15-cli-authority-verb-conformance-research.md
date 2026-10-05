@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:f8974a7126863a6570c2b2ce6e281aa5e43f4a3ec6bad6e71ac1752d644ddaf9'
+modified: '2026-10-05'
+body_hash: 'sha256:e52012fdf59110629c5844992d3a4fce84db124f3ca564584921fa4c579fba48'
 related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
 ---
@@ -194,12 +194,10 @@ emission with a typed purpose such as `portable_transfer` or `subject_access`.
 
 ### Residual exact hashing implementations
 
-The broader backend sweep found two exact SHA-256 implementations outside the
-canonical `core.hashing.sha256_hex`: MCP telemetry hashes UTF-8 text directly,
-and the review-package recipient registry hashes decoded public-key bytes
-directly.  Both are layer-safe consumers of core.  Retain a domain-named
-telemetry wrapper if useful, but delegate its body to `sha256_hex`; use
-`sha256_hex` directly for the recipient fingerprint.  This low-cost P2 hygiene
+The broader backend sweep found an exact SHA-256 implementation outside the
+canonical `core.hashing.sha256_hex`: the review-package recipient registry
+hashes decoded public-key bytes directly.  It is a layer-safe consumer of core.
+Use `sha256_hex` directly for the recipient fingerprint.  This low-cost P2 hygiene
 is included because the campaign promises a backend duplication sweep, not only
 operator-visible cleanup.
 

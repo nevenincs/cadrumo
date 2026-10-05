@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#external-client-boundary'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:921444af2abb07ea362a5299d7e939037fe9ff3b48f46849f4a1dfbd4f2e472b'
+body_hash: 'sha256:4b6ffc4fe710ed5df7fe6631b14f00e69401af59d315e4085db7f398fee32805'
 related: []
 ---
 # `external-client-boundary` research: base product and external client dependency boundary
@@ -24,7 +24,7 @@ the former source file models required MCP exposure and the former source file e
 
 ### Consumer identity leaks beyond the projection
 
-Base corpus-search documentation names harness mapper and resource functions  and `_citation_lookup.py:22`. Base configuration and storage taxonomy describe MCP session telemetry at `src/cadrumo/core/config.py:498` and the former source file. These names make base semantics depend on one consumer rather than a generic capability.
+Base corpus-search documentation names harness mapper and resource functions  and `_citation_lookup.py:22`.  These names make base semantics depend on one consumer rather than a generic capability.
 
 ### The product release cohort also treats the client as a base artifact
 

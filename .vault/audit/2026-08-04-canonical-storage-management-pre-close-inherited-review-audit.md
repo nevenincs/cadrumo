@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:722d8db865a92f283a198faa4609d2f19bffc97ab0e5e9f5af46c5e437afb764'
+body_hash: 'sha256:c6215222fbf036e351d91466e5a21b078318e6c38ae130de09970c63190ebd60'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
@@ -125,7 +125,7 @@ retyped inside `grammar=`. The fifteen remaining have no `segment=` field at all
 so there was no second spelling to collapse. Complete as scoped.
 
 **The residual is real and is a different duplication.** Those fifteen — the
-blob, run-trace, `llm-usage`, `llm-run-telemetry` and `tokens` fan-out shapes —
+blob, run-trace, `llm-usage` and `tokens` fan-out shapes —
 still hand-type a directory segment that a `StorageCategory` declares. That
 duplication is **across modules** (taxonomy against definitions), not within one,
 and the directory-agreement gate **pins it rather than eliminating it**. It is

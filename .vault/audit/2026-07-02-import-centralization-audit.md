@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-07-02'
-modified: '2026-10-03'
-body_hash: 'sha256:5012e3f8661d62b85956c49ec2d99b1e740a9b6cdd552b99f59957a2a90e60d3'
+modified: '2026-10-05'
+body_hash: 'sha256:abf486641dd7f3c63ffe0378a8c6f0f9666937d4dcfdb570b538847c6ae5a576'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-research]]'
@@ -412,7 +412,7 @@ type-ignore/utf8/mock/monkeypatch/broad-except inventories; the D7 lazy-import c
 peer function-local imports, e.g. `APPLICATION_DEFERRAL` 548>516 — far beyond anything a
 behavior-preserving facade campaign adds); docstring core-struct/return-type links on peer files
 (`_certificate_secret_backend`, `_review_package_signing`); `test_relative_imports_only` on peer
-files (`_clave_permanente.py`, `_run_telemetry`); the layered-contract ignore-edge ratchet
+files (`_clave_permanente.py`); the layered-contract ignore-edge ratchet
 (peer test edges); observability golden-replay drift; namespace-registry and sensitive-persistence
 inventories; optional-extra-degradation and provisioning; wizard translations; wheel-filename;
 and registry BOE-corpus / order-chain grounding for M100-2025 (now 38 profile bindings vs the

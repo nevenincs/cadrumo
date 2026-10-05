@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#bucket-event-payload-bounding'
 date: '2026-07-25'
-modified: '2026-07-26'
-body_hash: 'sha256:ed23a3051fab09d42e9107e72618f56164142d4495614982cb78d9cac66d98d7'
+modified: '2026-10-05'
+body_hash: 'sha256:b8878f455811b3773d818104a49a05c0e647e043e7be156ce6807252d87561e3'
 related:
   - "[[2026-07-25-reconcile-evidence-relocation-adr]]"
   - '[[2026-07-25-bucket-event-payload-bounding-payload-overflow-survey-audit]]'
@@ -100,7 +100,7 @@ should stop the next one.
   knowable statically; the defect is binding an unbounded collection to a
   bounded slot, whatever today's cardinality happens to be.
 - It must be scoped to bucket-event payloads only. `payload` is a common name
-  for Sheets rows, LLM telemetry and CLI result bodies, none of which are
+  for Sheets rows and CLI result bodies, none of which are
   written into the capped slot and none of which this gate has any business
   bounding. An unscoped first cut flagged twenty-two values, of which
   twenty-one were not bucket events at all.

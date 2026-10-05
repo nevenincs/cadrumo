@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b765f620a02b73df4ec3322b8a8e62bae5c570bb7a440bac2da35c9f0f760de'
+body_hash: 'sha256:eff61e0aa7255c681e9458197fc7c17042da5f4d3c58b3aa3183f6cf36ca0748'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-criterion-reference]]'
@@ -416,8 +416,8 @@ for these. **That was wrong** — all three are already declared as `StoragePath
 grammars and behaviourally pinned. See the grammar-mechanism finding below; this family
 needs nothing.
 
-*Family 4 — filename templates the model cannot currently express (5 patterns).*
-`llm-usage/usage-{}.jsonl`, `llm-run-telemetry/run-telemetry-{}.jsonl`,
+*Family 4 — filename templates the model cannot currently express (4 patterns).*
+`llm-usage/usage-{}.jsonl`,
 `tokens/{}-{}-auth.lock`, `cache/registry-verdict/{prefix}{digest}.json`, and
 `llm-cache/<provider>/<model>/{}-{}.json`. `StorageLocation.subpath` cannot express a family of
 files matching a pattern, so I first read this family as blocking on a model change or an
@@ -429,9 +429,9 @@ grammar entries and a few vocabulary tokens. See the grammar-mechanism finding b
 that none of the nested-ungoverned set was reachable by `reclaim`, on the eight
 settings-field-rooted sites then known. On the fuller set that is **wrong**: **11 of the
 34 sites sit under a reclaimable parent** — `runs` (7 sites), `llm-cache`,
-`llm-usage`, `llm-run-telemetry` (retention) and `logs` (rotation). In every one of the
-eleven, deletion is the *intended* behaviour: they are regenerable traces, caches and
-telemetry whose whole purpose is to be pruned, and `reclaim logs` was observed retaining
+`llm-usage` (retention) and `logs` (rotation). In every one of the
+eleven, deletion is the *intended* behaviour: they are regenerable traces and
+caches whose whole purpose is to be pruned, and `reclaim logs` was observed retaining
 an entry rather than clearing the tree. So the conclusion — no undeclared nested location
 currently sits under a reclaimable parent where deletion would be wrong — survives, but it
 survives on the merits of what happens to be declared today, it is asserted by nothing,

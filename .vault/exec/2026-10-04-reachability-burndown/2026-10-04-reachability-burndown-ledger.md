@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:afc2fd785ee1a85ff442e64f3ea2b878fa600ac824b65b8002f147d39b47900a'
+body_hash: 'sha256:5bc8ee4e3b52e71e38debc118aa87258ba81bf67cc748d5f3d561d3302cf012d'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -343,12 +343,10 @@ related:
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/models.py`
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_cache.py`
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_llm_storage_shape_conformance.py`
-- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_run_telemetry_roundtrip.py`
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_smoke.py`
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_usage.py`
 - `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_usage_roundtrip.py`
 - `S11` `M` `src/cadrumo/adapters/persistence/llm/cache.py`
-- `S11` `M` `src/cadrumo/adapters/persistence/llm/run_telemetry.py`
 - `S11` `M` `src/cadrumo/adapters/persistence/llm/usage.py`
 - `S11` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
 - `S11` `M` `src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py`

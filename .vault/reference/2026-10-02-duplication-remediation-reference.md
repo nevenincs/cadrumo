@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:81420daa5ad4daec4b45c719bf8ad097c26424a722d6068fccb11c3e93d17464'
+body_hash: 'sha256:f7d9a8b685be1b6d983a4345875b153f189cc9b95eac3efc879cf832cda2b809'
 related: []
 ---
 # `duplication-remediation` reference: `reported duplication and current consolidation boundaries`
@@ -476,10 +476,10 @@ Read-only inventory for the approved duplication-remediation goal. The supplied 
 |J15|Recipient-only reverse-charge categories hardcoded|S05|R|j-iva-modelos/findings.md:48 → domain/iva/flow.py:145; classification.py:944; runtime_catalogues.py:48|
 |K01|Registry catalogue boilerplate|S17|Csrc; count drifted|k-core2/findings.md:5 → facts/resolution.py:260; K counted 34; reference targeted current search counted 33 mapping / 22 resolve|
 |K02|Hand-rolled registry-token string subclasses|S17|R|k-core2/findings.md:11 → core/registry_token.py:24,72,105 vs IRNR, IVA, categories, CCAA, deadlines, invoices|
-|K03|LLM run-timing records and summaries|S14|R|k-core2/findings.md:16 → adapters/persistence/llm/run_telemetry.py:93; application diagnostics ports :23 and service :251; CLI payload :112|
+|K03|LLM run-timing records and summaries|S14|R|k-core2/findings.md:16 → application diagnostics ports :23 and service :251; CLI payload :112|
 |K04|Output-language resolution and pinning|S21|R|k-core2/findings.md:19 → core/i18n/render.py:301-308; CLI runtime_profile_view.py:68-79; cli/common.py:1285-1301; custody.py|
 |K05|Config keys declared but never read|S23|R|k-core2/findings.md:23 → core/config.py:261,265,269; external_constants.py:219 and TOML :124|
-|K06|Two gestor-mode settings|S23|R|k-core2/findings.md:26 → core/config.py:723,757; llm/consent.py:139; telemetry/consent.py:30|
+|K06|Two gestor-mode settings|S23|R|k-core2/findings.md:26 → core/config.py:723,757; llm/consent.py:139|
 |K07|Boolean vocabulary bypasses parse_bool|S09|Csrc|k-core2/findings.md:29 → core/parsing/utils.py:43 vs aggregation/atribucion_member.py:385; report row 14|
 |K08|Postcode/province shape restated|S09|Csrc|k-core2/findings.md:32 → core/spanish_postcode.py:32 vs aggregation/retenciones.py:70,75; invoice_withholding_capture_public.py:164,169|
 |K09|Tax-identifier compact normalization mismatch|S09|Csrc|k-core2/findings.md:35 → core/identity/documents.py:189 vs :409; report row 15 dotted NIF shape vs validation|
@@ -2157,7 +2157,7 @@ Configured settings were read from the current code; the raw signal files do not
 
 Coverage / unavailable signals:
 
-- There are 14 lane queries.log files and 3,739 lines in total. Lane-reported volumes: A 218 (24 MCP, 194 CLI); B summary 238, queries.log 240 lines (227 CLI + 8 MCP + 3 pivots); C 398; D 251; E summary 108, log 110; F summary 23 and log 31 (partial, no like_ids, domain values/observability/telemetry barely swept); G 264 (256 CLI, 8 MCP, no pivots); H summary 46, log 51; I 231 (219 CLI, 12 MCP); J summary 302, log 300; K 309; L 562 distinct generated searches, log 622 lines; M 359 with 24 server KeyErrors returning no hits, log 359; N summary 357, log 355. The supplied overall estimate is ~3,680 distinct plus ~70 MCP calls; retain the per-lane/log discrepancies above.
+- There are 14 lane queries.log files and 3,739 lines in total. Lane-reported volumes: A 218 (24 MCP, 194 CLI); B summary 238, queries.log 240 lines (227 CLI + 8 MCP + 3 pivots); C 398; D 251; E summary 108, log 110; F summary 23 and log 31 (partial, no like_ids, domain values/observability barely swept); G 264 (256 CLI, 8 MCP, no pivots); H summary 46, log 51; I 231 (219 CLI, 12 MCP); J summary 302, log 300; K 309; L 562 distinct generated searches, log 622 lines; M 359 with 24 server KeyErrors returning no hits, log 359; N summary 357, log 355. The supplied overall estimate is ~3,680 distinct plus ~70 MCP calls; retain the per-lane/log discrepancies above.
 - Search index was ~9 hours stale; incremental reindex failed with full_reindex_required. It returns deleted pre-split MCP modules. adapters/local_runtime/** and entrypoints/runtime/** were not indexed. Lane B says it AST-scanned 3,502 functions over entrypoints/local_runtime and 11,985 functions across entrypoints/application/core to cover the gap.
 - M lane’s 24 ragbatch KeyErrors produced no hits (mostly single-file include-globs); those queries do not prove absence. F/E/H did not meet the brief’s 200-search target. D’s raw d-registry/r3.txt includes a Windows charmap UnicodeEncodeError on output capture; treat that specific capture as incomplete. Lane L’s 248 candidate-pair analyser output was only manually reviewed for about 30 pairs; 9 were confirmed.
 - The semantic code index cannot prove absence. Do not use stale search output as current evidence. Supplied finding locators are mid-merge, and current stable-tree census remains S01/S25 work owned by root.

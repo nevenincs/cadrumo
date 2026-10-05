@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:39158103f95e7d8c647b0f612d82ec82d18afda6cb3b15e98366b548aa916fc4'
+body_hash: 'sha256:93c330f5e1d9c8eae8385021633d848f081909e99e2df89571950731ea9c4e59'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -2299,12 +2299,11 @@ related:
 - `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
 - `S29` `verify:` `190 export trees target-current; form layouts 0 stale; candidate inspection 0 findings and tightened row-binding gate no defects (checked 18:5x UTC)` -> `pass`
 - `S29` `verify:` `two 190 tests pending authority republication; later candidate re-run blocked by another writer's in-progress 303/2023 bindings edit (19:37 UTC)` -> `fail`
-- `S29` `A` `src/cadrumo/entrypoints/tests/conformance_diagnostics_telemetry_support.py`
 - `S29` `A` `src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py`
 - `S29` `A` `src/cadrumo/entrypoints/tests/conformance_auth_diagnostic_report_support.py`
 - `S29` `A` `src/cadrumo/entrypoints/tests/conformance_auth_apoderado_support.py`
 - `S29` `verify:` `CF1 ruff/format/ty/import on 5 files` -> `pass`
-- `S29` `verify:` `7 conformance cases passed (apoderado and workstation after final edits; telemetry and phone-state report before them); mutation check showed teeth` -> `pass`
+- `S29` `verify:` `7 conformance cases passed (apoderado and workstation after final edits; phone-state report before them); mutation check showed teeth` -> `pass`
 - `S29` `verify:` `final rerun blocked: another writer's calculation_diagnostics.py imports a deleted _m347_inmueble_advisory module` -> `fail`
 - `S29` `by:` `sonnet`
 - `S29` `A` `src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py`
@@ -2802,7 +2801,7 @@ related:
 - `S09` Final Luna r3 execution receipt AE50E0D257273E6602176B3AE3F0A5DEE8D99B992B6F222C7F65314CA4DF03BA and invocation transcript215265D558184A4AC3F005DCF4F837FDD0943EFC72B86DFFBB9EB4148676FE27 fully root-reviewed; all16 indexed final artifacts hash/size match. Exact-path reconciliation0440FC2A4930E8FFEF9E1B3D2B31C1D0BE7A2FFF03146CB2FD942F67BE4E034B preserves zero67-path pre/post mismatches and one later current logger change. Root independently measures logging.py53EAE197292AB3CE29379178131A144594B667F9E2BCB146F7F078872E070CB7; at-run pre/post bothE59D46477E2DA4AF97A7E6E67A8B7D7EA553517406BCD97AC17980130FBD0B30. Bounded PASS pertains to that stable run cohort; no whole-current-tree verdict. No new gate or source edit. Worker narrative mentions reason preservation; exact owning assertions accepted here are code, key, `data_type,` value omission and rendered/exception-chain input omission, not a separately asserted reason field.
 - `S29` Conformance scenarios for the review-package exchange chain and modelo audit, seeded through production crypto and evidence services with synthetic keys
 - `S29` Modelo 190 Tipo 2 perceptor record repeats per perceptor and clave/subclave in 2022-2025 (Orden EHA/3127/2009, all four corpus editions; Tipo 1 positions 136-144 count tipo 2 records); regenerated through canonical generators, typed comparison shows only the repeat header changed; row-binding gate tightened to refuse non-repeating binding records
-- `S29` Conformance scenarios for diagnostics telemetry flush, workstation check, auth diagnostic phone-state report and the four apoderado operations; apoderado check asserts its documented `REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE`
+- `S29` Conformance scenarios for workstation check, auth diagnostic phone-state report and the four apoderado operations; apoderado check asserts its documented `REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE`
 - `S29` Conformance scenarios for modelo spreadsheet, live borrador 100, profile archive and profile history; outcomes follow source (spreadsheet export local success; calculate/pull/verify refuse at the Drive root; borrador import uses the committed synthetic fixture)
 - `S29` Conformance scenarios for ledger export, link, classify iva-derive and review, split review, llm-diagnostics, evidence `batch/pull/pull_all,` invoice import and wizard; open: iva-derive appends a `LEDGER_TRANSACTION_CLASSIFIED` event although the classification is unchanged
 - `S06` Root independently reviewed exact comment-only two-line correction B0FC4DD31389E5D64C7E64A448DA7365F76184D2357138719839A74DEEEF3577→CF6B90851823AC0D4B4103A58A5B3BD2B6805DAC09E62CA8E31FB2086D41C54F, matching full preimage/final/patch/receipt and whole-byte replacement hash. Only the coarse review comment changes; executable code/docstrings/fields/amounts/date behavior remain identical. ReceiptH:/Temp/s06-balance-comment-apply-20261003-1fe271b5/receipt.json50F18C7B0E809E79D32E5A3C5624CAAB2CA55E0994AC0FE5DBAA39C6A675596B; patch06E6A253D65E325E590B98D31E27D8E540CC6A141FAB03C3063E7A8217262528. No test/static run warranted; accepted behavior evidence reused.

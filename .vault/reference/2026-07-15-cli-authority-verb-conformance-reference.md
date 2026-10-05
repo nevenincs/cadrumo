@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:559f0267c04544fb6999100f595ab05537f59d7d37f5c2f9eb0cf9f06565f238'
+modified: '2026-10-05'
+body_hash: 'sha256:6fc633d5c8ba5e13d187ddb21982cabec2aef410930eb2b8c434bd3bc880439e'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -525,9 +525,8 @@ Canonical implementation: `src/cadrumo/core/hashing.py:32-40`.
 
 Residual exact implementations:
 
-Both consumers may import core without violating layer direction.  Delegate the
-telemetry wrapper to `sha256_hex` and replace the recipient fingerprint body
-with the same helper.  Tests assert digest parity through the real public
+The consumer may import core without violating layer direction.  Replace the
+recipient fingerprint body with `sha256_hex`.  Tests assert digest parity through the real public
 consumers rather than mirroring the algorithm.
 
 ## External command references

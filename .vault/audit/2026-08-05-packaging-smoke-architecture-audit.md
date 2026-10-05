@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:40781530c40a3fdc327922f9aed535ac1057f6bc317ddc127e7610ae4e41a115'
+body_hash: 'sha256:6a69b2b35378ea8450cc989b3f521016325421d98af3a4c127bbe7a92091d9d0'
 related:
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-research]]"
@@ -105,7 +105,7 @@ proves.
 nondeterministic element is whether the model emits a tool call, while the observable
 being tested is deterministic — `smoke_desktop_client._perform_attempt` gates on
 `len(observation.successful_calls) > baseline_calls` read from Claude Desktop's own MCP
-server telemetry log, requiring a NEW call that was really served AND carried no error
+server log, requiring a NEW call that was really served AND carried no error
 marker. Retrying a nondeterministic trigger for a deterministic observable is the same
 shape as polling, not a coin flip. The loop is also fail-closed: exhaustion raises, and
 every attempt is retained in `attempts.json` and embedded verbatim in the emitted

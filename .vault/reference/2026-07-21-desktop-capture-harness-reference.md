@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#desktop-capture-harness'
 date: '2026-07-21'
-modified: '2026-10-03'
-body_hash: 'sha256:1a3923f50392ce9e3b78bedbd393d54d7daca5cb7e19999d23ee8ac394507fac'
+modified: '2026-10-05'
+body_hash: 'sha256:ad3327647d68ef7327490033f9fe57659ddb75562d65975e9189dfdc25a9514b'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
 ---
@@ -43,8 +43,8 @@ Whether `Claude.exe` honors `--user-data-dir` (versus a hardcoded `app.setPath('
 
 ## MCP tool-call proof
 
-The cadrumo MCP server records one telemetry object per served call carrying a typed `transport` field (`inprocess` / `subprocess` / `subprocess_fallback`) plus the attested environment-CLI path/sha (commit `60d7120e22`). Desktop captures that on the server's stderr in the isolated profile's `logs\mcp-server-*.log`. The harness parses it (`desktop_capture.parse_mcp_server_log`) and gates capture success on a genuinely-served call whose RESULT carried no error marker (`McpToolCall.succeeded`), not merely a dispatched call — closing the connected-plus-dispatched false-pass.
+The cadrumo MCP server records one log object per served call carrying a typed `transport` field (`inprocess` / `subprocess` / `subprocess_fallback`) plus the attested environment-CLI path/sha (commit `60d7120e22`). Desktop captures that on the server's stderr in the isolated profile's `logs\mcp-server-*.log`. The harness parses it (`desktop_capture.parse_mcp_server_log`) and gates capture success on a genuinely-served call whose RESULT carried no error marker (`McpToolCall.succeeded`), not merely a dispatched call — closing the connected-plus-dispatched false-pass.
 
 ## Cowork assessment (design-only)
 
-Claude Cowork runs at claude.ai in a browser, so its capture would be Playwright driving a persistent-auth browser profile (a one-time interactive login persisted in a dedicated harness browser user-data dir, clean per run otherwise) against the claude.ai chat surface, with the same MCP/tool-call proof read from the connected server's telemetry rather than a debug port. It is a distinct decision from the Desktop MSIX shape and is not built in this pass; recommended as the next capture surface after the Desktop harness proves out.
+Claude Cowork runs at claude.ai in a browser, so its capture would be Playwright driving a persistent-auth browser profile (a one-time interactive login persisted in a dedicated harness browser user-data dir, clean per run otherwise) against the claude.ai chat surface, with the same MCP/tool-call proof read from the connected server's log rather than a debug port. It is a distinct decision from the Desktop MSIX shape and is not built in this pass; recommended as the next capture surface after the Desktop harness proves out.

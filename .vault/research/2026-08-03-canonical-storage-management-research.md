@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b4829e432815c93c06cbd28c98be1f19d8121d02d4d94975648b663912fa0c7c'
+body_hash: 'sha256:445be0941d55bd73d4b0e3c28bd404f4a4265e8117ec474f30f747b7ef886a2b'
 related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
@@ -74,8 +74,6 @@ read:
   declares `_INDEX_SUBDIR = "corpus-search"` and resolves
   `cadrumo_local_storage_root / _INDEX_SUBDIR`;
   the former source file declares
-  `_TELEMETRY_DIRNAME = "telemetry"` and resolves it the same way;
-  the former source file declares
   `_POINTER_FILENAME = "active-profile"` for the top-level pointer file. Each is
   root-anchored (so no escape), each is invisible to every gate and to the
   operator's override surface.
@@ -115,7 +113,7 @@ properties of that predicate bound its reach hard:
   ad-hoc sites build paths by operator join — `root / "buckets" / bucket_id / "db"`,
   `cadrumo_local_storage_root / _INDEX_SUBDIR` — which the regex cannot see.
 - Its vocabulary derives from `_STATE_ROOT_DERIVED_DIRS.values()`, so a segment
-  that was never enrolled (`buckets`, `keystore`, `corpus-search`, `telemetry`,
+  that was never enrolled (`buckets`, `keystore`, `corpus-search`,
   `active-profile`) is not in the vocabulary and cannot be flagged even if it
   did appear in a slashed literal.
 - It excludes test trees entirely (`"/tests/" in rel` is skipped), so a test
@@ -447,7 +445,7 @@ fail, in both directions:**
 | candidate | size | delta versus shipped set |
 |---|---|---|
 | retention ∪ TTL | 7 | misses corpus-text, validation-verdict, backups; wrongly adds registry-disk-cache, wallet-diagnostic |
-| `cache/` grouping | 4 | misses llm-usage, llm-run-telemetry, runs, backups |
+| `cache/` grouping | 4 | misses llm-usage, runs, backups |
 | `cache/` ∪ retention ∪ TTL | 9 | misses backups; wrongly adds registry-disk-cache, wallet-diagnostic |
 | retention alone | 6 | misses status-cache, corpus-text, validation-verdict, backups; wrongly adds two |
 
@@ -833,7 +831,6 @@ surface, not a new surface plus bridges to the old one.
 - the former source file — the pinned duplicate
 - the former source file — the CRUD contract
 - the former source file — the registered catalogue
-- the former source file — the `telemetry` directory
 - the former source file — the registry cache branch
 - the former source file — the two red relative-path tests
 - the former source file — the reset-journal parity pin

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-all-mcp-integration'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a61d783eb2c10e1a0d6d4f61614aead3264f221df6cc9eeb5a69e40ba1bf5b48'
+body_hash: 'sha256:1c54ce9249e5233e8ad84c80ee541dd02700abadf205561393cdebceb0404433'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -923,7 +923,6 @@ related:
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -1019,7 +1018,6 @@ related:
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S04` `A` `docs/locales/ca/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -1156,7 +1154,6 @@ related:
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -1252,7 +1249,6 @@ related:
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S04` `A` `docs/locales/es/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -1389,7 +1385,6 @@ related:
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -1485,7 +1480,6 @@ related:
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S04` `A` `docs/locales/hu/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -1621,7 +1615,6 @@ related:
 - `S04` `A` `docs/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.md`
 - `S04` `A` `docs/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.md`
 - `S04` `A` `docs/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.md`
-- `S04` `A` `docs/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md`
 - `S04` `A` `docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
 - `S04` `A` `docs/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.md`
 - `S04` `A` `docs/technical/articles/029-installed-workbench-generations-and-workstation-checks.md`
@@ -1717,7 +1710,6 @@ related:
 - `S04` `A` `docs/technical/articles/119-error-contracts-renderers-and-record-fault-projection.md`
 - `S04` `A` `docs/technical/articles/120-error-registry-catalogues-and-severity.md`
 - `S04` `A` `docs/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md`
-- `S04` `A` `docs/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md`
 - `S04` `A` `docs/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md`
 - `S04` `A` `docs/technical/articles/124-registry-formulas-and-filing-row-materialization.md`
 - `S04` `A` `docs/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md`
@@ -1859,7 +1851,6 @@ related:
 - `S04` `D` `technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.md`
 - `S04` `D` `technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.md`
 - `S04` `D` `technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.md`
-- `S04` `D` `technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md`
 - `S04` `D` `technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
 - `S04` `D` `technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.md`
 - `S04` `D` `technical/articles/029-installed-workbench-generations-and-workstation-checks.md`
@@ -1955,7 +1946,6 @@ related:
 - `S04` `D` `technical/articles/119-error-contracts-renderers-and-record-fault-projection.md`
 - `S04` `D` `technical/articles/120-error-registry-catalogues-and-severity.md`
 - `S04` `D` `technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.md`
-- `S04` `D` `technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md`
 - `S04` `D` `technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md`
 - `S04` `D` `technical/articles/124-registry-formulas-and-filing-row-materialization.md`
 - `S04` `D` `technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md`
@@ -2603,7 +2593,6 @@ related:
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -2699,7 +2688,6 @@ related:
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S05` `M` `docs/locales/ca/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -2816,7 +2804,6 @@ related:
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -2912,7 +2899,6 @@ related:
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S05` `M` `docs/locales/es/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -3033,7 +3019,6 @@ related:
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/023-profile-custody-primitives-session-state-and-secure-envelopes.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.po`
-- `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/029-installed-workbench-generations-and-workstation-checks.po`
@@ -3129,7 +3114,6 @@ related:
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/120-error-registry-catalogues-and-severity.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/121-localization-identity-validation-run-traces-and-date-parsing.po`
-- `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/122-redaction-bundled-resources-telemetry-and-time-contracts.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/123-domain-evidence-filing-periods-and-capital-goods-registers.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/124-registry-formulas-and-filing-row-materialization.po`
 - `S05` `M` `docs/locales/hu/LC_MESSAGES/technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.po`
@@ -3342,7 +3326,6 @@ related:
 - `S05` `A` `src/cadrumo/entrypoints/tests/conformance_auth_diagnostic_report_support.py`
 - `S05` `D` `src/cadrumo/entrypoints/tests/conformance_borrador_support.py`
 - `S05` `D` `src/cadrumo/entrypoints/tests/conformance_censo_support.py`
-- `S05` `A` `src/cadrumo/entrypoints/tests/conformance_diagnostics_telemetry_support.py`
 - `S05` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
 - `S05` `A` `src/cadrumo/entrypoints/tests/conformance_invoice_intake_support.py`
 - `S05` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_classification_support.py`

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4ede2dfd868bd651b8d8acb420270dd023c825b5021376f4db00fd0f833a689a'
+body_hash: 'sha256:68e1217fcbc266d46856458806d0a4b02acc1bb7eda357ef6c746c0af1fb99eb'
 related: []
 ---
 # `test-harness-sanity` audit: harness performance
@@ -3337,8 +3337,8 @@ this per document, not once.
   varies run to run. Anything that binds 11434 would change these tests'
   behaviour outright.
 - **`cadrumo_llm_ollama_chat_url` is declared in the wrong module.** Every other
-  `cadrumo_llm_*` field -- provider, model, API keys, timeouts, retries, cache
-  and telemetry dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
+  `cadrumo_llm_*` field -- provider, model, API keys, timeouts, retries, and cache
+  dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
   endpoint alone sits in `core/_config_runtime_fields.py:18`. It is a normal
   Settings field with the normal env override; only its home is wrong.
 

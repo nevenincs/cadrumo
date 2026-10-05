@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d951ff486167c5f77ce7ab4b92399764adfb37d86dec7777b76ec6cb00c1920a'
+body_hash: 'sha256:2135188911eb61722f770682c1718d6bda8035fe43cd75c3cde01d1dc1d8c8d3'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -281,7 +281,7 @@ action becomes callable or declares `TuiCapability.AVAILABLE`
 
 Financial values are not generic application secrets, but they are sensitive.
 They must remain in the workspace projection, mounted widgets, and memory-only
-edit session; they cannot be placed in route strings, telemetry, snapshots,
+edit session; they cannot be placed in route strings, snapshots,
 operation journals, diagnostics, concurrency tokens, or golden fixtures. This
 ADR does not reopen the separate generic secret-submission or recovery-display
 decisions.

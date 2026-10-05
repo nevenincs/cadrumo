@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-30'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:86e2df8efbd38c79e07a562b0359ee31a9da64d4785be500846a4f65afd1a86d'
+body_hash: 'sha256:66b70cda0ffe7ef4c2ec637ccfbda4dda3980ea92af2c4bfc7b70df962d926b9'
 related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
 ---
@@ -1596,8 +1596,8 @@ match against and excluded nothing. The result — **58** bare
 rounding-mode defect across production tax code, on the reasoning that Python's
 default is banker's rounding while AEAT expects half-up.
 
-**The real production figure is 4**, and all four are non-tax: two run-health
-diagnostics, one telemetry mean, one percentage-change projection. No filed
+**The real production figure is 3**, and all three are non-tax: two run-health
+diagnostics and one percentage-change projection. No filed
 amount is affected. The tax paths use explicit `ROUND_HALF_UP` (37 occurrences).
 The formula engine's `localcontext()` sets `prec = 28` and no rounding, which
 affects only the 28th significant digit and is immaterial for money.

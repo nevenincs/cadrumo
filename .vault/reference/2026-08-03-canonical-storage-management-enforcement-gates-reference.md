@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d413e9ff433c51df4e6fc011386cccbf8664e7db050abbf9e90112c2a4e4a913'
+body_hash: 'sha256:a03eef9bf45c8db1660ff41837ec830331d08a4db7f290e134344bbc73dad524'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -33,8 +33,7 @@ pass by asserting the accessor equals itself is not a gate.
 ### Gate 1 — Provenance
 
 **Defect:** a module inventing a storage location instead of resolving one —
-the class that produced the corpus-search directory, the MCP telemetry
-directory, and the inline bucket-database path.
+the class that produced the corpus-search directory, and the inline bucket-database path.
 
 **Mechanism.** Parse every production module to an AST. Flag any
 `ast.Attribute` node whose `attr` is `cadrumo_local_storage_root`, and any

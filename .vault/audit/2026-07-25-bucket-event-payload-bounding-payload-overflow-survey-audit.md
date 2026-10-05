@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#bucket-event-payload-bounding'
 date: '2026-07-25'
-modified: '2026-10-03'
-body_hash: 'sha256:2974c4b1cf612c1ca6f28f9352ca1934dd18bebf839e1334425a63389f9d9825'
+modified: '2026-10-05'
+body_hash: 'sha256:6f720b81a24074880462611e08488d39bc516965559280aac931df13d15b000a'
 related:
   - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
 ---
@@ -113,7 +113,7 @@ guard cannot enforce a bound that is not named.
 ### scoping-noise | medium | an unscoped detector is dominated by false positives
 
 A first cut keyed on the name `payload` alone flagged twenty-two values, of
-which twenty-one were not bucket events: Google Sheets rows, LLM telemetry and
+which twenty-one were not bucket events: Google Sheets rows, LLM
 cache records, CLI result bodies, and rendering payloads. `payload` is a common
 name across the codebase and carries no capped-slot contract outside this
 substrate.

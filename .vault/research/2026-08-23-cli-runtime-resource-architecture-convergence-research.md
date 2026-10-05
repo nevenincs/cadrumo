@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-runtime-resource-architecture-convergence'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:515e8cf2da069ba8f1894e1bccdd0855384188fb80bd78bc4b1491336061a80b'
+body_hash: 'sha256:e509728d36d00f755868fb2a89ef54ba4c378b357d7533b54b78ca09058bc47a'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
 ---
@@ -68,7 +68,7 @@ on materializing the production tree it is trying to describe.
 
 The first review described S14 as a direct generator/bootstrap cycle. Exact
 source narrows that claim. S14 imports and manually composes nine application
-families, supplemental telemetry, review, and participation registrars, then
+families, supplemental, review, and participation registrars, then
 walks the reconstructed Typer tree; it does not call `full_command_tree`.
 
 That correction does not make the design independent. The manual composition is

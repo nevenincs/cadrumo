@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f0f7261ea4e983fde129361fc33002a88833b2e413b6175b02e9784bc4fbd6a'
+body_hash: 'sha256:9aa0888fea27724a41df299a1e3451db62896034934e5a63c9acbcb8450d617a'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -336,11 +336,9 @@ core, and returns a typed result; it holds no repository handle, constructs no
 `AttachmentStore`, and imports nothing from `adapters.persistence`. This is a discipline
 enforced by the gates and by an import contract, not by the type system — the research
 established the type system cannot carry it, since both `EvidenceInput.data` and a
-structural `AttachmentStoreProtocol` hand over bytes freely. The three inference-scoped
+structural `AttachmentStoreProtocol` hand over bytes freely. The two inference-scoped
 stores that today write through `secure_object_repository_for_active_bucket`
-(`_cache.py`, `_run_telemetry.py`, `_usage.py`) stay on the core side of the boundary,
-which also preserves `application/diagnostics_run_health.py:71` — a core, non-ledger
-consumer of run telemetry that must not become conditional on an optional install.
+(`_cache.py`, `_usage.py`) stay on the core side of the boundary.
 
 **D4 — the output shape is a typed validated payload, never free text.** The core accepts
 a single strict model (`extra="forbid"`, closed key set, `STRICT_FROZEN_CONFIG`) and

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4a4db076acd81094c6f732c276e94774907fa033745be3471b2440300a1d598e'
+body_hash: 'sha256:9d443b10a0c5689fc4afcf9ceec32505ce6f0f4b49b188cc909b70788c121128'
 related: []
 ---
 
@@ -149,22 +149,22 @@ three of the four families **already closed by the grammar mechanism**:
   `SUBMISSIONS_AMENDMENT_RESULTS`, `SUBMISSIONS_AMENDMENTS`, and
   `ATTACHMENTS_MANIFESTS`. Plain membership, not `StoragePathDefinition` —
   correct, since none of these segments is data-derived.
-- **Family 4 — filename templates** (5 patterns, `S107`, **closed**):
-  `llm_usage_record`, `llm_run_telemetry_record`, `auth_acquisition_lock`,
+- **Family 4 — filename templates** (4 patterns, `S107`, **closed**):
+  `llm_usage_record`, `auth_acquisition_lock`,
   `validation_verdict_cache_entry`, and `llm_cache_entry` are all declared as
   `StoragePathDefinition` grammars, confirmed at pinned HEAD `b6287cd8f5`. The
   open question this family originally posed — does the model need a new
   field, or does an ADR ruling need to state instance-keyed files are
   governed by their directory alone — was answered by the same evidence that
   closed `S86`–`S88`: the grammar mechanism already handles a parameterised
-  filename with no model change and no ruling, and the five grammars are now
+  filename with no model change and no ruling, and the four grammars are now
   declared, not merely confirmed declarable.
 
 **Reclaim-reachability, corrected on the fuller set.** An earlier pass found
 no nested-ungoverned site reachable by `reclaim`. On the full 34-site set that
 is wrong: 11 sit under a reclaimable parent (`runs`, `llm-cache`,
-`llm-run-telemetry`, `llm-usage`, `logs`). In every one, deletion is the
-intended behaviour — regenerable traces, caches, and telemetry — so the
+`llm-usage`, `logs`). In every one, deletion is the
+intended behaviour — regenerable traces and caches — so the
 conclusion (no undeclared nesting sits where deletion would be wrong)
 survives, but on the merits of what happens to be declared today, asserted by
 nothing. `S106` tracks the containment-proof gap this depends on.

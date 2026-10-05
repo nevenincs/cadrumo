@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cli-root-verb-homes'
 date: '2026-08-25'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a2f029a0b762d2c09d3721f22e7fb13edefa547b8f26c099984d2dc7d77b158e'
+body_hash: 'sha256:87989685cf2e2ee6271ebbd8929c0c048594cbe0d662c64b41770375e4e2118d'
 related: []
 ---
 
@@ -124,8 +124,8 @@ declared-policy tell that it is a custody verb.
 ### diagnostics-charter-contradicts-its-mount | medium | The `config` root help claims diagnostics, but the diagnostics family is mounted under `app`.
 
 `cli.config.app_help` reads "Manage local configuration and diagnostics". The
-seven-leaf diagnostics family is `aeat app diagnostics
-{errors,latency,llm-usage,run-health,runs,telemetry flush,telemetry status}`, every
+five-leaf diagnostics family is `aeat app diagnostics
+{errors,latency,llm-usage,run-health,runs}`, every
 one declaring `local-storage` and nothing else. Meanwhile `config` does carry
 diagnostics-shaped leaves of its own: `config check`, `config auth diagnostics
 {list,report,show}`, `config repair logs`, `config provision report`.

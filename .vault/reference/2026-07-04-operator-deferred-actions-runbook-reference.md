@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#operator-deferred-actions-runbook'
 date: '2026-07-04'
-modified: '2026-10-03'
-body_hash: 'sha256:79647a37f282a23afb3a3cbc63ee491f885d517df5909ae6f23c1b8600e982f4'
+modified: '2026-10-05'
+body_hash: 'sha256:f4cc709835815c44a025a74879c0de2a6974e75c90da0182f678527616c09cc6'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## Summary
 
-Consolidated runbook for six items that are genuinely gated on an operator
+Consolidated runbook for five items that are genuinely gated on an operator
 action this repository's automation cannot and must not take: outward
 publishing, a GitHub repository-settings toggle, a live external-service call
 requiring credentials this environment does not hold, or a physical
@@ -24,7 +24,7 @@ this document; every verification below was read-only or local.
 
 Issue numbers below are the real GitHub issue numbers for this repository
 (`nevenincs/aeat`); they differ from the `#110`-`#115` placeholder numbers used
-to commission this runbook, which do not correspond to these six items in this
+to commission this runbook, which do not correspond to these five items in this
 repository's tracker.
 
 ## Item 1 — cut the next release (issue #382)
@@ -323,8 +323,7 @@ longer name that modelo.
     hermetic reproduction, no mocks) and every typed-record contract;
     `test_session_store_roundtrip.py` and `test_factory.py` cover persistence
     and dispatch; `test_google_credential_source_cli.py` (integration-marked)
-    covers the CLI surface. All green at HEAD (65 tests passed across the
-    telemetry+impersonation-adjacent focused run; impersonation-specific
+    covers the CLI surface. All green at HEAD (impersonation-specific
     modules pass in isolation).
 - The ADR (`.vault/adr/2026-07-04-google-sa-impersonation-adr.md`) and the
   module docstring both explicitly name the one deferred piece: "a live-gated
@@ -368,77 +367,6 @@ short-lived, valid impersonated access token was minted for the named target
 principal — no error, and no unrelated `GoogleAuthAdcStaleError` or
 `GoogleAuthImpersonationRefusedError` was raised.
 
-## Item 6 — local-only telemetry activation (issue #407)
-
-**Verified autonomous surface: exhausted; telemetry stays default-off and
-structurally inert.**
-
-- Every planned slice for issue #407 is landed at HEAD (`2e6ebdae1e` default-off
-  consent gate + payload scrub, `2d21331067` non-sensitive metric registry +
-  local producers, `de69718942` default-inert consent-gated HTTP transport
-  sink, `59238e0516` CLI opt-in/tier/endpoint + flush controls, `8e8498f6fb`
-  JSONL run-telemetry sink + retention window, plus the local-only diagnostics
-  CLI verbs from `c1096f98a6`/`7d83628218`/`824c0e5c28`):
-  - `core.telemetry.telemetry_emit_permitted` — the four-way consent gate
-    (gestor-mode absolute bar → deployment opt-in → tier → per-invocation
-    acknowledgement, all ANDed, never sticky), mirroring the shape of
-    `application.ledger.cloud_evidence_read_permitted`.
-  - `core.telemetry.TelemetryEventPayload` — closed allowlisted payload model;
-    no `extra` field, no free-text field wide enough to carry operator
-    content; a metric key can only ever be emitted remotely if it is
-    registered in `TELEMETRY_METRIC_REGISTRY` with `remote_allowed=True`.
-  - `core.telemetry.LocalNoopTelemetrySink` — the default sink, a pure no-op
-    that proves the gate-then-schema-then-emit pipeline end-to-end with zero
-    transmission.
-  - `core.telemetry._http_sink.HttpTelemetrySink` — the real transmitting
-    sink, structurally inert unless a caller BOTH explicitly builds one AND
-    the consent gate already permitted the emission; additionally, no
-    configured `settings.aeat_telemetry_endpoint` means unconditional no-send,
-    and any transport failure is swallowed (logged at debug level, no payload
-    content logged) so telemetry can never affect a command's outcome.
-  - `core.config.Settings` fields: `aeat_telemetry_opt_in` (default `False`),
-    `aeat_telemetry_tier` (`TelemetryTier`, default off), `aeat_telemetry_endpoint`
-    (default `None`), all under the `AEAT_TELEMETRY_*` env-var family, with
-    `aeat_evidence_gestor_mode` as the categorical bar independent of the
-    other two.
-  - CLI surface: `aeat app diagnostics telemetry status` (reports the current
-    posture — opt-in, tier, gestor mode, endpoint, `would_emit_if_acknowledged`
-    — and NEVER emits anything itself) and `aeat app diagnostics telemetry
-    flush` (`--dry-run` is the default; it previews the exact aggregate
-    payload that would be sent with zero network calls; `--no-dry-run` sends
-    only when the consent gate permits AND `--acknowledge-remote-telemetry`
-    is passed AND an endpoint is configured — the acknowledgement is never
-    sticky and must be re-affirmed on every invocation).
-- Hermetic test coverage: 65/65 tests passed across
-  `src/cadrumo/core/telemetry` (consent, emit, workspace hashing, settings
-  fields, schema allowlist, producers, HTTP sink) plus
-  `src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_telemetry.py`.
-- By design, this residual is not a gap to close — it is the intended
-  default-off posture. Nothing further should be built to "activate" telemetry
-  automatically; activation is deliberately an explicit, per-deployment,
-  per-invocation operator choice.
-
-**No further prep needed or appropriate.** Building any auto-activation path
-would violate the ADR's explicit default-off, always-re-affirmed consent
-design.
-
-**Operator action (opt-in, only if desired):**
-
-1. Preview the posture first (never emits): `aeat app diagnostics telemetry status`.
-2. Preview what a send would contain (never emits):
-   `aeat app diagnostics telemetry flush` (dry-run is the default).
-3. To actually opt a deployment in, set in `env/.env`:
-   `AEAT_TELEMETRY_OPT_IN=true`, `AEAT_TELEMETRY_TIER=crash_only` (or `full`),
-   and `AEAT_TELEMETRY_ENDPOINT=<collector-url>`.
-4. To send the aggregate local-run payload once, per invocation:
-   `aeat app diagnostics telemetry flush --no-dry-run --acknowledge-remote-telemetry`.
-
-**Acceptance signal:** `aeat app diagnostics telemetry status` reports
-`opt_in=True`, the chosen `tier`, and the configured `endpoint`; a subsequent
-`flush --no-dry-run --acknowledge-remote-telemetry` reports `sent=True` and the
-configured collector receives the payload (verified on the collector side,
-outside this repository).
-
 ## Non-outward prep landed while preparing this runbook
 
 - `README.md` — added one line to "Getting help" cross-linking `SECURITY.md`
@@ -450,6 +378,5 @@ outside this repository).
 Verified before landing: `uv run --no-sync pytest --collect-only -q src/cadrumo`
 collects cleanly (12,560 tests, 0 errors); the new live test collects and
 skips correctly without opt-in; `ruff check` is clean on the new test file;
-the full telemetry + impersonation focused suites pass (65 + impersonation
-module tests green). No outward action (push, tag, publish, GitHub setting
+the impersonation focused suites pass. No outward action (push, tag, publish, GitHub setting
 change, live external call) was taken.

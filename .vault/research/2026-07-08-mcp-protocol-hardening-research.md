@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-10-03'
-body_hash: 'sha256:e70e71ee2b006eebaa84a0832bde445d01689d086624bfdc032c8b154ca5e8ab'
+modified: '2026-10-05'
+body_hash: 'sha256:5cac204a0750d6439d0c4e031473ecc9c4ce288b1d66c4b620334905157450ae'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
@@ -118,14 +118,6 @@ model reads English best and the operator never sees tool descriptions) or
 an oversight. It should be decided explicitly, gated, and documented, so the
 locale parity gates know their boundary.
 
-### F7 — Telemetry grows without bound
-
-Per-session JSONL trajectory rows are payload-free (hashes only — correct
-per the secure-storage rule) but nothing prunes or rotates the telemetry
-directory across sessions (`_telemetry.py`, lines 78–134). A long-lived
-installation accretes files indefinitely. A retention policy (age- or
-count-based) is needed, plus a documented read path.
-
 ### F8 — Faithfulness window: sound, narrow, and honestly bounded
 
 The serving-path check is argument-faithfulness (regex amount-shapes in call
@@ -162,7 +154,7 @@ resolution table).
 The console already holds the load-bearing lines: stdio-only transport,
 annotations-as-hints with server-side gate enforcement, no token
 passthrough, evidence bytes never in tool results (conformance-gated),
-payload-free telemetry. Two items from the brief deserve explicit ADR
+Two items from the brief deserve explicit ADR
 treatment: (a) third-party content sanitisation — AEAT portal HTML /
 justificante text relayed through pull results is untrusted input to the
 model (prompt-injection vector) and currently flows verbatim; (b) URL-mode

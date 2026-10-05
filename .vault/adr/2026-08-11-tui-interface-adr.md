@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:9f74bc002f00c55746d39f6b67fd246ed3fc198f5643bacc6b806536c5190d55'
+body_hash: 'sha256:05fcdd5f2d00355dfd73277921e7549c35bb2aa15b1efee743cfe901a3fcf165'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -458,7 +458,7 @@ separate port is deliberately not decided here.
 
 Values and reversible derivatives are excluded from flow answers, form models,
 envelopes, journals, receipts, events, snapshots, logs, traces, checkpoints,
-replay, retained UI history, exceptions, telemetry, and clipboard actions.
+replay, retained UI history, exceptions, and clipboard actions.
 Expiry, duplicate, mismatch, or missing consumer refuses without echo. The
 contract promises bounded custody, not impossible runtime-wide erasure.
 

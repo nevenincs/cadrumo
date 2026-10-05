@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2376e2997f58e63baa9b9b4b30df139ec547ea15c9be05ce5b6d2d652c25df1'
+body_hash: 'sha256:14205ebdd7b06f0648afe4026597d91ae3e42005cc4831cb1dd6e19e4f1531dd'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -52,8 +52,7 @@ Run at `64c9fe6d6e`, `--scope tests`: 4557 file-producing sites, 1% unresolved
 (34), 114 flagged `constrained`. Against the oracles: `test_bundle_export_recovery.py`
 fired correctly; `_registry_cli_fixtures.py` and `test_m145_communication_cli.py`
 — the other two known `secrets` positives — did not fire. `registry` produced 3
-hits against an expected 0; `llm-*` produced roughly 9 hits (`test_cache.py`,
-`test_run_telemetry_retention.py`) against an expected 0. Independently
+hits against an expected 0; `llm-*` produced roughly 9 hits (`test_cache.py`) against an expected 0. Independently
 reproduced at a different pin from a parallel run at `53f80f0830` (110 hits, the
 same two misses, the same over-firing shape), so the result is not an artefact of
 one revision.
@@ -71,7 +70,7 @@ independently-confirmed causes, none of them the intended signal:
    distinguish that from an independent injection agreeing with an unrelated
    consumer.
 2. **Generic local-variable names colliding with the marker vocabulary.**
-   `test_run_telemetry_retention.py` never calls any accessor. It fires because
+   A retention test never calls any accessor. It fires because
    line 157 assigns a local variable literally named `root_dir` — a wholly
    ordinary choice of scratch variable name a test author made — and `root_dir`
    is a member of `TAXONOMY_MARKERS`, reused wholesale as part of

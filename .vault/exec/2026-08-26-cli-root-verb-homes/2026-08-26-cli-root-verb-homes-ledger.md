@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a7bc1b11232a120995c882652efedc1e41ff0dd6eb4aba762141132987e094f'
+body_hash: 'sha256:b54d528e142943c8575698de875e562c1854bd77ec5f88d6f95466fb0464e273'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
@@ -943,7 +943,7 @@ related:
 - `S56` staleness -- in all four catalogues.
 - `S56` The root placement was considered and left. Observability of the app's own work
 - `S56` is neither configuration nor tax work, and with only two roots permitted, `app`
-- `S56` fits it better than `config`, which would file runtime telemetry under setup.
+- `S56` fits it better than `config`.
 - `S56` `attach` versus `link` is principled, and the parameters prove it.** Both take
 - `S56` `transaction_id` positionally, as the single-subject rule requires. `attach`
 - `S56` takes `--attachment-ids` / `--purchase-invoice-evidence-id` and binds stored
@@ -1049,7 +1049,6 @@ related:
 - `S60` `config profile` exists to hold, and it sits consistently beside `capabilities`
 - `S60` and `censo`. `app diagnostics` is neither configuration nor tax work, but with
 - `S60` only two roots permitted it is observation OF the work, and filing runtime
-- `S60` telemetry under setup would be worse.
 - `S60` The standing goal asked that every app-versus-config conflation be found and
 - `S60` tightened. On the evidence of this pass there are none left to find; what the
 - `S60` pass cannot claim is that the criterion above is enforced -- it is judgement

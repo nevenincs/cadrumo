@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-03'
-modified: '2026-10-03'
-body_hash: 'sha256:d2de711501880727de3fb61743f0b81293ff52ec57e4b53c751333fe55a2b6f4'
+modified: '2026-10-05'
+body_hash: 'sha256:9aee4cfcda8968b4febd24125a2a14183d312eec3f86f871ffa9de29a48e807b'
 related: []
 ---
 
@@ -30,7 +30,7 @@ The three filing concretes (`ModeloDraftRepository`, `ModeloAmendmentRepository`
 
 ### out-of-scope-red-gate | medium | test_import_hygiene_gate + test_lazy_import_policy RED at HEAD from unrelated peer work
 
-Six tests across the retired test (2) and the retired test (4) are RED at committed HEAD, reproduced against a pristine `git archive HEAD` extraction (genuine committed-state failure, not working-tree noise). Root cause is unrelated concurrent peer commits landing during this campaign's window — `#407` local-only run/session diagnostics (`adapters/outbound/llm/_run_telemetry.py`), `#422` sandboxed experiment workspace (`application/bucket_maintenance/_sandbox.py`), the `claude-ecosystem-packaging` campaign (`agent/_workspace.py`), plus three test files under `corpus_search`, `calc_sheets`, and `entrypoints/mcp`. None are in the ports-inversion ADR/plan scope or its touched files; the campaign's own edits to `test_lazy_import_policy.py` were surgical (only its own relocation edges). Per `full-tree-gate-must-distinguish-owner` this does not block ports-inversion closure, but it is a real red gate on the shared branch.
+Six tests across the retired test (2) and the retired test (4) are RED at committed HEAD, reproduced against a pristine `git archive HEAD` extraction (genuine committed-state failure, not working-tree noise). Root cause is unrelated concurrent peer commits landing during this campaign's window — `#422` sandboxed experiment workspace (`application/bucket_maintenance/_sandbox.py`), the `claude-ecosystem-packaging` campaign (`agent/_workspace.py`), plus three test files under `corpus_search`, `calc_sheets`, and `entrypoints/mcp`. None are in the ports-inversion ADR/plan scope or its touched files; the campaign's own edits to `test_lazy_import_policy.py` were surgical (only its own relocation edges). Per `full-tree-gate-must-distinguish-owner` this does not block ports-inversion closure, but it is a real red gate on the shared branch.
 
 ## Recommendations
 

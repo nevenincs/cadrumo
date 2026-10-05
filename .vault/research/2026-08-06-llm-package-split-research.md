@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3bcdec911f7483e603424774295c4f11dc52a9c0070af48e4056e07172143d64'
+body_hash: 'sha256:fa1ea4b6edf9d1b333a5d61ade4fcf2229f17508f8a7283253398e6fdc796d44'
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
@@ -62,7 +62,7 @@ Classifying the candidate set by what each module actually does:
 - **Mixed inference and core orchestration** (the split line):
   `application/ledger/_llm_classification.py`, 1606 lines. It holds inference call sites
   (`rasterise_pdf_pages_to_base64_png`, `LocalVisionLLMClassifier`, subprocess classifier
-  and split proposer, `LLMRunTelemetryRecorder`) *and* core writes — `set_classification`,
+  and split proposer) *and* core writes — `set_classification`,
   `BucketEventHistoryRepository` (`:53-54`), `AttachmentStore` over
   `secure_object_repository_for_bucket` (`:261`), the consent gate
   (`cloud_evidence_read_permitted`, `:275`), and split persistence
@@ -73,24 +73,14 @@ Classifying the candidate set by what each module actually does:
   `_llm_diagnostics.py` (`:43-46`, reads `UsageRecord`/`UsageRecorder` plus the
   transaction catalogue).
 
-Three adapter modules are inference-scoped but write core persistence through
+Two adapter modules are inference-scoped but write core persistence through
 `secure_object_repository_for_active_bucket`: `_cache.py:20` (read `:123`, write `:205`),
-`_run_telemetry.py:55` (write `:153`), `_usage.py:20` (write `:119`). They cannot move
+`_usage.py:20` (write `:119`). They cannot move
 without either moving a persistence dependency across the boundary or leaving the writes
 behind.
 
-### One hard non-ledger consumer blocks a clean lift of the telemetry stores
-
-`application/diagnostics_run_health.py:71` imports `LLMRunRecord` and
-`LLMRunTelemetryRecorder` directly. That module powers the general
-`aeat app diagnostics run-health / runs / latency / errors / llm-usage` verbs, which are
-not ledger-classification features. So the run-telemetry store has a core consumer
-independent of the inference path: moving it into an optional extension would make a
-core diagnostics surface conditional on an optional install.
-
-The remaining apparent couplings are not imports and do not force a package dependency:
-`core/telemetry/_producers.py`, `_schema.py`, `_http_sink.py` mention the recorder in
-docstrings only; `core/errors/registry/_adapters_part2.py:176-245` keys an error table by
+The apparent couplings that remain are not imports and do not force a package dependency:
+`core/errors/registry/_adapters_part2.py:176-245` keys an error table by
 string qualname; `core/paths.py`, `_storage_path_definitions.py` and
 `_namespace_registry.py` carry `owner="cadrumo.adapters.outbound.llm"` as a string label.
 These need re-pointing on a rename, not re-architecting.

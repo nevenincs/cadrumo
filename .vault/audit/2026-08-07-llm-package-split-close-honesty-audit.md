@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ddd9449d43a4b2468bb658530b5579d869ebac0ac34b28b483e6156a68636712'
+body_hash: 'sha256:3b1316ca09abbb202c36624bc2107bfc06f4f5fef90cdfeced36eef6777834fc'
 related: []
 ---
 # `llm-package-split` close: what the unchecked steps actually are
@@ -37,7 +37,7 @@ demands, at HEAD, in this session.
 - `W04.P08.S38` -- no string owner label or error-registry qualname under
   `core/` still names a vacated `adapters.outbound.llm._*` path. Verified by
   search returning empty, which is the Step's own red condition inverted.
-- `W04.P09.S41` -- the cache, run-telemetry and usage stores remain in
+- `W04.P09.S41` -- the cache and usage stores remain in
   `adapters/outbound/llm/`, which is the Step's requirement rather than
   leftover work. Their staying put is what keeps the diagnostics consumer
   unconditional.

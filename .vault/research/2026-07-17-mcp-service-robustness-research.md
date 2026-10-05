@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-service-robustness'
 date: '2026-07-17'
-modified: '2026-10-03'
-body_hash: 'sha256:5b2bd58cd1d691e95c61b5968d6f50f1a6d4c6cc9a429510b6051d663779ae17'
+modified: '2026-10-05'
+body_hash: 'sha256:b7d9e9caf87bbb4fdb8e3786d65deb52d273bd7daa67b260b0e12480eef0b1c9'
 related:
   - '[[2026-07-17-mcp-service-robustness-audit]]'
 ---
@@ -72,8 +72,7 @@ machines, risking false timeouts on a first read.
 
 ### Stdout hygiene: clean
 
-No stray stdout writers exist in the package; child output is piped, telemetry
-writes to files, `stdin` is `DEVNULL`-isolated, and encoding is explicit — the
+No stray stdout writers exist in the package; child output is piped, `stdin` is `DEVNULL`-isolated, and encoding is explicit — the
 JSON-RPC stream itself is not at risk from child output.
 
 ### Empirical latency decomposition (installed cohort, Windows workstation, 2026-07-17)

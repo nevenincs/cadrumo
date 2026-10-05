@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd13183b13b15581fc3e2eac6a059ad4ea6c9841ec139f728d95756f0e4d9962'
+body_hash: 'sha256:abe0f8f5fdca369823bc395f7613b3ed43c5c2a9c159333c7c65c741156a6184'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]"
@@ -58,7 +58,7 @@ The archive policy and installed-oracle code select exactly one descriptor/datab
 
 ### cache-accounting-evidence | medium | Production retention weights and acceptance tests do not prove the 64 MiB decoded-object bound
 
-The database compiler sets each component's `retained_weight` to encoded payload byte length, and the reader charges only that value for the decoded Pydantic object. No estimator relates encoded bytes to retained decoded memory, and production loads never supply shared-weight tokens. The cache tests validate synthetic declared numbers but do not fill real concurrent components, prove production shared references are charged once, or prove caller-held values survive eviction. Telemetry can consequently remain below 64 MiB while retained decoded objects exceed the advertised accounted budget.
+The database compiler sets each component's `retained_weight` to encoded payload byte length, and the reader charges only that value for the decoded Pydantic object. No estimator relates encoded bytes to retained decoded memory, and production loads never supply shared-weight tokens. The cache tests validate synthetic declared numbers but do not fill real concurrent components, prove production shared references are charged once, or prove caller-held values survive eviction. Reported size can consequently remain below 64 MiB while retained decoded objects exceed the advertised accounted budget.
 
 **Resolution re-review (2026-09-14): Resolved at the ownership boundary.** On first use the reader charges the greater of the stored payload weight and a cycle-safe decoded immutable-graph estimate; the LRU budget accounts retained values while caller-held and leased values remain explicitly outside cache ownership. Shared-token accounting is retained for graphs that declare shared ownership. Focused decoded-graph, oversize, eviction-survival, concurrent-coalescing, and failure cleanup tests passed.
 

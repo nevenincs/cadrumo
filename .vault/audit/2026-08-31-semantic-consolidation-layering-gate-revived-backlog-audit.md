@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:73bd299bcf51b6c7850e282a7681f5070cfcccc8d27fc3d5145225a2d5132848'
+body_hash: 'sha256:16d330be12815f56eb58a552978ad70f324410ac5211befa4d672107eb773221'
 related: []
 ---
 
@@ -54,7 +54,7 @@ The first is exact: the violating import is byte-identical at `HEAD`. These
 edges predate the campaign and were simply invisible while the gate aborted.
 
 `.importlinter` already carries the shape that would exempt one --
-`cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm._run_telemetry`
+an existing `cadrumo.application.diagnostics_run_health` edge into the LLM adapters
 at line 516 -- so the neighbouring `llm_diagnostics -> ._usage` edge is
 unexempted rather than unexemptable. Whether each of the 82 is a real violation
 to fix or an exemption to add is per-edge work and is NOT this campaign's.
