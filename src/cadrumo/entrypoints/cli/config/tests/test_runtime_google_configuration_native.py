@@ -5,9 +5,10 @@ evidence. This journey does not establish platform secret-store acceptance or
 exercise Google OAuth, browser consent, or remote provider traffic.
 
 The worker is a separate process and reads the Google client from the one
-installation location, which nothing can redirect. Sign-in is therefore attempted
-only when this checkout holds no client file, where it is the typed refusal;
-with a client file it would open a browser, so consent is never started.
+installation location, which nothing can redirect, and the application ships
+that client. Sign-in would therefore open a browser, so consent is never
+started; the refusal for an installation without a client is covered where the
+location can be redirected, by the composition and conformance tests.
 """
 
 from __future__ import annotations
@@ -49,21 +50,19 @@ from .....application.runtime.operation_access import (
 )
 from .....application.user_profile.access_contracts import AccessDenialCode
 from .....application.user_profile.google_configuration_operation_contracts import (
-    GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleStatusProjection,
     GoogleStatusRequest,
 )
-from .....application.user_profile.google_configuration_operation_refusal import GOOGLE_CONFIGURATION_REFUSAL_CODE
 from .....application.user_profile.login_session import login_profile, resolve_login_target
 from .....core.hashing import canonical_json_bytes
-from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .....core.operations import OperationEffect, profile_operation_subject
 from .....core.redaction.rules import redact_structured_for_cli_output
 from .....core.resources.bundled_data import packaged_data
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....tests.cli_envelope import require_error_document, unwrap_cli_result
+from .....tests.cli_envelope import unwrap_cli_result
 from ...runtime_registered_operation import run_registered_operation
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.runtime_profile_cli_fixture import (
@@ -112,7 +111,9 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
 ) -> None:
     """Retain complete local state through real CLI leaves; no leaf accepts a client from the operator."""
     refresh_value = "native-refresh-" + uuid4().hex
-    client_installed = packaged_data(*INSTALLATION_CLIENT_DATA_PARTS).is_file()
+    # The worker signs in with the client the application ships, so sign-in itself
+    # would open a browser and is never started here.
+    assert packaged_data(*INSTALLATION_CLIENT_DATA_PARTS).is_file()
     original_operation = RuntimeFrontendClient.operation
     original_result = RuntimeFrontendClient.read_result_document
     definitions: dict[str, str] = {}
@@ -284,25 +285,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         # The flag that claimed to refresh without consent no longer exists.
         removed_flag = _invoke(profile, "login", "--refresh-only")
         assert removed_flag.exit_code == 2, removed_flag.output
-        if not client_installed:
-            # Sign-in refuses before any consent or provider exchange.
-            refused = _invoke(profile, "login")
-            assert refresh_value not in refused.output
-            assert refused.exit_code != 0, (refused.output, observations)
-            error = require_error_document(refused.output)["error"]
-            assert error["code"] == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE" and error["category"] == "REFUSED"
-            context = error["context"]
-            assert isinstance(context, dict)
-            assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
-            assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
-            assert context["effect"] == OperationEffect.NONE.value
-            definition, effect, outcome = completions[-1]
-            assert definition == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
-            assert effect is OperationEffect.NONE and outcome.outcome == "refused"
-            assert outcome.result is None and outcome.refusal is not None
-            assert outcome.refusal.provider_code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
-            assert outcome.refusal.message_key == "errors.refused.refused_google_client_metadata_unavailable"
-            assert unwrap_cli_result(invoke("status")) == linked
+        assert unwrap_cli_result(invoke("status")) == linked
         first_logout = unwrap_cli_result(invoke("logout"))
         assert first_logout["token_removed"] is True and first_logout["metadata_removed"] is True
         second_logout = unwrap_cli_result(invoke("logout"))

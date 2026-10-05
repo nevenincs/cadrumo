@@ -17,6 +17,7 @@ from ..errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthPrecond
 from ..installation_client import INSTALLATION_CLIENT_DATA_PARTS, load_installation_client
 from .installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
+    SYNTHETIC_CLIENT_ID,
     synthetic_installation_client,
     use_absent_installation_client,
     use_installation_client,
@@ -180,16 +181,25 @@ def test_the_location_is_the_bundled_data_root_and_is_not_configurable() -> None
     assert sorted(name for name in Settings.model_fields if "google" in name and "client" in name) == []
 
 
-def test_the_development_client_file_is_ignored_and_never_built_into_a_distribution() -> None:
-    """A developer's own client file must reach neither history nor a package."""
-    ignore_rules = (_REPOSITORY_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-    directory = f"src/cadrumo/_data/{INSTALLATION_CLIENT_DATA_PARTS[0]}"
-    assert f"/{directory}/" in ignore_rules
+def test_the_shipped_client_file_is_a_valid_desktop_client_carried_by_every_build(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The publisher client is part of the application: present, readable, and excluded from no build."""
+    shipped = packaged_data(*INSTALLATION_CLIENT_DATA_PARTS)
+    assert shipped.is_file()
+    monkeypatch.setattr(installation_client, "installation_client_source", lambda: shipped)
 
+    client = load_installation_client()
+
+    # Shape only: the values themselves are never asserted on or printed.
+    assert client.client_id.endswith(".apps.googleusercontent.com")
+    assert client.client_id != SYNTHETIC_CLIENT_ID
+
+    directory = f"src/cadrumo/_data/{INSTALLATION_CLIENT_DATA_PARTS[0]}"
+    ignore_rules = (_REPOSITORY_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert not [rule for rule in ignore_rules if rule.strip().strip("/") == directory]
     targets = tomllib.loads((_REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["tool"]["hatch"][
         "build"
     ]["targets"]
     for target in ("sdist", "wheel"):
-        excluded = targets[target]["exclude"]
-        assert directory in excluded, target
-        assert f"{directory}/**" in excluded, target
+        assert not [entry for entry in targets[target]["exclude"] if entry.startswith(directory)], target

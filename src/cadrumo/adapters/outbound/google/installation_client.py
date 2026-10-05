@@ -6,9 +6,11 @@ profile, and is read from one place by :func:`load_installation_client`.
 Nothing here is a profile record, and no command, setting or environment
 variable can supply a different client.
 
-A development checkout reads the same location through the same reader. The
-developer places the development project's client file there; the file is
-never committed.
+The file is part of the application: it is committed with the source and
+carried by every build, so a development checkout and a deployed installation
+sign in with the same client through the same reader. Google does not treat
+the value it labels ``client_secret`` as confidential for an installed
+application; it is still kept out of command output, logs and errors.
 """
 
 from __future__ import annotations

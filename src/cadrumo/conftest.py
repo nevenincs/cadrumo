@@ -452,12 +452,12 @@ def _release_settings_storage_directories() -> Iterator[None]:
 def _keep_the_installation_google_client_out_of_tests(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
     """Make the installation carry no Google client unless a test supplies one.
 
-    A development checkout may hold the developer's own Google OAuth client
-    file at the installation location. Reading it from a test would make the
-    outcome depend on which machine runs the suite, and would put a real
-    client secret in a test process. Every test therefore starts from an
-    installation without one; a test that needs a client binds a synthetic
-    file through ``adapters.outbound.google.tests.installation_client_support``.
+    The application ships its publisher's Google OAuth client. A test that
+    read it could hand a stored or synthetic token to Google under the real
+    client, so every test starts from an installation without one; a test
+    that needs a client binds a synthetic file through
+    ``adapters.outbound.google.tests.installation_client_support``, and the
+    one test that checks the shipped file names its location itself.
     """
     from .adapters.outbound.google import installation_client
 

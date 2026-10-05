@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:0618acbdb152abc536b75c89881c4a52e6b635a2ca03941a0165161254433f70'
+body_hash: 'sha256:1fe2e3b33efc508e93cabad713df35b3a1a4ba958f8704f5558fddbe3c119d75'
 ---
 
 # `google-app-identity` plan
@@ -70,12 +70,23 @@ Scope notes that keep Steps honest:
   repository's own generators produce and reports the rest.
 - `S06` follows commitment 3 as amended on 2026-10-05: the publisher client
   is the only client, so the Step removes client registration rather than
-  keeping it as a fallback. No client ID, real or placeholder, is committed.
-  A development checkout reads its client file from the git-ignored
-  `src/cadrumo/_data/google/oauth_client.json`, which both build targets
-  exclude. With no usable file present the behaviour is one typed refusal.
-  Placing the publisher client in a packaged installation belongs to the
-  packaging work.
+  keeping it as a fallback. With no usable file present the behaviour is one
+  typed refusal. As first built, the client file was git-ignored and excluded
+  from both build targets; `S11` reverses that.
+- `S11` follows commitment 3 as amended a second time on 2026-10-05, after
+  the product owner ruled, in another session and relayed to this one, that
+  the application is deployed with its Google sign-in built in. The client
+  file is committed with the source and carried by every build. The file's
+  contents are never printed, logged or quoted in a record.
+- `S12` and `S13` were added on 2026-10-05 on an instruction from the product
+  owner relayed by the decision record's author as "fix the UNKNOWN refusal
+  issues", which is that author's reading of a dictated message. Neither
+  involves a costly decision and no ADR governs them. Both keep UNKNOWN
+  wherever an effect is genuinely ambiguous; only a response that proves the
+  effect did not happen may settle as not applied. `S12` stops and reports
+  if it would need a change to the supervisor or tracker contract that other
+  operation families share. `S13` is outside the Google integration: it was
+  observed while `S02` was being verified.
 - `S07` changes the persisted token schema. Per commitment 9 there is no
   reader for the old shape.
 
@@ -98,6 +109,9 @@ proposed to the product owner at plan close.
 - [x] `S08` - Implement or delete the stale refresh lifecycle declarations: rotated-token persistence, last refresh and reauth fields, the refresh-only login mode and the unread refresh buffer setting; `src/cadrumo/adapters/outbound/google/records.py`.
 - [ ] `S09` - Document the removals, the local import replacement and the re-export after a client change in the user documentation and release notes, and regenerate the references they feed; `docs`.
 - [ ] `S10` - Run the live proof of every listed Sheets and Drive method under drive.file alone against an application-created workbook, or record it as pending verification; `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`.
+- [x] `S11` - Commit the publisher client file with the source and include it in every build, removing the ignore rule and both build exclusions, and confirm a built wheel and sdist carry it; `src/cadrumo/_data/google/oauth_client.json`.
+- [ ] `S12` - Settle a definitive provider refusal under the Google configuration operation as a refusal with no effect applied, keeping UNKNOWN wherever the effect is ambiguous; `src/cadrumo/application/user_profile/google_configuration_executor.py`.
+- [ ] `S13` - Report an uncertain custody write during a ledger evidence batch as the designed refusal instead of a validation error; `src/cadrumo/application/ledger/evidence_ingestion_operation.py`.
 
 ## Parallelization
 
