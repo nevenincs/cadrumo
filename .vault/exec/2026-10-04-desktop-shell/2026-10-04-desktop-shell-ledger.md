@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b45c425b2516c150f4513b1c245449f369c93aa57e1c2030365d38db7ee67128'
+body_hash: 'sha256:c4c20765c9129f93bc39fb2bf7493a36843e87117363e622e0a58cd6362d0e92'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -508,6 +508,12 @@ related:
 - `S10` `verify:` `GUI candidate package --check-package` -> `pass`
 - `S10` `verify:` `WebView2 packaged host release build` -> `pass`
 - `S10` `verify:` `packaged setup smoke` -> `fail`
+- `S10` `verify:` `packaged runtime verified hello and clean teardown` -> `pass`
+- `S10` `verify:` `canonical runtime client connection phase` -> `pass`
+- `S10` `verify:` `Session0 sign-in-status native admission` -> `fail`
+- `S10` `verify:` `PowerShell interactive wrapper syntax` -> `pass`
+- `S10` `verify:` `final packaged harness regression (20)` -> `pass`
+- `S10` `verify:` `final harness Ruff format ty syntax` -> `pass`
 
 ## Notes
 
@@ -587,3 +593,5 @@ related:
 - `S10` S10 remains open. Logout retains selected profile after human-access revocation; exact-profile packaged assertions prevent empty pointer falsely proving revocation. Mixed custody.py includes external B4 work and remains uncommitted. Synthetic cold profile setup bound 300s; other fixture commands and production host deadlines unchanged. Actual GUI acceptance pending interactive run.
 - `S10` Docs executable-example prerequisite remains failed; no goldens refreshed. Synthetic shared receipt custody is selected only for three explicit sign-out scenarios or cumulative pages enrolling them; default no-vault behavior remains. Profile-setup deletion is unresolved: accepted selected-profile deletion refusal conflicts with docs guidance to logout now that logout retains selection; no auth bypass or silent reauthentication added. Retained profile-setup-inspect run passed all four expected frame exits at unchanged deadlines after docs renders ended (41.77s); this is execution, not golden equality.
 - `S10` Fresh GUI candidate app-v1 assembled from rebuilt product wheels; full docs gate remains failed. Setup exposed missing profile-custody adapter composition in test helper, corrected at pointer observation. Subsequent real runtime hello and teardown pass, but canonical CLI sign-in-status returns `runtime_unavailable;` exact retained diagnostic pending root cause. Interactive handoff not yet ready; no session bridge or runtime bypass.
+- `S10` Conclusive status-diagnostic-v3.log separates successful canonical client connection from sign-in-status refusal. Native `windows_desktop_logon._native_token_fields_are_supported` explicitly excludes session zero; native-session-observation.log traces `runtime_unavailable` to that check. Runtime alive before/after CLI, identical endpoint identity, helper teardown exit0 and exact receipt absence confirmed. Requires real signed-in desktop; user already agreed to run prepared command. No bridge or observation override. Docs gate and manager-start S12 still open.
+- `S10` Harness frozen for interactive handoff. Evidence build/windows-x86-64/e2e-desktop/harness-tests-handoff.log; scope remains harness assertions, not actual UI acceptance.

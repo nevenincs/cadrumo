@@ -20,7 +20,10 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
+    delete_profile_session,
+    profile_session_path,
+)
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.paths import effective_storage_root
@@ -90,14 +93,33 @@ def main() -> None:
                         time.sleep(0.05)
                     else:
                         raise RuntimeError(f"runtime exited before handshake: {code}") from error
-            emit({"kind": "ready", "pid": process.pid, "profileId": str(profile_id)})
+            emit(
+                {
+                    "kind": "ready",
+                    "pid": process.pid,
+                    "profileId": str(profile_id),
+                    "storageIdentity": endpoint.storage_identity,
+                    "osOwnerId": endpoint.os_owner_id,
+                }
+            )
             sys.stdin.buffer.read()
+            try:
+                exit_code = process.wait(timeout=0)
+            except RuntimeRefusalError as waiting:
+                if waiting.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    raise
+                emit({"kind": "runtime-alive-before-cleanup", "pid": process.pid})
+            else:
+                emit({"kind": "runtime-exited-before-cleanup", "pid": process.pid, "exitCode": exit_code})
     finally:
         # Narrow fixture teardown, as in the secure-storage integration fixtures:
         # address only the new profile under this fresh root, after runtime exit.
         # Normal acceptance signs out through the canonical host command first.
         if root is not None and profile_id is not None:
             delete_profile_session(storage_root=root, profile_id=profile_id)
+            receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
+            if receipt_path.exists() or receipt_path.is_symlink():
+                raise RuntimeError("exact-profile receipt remained after fixture cleanup")
             emit({"kind": "profile-cleaned", "profileId": str(profile_id)})
         else:
             emit({"kind": "setup-incomplete", "detail": "no runtime launched or sign-in receipt minted"})

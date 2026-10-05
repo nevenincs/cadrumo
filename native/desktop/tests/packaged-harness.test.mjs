@@ -80,6 +80,12 @@ test("canonical failure evidence retains identifiers and excludes payloads", () 
   );
   assert.deepEqual(canonicalFailure("x".repeat(65537)), {});
   assert.deepEqual(canonicalFailure("not json"), {});
+  assert.deepEqual(
+    canonicalFailure(
+      JSON.stringify({ error: { context: { reason: "runtime_unavailable" } } }),
+    ),
+    { reason: "runtime_unavailable" },
+  );
 });
 after(async () => {
   const failures = [];

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0f32c852e6ac5fd7be908e3fbe379c663ca6bdd507880965758552bf9637457'
+body_hash: 'sha256:0e46204cd7bc23a7b421261255c25ed91fe465a36ad15d12eb3dbf84114ece2e'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -158,6 +158,10 @@ Reviewed synthetic process-shared keyring confined to private docs sandbox, sele
 ### packaged-setup-refusal | medium | 2026-10-05
 
 GUI candidate app-v1 passes --check-package and test host release builds with SHA256 f063d49eafc982217b1f19d7e84122cc733d3741a0ebc767213675cdfbe50db3. Initial helper failed before launch because profile pointer observation lacked canonical profile_free_adapter_composition; scoped initialization corrected. Fresh helper then completed verified runtime hello and teardown, but real aeat config sign-in-status returned REFUSED_LOCAL_RUNTIME/runtime_unavailable. Reproduced against retained synthetic root without new password or auth overrides. Keep acceptance failed until endpoint/lifecycle cause is resolved; do not classify as Session0 refusal without evidence.
+
+### session-zero-status-refusal-resolved | low | 2026-10-05
+
+The previous packaged setup refusal is now attributed to native login admission, not endpoint absence: status-diagnostic-v3.log proves canonical connection succeeds, then sign_in_status alone raises runtime_unavailable. Native observer rejects session zero explicitly; direct frozen-package observation traces the same check. Runtime remains alive before/after CLI and helper teardown exits zero. Harness now retains bounded lowercase refusal reasons, reports process liveness and verifies exact-profile receipt absence after cleanup. Full GUI acceptance requires the signed-in desktop command the user agreed to run. Package and WebView2 test host are prepared; failed docs gate and incomplete manager composition remain separate open acceptance obligations.
 
 ## Recommendations
 

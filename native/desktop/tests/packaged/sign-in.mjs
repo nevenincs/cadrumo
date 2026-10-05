@@ -23,7 +23,7 @@ export function canonicalFailure(stderr, secrets = []) {
     schema: [envelope?.schema_version, /^[0-9]{1,3}$/],
     command: [envelope?.command, /^[a-z][a-z0-9_.-]{0,79}$/],
     code: [envelope?.error?.code, /^[A-Z][A-Z0-9_]{0,79}$/],
-    reason: [envelope?.error?.context?.reason, /^[A-Z][A-Z0-9_]{0,79}$/],
+    reason: [envelope?.error?.context?.reason, /^[A-Za-z][A-Za-z0-9_]{0,79}$/],
   };
   return Object.fromEntries(
     Object.entries(identifiers)
@@ -391,10 +391,11 @@ export class SignInFixture {
       "runtime fixture must settle its contained runtime and exact-profile keychain teardown",
     );
     assert(this.messages.some((m) => m.kind === "stopped"));
+    assert(this.messages.some((m) => m.kind === "profile-cleaned"));
     return {
       verdict: PASS,
       detail:
-        "runtime process scope terminated and exact-profile keychain cleanup completed",
+        "runtime process scope terminated; exact-profile receipt absence verified after cleanup",
     };
   }
 }
