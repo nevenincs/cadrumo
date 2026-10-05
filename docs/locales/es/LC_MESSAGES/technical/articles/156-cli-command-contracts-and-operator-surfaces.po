@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 11:02+0200\n"
+"POT-Creation-Date: 2026-10-05 11:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -56,22 +56,23 @@ msgstr "Ámbito"
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:12
 msgid ""
-"This chunk covers 24 CLI entrypoint modules. I read all assigned ranges "
+"This chunk covers 26 CLI entrypoint modules. I read all assigned ranges "
 "across nine bounded pages; where page output truncated, I inspected the "
-"unfinished file tails as smaller line slices. The modules declare ledger "
-"command trees, parameter/transport contracts, execution policies, typed "
-"payloads, and thin Typer handlers. Static inspection only: I did not "
-"import the application, invoke commands, or run tests. No test files are "
-"assigned here."
+"unfinished file tails as smaller line slices. The modules declare "
+"diagnostics and ledger command trees, parameter/transport contracts, "
+"execution policies, typed payloads, and thin Typer handlers. Static "
+"inspection only: I did not import the application, invoke commands, or "
+"run tests. No test files are assigned here."
 msgstr ""
-"Este bloque abarca 24 módulos de puntos de entrada CLI. Leí todos los "
+"Este bloque abarca 26 módulos de puntos de entrada CLI. Leí todos los "
 "intervalos asignados en nueve páginas acotadas; cuando la salida de "
 "páginas se truncó, inspeccioné los finales pendientes de archivos "
 "mediante fragmentos menores de líneas. Los módulos declaran árboles de "
-"comandos del libro contable, contratos de parámetros y transporte, "
-"políticas de ejecución, contenidos tipados y manejadores ligeros Typer. "
-"Solo inspección estática: no importé la aplicación, invoqué comandos ni "
-"ejecuté pruebas. Aquí no se asignan archivos de pruebas."
+"comandos de diagnósticos y libro contable, contratos de parámetros y "
+"transporte, políticas de ejecución, contenidos tipados y manejadores "
+"ligeros Typer. Solo inspección estática: no importé la aplicación, "
+"invoqué comandos ni ejecuté pruebas. Aquí no se asignan archivos de "
+"pruebas."
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:14
 msgid "Product capabilities"
@@ -179,6 +180,31 @@ msgstr ""
 
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:22
 msgid ""
+"The diagnostics group provides local reports of recent LLM run health, "
+"individual runs, latency percentiles, error kinds, and provider/model "
+"usage, alongside persisted AEAT-session presence and staleness. The "
+"displayed fields include provider, model, caller, timestamps, duration, "
+"success state, and typed error kind; these handlers project operational "
+"metadata rather than prompt or invoice contents (run health and session "
+"state (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), run records "
+"(`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), provider/model usage"
+" (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`))."
+msgstr ""
+"El grupo de diagnósticos proporciona informes locales de estado reciente "
+"de ejecuciones LLM, ejecuciones individuales, percentiles de latencia, "
+"tipos de errores y uso de proveedores y modelos, junto con presencia y "
+"obsolescencia de sesiones AEAT persistidas. Los campos mostrados incluyen"
+" proveedor, modelo, llamador, marcas temporales, duración, estado de "
+"éxito y tipo de error tipado; estos manejadores proyectan metadatos "
+"operativos en lugar de contenido de instrucciones o facturas. (Estado de "
+"ejecuciones y sesiones "
+"(`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), Registros de "
+"ejecuciones (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), Uso de "
+"proveedores y modelos "
+"(`src/cadrumo/entrypoints/cli/_app_diagnostics.py`))."
+
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:24
+msgid ""
 "The shared command-spec support functions reduce repeated option-shape "
 "definitions and can project application-owned operator input contracts "
 "into CLI fields. Resolved precondition actions are serialized from the "
@@ -198,11 +224,11 @@ msgstr ""
 "Representación de acciones "
 "(`src/cadrumo/entrypoints/cli/_action_rendering.py`))."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:24
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:26
 msgid "Knowledge and data"
 msgstr "Conocimiento y datos"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:26
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:28
 msgid ""
 "This layer mostly declares and transports inputs; it does not implement "
 "tax calculations or establish legal applicability. Registry-backed "
@@ -225,24 +251,26 @@ msgstr ""
 "Esas propiedades dependen de las implementaciones referenciadas de "
 "manejadores, procesos de trabajo y adaptadores."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:28
-msgid ""
-"Ledger options can carry taxpayer identifiers, counterparty details, "
-"notes, tax classifications, invoice facts, and local evidence paths. This"
-" chunk’s declarations show how these values enter the CLI but not how "
-"handlers redact, retain, or export them."
-msgstr ""
-"Las opciones del libro contable pueden contener identificadores de "
-"contribuyentes, detalles de contrapartes, notas, clasificaciones "
-"fiscales, hechos de facturas y rutas locales de pruebas. Las "
-"declaraciones de este bloque muestran cómo entran esos valores en la CLI,"
-" pero no cómo los manejadores los ocultan, conservan o exportan."
-
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:30
+msgid ""
+"The diagnostics commands read local run records according to the module "
+"contract. Ledger options can carry taxpayer identifiers, counterparty "
+"details, notes, tax classifications, invoice facts, and local evidence "
+"paths. This chunk’s declarations show how these values enter the CLI but "
+"not how handlers redact, retain, or export them."
+msgstr ""
+"Los comandos de diagnósticos leen registros locales de ejecuciones según "
+"el contrato del módulo. Las opciones del libro contable pueden contener "
+"identificadores de contribuyentes, detalles de contrapartes, notas, "
+"clasificaciones fiscales, hechos de facturas y rutas locales de pruebas. "
+"Las declaraciones de este bloque muestran cómo entran esos valores en la "
+"CLI, pero no cómo los manejadores los ocultan, conservan o exportan."
+
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:32
 msgid "Security and safety assessment"
 msgstr "Evaluación de seguridad y protección"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:32
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:34
 msgid ""
 "The strongest CLI-boundary controls visible here are typed input "
 "contracts, explicit file/remote transport metadata, typed result schemas,"
@@ -264,20 +292,30 @@ msgstr ""
 " sean correctos; la síntesis debería compararlas con contratos "
 "registrados de procesos de trabajo y rutas de manejadores."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:34
-msgid ""
-"The handlers translate absent projections into typed runtime refusal "
-"errors rather than emitting a misleading empty success payload."
-msgstr ""
-"Los manejadores traducen proyecciones ausentes a errores tipados de "
-"rechazo del entorno de ejecución en lugar de emitir un contenido vacío "
-"engañoso de éxito."
-
 #: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:36
+msgid ""
+"The no-data notices in diagnostics resolve to the classification action "
+"from an action catalogue, and resolved-action rendering preserves the "
+"typed action object rather than deriving shell text locally. This is a "
+"safer presentation seam than string-building a recovery command, but the "
+"correctness of action resolution is outside this chunk. The handlers "
+"translate absent projections into typed runtime refusal errors rather "
+"than emitting a misleading empty success payload."
+msgstr ""
+"Los avisos de ausencia de datos en diagnósticos se resuelven a la acción "
+"de clasificación de un catálogo de acciones y la representación de "
+"acciones resueltas conserva el objeto tipado de acción en lugar de "
+"derivar texto de shell localmente. Es un punto de presentación más seguro"
+" que construir por cadenas un comando de recuperación, pero la corrección"
+" de la resolución de acciones queda fuera de este bloque. Los manejadores"
+" traducen proyecciones ausentes a errores tipados de rechazo del entorno "
+"de ejecución en lugar de emitir un contenido vacío engañoso de éxito."
+
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:38
 msgid "Implementation assessment and follow-up"
 msgstr "Evaluación de la implementación y seguimiento"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:38
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:40
 msgid ""
 "The declarative tree is split into focused fragments with shared helpers "
 "for common options, plus typed schemas at output boundaries. Repeated "
@@ -296,7 +334,7 @@ msgstr ""
 " siguen explícitas. La CLI de activos de actividad mantiene separadas "
 "vistas previas de calendarios y deducciones aplicadas persistidas."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:40
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:42
 msgid ""
 "The breadth of ledger fragments creates a large public surface, but the "
 "immutable tuple composition and stable command identities give synthesis "
@@ -315,11 +353,11 @@ msgstr ""
 "inspección no encontró pruebas de tests en este bloque y no se ejecutó "
 "ningún comando."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:42
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:44
 msgid "Dependencies and follow-up"
 msgstr "Dependencias y seguimiento"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:44
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:46
 msgid ""
 "Handlers delegate to application operations, domain models, result "
 "payload schemas, common envelope rendering, and the command "
@@ -338,102 +376,110 @@ msgstr ""
 "para operaciones destructivas. La exactitud legal actual y el "
 "comportamiento integral de la CLI no están verificados."
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:46
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:48
 msgid "Complete assigned-file coverage"
 msgstr "Cobertura completa de los archivos asignados"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:48
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:50
 msgid "`src/cadrumo/entrypoints/cli/__init__.py`"
 msgstr "`src/cadrumo/entrypoints/cli/__init__.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:49
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:51
 msgid "`src/cadrumo/entrypoints/cli/_action_rendering.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_action_rendering.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:50
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:52
 msgid "`src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:51
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:53
 msgid "`src/cadrumo/entrypoints/cli/_actividad_asset_payloads.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_actividad_asset_payloads.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:52
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:54
+msgid "`src/cadrumo/entrypoints/cli/_app_diagnostics.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_diagnostics.py`"
+
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:55
+msgid "`src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`"
+
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:56
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:53
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:57
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:54
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:58
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:55
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:59
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_command_spec_policies.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_command_spec_policies.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:56
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:60
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:57
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:61
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:58
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:62
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:59
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:63
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:60
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:64
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_evidence_followup_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_evidence_followup_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:61
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:65
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:62
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:66
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:63
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:67
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:64
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:68
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:65
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:69
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_invoice_lifecycle_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_invoice_lifecycle_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:66
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:70
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:67
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:71
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:68
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:72
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:69
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:73
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_participation_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_participation_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:70
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:74
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_prorrata_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_prorrata_command_specs.py`"
 
-#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:71
+#: ../../technical/articles/156-cli-command-contracts-and-operator-surfaces.md:75
 msgid "`src/cadrumo/entrypoints/cli/_app_ledger_ratios_command_specs.py`"
 msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_ratios_command_specs.py`"

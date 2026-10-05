@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers 20 application files (5,273 lines), including durable all-profile reset orchestration, repair diagnostics, and registry-derived foreign-asset thresholds. I read all assigned ranges across nine bounded pages. Static review only; I did not execute destructive reset, CLI, or network paths. Legal accuracy is outside this review.
+This chunk covers 20 application files (5,273 lines), including durable all-profile reset orchestration, diagnostic and LLM-run projections, registered diagnostic operations, and registry-derived foreign-asset thresholds. I read all assigned ranges across nine bounded pages. Static review only; I did not execute destructive reset, CLI, or network paths. Legal accuracy is outside this review.
 
 ## Durable all-profile reset
 
@@ -26,6 +26,12 @@ The reset journal repository serializes creation and per-operation execution, re
 `aeat config repair` builds typed checks for Python/package/logging, secure workflow state, active-profile health, wizard/auth readiness, and per-namespace secure-object decryptability. It does not unlock a profile to make the report succeed. On locked/unreadable state it emits redacted profile-health outcomes; only a typed missing-session classification is downgraded to an expected cold-start warning. The model requires every warning/failure row to carry a structured actionable verdict or explicit no-recovery outcome, while OK rows carry none. Rendering reports diagnoses without reconstructing executable commands from error text. Diagnostic status contract (`src/cadrumo/application/diagnostic_models.py`) Repair report assembly (`src/cadrumo/application/diagnostics.py`) Quarantine operation (`src/cadrumo/application/diagnostics.py`)
 
 Integrity probing aggregates counts from populated secure-object namespaces. Dry-run quarantine and committed quarantine use the same decryptability probe; quarantine preserves the encrypted payload and metadata in an archive table and does not auto-delete it. One local reporting weakness is visible: when the repository or engine cannot be reached, `_probe_secure_objects_integrity` returns an empty zero-count report, which the following check renders as `secure_objects_empty`/OK. A separate storage-state warning may still explain the outage, but this integrity row alone cannot distinguish “empty” from “unavailable”; preserve that uncertainty in the diagnostic result.
+
+Other local diagnostics consume only recorded LLM run timing/outcome rows and a redacted auth-session probe. They provide recent-run listing, nearest-rank latency percentiles, error-kind breakdown, and provider/model run counts, durations, and success rates. The run record carries no prompts, responses, token counts, or cost. The code explicitly points to a different usage/cost source for those measures. Local run-health report (`src/cadrumo/application/diagnostics_run_health.py`) Latency aggregation (`src/cadrumo/application/diagnostics_run_health.py`) Provider/model usage aggregation (`src/cadrumo/application/diagnostics_run_health.py`)
+
+## Registered operations
+
+The registered `diagnostics.read` operation captures a complete typed report for an exact profile and filter set, retains it through the operation operand store, and releases it only after a successful terminal receipt matches the profile subject and operation definition. The projection model checks that exactly one report variant matches the requested kind and preserves date/provider/limit filters. Access resolution requires exact profile and reviewed result disclosure; operation capabilities are declared as recorded idempotent secure stored reads. Diagnostics read executor (`src/cadrumo/application/diagnostics_operation.py`) Exact-profile access and result projection (`src/cadrumo/application/diagnostics_operation.py`)
 
 ## Other application boundaries and assessment
 
