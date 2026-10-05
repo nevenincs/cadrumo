@@ -110,8 +110,6 @@ _LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
 _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "validation",
     "client_revoked",
-    "token_revoked",
-    "token_expired",
     "scope_insufficient",
     "network",
     "loopback_bind",

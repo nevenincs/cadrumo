@@ -561,7 +561,6 @@ def _google_records(label: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]
             account_email=f"{label}@example.com",
             granted_scopes=REQUIRED_SCOPES,
             issued_at=issued_at,
-            last_refresh_at=issued_at,
         ),
         DriveConfig(root_folder_id=f"drive-folder-{label}"),
     )

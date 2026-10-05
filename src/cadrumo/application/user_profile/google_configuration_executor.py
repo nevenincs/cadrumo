@@ -181,7 +181,7 @@ class GoogleConfigurationExecutor:
         payload = _require_profile(request, context)
         await context.events.phase(request.definition_id)
         await context.events.effect(OperationEffect.NONE)
-        if isinstance(payload, GoogleLoginRequest) and not payload.refresh_only:
+        if isinstance(payload, GoogleLoginRequest):
             return await self._prepare_consent(request, context, payload)
         return await self._run(request, context, terminal_admission=None)
 
@@ -224,7 +224,7 @@ class GoogleConfigurationExecutor:
     ) -> OperationExecutorResult:
         """Require the exact consumed human terminal acknowledgement before consent."""
         payload = _require_profile(request, context)
-        if not isinstance(payload, GoogleLoginRequest) or payload.refresh_only:
+        if not isinstance(payload, GoogleLoginRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         if not checkpoint.consumed:
             return None

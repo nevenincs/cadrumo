@@ -20,8 +20,6 @@ type GoogleConfigurationProviderCode = Literal[
     "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
     "AUTH_GOOGLE_CLIENT_REVOKED",
     "REFUSED_GOOGLE_SIGN_IN_REQUIRED",
-    "AUTH_GOOGLE_REVOKED",
-    "AUTH_GOOGLE_EXPIRED",
     "AUTH_GOOGLE_SCOPE_INSUFFICIENT",
     "FAIL_GOOGLE_NETWORK",
     "FAIL_GOOGLE_LOOPBACK_BIND",
@@ -48,8 +46,6 @@ type GoogleConfigurationMessageKey = Literal[
     "errors.refused.refused_google_client_metadata_unavailable",
     "errors.auth.auth_google_client_revoked",
     "errors.refused.refused_google_sign_in_required",
-    "errors.auth.auth_google_revoked",
-    "errors.auth.auth_google_expired",
     "errors.auth.auth_google_scope_insufficient",
     "errors.fail.fail_google_network",
     "errors.fail.fail_google_loopback_bind",
@@ -68,7 +64,6 @@ type GoogleConfigurationMessageKey = Literal[
     "errors.refused.refused_outbound_storage_quota",
     "errors.fail.fail_outbound_storage_network",
     "errors.integrity.integrity_outbound_storage",
-    "cli.config.google.detail.no_metadata_for_refresh",
     "adapters.google.installation_client.errors.client_metadata_invalid",
     "adapters.google.oauth_flow.errors.non_interactive",
     "adapters.google.oauth_flow.errors.profile_state_unresolved",
@@ -97,7 +92,6 @@ _DYNAMIC_CODES: dict[str, frozenset[str]] = {
     "adapters.google.installation_client.errors.client_metadata_invalid": frozenset(
         {"REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"}
     ),
-    "cli.config.google.detail.no_metadata_for_refresh": frozenset({"AUTH_GOOGLE_EXPIRED"}),
     "adapters.google.oauth_flow.errors.non_interactive": frozenset({"REFUSED_GOOGLE_NON_INTERACTIVE"}),
     "adapters.google.oauth_flow.errors.refresh_token_missing": frozenset({"REFUSED_GOOGLE_VALIDATION"}),
     "adapters.google.oauth_flow.errors.profile_state_unresolved": frozenset({"REFUSED_GOOGLE_PROFILE_UNBOUND"}),

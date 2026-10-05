@@ -127,16 +127,6 @@ GOOGLE_COMMAND_SPECS = (
         "_google_payloads",
         "GoogleLoginResult",
         GOOGLE_WRITE,
-        (
-            _option(
-                "refresh_only",
-                ("--refresh-only",),
-                FLAG_VALUE,
-                "cli.config.google.refresh_only_help",
-                default=False,
-                flag=True,
-            ),
-        ),
     ),
     _leaf(
         "config_google_status",

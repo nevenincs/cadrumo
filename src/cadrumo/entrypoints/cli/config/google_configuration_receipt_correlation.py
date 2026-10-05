@@ -97,7 +97,7 @@ def google_success_effects(request: BaseModel, result: BaseModel) -> frozenset[O
     if isinstance(request, (GoogleFolderViewRequest, GoogleStatusRequest)):
         return frozenset({OperationEffect.NONE})
     if isinstance(request, GoogleLoginRequest):
-        return frozenset({OperationEffect.NONE if request.refresh_only else OperationEffect.UPDATED})
+        return frozenset({OperationEffect.UPDATED})
     if isinstance(request, GoogleLogoutRequest) and isinstance(result, GoogleLogoutProjection):
         return logout_effects(result)
     if isinstance(request, GoogleProbeRequest) and isinstance(result, GoogleProbeProjection):

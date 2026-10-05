@@ -43,18 +43,17 @@ if TYPE_CHECKING:
     import typer
 
 
-def google_login(ctx: typer.Context, refresh_only: bool = False) -> None:
-    """Refresh existing metadata or run the worker's human-consented login flow."""
+def google_login(ctx: typer.Context) -> None:
+    """Run the worker's human-consented login flow."""
     client = bound_profile_client(ctx)
     projection = run_google_configuration(
         ctx,
-        GoogleLoginRequest(profile_id=client.profile_id, refresh_only=refresh_only),
+        GoogleLoginRequest(profile_id=client.profile_id),
         result_type=GoogleLoginProjection,
     )
     profile = str(projection.profile_id)
     typed = GoogleLoginResult(
         profile=profile,
-        mode=projection.mode,
         account_email=projection.account_email,
         granted_scopes=list(projection.granted_scopes),
     )
@@ -65,7 +64,6 @@ def google_login(ctx: typer.Context, refresh_only: bool = False) -> None:
         lines=(
             "operation\tconfig.google.login",
             f"profile\t{profile}",
-            f"mode\t{projection.mode}",
             f"account_email\t{projection.account_email}",
             *tuple(f"scope\t{scope}" for scope in projection.granted_scopes),
         ),
@@ -79,8 +77,6 @@ def _google_status_result(projection: GoogleStatusProjection) -> GoogleStatusRes
         account_email=projection.account_email,
         granted_scopes=list(projection.granted_scopes),
         issued_at=projection.issued_at,
-        last_refresh_at=projection.last_refresh_at,
-        reauth_required=projection.reauth_required,
     )
 
 
@@ -95,8 +91,6 @@ def _google_status_lines(projection: GoogleStatusProjection) -> tuple[str, ...]:
             (
                 f"account_email\t{projection.account_email}",
                 f"issued_at\t{projection.issued_at}",
-                f"last_refresh_at\t{projection.last_refresh_at}",
-                f"reauth_required\t{projection.reauth_required}",
                 *tuple(f"scope\t{scope}" for scope in projection.granted_scopes),
             ),
         )

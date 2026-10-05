@@ -39,7 +39,7 @@ def run_google_configuration[ProjectionT: BaseModel](
         google_invalid_frame(operation_id="config.google.invalid")
     definition_id, expected_projection_type = request_contract
 
-    if isinstance(request, GoogleLoginRequest) and not request.refresh_only:
+    if isinstance(request, GoogleLoginRequest):
         from .runtime_google_consent import login_google_with_runtime
 
         try:

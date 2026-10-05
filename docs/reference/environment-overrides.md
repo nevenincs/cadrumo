@@ -88,7 +88,6 @@ value already present in your shell always wins.
 | `CADRUMO_GNOME_EXTENSIONS_DIR` | Path | (derived) | Explicit GNOME extension publication directory. |
 | `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | str | unset | Drive folder ID under which `cadrumo-vault/` is created and used. Required when cadrumo_storage_provider_kind=google_drive. Operator obtains this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` lazily on first probe. |
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
-| `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | int | `300` | Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens |
 | `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
 | `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |

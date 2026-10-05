@@ -95,7 +95,6 @@ def test_status_round_trips_persisted_metadata(monkeypatch: pytest.MonkeyPatch) 
             f"`aeat config google login --profile {profile}` manually after live opt-in",
         )
     assert metadata.account_email
-    assert metadata.reauth_required is False
     for scope in REQUIRED_SCOPES:
         assert scope in metadata.granted_scopes
 

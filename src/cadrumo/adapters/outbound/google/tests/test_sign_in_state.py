@@ -10,14 +10,17 @@ from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.discovery import build
 
 from .....core.time.clock import now
-from ....persistence.storage.secure_object_namespaces import GOOGLE_OAUTH_TOKEN_NAMESPACE
+from ....persistence.storage.secure_object_namespaces import (
+    GOOGLE_OAUTH_METADATA_NAMESPACE,
+    GOOGLE_OAUTH_TOKEN_NAMESPACE,
+)
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageNetworkError
 from .. import session_store
 from ..api import RequestRetryPolicy, execute_request
 from ..errors import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
-from ..records import OAuthToken
-from ..sign_in_state import ended_grant_refusal, load_token_minted_for
+from ..records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
+from ..sign_in_state import ended_grant_refusal, load_sign_in_record, load_token_minted_for
 from .installation_client_support import SYNTHETIC_CLIENT_ID, synthetic_installation_client
 from .token_endpoint_server import (
     ENDED_GRANT_RESPONSE,
@@ -99,6 +102,44 @@ def test_a_token_stored_without_a_client_requires_a_new_sign_in(tmp_path: Path) 
         facts={"stored_token_readable": False},
     )
     assert refused.value.__cause__ is None and refused.value.__suppress_context__
+
+
+def test_a_recorded_sign_in_is_read_back_and_its_absence_is_not_an_error(tmp_path: Path) -> None:
+    recorded = OAuthMetadata(account_email="operator@example.invalid", granted_scopes=REQUIRED_SCOPES, issued_at=now())
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
+        assert load_sign_in_record(_PROFILE) is None
+        session_store.save_metadata(_PROFILE, recorded)
+
+        assert load_sign_in_record(_PROFILE) == recorded
+
+
+def test_a_sign_in_record_of_the_earlier_shape_requires_a_new_sign_in(tmp_path: Path) -> None:
+    """A record carrying the removed refresh fields is refused, so status cannot show stale state."""
+    earlier = {
+        "account_email": "operator@example.invalid",
+        "granted_scopes": list(REQUIRED_SCOPES),
+        "issued_at": "2026-05-26T09:00:00Z",
+        "last_refresh_at": "2026-05-26T09:00:00Z",
+        "reauth_required": False,
+    }
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE) as profile:
+        profile.repository.save(
+            namespace=GOOGLE_OAUTH_METADATA_NAMESPACE.namespace,
+            object_key=_PROFILE,
+            classification=GOOGLE_OAUTH_METADATA_NAMESPACE.sensitivity,
+            schema_version=GOOGLE_OAUTH_METADATA_NAMESPACE.schema_version,
+            written_at=now(),
+            payload=json.dumps(earlier).encode("utf-8"),
+        )
+
+        with pytest.raises(GoogleAuthSignInRequiredError) as refused:
+            load_sign_in_record(_PROFILE)
+
+    _assert_sign_in_required(
+        refused.value,
+        condition=GoogleAuthPreconditionCondition.SIGN_IN_RECORD_READABLE,
+        facts={"sign_in_record_readable": False},
+    )
 
 
 @pytest.mark.parametrize(

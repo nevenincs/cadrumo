@@ -48,9 +48,7 @@ class GoogleFolderViewRequest(GoogleProfileRequest):
 
 
 class GoogleLoginRequest(GoogleProfileRequest):
-    """Consent or the current metadata-only refresh inspection."""
-
-    refresh_only: bool = False
+    """Sign in through the browser consent flow."""
 
 
 class GoogleLogoutRequest(GoogleProfileRequest):
@@ -99,7 +97,6 @@ class GoogleLoginProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    mode: Literal["consent", "refresh-only"]
     account_email: _Text
     granted_scopes: tuple[_Text, ...] = ()
 
@@ -128,7 +125,7 @@ class GoogleProbeProjection(BaseModel):
 
 
 class GoogleStatusProjection(BaseModel):
-    """Whole current session inspection without credential material."""
+    """The stored sign-in as it was recorded, without credential material."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -136,8 +133,6 @@ class GoogleStatusProjection(BaseModel):
     account_email: _Text | None = None
     granted_scopes: tuple[_Text, ...] = ()
     issued_at: _Text | None = None
-    last_refresh_at: _Text | None = None
-    reauth_required: bool | None = None
 
 
 type GoogleConfigurationProjection = (

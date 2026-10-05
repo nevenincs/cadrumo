@@ -2011,8 +2011,6 @@ cli:
         login` to sign in again.
     google:
       detail:
-        no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
-          without a prior login
         sync_push_limit_requires_dry_run: Google sync push cannot use --limit unless
           --dry-run is set, because a bounded non-dry-run would create a partial remote
           mirror manifest.
@@ -2031,10 +2029,6 @@ cli:
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
-        token_expired: Google access has expired (testing-project tokens lapse after
-          7 days). Run `aeat config google login`.
-        token_revoked: Google access has been revoked. Run `aeat config google login`
-          to authorise again.
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
         validation: 'The data supplied for Google did not pass validation: {detail}'
@@ -2046,12 +2040,10 @@ cli:
         set_help: Link a Google Drive folder id to the active profile
         view_help: Show the Google Drive root folder configured for the active profile.
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
-      login_help: Run the OAuth consent flow (or refresh an existing credential)
+      login_help: Run the OAuth consent flow
       logout_help: Clear the refresh token and metadata
       probe_help: Probe the configured Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
-      refresh_only_help: Skip the consent screen and refresh an existing credential
-        only
       status_help: Show the current Google OAuth session state for the active profile
     list:
       help: List every registered profile and mark the active one

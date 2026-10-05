@@ -140,9 +140,9 @@ class OAuthToken(BaseModel):
     :func:`adapters.outbound.google.oauth_flow.run_login_flow` returns
     this record with :class:`adapters.outbound.google.records.OAuthMetadata`.
     :func:`adapters.outbound.google.session_store.save_token` persists
-    it under the SECRET classification. The refresh token is re-persisted on
-    every successful refresh because Google may rotate it. Access tokens are
-    held in memory only and rebuilt from the refresh token on process start.
+    it under the SECRET classification. It is written once, at sign-in.
+    Access tokens are held in memory only and rebuilt from the refresh token
+    on process start.
 
     ``client_id`` names the client that minted the token. A refresh token is
     only valid with that client, so the token is never presented with
@@ -165,28 +165,25 @@ class OAuthToken(BaseModel):
 
 
 class OAuthMetadata(BaseModel):
-    """Audit fields surfaced by `aeat config google status` and refresh policy.
+    """Audit fields surfaced by `aeat config google status`.
 
     This is the non-secret companion record to
     :class:`adapters.outbound.google.records.OAuthToken`.
     :func:`adapters.outbound.google.session_store.save_metadata`
     persists which Google account the operator linked, which
     :data:`adapters.outbound.google.records.REQUIRED_SCOPES` the consent screen
-    granted, when the credential was issued, when it was last refreshed, and
-    whether the most recent refresh hit a hard ``invalid_grant`` requiring
-    re-consent.
+    granted, and when the credential was issued. It records the sign-in, not
+    what happened to the grant afterwards: nothing observes a later refresh.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     account_email: str = Field(min_length=1)
     granted_scopes: tuple[str, ...] = Field(min_length=1)
-    # These audit instants survive encrypted persistence and the operator's
-    # status projection, so their timezone policy belongs to the shared core
+    # This audit instant survives encrypted persistence and the operator's
+    # status projection, so its timezone policy belongs to the shared core
     # contract rather than to each producer and renderer.
     issued_at: UtcInstant
-    last_refresh_at: UtcInstant
-    reauth_required: bool = False
 
     @field_validator("granted_scopes")
     @classmethod

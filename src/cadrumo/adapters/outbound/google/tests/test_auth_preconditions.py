@@ -54,7 +54,7 @@ def _contract(
 
 
 # This is a complete, source-level contract for the 1 active-profile, 2
-# installation-client, 16 OAuth and 3 sign-in-state GoogleAuthError producers. Values are AST expressions, not
+# installation-client, 16 OAuth and 4 sign-in-state GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -174,6 +174,12 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "sign_in_state:load_token_minted_for:GoogleAuthSignInRequiredError:the stored Google sign-in was minted for a different client": _contract(
         GoogleAuthPreconditionCondition.SIGN_IN_CLIENT_BOUND,
         (("stored_token_readable", "True"), ("token_client_matches", "False")),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "sign_in_state:load_sign_in_record:GoogleAuthSignInRequiredError:the stored Google sign-in record is not in a shape this version reads": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_RECORD_READABLE,
+        (("sign_in_record_readable", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),

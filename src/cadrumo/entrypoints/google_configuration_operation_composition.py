@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from ..adapters.outbound.google import errors as google_errors
-from ..adapters.outbound.google.errors import GoogleAuthError, GoogleAuthExpiredError
+from ..adapters.outbound.google.errors import GoogleAuthError
 from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFIGURATION_ERROR_TYPES
 from ..adapters.outbound.google.installation_client import load_installation_client
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
@@ -15,11 +15,11 @@ from ..adapters.outbound.google.records import DriveConfig
 from ..adapters.outbound.google.session_store import (
     delete_session,
     load_drive_config,
-    load_metadata,
     save_drive_config,
     save_metadata,
     save_token,
 )
+from ..adapters.outbound.google.sign_in_state import load_sign_in_record
 from ..adapters.outbound.storage.errors import OutboundStorageError
 from ..adapters.outbound.storage.factory import get_storage_provider
 from ..application.operator_actions.models import PreconditionVerdict
@@ -238,20 +238,11 @@ def _dispatch_google_login(
     local: _LocalFacts,
 ) -> GoogleLoginProjection:
     """Run the existing GoogleLogin branch in its original effect order."""
-    if not request.refresh_only:
-        if terminal_admission is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-        terminal_admission()
+    if terminal_admission is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+    terminal_admission()
     client = load_installation_client()
     local.audience = client.client_id
-    if request.refresh_only:
-        metadata = load_metadata(profile)
-        if metadata is None:
-            raise GoogleAuthExpiredError(
-                translated_message="cli.config.google.detail.no_metadata_for_refresh",
-                context={"profile": profile},
-            )
-        return GoogleLoginProjection(profile_id=profile_id, mode="refresh-only", account_email=metadata.account_email)
     consent_token, consent_metadata = run_login_flow(
         client,
         profile,
@@ -264,7 +255,6 @@ def _dispatch_google_login(
     commit(lambda: save_metadata(profile, consent_metadata), changed=lambda _result: True)
     return GoogleLoginProjection(
         profile_id=profile_id,
-        mode="consent",
         account_email=consent_metadata.account_email,
         granted_scopes=consent_metadata.granted_scopes,
     )
@@ -280,15 +270,13 @@ def _dispatch_google_logout(
 
 def _dispatch_google_status(request: GoogleStatusRequest, profile: str, profile_id: UUID) -> GoogleStatusProjection:
     """Run the existing GoogleStatus branch in its original effect order."""
-    metadata = load_metadata(profile)
+    metadata = load_sign_in_record(profile)
     return GoogleStatusProjection(
         profile_id=profile_id,
         session_present=metadata is not None,
         account_email=metadata.account_email if metadata is not None else None,
         granted_scopes=metadata.granted_scopes if metadata is not None else (),
         issued_at=metadata.issued_at.isoformat() if metadata is not None else None,
-        last_refresh_at=metadata.last_refresh_at.isoformat() if metadata is not None else None,
-        reauth_required=metadata.reauth_required if metadata is not None else None,
     )
 
 

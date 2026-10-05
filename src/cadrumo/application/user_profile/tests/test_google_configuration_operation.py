@@ -178,8 +178,8 @@ def _factory(
 def _refusal() -> GoogleConfigurationRefusalProjection:
     return GoogleConfigurationRefusalProjection(
         profile_id=_PROFILE,
-        provider_code="AUTH_GOOGLE_EXPIRED",
-        message_key="cli.config.google.detail.no_metadata_for_refresh",
+        provider_code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+        message_key="errors.refused.refused_google_sign_in_required",
         facts=GoogleConfigurationPresentationFacts(profile=_PROFILE),
     )
 
@@ -408,9 +408,7 @@ def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonic
         assert not fence.inside
         flows.append("consent")
         acknowledged("oauth.browser-consent")
-        return contracts.GoogleLoginProjection(
-            profile_id=_PROFILE, mode="consent", account_email="synthetic@example.invalid"
-        )
+        return contracts.GoogleLoginProjection(profile_id=_PROFILE, account_email="synthetic@example.invalid")
 
     executor = GoogleConfigurationExecutor(_factory(run))
     assert asyncio.run(executor.execute(request, context)) is None

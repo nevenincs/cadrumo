@@ -185,7 +185,7 @@ def credentials_to_records(
     :class:`adapters.outbound.google.records.OAuthToken` carries the refresh
     credential and the returned
     :class:`adapters.outbound.google.records.OAuthMetadata` carries the linked
-    Google account, granted scope tuple, and issuance timestamps used by the
+    Google account, granted scope tuple, and issuance timestamp used by the
     session store.
 
     Args:
@@ -233,7 +233,6 @@ def credentials_to_records(
         account_email=account_email,
         granted_scopes=tuple(granted_scopes),
         issued_at=issued_at,
-        last_refresh_at=issued_at,
     )
     return token, metadata
 

@@ -32,6 +32,7 @@ class GoogleAuthPreconditionCondition(StrEnum):
     REFRESH_CREDENTIAL_ISSUED = "google.auth.refresh_credential.issued"
     SIGN_IN_CLIENT_BOUND = "google.auth.sign_in_client.bound"
     GRANT_ACTIVE = "google.auth.grant.active"
+    SIGN_IN_RECORD_READABLE = "google.auth.sign_in_record.readable"
     OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
     CLIENT_METADATA_AVAILABLE = "google.auth.client_metadata.available"
     OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"
@@ -81,14 +82,6 @@ class GoogleAuthClientRevokedError(GoogleAuthError):
     """Raised when Google no longer accepts this installation's Desktop OAuth client."""
 
 
-class GoogleAuthRevokedError(GoogleAuthError):
-    """Raised when the refresh token was revoked (e.g. via myaccount.google.com).
-
-    Maps to Google's ``invalid_grant`` response with
-    ``error_description="Token has been expired or revoked."``.
-    """
-
-
 class GoogleAuthSignInRequiredError(GoogleAuthError):
     """Raised when a profile's stored Google sign-in can no longer be used.
 
@@ -96,10 +89,6 @@ class GoogleAuthSignInRequiredError(GoogleAuthError):
     that does not belong to the client this installation signs in with. The
     remedy is the same in every case: sign in again.
     """
-
-
-class GoogleAuthExpiredError(GoogleAuthError):
-    """Raised when a Testing-project refresh token has aged past Google's 7-day cap."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,14 +164,12 @@ __all__ = [
     "GoogleAuthClientMetadataUnavailableError",
     "GoogleAuthClientRevokedError",
     "GoogleAuthError",
-    "GoogleAuthExpiredError",
     "GoogleAuthKeychainLockedError",
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
     "GoogleAuthNonInteractiveError",
     "GoogleAuthPreconditionCondition",
     "GoogleAuthProfileUnboundError",
-    "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthSignInRequiredError",
     "GoogleAuthValidationError",

@@ -21,7 +21,7 @@ from .errors import (
     GoogleAuthSignInRequiredError,
     google_auth_no_action_verdict,
 )
-from .records import OAuthClient, OAuthToken
+from .records import OAuthClient, OAuthMetadata, OAuthToken
 
 _ENDED_GRANT_ERROR = "invalid_grant"
 
@@ -72,6 +72,30 @@ def load_token_minted_for(profile: str, client: OAuthClient) -> OAuthToken | Non
     return token
 
 
+def load_sign_in_record(profile: str) -> OAuthMetadata | None:
+    """Return what the profile's sign-in recorded, or ``None`` when it never signed in.
+
+    Raises:
+        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+            When a record is stored in a shape this version does not read.
+            Signing in again replaces it.
+    """
+    from .session_store import load_metadata
+
+    try:
+        return load_metadata(profile)
+    except ValidationError:
+        raise GoogleAuthSignInRequiredError(
+            "the stored Google sign-in record is not in a shape this version reads",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.SIGN_IN_RECORD_READABLE,
+                facts={"sign_in_record_readable": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
+        ) from None
+
+
 def ended_grant_refusal(error: Exception, *, action: str) -> GoogleAuthSignInRequiredError | None:
     """Return the sign-in-required refusal when ``error`` is Google ending the grant.
 
@@ -107,4 +131,4 @@ def ended_grant_refusal(error: Exception, *, action: str) -> GoogleAuthSignInReq
     )
 
 
-__all__ = ["ended_grant_refusal", "load_token_minted_for"]
+__all__ = ["ended_grant_refusal", "load_sign_in_record", "load_token_minted_for"]

@@ -74,7 +74,6 @@ _EXCHANGE_URI = "https://oauth2.googleapis.com/token"
 _SYNTHETIC_REFRESH_CREDENTIAL = "conformance-synthetic-refresh-credential"
 _SYNTHETIC_CLIENT_ID = "conformance-client.apps.googleusercontent.com"
 _ISSUED_AT = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
-_REFRESHED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 
 
 def _synthetic_metadata() -> OAuthMetadata:
@@ -82,8 +81,6 @@ def _synthetic_metadata() -> OAuthMetadata:
         account_email=_ACCOUNT_EMAIL,
         granted_scopes=REQUIRED_SCOPES,
         issued_at=_ISSUED_AT,
-        last_refresh_at=_REFRESHED_AT,
-        reauth_required=False,
     )
 
 
@@ -163,7 +160,7 @@ def _prepare_login(context: ConformanceFamilyContext) -> ConformancePreparation:
         assert load_token(profile) is None
         assert load_metadata(profile) is None
 
-    request = GoogleLoginRequest(profile_id=context.profile_id, refresh_only=False)
+    request = GoogleLoginRequest(profile_id=context.profile_id)
     return _preparation(
         context,
         request,
@@ -206,8 +203,6 @@ def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation
         account_email=metadata.account_email,
         granted_scopes=metadata.granted_scopes,
         issued_at=_ISSUED_AT.isoformat(),
-        last_refresh_at=_REFRESHED_AT.isoformat(),
-        reauth_required=False,
     )
     request = GoogleStatusRequest(profile_id=context.profile_id)
     return _preparation(context, request, _succeeded(context.profile_id, expected))
@@ -259,7 +254,6 @@ _RETAINED_GOOGLE_METADATA = OAuthMetadata(
     account_email="conformance@example.invalid",
     granted_scopes=REQUIRED_SCOPES,
     issued_at=_RETAINED_GOOGLE_TIME,
-    last_refresh_at=_RETAINED_GOOGLE_TIME,
 )
 
 
@@ -294,8 +288,8 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 ),
             )
             if operation_id.endswith("login"):
-                # A stored session cannot be refreshed without the client it was minted for.
-                request = GoogleLoginRequest(profile_id=context.profile_id, refresh_only=True)
+                # Signing in over a stored session still needs the installation's client.
+                request = GoogleLoginRequest(profile_id=context.profile_id)
                 refused = _client_metadata_unavailable(context.profile_id)
             elif operation_id.endswith("logout"):
                 request = GoogleLogoutRequest(profile_id=context.profile_id)
@@ -310,8 +304,6 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
                     account_email=_RETAINED_GOOGLE_METADATA.account_email,
                     granted_scopes=REQUIRED_SCOPES,
                     issued_at=_RETAINED_GOOGLE_TIME.isoformat(),
-                    last_refresh_at=_RETAINED_GOOGLE_TIME.isoformat(),
-                    reauth_required=False,
                 )
         case "config.google.probe":
             save_drive_config(profile, DriveConfig(root_folder_id="synthetic-conformance-folder"))

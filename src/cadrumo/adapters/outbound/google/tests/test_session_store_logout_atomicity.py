@@ -60,7 +60,6 @@ def _seed() -> None:
             account_email="operator@example.com",
             granted_scopes=REQUIRED_SCOPES,
             issued_at=_ISSUED_AT,
-            last_refresh_at=_ISSUED_AT,
         ),
     )
     session_store.save_drive_config(_PROFILE, DriveConfig(root_folder_id="drive-folder-id"))

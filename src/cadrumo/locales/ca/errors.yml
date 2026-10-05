@@ -34,10 +34,6 @@ errors:
     auth_google: S'ha produït un error en l'autenticació amb Google.
     auth_google_client_revoked: Google ja no accepta el client OAuth d'escriptori
       d'aquesta instal·lació. Actualitza l'aplicació a una versió actual.
-    auth_google_expired: El testimoni d'actualització de Google ha caducat pel límit
-      de 7 dies dels projectes en proves. Torna a autoritzar l'accés a Google.
-    auth_google_revoked: El testimoni d'actualització de Google ha estat revocat.
-      Torna a autoritzar l'accés a Google.
     auth_google_scope_insufficient: Els permisos concedits a Google no inclouen tots
       els necessaris per a aquesta operació. Torna a autoritzar concedint tots els
       permisos sol·licitats.

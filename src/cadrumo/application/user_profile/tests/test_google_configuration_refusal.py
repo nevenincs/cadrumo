@@ -46,7 +46,7 @@ def test_closed_tty_refusal_keeps_ordered_canonical_verdict_without_a_second_fra
     [
         {"provider_code": "UNDECLARED_GOOGLE_FAILURE"},
         {"message_key": "arbitrary.exception.message"},
-        {"message_key": "cli.config.google.detail.no_metadata_for_refresh"},
+        {"message_key": "errors.refused.refused_google_sign_in_required"},
         {"context": {"secret": "arbitrary-exception-context"}},
         {"facts": {"profile": _PROFILE, "unknown_secret": "unchecked"}},
     ],
@@ -67,8 +67,8 @@ def test_closed_google_refusal_rejects_unknown_codes_keys_context_and_cross_code
 def test_outcome_rejects_refusal_details_for_another_profile() -> None:
     refusal = GoogleConfigurationRefusalProjection(
         profile_id=_PROFILE,
-        provider_code="AUTH_GOOGLE_EXPIRED",
-        message_key="cli.config.google.detail.no_metadata_for_refresh",
+        provider_code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+        message_key="errors.refused.refused_google_sign_in_required",
         facts=GoogleConfigurationPresentationFacts(profile=_PROFILE),
     )
     with pytest.raises(ValidationError):

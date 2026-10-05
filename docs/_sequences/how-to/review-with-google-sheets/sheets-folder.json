@@ -26,10 +26,8 @@
           "account_email": null,
           "granted_scopes": [],
           "issued_at": null,
-          "last_refresh_at": null,
           "operation": "config.google.status",
           "profile": "<profile-id>",
-          "reauth_required": null,
           "session_present": false
         },
         "schema_version": "2",

@@ -258,26 +258,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthRevokedError",
-        ErrorCode(
-            code="AUTH_GOOGLE_REVOKED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_revoked",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthExpiredError",
-        ErrorCode(
-            code="AUTH_GOOGLE_EXPIRED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_expired",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.google.errors.GoogleAuthScopeInsufficientError",
         ErrorCode(
             code="AUTH_GOOGLE_SCOPE_INSUFFICIENT",

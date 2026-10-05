@@ -91,9 +91,7 @@ def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     # The token records the client the consent was granted to.
     assert token.client_id == "desktop-client.apps.googleusercontent.com"
     assert metadata.issued_at == issued_at
-    assert metadata.last_refresh_at == issued_at
     assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
-    assert metadata.model_dump(mode="json")["last_refresh_at"] == "2026-05-26T09:00:00Z"
 
 
 def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:

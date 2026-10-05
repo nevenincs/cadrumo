@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cbd046ce3b3ca30393e36ee20257e1f5ff405ecaf1d45b25f4a29c772cd4e5d'
+body_hash: 'sha256:6236d9d70a992ca9f1b7ffdf0371cc0eb82b75c2f357538266d8dedac75a3856'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -309,6 +309,62 @@ related:
 - `S07` `verify:` `just check-types` -> `pass`
 - `S07` `verify:` `python -m dev.locales status` -> `pass`
 - `S07` `by:` `CADRUMO-GOOGLE-OATH`
+- `S08` `M` `dev/ci/tests/test_core_external_constants.py`
+- `S08` `M` `dev/locales/fstring_registry.py`
+- `S08` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S08` `M` `docs/reference/environment-overrides.md`
+- `S08` `M` `env/.env.example`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/google_configuration_refusal.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/oauth_flow.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/session_store.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/sign_in_state.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_flow.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_records.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_logout_atomicity.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_namespace_binding.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_roundtrip.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/tests/test_sign_in_state.py`
+- `S08` `M` `src/cadrumo/application/user_profile/google_configuration_executor.py`
+- `S08` `M` `src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`
+- `S08` `M` `src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_refusal.py`
+- `S08` `M` `src/cadrumo/core/config_integration_fields.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_google_command_specs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_google_payloads.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/google.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_session_correlation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_status_correlation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/google_consent_admission.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_command_specs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_error_localisation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S08` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S08` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S08` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S08` `M` `src/cadrumo/locales/en/cli.yml`
+- `S08` `M` `src/cadrumo/locales/en/errors.yml`
+- `S08` `M` `src/cadrumo/locales/es/cli.yml`
+- `S08` `M` `src/cadrumo/locales/es/errors.yml`
+- `S08` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S08` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S08` `verify:` `pytest unit, integration and docs: Google and storage adapter suites, user-profile application, Google composition and CLI tests, settings-constant and environment-reference tests (1226)` -> `pass`
+- `S08` `verify:` `pytest integration: registered-executor conformance Google and spreadsheet cases, native Google journey, documented-command conformance (385)` -> `pass`
+- `S08` `verify:` `ruff check and ruff format --check on touched files; just check-style; just check-format` -> `pass`
+- `S08` `verify:` `just check-import-boundaries` -> `pass`
+- `S08` `verify:` `just check-types` -> `pass`
+- `S08` `verify:` `python -m dev.locales status` -> `pass`
+- `S08` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -350,3 +406,10 @@ related:
 - `S07` Left for S08: GoogleAuthRevokedError and GoogleAuthClientRevokedError still have no producer, GoogleAuthExpiredError is raised only by the refresh-only login mode, and the stored `reauth_required` and `last_refresh_at` fields are not updated when a grant ends.
 - `S07` The provider probe test lives in the storage package and shares a token-endpoint helper from the Google tests, because the import-boundary gate refuses a private module imported across packages. The local InstalledAppFlow stub gained WSGITimeoutError.
 - `S07` One unit failure in the touched suites is not in files changed here: an unregistered SupervisorLineError in the runtime supervisor work.
+- `S08` Every listed declaration was deleted rather than implemented. Keeping the fields true would need a local write from inside the credential refresh, which runs during operations declared read-only such as spreadsheet pull; Google does not rotate an installed application's refresh token; and the refresh-only mode made no network call.
+- `S08` Released surface removed here that commitment 10 does not enumerate, all present in v0.5.1: config google login --refresh-only; the mode field of the login result; `last_refresh_at` and `reauth_required` in the status result and the stored sign-in record; the setting `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S;` the error codes `AUTH_GOOGLE_EXPIRED` and `AUTH_GOOGLE_REVOKED,` replaced by `REFUSED_GOOGLE_SIGN_IN_REQUIRED.` The ADR author was told before this commit and has put the question to the product owner; the release notes in S09 must name each.
+- `S08` Outside the Google modules the two removed error codes were referenced only by their own locale keys and by tests. No operator-remedy catalogue entry, documentation page or sequence contract named them. The catalogue keys `cli.config.google.errors.token_expired` and `token_revoked` were removed with them.
+- `S08` A sign-in record stored with the removed fields fails validation and config google status reports sign-in required; there is no reader for the earlier shape. A leftover `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` in a process environment is ignored. The developer-local env/.env still carries the line and was not touched.
+- `S08` docs/reference/environment-overrides.md and the sheets-folder golden were regenerated by their owning commands; env/.env.example is a hand-annotated template and was edited directly. The native contract projection of the settings surface belongs to the packaging work and was not regenerated here.
+- `S08` GoogleAuthClientRevokedError and its code remain with no producer; it is a client state rather than a refresh state and was left alone.
+- `S08` Two tests in `dev/ci/tests/test_core_external_constants.py` fail on AEAT route literals and an unparsable AEAT sede module that other sessions are changing; neither concerns the setting removed here.

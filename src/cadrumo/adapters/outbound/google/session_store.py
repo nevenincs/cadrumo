@@ -14,8 +14,8 @@ storage registry:
   ``SECRET`` sensitivity.
 - :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
   stores the non-secret
-  :class:`adapters.outbound.google.records.OAuthMetadata` account, scope,
-  issuance, refresh, and reauth audit fields at ``FINANCIAL`` sensitivity.
+  :class:`adapters.outbound.google.records.OAuthMetadata` account, scope
+  and issuance audit fields at ``FINANCIAL`` sensitivity.
 - :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_DRIVE_CONFIG_NAMESPACE`
   stores the :class:`adapters.outbound.google.records.DriveConfig` root folder
   selection used by
@@ -61,8 +61,7 @@ def save_token(profile: str, token: OAuthToken) -> None:
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE`
     with :class:`~core.classification.policies.SensitivityClass`
     ``SECRET``. The CLI saves this after
-    :func:`adapters.outbound.google.oauth_flow.run_login_flow`, and
-    refresh code may overwrite it when Google rotates the refresh token.
+    :func:`adapters.outbound.google.oauth_flow.run_login_flow`.
     """
     _repository().save(
         namespace=_NAMESPACE_TOKEN,
@@ -97,7 +96,7 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
 
     Metadata is non-secret companion state for
     :class:`adapters.outbound.google.records.OAuthToken`: account email, granted
-    scopes, issue/refresh timestamps, and reauth status. It is written under
+    scopes and the issue timestamp. It is written under
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
     with :class:`~core.classification.policies.SensitivityClass`
     ``FINANCIAL``.

@@ -5,9 +5,9 @@ evidence. This journey does not establish platform secret-store acceptance or
 exercise Google OAuth, browser consent, or remote provider traffic.
 
 The worker is a separate process and reads the Google client from the one
-installation location, which nothing can redirect. Sign-in is therefore judged
-against whether this checkout holds a client file: the typed refusal when it
-does not, the metadata-only refresh when it does. Consent is never started.
+installation location, which nothing can redirect. Sign-in is therefore attempted
+only when this checkout holds no client file, where it is the typed refusal;
+with a client file it would open a browser, so consent is never started.
 """
 
 from __future__ import annotations
@@ -239,8 +239,6 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
                     account_email="synthetic@example.invalid",
                     granted_scopes=REQUIRED_SCOPES,
                     issued_at=instant,
-                    last_refresh_at=instant,
-                    reauth_required=False,
                 ),
             )
         finally:
@@ -253,15 +251,12 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         assert isinstance(canonical_status, GoogleStatusProjection)
         assert canonical_status.granted_scopes == REQUIRED_SCOPES
         assert canonical_status.account_email == "synthetic@example.invalid"
-        assert canonical_status.issued_at == instant.isoformat() == canonical_status.last_refresh_at
-        assert canonical_status.reauth_required is False
+        assert canonical_status.issued_at == instant.isoformat()
         expected_visible = redact_structured_for_cli_output(
             {
                 "account_email": canonical_status.account_email,
                 "granted_scopes": list(canonical_status.granted_scopes),
                 "issued_at": canonical_status.issued_at,
-                "last_refresh_at": canonical_status.last_refresh_at,
-                "reauth_required": canonical_status.reauth_required,
             }
         )
         for field, expected in expected_visible.items():
@@ -278,32 +273,29 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
             assert reopened_metadata.granted_scopes == canonical_status.granted_scopes == REQUIRED_SCOPES
             assert reopened_metadata.account_email == canonical_status.account_email
             assert reopened_metadata.issued_at.isoformat() == canonical_status.issued_at
-            assert reopened_metadata.last_refresh_at.isoformat() == canonical_status.last_refresh_at
-            assert reopened_metadata.reauth_required is canonical_status.reauth_required
         finally:
             close_active_bucket_session()
-        if client_installed:
-            refreshed = unwrap_cli_result(invoke("login", "--refresh-only"))
-            assert refreshed["mode"] == "refresh-only" and refreshed["account_email"] == linked["account_email"]
-        else:
-            # Both sign-in leaves refuse alike before any consent or provider exchange.
-            for arguments in (("login",), ("login", "--refresh-only")):
-                refused = _invoke(profile, *arguments)
-                assert refresh_value not in refused.output
-                assert refused.exit_code != 0, (refused.output, observations)
-                error = require_error_document(refused.output)["error"]
-                assert error["code"] == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE" and error["category"] == "REFUSED"
-                context = error["context"]
-                assert isinstance(context, dict)
-                assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
-                assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
-                assert context["effect"] == OperationEffect.NONE.value
-                definition, effect, outcome = completions[-1]
-                assert definition == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
-                assert effect is OperationEffect.NONE and outcome.outcome == "refused"
-                assert outcome.result is None and outcome.refusal is not None
-                assert outcome.refusal.provider_code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
-                assert outcome.refusal.message_key == "errors.refused.refused_google_client_metadata_unavailable"
+        # The flag that claimed to refresh without consent no longer exists.
+        removed_flag = _invoke(profile, "login", "--refresh-only")
+        assert removed_flag.exit_code == 2, removed_flag.output
+        if not client_installed:
+            # Sign-in refuses before any consent or provider exchange.
+            refused = _invoke(profile, "login")
+            assert refresh_value not in refused.output
+            assert refused.exit_code != 0, (refused.output, observations)
+            error = require_error_document(refused.output)["error"]
+            assert error["code"] == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE" and error["category"] == "REFUSED"
+            context = error["context"]
+            assert isinstance(context, dict)
+            assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
+            assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
+            assert context["effect"] == OperationEffect.NONE.value
+            definition, effect, outcome = completions[-1]
+            assert definition == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
+            assert effect is OperationEffect.NONE and outcome.outcome == "refused"
+            assert outcome.result is None and outcome.refusal is not None
+            assert outcome.refusal.provider_code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
+            assert outcome.refusal.message_key == "errors.refused.refused_google_client_metadata_unavailable"
             assert unwrap_cli_result(invoke("status")) == linked
         first_logout = unwrap_cli_result(invoke("logout"))
         assert first_logout["token_removed"] is True and first_logout["metadata_removed"] is True

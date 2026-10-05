@@ -2146,8 +2146,6 @@ cli:
         config login` per tornar a iniciar la sessió.
     google:
       detail:
-        no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile};
-          no es pot renovar sense un inici de sessió previ
         sync_push_limit_requires_dry_run: La sincronització push de Google no pot
           usar --límit llevat que --dry-run estigui activat, perquè una execució real
           acotada crearia un manifest remot parcial.
@@ -2170,10 +2168,6 @@ cli:
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
           Executa `aeat config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
-        token_expired: L'accés a Google ha caducat (els tokens dels projectes en proves
-          caduquen al cap de 7 dies). Executa `aeat config google login`.
-        token_revoked: L'accés a Google ha estat revocat. Executa `aeat config google
-          login` per autoritzar-lo de nou.
         unsecured_mode: L'accés a Google està blocat mentre el magatzem de secrets
           funciona en mode no segur per a un perfil amb un NIF real.
         validation: 'Les dades proporcionades per a Google no han superat la validació:
@@ -2188,12 +2182,10 @@ cli:
         view_help: Mostra la carpeta arrel de Google Drive configurada per al perfil
           actiu.
       help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
-      login_help: Executar el flux de consentiment OAuth (o refrescar una credencial
-        existent)
+      login_help: Executar el flux de consentiment OAuth
       logout_help: Esborrar el token de refresc i les metadades
       probe_help: Comprova l'accés a la carpeta configurada de Google Drive
       probe_read_only_help: Comprova Google Drive en mode només lectura
-      refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
     list:

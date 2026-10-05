@@ -28,7 +28,6 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         account_email="operator@example.com",
         granted_scopes=REQUIRED_SCOPES,
         issued_at=issued_at,
-        last_refresh_at=issued_at,
     )
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
@@ -45,7 +44,6 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         assert loaded_metadata == metadata
         assert loaded_metadata is not None
         assert loaded_metadata.issued_at.isoformat() == "2026-05-26T09:00:00+00:00"
-        assert loaded_metadata.last_refresh_at.isoformat() == "2026-05-26T09:00:00+00:00"
         assert session_store.load_drive_config(profile) == drive_config
 
         assert session_store.delete_session(profile) == (True, True)

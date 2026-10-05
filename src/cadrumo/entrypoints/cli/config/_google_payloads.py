@@ -35,17 +35,14 @@ from ....core.json_contract import OutputSchema
 class GoogleLoginResult(OutputSchema):
     """JSON envelope for ``aeat config google login``.
 
-    The ``consent`` branch mirrors the
+    Mirrors the
     :class:`OAuthMetadata` returned with an
     :class:`OAuthToken` by
-    :func:`run_login_flow`. The
-    ``refresh-only`` branch reports the existing metadata without exposing the
-    refresh token.
+    :func:`run_login_flow`. The refresh token is never exposed.
     """
 
     operation: str = "config.google.login"
     profile: str
-    mode: str
     account_email: str
     granted_scopes: list[str] = []
 
@@ -65,8 +62,6 @@ class GoogleStatusResult(OutputSchema):
     account_email: str | None = None
     granted_scopes: list[str] = []
     issued_at: str | None = None
-    last_refresh_at: str | None = None
-    reauth_required: bool | None = None
 
 
 class GoogleLogoutResult(OutputSchema):

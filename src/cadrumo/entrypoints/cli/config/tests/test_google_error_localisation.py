@@ -11,7 +11,7 @@ import pytest
 from .....adapters.outbound.google.errors import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthError,
-    GoogleAuthExpiredError,
+    GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
 from .....adapters.outbound.storage.errors import OutboundStorageError
@@ -34,7 +34,7 @@ def test_each_error_type_routes_through_the_central_registry() -> None:
     errors: tuple[GoogleAuthError | OutboundStorageError, ...] = (
         GoogleAuthValidationError("raw adapter detail"),
         GoogleAuthClientMetadataUnavailableError("raw adapter detail"),
-        GoogleAuthExpiredError("raw adapter detail"),
+        GoogleAuthSignInRequiredError("raw adapter detail"),
         OutboundStorageError("raw adapter detail"),
     )
 

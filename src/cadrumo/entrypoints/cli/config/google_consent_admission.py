@@ -24,7 +24,7 @@ def admit_google_consent_connection(
     client: RuntimeFrontendClient, request: GoogleLoginRequest, timeout: float
 ) -> tuple[float, UUID, UUID]:
     """Admit google consent connection."""
-    if request.refresh_only or not math.isfinite(timeout) or not 0 < timeout <= 420:
+    if not math.isfinite(timeout) or not 0 < timeout <= 420:
         raise ValueError("Google browser consent requires a finite timeout of at most 420 seconds")
     deadline = time.monotonic() + timeout
     profile_id, session_id = client.profile_id, client.session_id

@@ -55,7 +55,6 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
         account_email="operator@example.com",
         granted_scopes=REQUIRED_SCOPES,
         issued_at=_ISSUED_AT,
-        last_refresh_at=_ISSUED_AT,
     )
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 

@@ -34,10 +34,6 @@ errors:
     auth_google: Google-hitelesítési hiba történt.
     auth_google_client_revoked: A Google már nem fogadja el ennek a telepítésnek a
       Desktop OAuth-kliensét. Frissítsd az alkalmazást egy aktuális kiadásra.
-    auth_google_expired: A Google frissítési token lejárt a 7 napos tesztelési projekt
-      korlátján belül. Engedélyezd újra a Google-hozzáférést.
-    auth_google_revoked: A Google frissítési tokent visszavonták. Engedélyezd újra
-      a Google-hozzáférést.
     auth_google_scope_insufficient: A megadott Google hatókörök nem tartalmazzák a
       művelethez szükséges összes hatókört. Engedélyezd újra, megadva az összes kért
       hatókört.

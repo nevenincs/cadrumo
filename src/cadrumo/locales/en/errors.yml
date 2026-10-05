@@ -33,10 +33,6 @@ errors:
     auth_google: A Google authentication error occurred.
     auth_google_client_revoked: Google no longer accepts this installation's Desktop
       OAuth client. Update the application to a current release.
-    auth_google_expired: The Google refresh token has expired under the 7-day Testing-project
-      cap. Re-authorize Google access.
-    auth_google_revoked: The Google refresh token has been revoked. Re-authorize Google
-      access.
     auth_google_scope_insufficient: The granted Google scopes do not include every
       scope this operation requires. Re-authorize, granting all requested scopes.
     auth_outbound_storage_permission: The active credentials lack the permission required

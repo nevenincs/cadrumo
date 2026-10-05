@@ -33,10 +33,6 @@ errors:
     auth_google: Se produjo un error en la autenticación con Google.
     auth_google_client_revoked: Google ya no acepta el cliente OAuth de escritorio
       de esta instalación. Actualiza la aplicación a una versión actual.
-    auth_google_expired: El token de actualización de Google ha caducado por el límite
-      de 7 días de los proyectos en pruebas. Vuelve a autorizar el acceso a Google.
-    auth_google_revoked: El token de actualización de Google ha sido revocado. Vuelve
-      a autorizar el acceso a Google.
     auth_google_scope_insufficient: Los permisos concedidos a Google no incluyen todos
       los necesarios para esta operación. Vuelve a autorizar concediendo todos los
       permisos solicitados.

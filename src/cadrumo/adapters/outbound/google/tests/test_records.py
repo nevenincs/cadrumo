@@ -21,13 +21,12 @@ from ..errors import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthClientRevokedError,
     GoogleAuthError,
-    GoogleAuthExpiredError,
     GoogleAuthKeychainLockedError,
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
     GoogleAuthProfileUnboundError,
-    GoogleAuthRevokedError,
     GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
 from ..records import (
@@ -56,7 +55,6 @@ class _MetadataKwargs(TypedDict):
     account_email: str
     granted_scopes: tuple[str, ...]
     issued_at: datetime
-    last_refresh_at: datetime
 
 
 def _valid_client_kwargs() -> _ClientKwargs:
@@ -76,7 +74,6 @@ def _valid_metadata_kwargs() -> _MetadataKwargs:
         "account_email": "operator@example.com",
         "granted_scopes": REQUIRED_SCOPES,
         "issued_at": datetime(2026, 5, 14, 9, 0, tzinfo=UTC),
-        "last_refresh_at": datetime(2026, 5, 14, 12, 0, tzinfo=UTC),
     }
 
 
@@ -201,10 +198,8 @@ def test_oauth_metadata_round_trip() -> None:
     reloaded = OAuthMetadata.model_validate_json(metadata.model_dump_json())
 
     assert reloaded == metadata
-    assert metadata.reauth_required is False
     assert DRIVE_FILE_SCOPE in metadata.granted_scopes
     assert metadata.issued_at.isoformat() == "2026-05-14T09:00:00+00:00"
-    assert metadata.last_refresh_at.isoformat() == "2026-05-14T12:00:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -212,12 +207,10 @@ def test_oauth_metadata_round_trip() -> None:
     (
         ("issued_at", datetime(2026, 5, 14, 9, 0)),
         ("issued_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
-        ("last_refresh_at", datetime(2026, 5, 14, 9, 0)),
-        ("last_refresh_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
     ),
 )
 def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_instant: datetime) -> None:
-    """Both persisted OAuth audit instants must be explicitly UTC."""
+    """The persisted OAuth audit instant must be explicitly UTC."""
 
     payload: dict[str, object] = dict(_valid_metadata_kwargs())
     payload[field] = invalid_instant
@@ -240,10 +233,14 @@ def test_oauth_metadata_rejects_empty_scope_tuple() -> None:
         OAuthMetadata(**kwargs)
 
 
-def test_oauth_metadata_reauth_required_round_trips() -> None:
-    base = _valid_metadata_kwargs()
-    metadata = OAuthMetadata(**base, reauth_required=True)
-    assert metadata.reauth_required is True
+@pytest.mark.parametrize("field", ("last_refresh_at", "reauth_required"))
+def test_oauth_metadata_does_not_accept_the_refresh_lifecycle_fields_nothing_maintains(field: str) -> None:
+    """A stored record of the earlier shape is refused, not read with stale values."""
+    payload: dict[str, object] = dict(_valid_metadata_kwargs())
+    payload[field] = True if field == "reauth_required" else datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
+
+    with pytest.raises(ValidationError):
+        OAuthMetadata.model_validate(payload)
 
 
 def test_drive_app_properties_round_trip() -> None:
@@ -276,12 +273,11 @@ def test_google_auth_error_hierarchy_is_unified() -> None:
         GoogleAuthBrowserOpenError,
         GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
-        GoogleAuthExpiredError,
         GoogleAuthKeychainLockedError,
         GoogleAuthLoopbackBindError,
         GoogleAuthNetworkError,
         GoogleAuthProfileUnboundError,
-        GoogleAuthRevokedError,
+        GoogleAuthSignInRequiredError,
         GoogleAuthScopeInsufficientError,
         GoogleAuthValidationError,
     ):
@@ -302,8 +298,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
         GoogleAuthValidationError,
         GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
-        GoogleAuthRevokedError,
-        GoogleAuthExpiredError,
+        GoogleAuthSignInRequiredError,
         GoogleAuthScopeInsufficientError,
         GoogleAuthNetworkError,
         GoogleAuthLoopbackBindError,
@@ -320,7 +315,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
 def test_google_auth_error_constructs_with_factual_context_only() -> None:
     """Google adapter errors retain facts without a legacy recovery field."""
 
-    err = GoogleAuthRevokedError(
+    err = GoogleAuthSignInRequiredError(
         "Refresh token revoked",
         context={"profile": "default"},
     )

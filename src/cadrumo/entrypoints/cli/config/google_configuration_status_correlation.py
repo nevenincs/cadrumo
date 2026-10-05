@@ -15,16 +15,9 @@ from .google_configuration_refusals import google_invalid_frame
 
 def status_session_details(result: GoogleStatusProjection) -> tuple[bool, bool]:
     """Status session details."""
-    session_details_present = all(
-        value is not None
-        for value in (result.account_email, result.issued_at, result.last_refresh_at, result.reauth_required)
-    )
+    session_details_present = all(value is not None for value in (result.account_email, result.issued_at))
     session_details_absent = (
-        all(
-            value is None
-            for value in (result.account_email, result.issued_at, result.last_refresh_at, result.reauth_required)
-        )
-        and not result.granted_scopes
+        all(value is None for value in (result.account_email, result.issued_at)) and not result.granted_scopes
     )
     return session_details_present, session_details_absent
 

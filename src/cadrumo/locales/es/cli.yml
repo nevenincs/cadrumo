@@ -2162,8 +2162,6 @@ cli:
         login` para volver a iniciar sesión.
     google:
       detail:
-        no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
-          se puede renovar sin un inicio de sesión previo
         sync_push_limit_requires_dry_run: La sincronización push de Google no puede
           usar --limit salvo que --dry-run este activado, porque una ejecución real
           acotada crearía un manifiesto remoto parcial.
@@ -2186,10 +2184,6 @@ cli:
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
           Ejecuta `aeat config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
-        token_expired: El acceso a Google ha caducado (los tokens de los proyectos
-          en pruebas caducan a los 7 días). Ejecuta `aeat config google login`.
-        token_revoked: El acceso a Google ha sido revocado. Ejecuta `aeat config google
-          login` para autorizarlo de nuevo.
         unsecured_mode: El acceso a Google está bloqueado mientras el almacén de secretos
           funciona en modo no seguro para un perfil con un NIF real.
         validation: 'Los datos proporcionados para Google no superaron la validación:
@@ -2203,13 +2197,10 @@ cli:
         view_help: Muestra la carpeta raíz de Google Drive configurada para el perfil
           activo.
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
-      login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
-        existente)
+      login_help: Ejecutar el flujo de consentimiento OAuth
       logout_help: Limpiar el token de refresco y los metadatos
       probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
       probe_read_only_help: Comprueba Google Drive en modo solo lectura
-      refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
-        existente
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
     list:

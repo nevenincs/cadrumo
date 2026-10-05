@@ -82,8 +82,7 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
         assert isinstance(root, contracts.GoogleFolderSetProjection) and root.root_folder_id == "synthetic-root"
         assert load_drive_config(str(_PROFILE)) is not None
         now = datetime.now(UTC)
-        # Canonical fixture setup supplies a previously acknowledged session;
-        # the refresh-only leaf still performs its original metadata inspection.
+        # Canonical fixture setup supplies a previously acknowledged session.
         save_token(
             str(_PROFILE),
             OAuthToken(refresh_token=_REFRESH_CREDENTIAL, client_id=SYNTHETIC_CLIENT_ID, token_uri=_OAUTH_ENDPOINT),
@@ -94,23 +93,19 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
                 account_email="synthetic@example.invalid",
                 granted_scopes=REQUIRED_SCOPES,
                 issued_at=now,
-                last_refresh_at=now,
-                reauth_required=True,
             ),
-        )
-        refreshed = run(contracts.GoogleLoginRequest(profile_id=_PROFILE, refresh_only=True))
-        assert isinstance(refreshed, contracts.GoogleLoginProjection)
-        assert (
-            refreshed.mode == "refresh-only"
-            and refreshed.account_email == "synthetic@example.invalid"
-            and refreshed.granted_scopes == ()
         )
         status = run(contracts.GoogleStatusRequest(profile_id=_PROFILE))
         assert isinstance(status, contracts.GoogleStatusProjection)
         assert status.session_present and status.granted_scopes == REQUIRED_SCOPES
-        assert (
-            status.issued_at == now.isoformat() and status.last_refresh_at == now.isoformat() and status.reauth_required
-        )
+        assert status.issued_at == now.isoformat()
+        assert set(status.model_dump()) == {
+            "profile_id",
+            "session_present",
+            "account_email",
+            "granted_scopes",
+            "issued_at",
+        }
         # The installation client is never copied into the profile's store or a result.
         at_rest = read_db_at_rest_bytes(profile.paths.database_file)
         assert SYNTHETIC_CLIENT_CREDENTIAL.encode() not in at_rest and b"synthetic-refresh-secret" not in at_rest
@@ -155,7 +150,7 @@ def test_sign_in_without_usable_installation_client_is_one_closed_prewrite_refus
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Consent preparation and the refresh-only leaf refuse alike, before any write or handoff."""
+    """Consent preparation and the sign-in leaf refuse alike, before any write or handoff."""
 
     def forbidden_commit[T](save: Callable[[], T], *, changed: Callable[[T], bool]) -> T:
         pytest.fail("a sign-in without client metadata reached a credential save")
@@ -178,15 +173,15 @@ def test_sign_in_without_usable_installation_client_is_one_closed_prewrite_refus
         )
         with pytest.raises(GoogleConfigurationRefusedError) as prepared:
             ports.prepare_consent()
-        with pytest.raises(GoogleConfigurationRefusedError) as refreshed:
+        with pytest.raises(GoogleConfigurationRefusedError) as signed_in:
             ports.run(
-                contracts.GoogleLoginRequest(profile_id=_PROFILE, refresh_only=True),
+                contracts.GoogleLoginRequest(profile_id=_PROFILE),
                 commit=forbidden_commit,
                 before_handoff=forbidden_handoff,
                 acknowledged=forbidden_handoff,
-                terminal_admission=None,
+                terminal_admission=lambda: None,
             )
-        assert prepared.value.projection == refreshed.value.projection
+        assert prepared.value.projection == signed_in.value.projection
         refusal = prepared.value.projection
         assert refusal.provider_code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
         assert refusal.message_key == message_key

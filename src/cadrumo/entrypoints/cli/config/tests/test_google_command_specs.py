@@ -67,14 +67,8 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
 
 def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> None:
     by_key = {spec.key: spec for spec in GOOGLE_COMMAND_SPECS}
-    login = {
-        parameter.name: parameter
-        for parameter in by_key["config_google_login"].parameters
-        if isinstance(parameter, OptionSpec)
-    }
-    assert login["refresh_only"].declarations == ("--refresh-only",)
-    assert login["refresh_only"].is_flag is True
-    assert login["refresh_only"].multiple is False
+    # Sign-in takes no option: there is one way to sign in.
+    assert by_key["config_google_login"].parameters == ()
 
     probe = {
         parameter.name: parameter
