@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:11ee0e020340c68f1ae76dddcd98f2aa9f9551c1ec55dcbd638fab9d3707bcc8'
+body_hash: 'sha256:e64122f54d1586da8cea1bf9ca9566f73abda86f922ecd5a4fb3034568c2ee52'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -186,6 +186,30 @@ related:
 - `S07` `verify:` `clippy -D warnings with and without fixture-test-mode; rustfmt --check` -> `pass`
 - `S07` `verify:` `application_images pytest 33 passed` -> `pass`
 - `S07` `verify:` `verify 13/13 and verify-package (staged, hashed, not startup, CADRUMO Background Services 0.5.1)` -> `pass`
+- `S11` `A` `native/manager/src/custody.rs`
+- `S11` `A` `native/manager/src/custody/windows.rs`
+- `S11` `A` `native/manager/src/custody/posix.rs`
+- `S11` `A` `native/manager/src/session.rs`
+- `S11` `A` `native/manager/src/session/instance.rs`
+- `S11` `A` `native/manager/src/session/claim.rs`
+- `S11` `A` `native/manager/src/session/quit.rs`
+- `S11` `A` `native/manager/src/session/ownership.rs`
+- `S11` `A` `native/manager/src/session/windows.rs`
+- `S11` `A` `native/manager/src/session/linux.rs`
+- `S11` `A` `native/manager/tests/custody_conformance.rs`
+- `S11` `A` `native/manager/tests/session_ownership.rs`
+- `S11` `A` `native/manager/tests/session_records.rs`
+- `S11` `A` `native/manager/tests/session_record_vectors.json`
+- `S11` `A` `dev/packaging/tests/test_native_manager_session_records.py`
+- `S11` `M` `native/manager/src/lib.rs`
+- `S11` `M` `native/manager/src/supervision.rs`
+- `S11` `M` `native/manager/Cargo.toml`
+- `S11` `M` `native/manager/Cargo.lock`
+- `S11` `verify:` `cargo build/test/clippy -D warnings (incl. linux target, fixture-test-mode)/fmt --check --locked` -> `pass`
+- `S11` `verify:` `cross-language custody lock and record conformance against the real Python primitives` -> `pass`
+- `S11` `verify:` `two-session start race 40 rounds, crashed claim holder, Quit suppression` -> `pass`
+- `S11` `verify:` `mutation checks (non-canonical encoder, wrong lock open mode) fail as expected` -> `pass`
+- `S11` `verify:` `session record vectors pytest 6 passed; ruff; ty` -> `pass`
 
 ## Notes
 
@@ -198,3 +222,4 @@ related:
 - `S05` check-types failures are in other writers' operations, aggregation and `server_connection_handling` files. Import gate: two foreign private imports and stale `import_load_targets` metadata (shared, held by another writer; needs just generate-import-load-targets to include `core.child_console` and `local_runtime.windows_token_elevation).` A full elevated token is not available on this host; the refusal is proven by a faked token read. The supervised flag reaches spawners through `core.process_binding.ProcessScopedBinding.` Finding for the manager: a runtime launched without -I on Windows relaunches through subprocess.run on the same console, so a Ctrl+C kills it without draining; the manager must launch the packaged single-process host.
 - `S09` Exit reasons come from the generated contract.rs via `include!(env!(CADRUMO_CONTRACT_RS));` the CMake build of the manager needs Part B's Manager.cmake wiring (not yet included in native/CMakeLists, so the bundle is unaffected). ADR stop-delivery hypothesis corrected: the Ctrl+C handler must be registered after AttachConsole (a handler installed before attach does not apply to a console-less process), kept for the whole attachment, removed after FreeConsole. `unsafe_code` changed from forbid to deny with allows only in supervision/windows.rs, the POSIX kill module and the fixture. Interim fixed environment allow-list until S08; Windows-only fixture coverage; a foreign runtime is final for run() in this Step.
 - `S07` Part B closes the Step. Fixed a Part A Manager.cmake defect that split escaped LIB/INCLUDE semicolons. Fixture target dir is `CADRUMO_PATH_CARGO/manager-fixture` inside the declared cargo output. ProductName is the channel display name (CADRUMO Preview on preview). Signing gap: signed=true is validated only; no signing inventory exists in packaging. CompanyName omitted pending a publisher projection. Desktop packaging path not exercised (docs off).
+- `S11` POSIX/Linux paths compile-checked only (no Rust toolchain in WSL). Adds unix-only libc 0.2.190 (same as sibling crates). supervision::json made pub(crate) for reuse. Follow-ons added to the plan: gate supervisor restarts through the start claim, register manager .runtime records in the Python storage taxonomy, and record the session lock/claim/Quit grammar as a cross-version contract. Token-user/owner-only descriptor code duplicates native/platform desktop.rs; a shared helper needs the platform owner.

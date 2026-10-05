@@ -7,7 +7,7 @@ pub mod adoption;
 pub mod boot_record;
 pub mod environment;
 pub mod exit;
-mod json;
+pub(crate) mod json;
 pub mod launch;
 pub mod process;
 pub mod protocol;

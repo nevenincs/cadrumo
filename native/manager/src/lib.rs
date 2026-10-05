@@ -6,5 +6,7 @@
 compile_error!("release builds refuse the fixture test mode");
 
 pub mod contract;
+pub mod custody;
 pub mod identity;
+pub mod session;
 pub mod supervision;
