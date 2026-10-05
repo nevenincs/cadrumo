@@ -31,7 +31,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationPublicEventPageV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationRegistry, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -43,6 +43,8 @@ from cadrumo.entrypoints.tui.operations.runtime_controller import (
     RuntimeOperationController,
     await_terminal_projection,
 )
+
+from .....application.operations.schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

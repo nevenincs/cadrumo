@@ -21,7 +21,8 @@ from ...core.period import Period
 from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.utc import UtcInstant
 from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection, OperationPublicSchemaId
+from ..operations.registry import OperationFrontendProjection
+from ..operations.schema_identity import OperationPublicSchemaId
 
 ACCESS_LEASE_MAXIMUM = timedelta(minutes=5)
 GRANT_DEFAULT_VALIDITY = timedelta(days=365)

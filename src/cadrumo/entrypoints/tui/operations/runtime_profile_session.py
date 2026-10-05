@@ -12,7 +12,8 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.error_detail import OperationErrorDetailKind
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.operations import OperationTerminalCondition, profile_operation_subject

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from datetime import datetime
-from decimal import Decimal
 from typing import override
 
 from pydantic import BaseModel
@@ -34,10 +33,7 @@ from .authorization import invoke_authorized
 from .capabilities import OperationRequestStoragePolicy
 from .error_detail import build_operation_error_detail
 from .errors import OperationDeclarationError, OperationExecutorReturnedNoResultError, OperationUnsettledError
-from .financial_operand import (
-    OperationTransientFinancialOperandDelivery,
-    OperationTransientFinancialOperandRequirement,
-)
+from .financial_operand_contract import OperationFinancialOperandRefusalCode, OperationFinancialOperandRefusedError
 from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -63,6 +59,7 @@ from .persistence.journal import (
 from .refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from .registry import OperationReconciliationPolicy, OperationRegistry
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
+from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 _log = get_logger(__name__)
 
@@ -150,6 +147,10 @@ class SupervisorExecutionMixin(SupervisorHost):
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
         definition = self._require_pinned_definition(snapshot)
+        if definition.transient_financial_operand is not None:
+            if snapshot.financial_requirement is None or self._typed_financial_operands is None:
+                raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.UNKNOWN_REQUIREMENT)
+            await self._typed_financial_operands.require_ready(snapshot.financial_requirement)
         execution_deadline = self._execution_deadline_for(definition.capabilities.deadline)
         self._require_cleanup_timeout(definition.capabilities.cancellation)
         requirement = snapshot.secret_requirement
@@ -196,7 +197,11 @@ class SupervisorExecutionMixin(SupervisorHost):
                 broker=self._ephemeral_secrets,
                 clock=self._clock,
             ),
-            financial_operand=self._bound_financial_operand(running.identity, definition),
+            typed_financial_operand=BoundTypedFinancialOperandAccess(
+                broker=self._typed_financial_operands,
+                declaration=definition.transient_financial_operand,
+                requirement=running.financial_requirement,
+            ),
             clock=self._clock,
             response_authority_issuer=self._response_authority_issuer,
             response_token_factory=self._response_token_factory,
@@ -276,25 +281,6 @@ class SupervisorExecutionMixin(SupervisorHost):
         finally:
             if settlement.done() and self._settlement_tasks.get(operation_id) is settlement:
                 del self._settlement_tasks[operation_id]
-
-    @override
-    async def submit_transient_financial_operand(
-        self: SupervisorHost,
-        requirement: OperationTransientFinancialOperandRequirement,
-        amount: Decimal,
-    ) -> OperationTransientFinancialOperandDelivery:
-        """Answer one running invocation's declared operand wait with an amount.
-
-        The amount is a parameter and is never written to the journal: the
-        broker settles it against the declaration that opened the wait and
-        records only where custody stands.
-        """
-        if self._financial_operands is None:
-            raise ValueError("this supervisor has no transient financial operand custody")
-        snapshot = await self.inspect(requirement.identity.operation_id)
-        if snapshot.lifecycle is not OperationLifecycle.RUNNING:
-            raise ValueError("a transient financial operand may only answer a running invocation")
-        return await self._financial_operands.deliver(requirement, amount, observed_at=self._clock())
 
     @override
     async def submit_ephemeral_secret(

@@ -24,7 +24,7 @@ from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
 from .operation_access import OperationManagementRequest
 from .projection_pages import ProjectionPage, ProjectionPageRequest
-from .submission_payload import SubmissionPayloadChunk, SubmissionPayloadDescriptor
+from .submission_payload import FinancialOperandInputDescriptor, SubmissionPayloadChunk, SubmissionPayloadDescriptor
 from .worker_authorization import WorkerAuthorityRequest
 
 
@@ -132,7 +132,7 @@ class ProfileWorkerSubmissionBeginRequest(BaseModel):
     definition_id: OperationDefinitionId
     subject_ref: OperationReference
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
-    descriptor: SubmissionPayloadDescriptor
+    descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor
 
 
 class ProfileWorkerSubmissionChunkRequest(BaseModel):

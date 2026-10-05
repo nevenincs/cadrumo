@@ -190,13 +190,13 @@ def _scope(destination_id: UUID) -> AccessScope:
     )
 
 
-def _issue_scoped_key(subject: AdministrationSubject) -> bytes:
+def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
     requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
     subject.owner.requesting = requester
     subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
         requester=requester, secrets_store=subject.client_native
     )
-    scope = _scope(requester.client_id)
+    scope = _scope(requester.client_id) if scope is None else scope
     facts = subject.owner.current
     assert facts.session is not None
     subject.owner.current = changed(

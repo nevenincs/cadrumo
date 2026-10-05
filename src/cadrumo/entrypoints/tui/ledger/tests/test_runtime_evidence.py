@@ -48,7 +48,7 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
@@ -67,6 +67,8 @@ from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
 from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
 from cadrumo.entrypoints.tui.ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+
+from .....application.operations.schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

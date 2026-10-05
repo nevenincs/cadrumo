@@ -36,7 +36,7 @@ from ...core.identity.hex_ids import (
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
-from ..operations.registry import OperationSchemaIdentityV1
+from ..operations.schema_identity import OperationSchemaIdentityV1
 
 
 class EditModel(BaseModel):
@@ -105,7 +105,7 @@ class ModeloEditCompatibilityTupleV1(EditModel):
 
     workspace_contract_version: Literal[1] = 1
     edit_contract_version: Literal[1] = 1
-    operation_manifest_version: Literal[1] = 1
+    operation_manifest_version: Literal[2] = 2
     contract_set_digest: ContentDigest
     operation_definition_id: OperationDefinitionId
     definition_contract_digest: ContentDigest

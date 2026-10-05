@@ -27,8 +27,8 @@ from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
 )
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.operator_actions.models import ActionReference
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.deadline_budget import remaining_budget

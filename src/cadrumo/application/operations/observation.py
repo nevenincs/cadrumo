@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
+from ...core.operations import (
+    OperationCancellation,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from .frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicPendingInteractionV1,
@@ -181,6 +186,11 @@ def _project_operation_projection(
 ) -> OperationPublicProjectionV1:
     """Project the anchored snapshot into its renderer-neutral public state."""
     receipt = snapshot.terminal_receipt
+    financial_pending = (
+        snapshot.financial_requirement is not None
+        and snapshot.executor_entered_at is None
+        and snapshot.lifecycle is OperationLifecycle.CREATED
+    )
     return OperationPublicProjectionV1(
         operation_id=snapshot.operation_id,
         definition_id=snapshot.identity.definition_id,
@@ -199,10 +209,21 @@ def _project_operation_projection(
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
         cancellable_now=(
-            contract.cancellation is not OperationCancellation.UNSUPPORTED
-            and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+            (
+                financial_pending
+                or (
+                    contract.cancellation is not OperationCancellation.UNSUPPORTED
+                    and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+                )
+            )
             and snapshot.cancellation_requested_at is None
             and not snapshot.cancellation_deferred
+        ),
+        financial_operand_pending=financial_pending,
+        financial_operand_cancelled_before_delivery=(
+            snapshot.financial_requirement is not None
+            and snapshot.executor_entered_at is None
+            and snapshot.terminal_condition is OperationTerminalCondition.CANCELLED
         ),
         cancellation_requested=snapshot.cancellation_requested_at is not None,
         cancellation_acknowledged=snapshot.cancellation_acknowledged_at is not None,

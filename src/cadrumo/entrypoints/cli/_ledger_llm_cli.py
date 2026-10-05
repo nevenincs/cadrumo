@@ -23,7 +23,7 @@ from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
-from ...application.operations.registry import OperationSchemaIdentityV1
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity

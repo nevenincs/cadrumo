@@ -78,8 +78,8 @@ from ..registry import (
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
 )
+from ..schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

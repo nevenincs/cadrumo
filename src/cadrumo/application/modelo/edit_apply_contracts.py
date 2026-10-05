@@ -8,7 +8,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .edit_apply_operand_contracts import MODELO_EDIT_MANUAL_OVERRIDE_OPERAND
 from .edit_apply_row_contracts import (
     EDIT_WIRE_DECIMAL_PATTERN,
     EDIT_WIRE_MODEL_CONFIG,
@@ -31,7 +30,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
-from .edit_value_grammar import ModeloEditValueGrammarV1
+from .edit_value_grammar import MONEY_OPERAND_MAXIMUM, ModeloEditValueGrammarV1
 
 
 def _amount_within_declared_operand_bounds(
@@ -52,7 +51,7 @@ def _amount_within_declared_operand_bounds(
     if EDIT_WIRE_DECIMAL_PATTERN.fullmatch(value) is None:
         return True
     amount = Decimal(value)
-    return MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.minimum <= amount <= MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.maximum
+    return -MONEY_OPERAND_MAXIMUM <= amount <= MONEY_OPERAND_MAXIMUM
 
 
 class ModeloEditApplyDetailRowAddressV1(BaseModel):
@@ -153,18 +152,7 @@ class ModeloEditApplySubmissionV1(BaseModel):
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
-        """Enforce the manual-override operand's declared range on money addresses.
-
-        The broker path (`OperationTransientFinancialOperandProtocolV1`) that
-        would normally enforce `MODELO_EDIT_MANUAL_OVERRIDE_OPERAND` is not
-        reachable from any executor today (`OperationExecutorContext` has no
-        accessor for it). The manual-override amount instead arrives here,
-        through the already-admitted intent value, so this duplicates the
-        bounds the declaration promises rather than leaving them unenforced.
-        The bound is looked up by address in the baseline's admitted grammar,
-        so only money casillas and money bindings are held to it. It should
-        collapse into the broker once that wire lands.
-        """
+        """Keep canonical money bounds on input; ratios and quantities use their own grammar."""
         grammars: dict[tuple[str, str], ModeloEditValueGrammarV1] = {}
         for entry in self.baseline.permitted_surface:
             if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
@@ -236,14 +224,6 @@ class ModeloEditApplySubmissionV1(BaseModel):
             ),
             row_intents=tuple(ModeloEditApplyRowIntentV1.from_intent(intent) for intent in submission.row_intents),
         )
-
-
-class ModeloEditApplyOperationRequestV1(BaseModel):
-    """The admitted value-bearing edit submission held by secure-reference custody."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-
-    submission: ModeloEditApplySubmissionV1
 
 
 class ModeloEditApplyPublicResultV1(BaseModel):

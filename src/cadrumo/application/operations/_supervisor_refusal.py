@@ -12,7 +12,8 @@ from .errors import OperationDeclarationError
 from .models import OperationTerminalReceipt
 from .persistence.journal import OperationPersistedSnapshot
 from .refusal_evidence import OperationRefusalEvidence
-from .registry import OperationRegistry, OperationResultProjector, OperationSchemaIdentityV1
+from .registry import OperationRegistry, OperationResultProjector
+from .schema_identity import OperationSchemaIdentityV1
 
 if TYPE_CHECKING:
     from .persistence.journal import OperationSecureReferenceStore

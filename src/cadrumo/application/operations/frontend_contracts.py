@@ -122,6 +122,7 @@ def _validate_cancelled_terminal_fact(projection: OperationPublicProjectionV1) -
     if (
         projection.terminal_condition is OperationTerminalCondition.CANCELLED
         and not projection.cancellation_acknowledged
+        and not projection.financial_operand_cancelled_before_delivery
     ):
         raise ValueError("cancelled public operation requires cancellation acknowledgement")
 

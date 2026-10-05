@@ -39,6 +39,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerUploadAccepted,
 )
 from ...application.runtime.projection_pages import project_document_page
+from ...application.runtime.submission_payload import FinancialOperandInputDescriptor
 from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -94,6 +95,8 @@ async def operate(
                     ),
                     deadline=time.monotonic() + 5,
                 )
+            finally:
+                del request
     except Exception:
         failed.set()
         raise
@@ -161,7 +164,13 @@ async def _handle_submission(
         )
         return
     if isinstance(request, ProfileWorkerSubmissionBeginRequest):
-        operations.contract(request.session_id, request.definition_id)
+        contract = operations.contract(request.session_id, request.definition_id)
+        if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
+            contract.transient_financial_operand is not None
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        if isinstance(request.descriptor, FinancialOperandInputDescriptor) and request.idempotency_key is not None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         uploads.begin(request)
         _write_upload_accepted(channel, operations, request.request_id, request.upload_id)
         return
@@ -203,14 +212,23 @@ async def _submit_payload_reply(
     payload: StagedSubmission,
 ) -> None:
     """Admit both small and staged payloads through the one canonical owner."""
-    submitted = await operations.submit_payload(
-        session_id=payload.session_id,
-        frontend=payload.frontend,
-        definition_id=payload.definition_id,
-        subject_ref=payload.subject_ref,
-        payload_json=payload.payload_json,
-        idempotency_key=payload.idempotency_key,
-    )
+    if payload.financial_input:
+        submitted = await operations.submit_financial_input(
+            session_id=payload.session_id,
+            frontend=payload.frontend,
+            definition_id=payload.definition_id,
+            subject_ref=payload.subject_ref,
+            input_json=payload.payload_json,
+        )
+    else:
+        submitted = await operations.submit_payload(
+            session_id=payload.session_id,
+            frontend=payload.frontend,
+            definition_id=payload.definition_id,
+            subject_ref=payload.subject_ref,
+            payload_json=payload.payload_json,
+            idempotency_key=payload.idempotency_key,
+        )
     async with operations.release(
         payload.session_id, submitted.receipt.operation_id, payload.frontend, AccessAction.SUBMIT
     ) as release:

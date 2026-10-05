@@ -31,11 +31,8 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ...operations.registry import (
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
-)
+from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
+from ...operations.schema_identity import OperationSchemaIdentityV1
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_models import (
     ModeloEditAdmittedV1,

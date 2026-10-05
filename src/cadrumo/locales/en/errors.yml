@@ -808,6 +808,7 @@ errors:
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved
       work selection.
+    canonical_operation_financial_operand: The financial data could not be accepted.
     canonical_operation_observation_cursor_ahead: The requested observation cursor
       is beyond the authoritative anchor.
     canonical_operation_observation_unknown_operation: No observation journal exists

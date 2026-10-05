@@ -37,14 +37,16 @@ class SupervisorDrainMixin(SupervisorHost):
         deadline = loop.time() + timeout.total_seconds()
         self._accepting_admissions = False
         self._ephemeral_secrets.close()
+        if self._typed_financial_operands is not None:
+            for operation_id, task in self._typed_financial_operands.begin_close().items():
+                self._drain_tasks.setdefault(operation_id, set()).add(task)
+                task.add_done_callback(self._drain_close_completed)
         self._capture_drain_tasks()
         self._schedule_drain_settlement_closes(deadline)
         await self._await_pending_drain_tasks(deadline)
         await self._cancel_pending_drain_tasks(deadline)
         self._capture_drain_tasks()
         unresolved, recovery_required = self._drain_operation_ids()
-        if self._financial_operands is not None:
-            self._financial_operands.close()
         return OperationDrainResult(unresolved=unresolved, recovery_required=recovery_required)
 
     @override

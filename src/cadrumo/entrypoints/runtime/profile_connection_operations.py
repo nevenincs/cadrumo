@@ -19,6 +19,7 @@ from ...application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationContractReply,
     RuntimeOperationControl,
+    RuntimeOperationFinancialInput,
     RuntimeOperationManage,
     RuntimeOperationObserve,
     RuntimeOperationReply,
@@ -35,7 +36,10 @@ from ...application.runtime.profile_access import (
     RuntimeSecretReady,
 )
 from ...application.runtime.profile_worker import ProfileWorkerOperationReceipt
-from ...application.runtime.submission_payload import SUBMISSION_PAYLOAD_TIMEOUT_SECONDS
+from ...application.runtime.submission_payload import (
+    SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
+    FinancialOperandInputDescriptor,
+)
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import (
     AccessAction,
@@ -146,6 +150,8 @@ class ProfileConnectionOperationMixin:
         with ExitStack() as release_guard:
             try:
                 connection, host = self._operation_target(context, channel, request)
+                if isinstance(request, RuntimeOperationFinancialInput):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 if isinstance(request, RuntimeOperationSecret):
                     self._operation_secret(host, connection, channel, request)
                     return
@@ -254,6 +260,12 @@ class ProfileConnectionOperationMixin:
         contract = host.owner.operation_worker().describe(request.session_id, request.definition_id).contract
         if connection.frontend not in contract.permitted_frontends:
             raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
+            contract.transient_financial_operand is not None
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        if isinstance(request.descriptor, FinancialOperandInputDescriptor) and request.idempotency_key is not None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         reply, release = stream_operation_submission(
             host,
             connection,

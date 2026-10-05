@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-from decimal import Decimal
+from functools import partial
 from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel
@@ -16,6 +16,7 @@ from ...core.hex import Hex64Str
 from ...core.logging import get_logger
 from ...core.operations import (
     OperationCancellation,
+    OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
@@ -29,13 +30,11 @@ from ._supervisor_settlement import SupervisorSettlementMixin
 from ._supervisor_submission import SupervisorSubmissionMixin
 from .authorization import OperationExecutionAuthority
 from .event_replay import OperationEventCursor
-from .financial_operand import (
-    OperationTransientFinancialOperandDelivery,
-    OperationTransientFinancialOperandRequirement,
-)
-from .financial_operand_submission import (
-    BoundTransientFinancialOperandAccess,
-    OperationTransientFinancialOperandBroker,
+from .financial_operand_contract import (
+    CredentialFreeFinancialOperationRequest,
+    OperationFinancialOperandRefusalCode,
+    OperationFinancialOperandRefusedError,
+    OperationTransientFinancialOperandRequirementV1,
 )
 from .interactions import (
     OperationApplyResponse,
@@ -44,18 +43,16 @@ from .interactions import (
 )
 from .models import (
     OperationId,
-    OperationIdentity,
     OperationRequest,
     OperationStoredInvocation,
+    OperationTerminalReceipt,
     new_operation_id,
 )
 from .operation_definition import OperationDefinition
 from .persistence.events import (
     OperationNoticeEvent,
 )
-from .persistence.financial_operand_custody import (
-    OperationFinancialOperandCustodyRepository,
-)
+from .persistence.financial_operand_custody import OperationTypedFinancialOperandCustodyRepository
 from .persistence.journal import (
     OperationEventStream,
     OperationJournal,
@@ -80,6 +77,7 @@ from .secret_submission import (
     OperationSecretRequirement,
     zeroize_secret_buffer,
 )
+from .typed_financial_operand_submission import OperationTypedFinancialOperandBroker
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -88,21 +86,11 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 
-def _financial_operand_broker(
-    custody: OperationFinancialOperandCustodyRepository | None,
-    clock: Callable[[], datetime],
-) -> OperationTransientFinancialOperandBroker | None:
-    if custody is None:
-        return None
-    return OperationTransientFinancialOperandBroker(custody=custody, clock=clock)
-
-
 def _validate_supervisor_configuration(
     registry: OperationRegistry,
     lease_duration: timedelta,
     execution_timeout: timedelta | None,
     cleanup_timeout: timedelta | None,
-    financial_operands: OperationTransientFinancialOperandBroker | None,
 ) -> None:
     if lease_duration <= timedelta():
         raise ValueError("operation lease duration must be positive")
@@ -112,8 +100,6 @@ def _validate_supervisor_configuration(
         declaration = definition.ephemeral_secret
         if declaration is not None and declaration.lifetime >= lease_duration:
             raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
-        if definition.transient_financial_operands and financial_operands is None:
-            raise ValueError("transient financial operand operations require a durable custody repository")
 
 
 class OperationSupervisor(
@@ -143,8 +129,8 @@ class OperationSupervisor(
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
-        financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
         execution_authority: OperationExecutionAuthority | None = None,
+        typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
         self.registry = registry
@@ -178,13 +164,26 @@ class OperationSupervisor(
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
-        self._financial_operands = _financial_operand_broker(financial_operand_custody, clock)
+        self._typed_financial_operands = (
+            None
+            if typed_financial_operand_custody is None
+            else OperationTypedFinancialOperandBroker(
+                custody=typed_financial_operand_custody,
+                clock=clock,
+                lock_for=self._lease_lock,
+                require_current=self._require_current_financial_binding,
+                settle_expiry=self._settle_pre_entry_financial_expiry,
+            )
+        )
+        if self._typed_financial_operands is None and any(
+            definition.transient_financial_operand is not None for definition in registry.definitions
+        ):
+            raise ValueError("typed financial operations require hardened durable custody")
         _validate_supervisor_configuration(
             registry,
             lease_duration,
             execution_timeout,
             cleanup_timeout,
-            self._financial_operands,
         )
 
     @override
@@ -216,25 +215,134 @@ class OperationSupervisor(
             raise ValueError("request payload does not match definition")
 
     @override
-    def _bound_financial_operand(
-        self,
-        identity: OperationIdentity,
-        definition: OperationDefinition,
-    ) -> BoundTransientFinancialOperandAccess:
-        """Scope the operand broker to one invocation's own declarations."""
-        return BoundTransientFinancialOperandAccess(
-            declarations=definition.transient_financial_operands,
-            broker=self._financial_operands,
-            identity=identity,
-            revision=0,
+    async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
+        """Require delivery custody to finish before any terminal receipt is committed."""
+        if self._typed_financial_operands is not None:
+            await self._typed_financial_operands.settle_operation(operation_id)
+
+    async def bind_typed_financial_operand(self, operation_id: OperationId, operand: BaseModel) -> None:
+        """Transfer a complete batch only after its amount-free invocation was admitted."""
+        if not self._accepting_admissions:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.OWNER_LOST)
+
+        async def transfer(batch: BaseModel) -> None:
+            try:
+                broker = self._typed_financial_operands
+                if broker is None:
+                    raise OperationFinancialOperandRefusedError(
+                        OperationFinancialOperandRefusalCode.UNKNOWN_REQUIREMENT
+                    )
+                snapshot = await self.inspect(operation_id)
+                definition = self._require_pinned_definition(snapshot)
+                declaration = definition.transient_financial_operand
+                if declaration is None or type(batch) is not declaration.operand_type:
+                    raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
+                baseline = declaration.baseline_accessor(batch)
+                if type(baseline) is not declaration.baseline_type:
+                    raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+                submission = await broker.open(
+                    declaration=declaration,
+                    identity=snapshot.identity,
+                    revision=snapshot.revision + 1,
+                    domain_baseline_ref=declaration.baseline_reference(baseline),
+                    bind_requirement=self._attach_financial_requirement,
+                )
+                try:
+                    submission.operand = batch
+                    await broker.submit(submission)
+                finally:
+                    submission.release()
+            finally:
+                del batch
+
+        try:
+            await self._admit(operation_id, partial(transfer, operand))
+        finally:
+            del operand
+
+    async def refuse_unstarted_financial_input(self, operation_id: OperationId) -> None:
+        """Release an admitted batch and settle a failed intake with no executor or domain effect."""
+        snapshot = await self.inspect(operation_id)
+        definition = self._require_pinned_definition(snapshot)
+        if (
+            definition.transient_financial_operand is None
+            or snapshot.executor_entered_at is not None
+            or snapshot.lifecycle is not OperationLifecycle.CREATED
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        await self._settle_financial_operand_custody(operation_id)
+        await self.settle(
+            operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.REFUSED,
+                effect=OperationEffect.NONE,
+                settled_at=self._clock(),
+                refusal_ref="REFUSED_OPERATION_FINANCIAL_OPERAND",
+            ),
         )
 
-    @override
-    async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
-        """Acknowledge and release every operand one finished invocation held."""
-        if self._financial_operands is None:
+    async def _attach_financial_requirement(self, requirement: OperationTransientFinancialOperandRequirementV1) -> None:
+        """Coherently attach only safe coordinates while the broker owns the operation lock."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.financial_requirement is not None:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.DUPLICATE_SUBMISSION)
+        if snapshot.revision + 1 != requirement.invocation_revision:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        definition = self._require_pinned_definition(snapshot)
+        payload = await self._resolve_request_payload(snapshot, definition)
+        if not isinstance(payload, CredentialFreeFinancialOperationRequest) or (
+            payload.financial_baseline_ref != requirement.domain_baseline_ref
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+        now = self._clock()
+        lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
+        successor = snapshot.model_copy(
+            update={
+                "financial_requirement": requirement,
+                "revision": requirement.invocation_revision,
+                "updated_at": now,
+                "events": (),
+            }
+        )
+        await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
+        self._notify_durable_change(successor)
+
+    async def _require_current_financial_binding(
+        self, requirement: OperationTransientFinancialOperandRequirementV1
+    ) -> None:
+        """Verify immutable invocation, model, baseline and owner coordinates under the operation lock."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.TERMINAL_OPERATION)
+        if snapshot.identity != requirement.identity or snapshot.financial_requirement != requirement:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        declaration = self._require_pinned_definition(snapshot).transient_financial_operand
+        if declaration is None or (
+            declaration.operand_schema != requirement.operand_schema
+            or declaration.baseline_schema != requirement.baseline_schema
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
+        await self._require_owned_lease_unlocked(snapshot.identity, self._clock())
+
+    async def _settle_pre_entry_financial_expiry(
+        self, requirement: OperationTransientFinancialOperandRequirementV1
+    ) -> None:
+        """Settle an unconsumed expired handoff without claiming a domain effect."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL or snapshot.executor_entered_at is not None:
             return
-        await self._financial_operands.settle_operation(operation_id, now=self._clock())
+        await self.settle(
+            snapshot.identity.operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.INTERRUPTED,
+                effect=OperationEffect.NONE,
+                settled_at=self._clock(),
+            ),
+        )
 
     async def _admit[T](self, operation_id: OperationId, action: Callable[[], Awaitable[T]]) -> T:
         if not self._accepting_admissions:
@@ -284,15 +392,6 @@ class OperationSupervisor(
         if not self._accepting_admissions:
             raise ValueError("operation owner is draining")
         SupervisorExecutionMixin._schedule_continuation(self, snapshot, definition, continuation)
-
-    @override
-    async def submit_transient_financial_operand(
-        self, requirement: OperationTransientFinancialOperandRequirement, amount: Decimal
-    ) -> OperationTransientFinancialOperandDelivery:
-        return await self._admit(
-            requirement.identity.operation_id,
-            lambda: SupervisorExecutionMixin.submit_transient_financial_operand(self, requirement, amount),
-        )
 
     @override
     async def submit_ephemeral_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:

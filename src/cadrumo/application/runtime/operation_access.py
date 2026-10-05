@@ -25,7 +25,11 @@ from ..operations.registry import OperationPublicDefinitionContractV1
 from ..operations.secret_submission import OperationSecretRequirement
 from ..user_profile.access_contracts import AccessAction
 from .projection_pages import ProjectionPage, ProjectionPageRequest
-from .submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES, SubmissionPayloadDescriptor
+from .submission_payload import (
+    SUBMISSION_PAYLOAD_MAX_BYTES,
+    FinancialOperandInputDescriptor,
+    SubmissionPayloadDescriptor,
+)
 
 type OperationManagementRequest = (
     OperationCancellationRequestV1
@@ -64,6 +68,16 @@ class RuntimeOperationSubmit(RuntimeOperationTarget):
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
 
 
+class RuntimeOperationFinancialInput(RuntimeOperationTarget):
+    """Volatile bounded operator input, distinct from the registered amount-free request."""
+
+    action: Literal["operation_financial_input"] = "operation_financial_input"
+    definition_id: OperationDefinitionId
+    subject_ref: OperationReference
+    payload_json: str = Field(min_length=2, max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False)
+    idempotency_key: Literal[None] = None
+
+
 class RuntimeOperationSubmitPayload(RuntimeOperationTarget):
     """Begin one non-resumable protected upload before canonical submission."""
 
@@ -71,7 +85,7 @@ class RuntimeOperationSubmitPayload(RuntimeOperationTarget):
     definition_id: OperationDefinitionId
     subject_ref: OperationReference
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
-    descriptor: SubmissionPayloadDescriptor
+    descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor
 
 
 class RuntimeOperationControl(RuntimeOperationTarget):
@@ -133,6 +147,7 @@ class RuntimeOperationManage(RuntimeOperationTarget):
 
 type RuntimeOperationRequest = (
     RuntimeOperationSubmit
+    | RuntimeOperationFinancialInput
     | RuntimeOperationSubmitPayload
     | RuntimeOperationSecret
     | RuntimeOperationControl
@@ -165,7 +180,7 @@ class RuntimeOperationPayloadReady(RuntimeOperationReplyIdentity):
     """Exact bounded upload readiness; it confers no operation or effect authority."""
 
     kind: Literal["operation_payload_ready"] = "operation_payload_ready"
-    descriptor: SubmissionPayloadDescriptor
+    descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor
 
 
 class RuntimeOperationAcknowledged(RuntimeOperationReplyIdentity):

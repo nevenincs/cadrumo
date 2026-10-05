@@ -820,6 +820,7 @@ errors:
       aktuális alappal; indítsd újra a lekérdezést.
     canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan
       munkaválasztást talált.
+    canonical_operation_financial_operand: A pénzügyi adatok nem fogadhatók el.
     canonical_operation_observation_cursor_ahead: A kért megfigyelési kurzor túlmutat
       a hiteles horgonyon.
     canonical_operation_observation_unknown_operation: A kért művelethez nem tartozik

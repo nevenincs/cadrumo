@@ -22,6 +22,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -38,7 +39,7 @@ from ...application.modelo.edit_admission import (
     admit_modelo_edit_baseline,
     renew_modelo_edit_baseline,
 )
-from ...application.modelo.edit_apply_contracts import ModeloEditApplyOperationRequestV1, ModeloEditApplySubmissionV1
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -48,7 +49,9 @@ from ...application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from ...application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -58,8 +61,10 @@ from ...application.modelo.operation_definitions import (
 from ...application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.modelo.work_lifecycle import create_work_unit
-from ...application.operations.models import OperationIdentity, OperationRequest
+from ...application.operations.models import OperationIdentity, OperationRequest, new_operation_id
 from ...application.operations.owner import OperationExecutorContext
+from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
+from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.operations import OperationEffect
@@ -133,6 +138,9 @@ class _ExecutorContext:
     events: _RecordedEvents
     cancellation: _CommitSection = field(default_factory=_CommitSection)
     operands: _RecordedOperands = field(default_factory=_RecordedOperands)
+    typed_financial_operand: BoundTypedFinancialOperandAccess = field(
+        default_factory=lambda: BoundTypedFinancialOperandAccess(broker=None, declaration=None, requirement=None)
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,50 +248,61 @@ class SeededOperatorWork:
         request = OperationRequest(
             definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
             subject_ref=self.work_unit_id,
-            payload=ModeloEditApplyOperationRequestV1(
-                submission=ModeloEditApplySubmissionV1.from_submission(submission)
-            ),
+            payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
         )
-        return self._run_edit(
-            request, operation_id=content_hash_hex({"baseline": admitted.baseline_id, "submission": repr(submission)})
-        )
+        return self._run_edit(request, operation_id=new_operation_id())
 
     def execute(self, request: OperationRequest[BaseModel]) -> CadrumoError | None:
         """Run an edit request a frontend submitted through the production edit executor; its refusal, if any."""
-        return self._run_edit(request, operation_id=content_hash_hex({"request": repr(request)})).refusal
+        return self._run_edit(request, operation_id=new_operation_id()).refusal
 
     def _run_edit(self, request: OperationRequest[BaseModel], *, operation_id: str) -> AppliedEdit:
-        if not isinstance(request.payload, ModeloEditApplyOperationRequestV1):
-            raise TypeError("edit executor requires a modelo edit apply request")
-        typed_request = OperationRequest[ModeloEditApplyOperationRequestV1](
+        if not isinstance(request.payload, ModeloEditOperatorInputV2):
+            raise TypeError("edit executor fixture requires volatile operator input")
+        prepared = prepare_modelo_edit_operand(
+            definition_id=request.definition_id,
+            profile_id=UUID(self.work_unit.bucket_id),
+            subject_ref=request.subject_ref,
+            input_json=request.payload.model_dump_json(),
+        )
+        typed_request = OperationRequest(
             definition_id=request.definition_id,
             subject_ref=request.subject_ref,
-            payload=request.payload,
-            idempotency_key=request.idempotency_key,
+            payload=prepared.request,
         )
         executor = ModeloEditApplyExecutor(
             calculation_action_ports_factory=lambda **_: self.ports,
             receipt_repository_factory=self.receipt_repository_factory,
         )
         events = _RecordedEvents()
-        context = _ExecutorContext(
-            identity=OperationIdentity(
-                operation_id=operation_id,
-                definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-                subject_ref=self.work_unit_id,
-            ),
-            authority_operation=self.operation,
-            events=events,
+        identity = OperationIdentity(
+            operation_id=operation_id,
+            definition_id=request.definition_id,
+            subject_ref=self.work_unit_id,
         )
-        try:
-            asyncio.run(
-                executor.execute(
-                    typed_request,
-                    cast(OperationExecutorContext, context),
+
+        async def execute() -> None:
+            assert prepared.operand is not None
+            async with deliver_financial_operand(
+                identity=identity,
+                declaration=modelo_edit_financial_operand(self.receipt_repository_factory),
+                operand=prepared.operand,
+            ) as access:
+                prepared.release()
+                context = _ExecutorContext(
+                    identity=identity,
+                    authority_operation=self.operation,
+                    events=events,
+                    typed_financial_operand=access,
                 )
-            )
+                await executor.execute(typed_request, cast(OperationExecutorContext, context))
+
+        try:
+            asyncio.run(execute())
         except CadrumoError as refused:
             return AppliedEdit(calculation_revision_id=None, refusal=refused, effects=tuple(events.effects))
+        finally:
+            prepared.release()
         head = self.require_head()
         return AppliedEdit(
             calculation_revision_id=head.calculation_revision_id, refusal=None, effects=tuple(events.effects)

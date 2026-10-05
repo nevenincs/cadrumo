@@ -13,7 +13,10 @@ from ...core.operations import OperationDurability, OperationEffect, OperationIn
 from ..operator_actions.models import ActionReference
 from .capabilities import OperationCapabilities, OperationRequestStoragePolicy
 from .events import OperationEventCode
-from .financial_operand import OperationTransientFinancialOperandDeclaration
+from .financial_operand_contract import (
+    CredentialFreeFinancialOperationRequest,
+    OperationTransientFinancialOperandDeclarationV1,
+)
 from .models import CredentialFreeOperationRequest, OperationDefinitionId, OperationFailureErrorCode
 from .owner import OperationExecutor, OperationResumableExecutor
 from .refusal_evidence import validate_refusal_code
@@ -66,7 +69,7 @@ class OperationDefinition(BaseModel):
     permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
-    transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = ()
+    transient_financial_operand: OperationTransientFinancialOperandDeclarationV1 | None = None
     refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset()
     #: Whether a refused or failed executor's bounded public error detail is
     #: recorded for its frontend. Opt-in: an operation whose refusals may
@@ -89,7 +92,7 @@ class OperationDefinition(BaseModel):
         self._validate_factory_request_binding()
         self._validate_request_storage()
         self._validate_ephemeral_secret()
-        self._validate_transient_financial_operands()
+        self._validate_typed_financial_operand()
         self._validate_owner_loss_effect()
         self._validate_checkpoint_reconciliation()
         return self
@@ -141,27 +144,22 @@ class OperationDefinition(BaseModel):
         if OperationEffect.NONE not in self.capabilities.permitted_effects:
             raise ValueError("ephemeral secret operations must permit a pre-entry none effect")
 
-    def _validate_transient_financial_operands(self) -> None:
-        """Refuse operand declarations the runtime could not honour.
-
-        An operand lives only in the memory of the process that received it, so
-        a definition that expects to resume after owner loss is declaring
-        something custody cannot deliver: the restart would have to invent the
-        amount or the acknowledgement.
-        """
-        if not self.transient_financial_operands:
+    def _validate_typed_financial_operand(self) -> None:
+        if self.transient_financial_operand is None:
             return
-        kinds = [declaration.operand_kind for declaration in self.transient_financial_operands]
-        if len(set(kinds)) != len(kinds):
-            raise ValueError("operation definition cannot declare one financial operand kind twice")
-        if self.capabilities.durability is not OperationDurability.RECORDED:
-            raise ValueError("transient financial operand operations require recorded durability")
-        if self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT:
-            raise ValueError("transient financial operand operations cannot resume after owner loss")
-        if OperationInteractionKind.INPUT not in self.interaction_kinds:
-            raise ValueError("transient financial operand operations must declare an input interaction")
-        if OperationEffect.UNKNOWN not in self.capabilities.permitted_effects:
-            raise ValueError("transient financial operand operations must permit an uncertain-delivery effect")
+        if not issubclass(self.request_type, CredentialFreeFinancialOperationRequest):
+            raise ValueError("typed financial operation requires its amount-free baseline request")
+        if self.ephemeral_secret is not None:
+            raise ValueError("typed financial custody cannot share another input protocol")
+        if (
+            self.capabilities.durability is not OperationDurability.RECORDED
+            or self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT
+            or self.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
+            or OperationEffect.NONE not in self.capabilities.permitted_effects
+            or OperationEffect.UNKNOWN not in self.capabilities.permitted_effects
+            or self.public_error_detail
+        ):
+            raise ValueError("typed financial custody requires amount-free recorded requests and bounded refusals")
 
 
 # The two enums live in the registry's central contract module. Resolving them
@@ -183,9 +181,9 @@ def build_single_phase_definition(
     permitted_frontends: frozenset[OperationFrontendProjection],
     action_reference: ActionReference | None = None,
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
-    transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = (),
     refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
     public_error_detail: bool = False,
+    transient_financial_operand: OperationTransientFinancialOperandDeclarationV1 | None = None,
 ) -> OperationDefinition:
     """Declare ``definition_id`` as its own sole phase: no interactions, interrupted on owner loss."""
     return OperationDefinition(
@@ -204,7 +202,7 @@ def build_single_phase_definition(
         permitted_frontends=permitted_frontends,
         action_reference=action_reference,
         ephemeral_secret=ephemeral_secret,
-        transient_financial_operands=transient_financial_operands,
+        transient_financial_operand=transient_financial_operand,
         refusal_detail_codes=refusal_detail_codes,
         public_error_detail=public_error_detail,
     )

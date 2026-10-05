@@ -21,7 +21,7 @@ from ....domain.calculations.registry.schema_base import CasillaDataType, Casill
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.filing.schema import ModeloScalar
 from ....domain.modelos.codes import ModeloCode
-from ...operations.registry import OperationSchemaIdentityV1
+from ...operations.schema_identity import OperationSchemaIdentityV1
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from ..edit_models import (
     ModeloEditBaselineV1,

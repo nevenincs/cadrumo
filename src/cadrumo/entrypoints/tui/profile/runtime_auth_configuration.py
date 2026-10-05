@@ -18,7 +18,7 @@ from ....application.auth.operation_definitions import (
     AuthConfigureOperationRequest,
 )
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
-from ....application.operations.registry import OperationSchemaIdentityV1
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.error_codes import declared_error_codes_by_qualname
 from ....core.errors.hierarchy import RecordedRegisteredError

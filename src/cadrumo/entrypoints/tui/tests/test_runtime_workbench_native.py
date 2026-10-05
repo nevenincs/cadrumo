@@ -49,7 +49,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.runtime.contracts import RuntimeClientHello
 from cadrumo.application.runtime.operation_access import (
@@ -120,6 +120,7 @@ from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginM
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [
     pytest.mark.integration,

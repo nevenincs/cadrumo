@@ -11,7 +11,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.modelos.codes import ModeloCode
-from ...operations.registry import OperationSchemaIdentityV1
+from ...operations.schema_identity import OperationSchemaIdentityV1
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from ..edit_models import (
     ModeloBindingEditIntentV1,

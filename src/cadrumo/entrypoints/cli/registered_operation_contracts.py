@@ -10,9 +10,7 @@ from pydantic import BaseModel
 
 from ...application.operations.events import OperationEventCode
 from ...application.operations.models import OperationId
-from ...application.operations.registry import (
-    OperationSchemaIdentityV1,
-)
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...core.operations import OperationEffect, OperationTerminalCondition
 
 

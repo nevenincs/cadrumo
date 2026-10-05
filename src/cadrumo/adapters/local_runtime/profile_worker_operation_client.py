@@ -40,7 +40,11 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerUploadAccepted,
 )
 from ...application.runtime.projection_pages import ProjectionPageRequest
-from ...application.runtime.submission_payload import SubmissionPayloadChunk, SubmissionPayloadDescriptor
+from ...application.runtime.submission_payload import (
+    FinancialOperandInputDescriptor,
+    SubmissionPayloadChunk,
+    SubmissionPayloadDescriptor,
+)
 from .profile_worker_transport import ProfileWorkerTransport
 
 
@@ -125,7 +129,7 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
         definition_id: str,
         subject_ref: str,
         idempotency_key: str | None,
-        descriptor: SubmissionPayloadDescriptor,
+        descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor,
         deadline: float,
     ) -> None:
         """Reserve a worker-local upload; canonical admission waits for finish."""

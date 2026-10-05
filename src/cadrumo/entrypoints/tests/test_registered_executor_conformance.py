@@ -31,12 +31,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -260,6 +260,7 @@ from ...application.modelo.dependency_operation import (
     ModeloDependencyRequest,
 )
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.history_operation import ModeloWorkHistoryProjection, ModeloWorkHistoryRequest
 from ...application.modelo.invoice_withholding_capture_contracts import (
@@ -1475,6 +1476,25 @@ class _ExecutionDriver:
     services: OperationComposedServices
 
     async def prepare(self, *, definition_id: str, subject_ref: str, payload: BaseModel, secret: bytes | None = None):
+        if isinstance(payload, ModeloEditOperatorInputV2):
+            prepared = prepare_modelo_edit_operand(
+                definition_id=definition_id,
+                profile_id=UUID(payload.submission.baseline.bucket_id),
+                subject_ref=subject_ref,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                submitted = await self.services.submission.submit(
+                    OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=prepared.request),
+                    actor_ref=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+                )
+                assert prepared.operand is not None
+                await self.services.submission.supervisor.bind_typed_financial_operand(
+                    submitted.receipt.operation_id, prepared.operand
+                )
+                return submitted
+            finally:
+                prepared.release()
         submitted = await self.services.submission.submit(
             OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload),
             actor_ref=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -1497,12 +1517,13 @@ class _ExecutionDriver:
             secret=secret,
         )
         before_start = await self.observe(submitted.receipt.operation_id)
-        cancellation = await self.services.cancellation.request(
-            OperationCancellationRequestV1(
-                operation_id=submitted.receipt.operation_id, expected_revision=before_start.projection.revision
+        if not isinstance(payload, ModeloEditOperatorInputV2):
+            cancellation = await self.services.cancellation.request(
+                OperationCancellationRequestV1(
+                    operation_id=submitted.receipt.operation_id, expected_revision=before_start.projection.revision
+                )
             )
-        )
-        assert isinstance(cancellation, OperationCancellationRefusalV1)
+            assert isinstance(cancellation, OperationCancellationRefusalV1)
         await self.services.submission.start(submitted.receipt.operation_id)
         await self.services.submission.settled(submitted.receipt.operation_id)
         return submitted, await self.observe(submitted.receipt.operation_id)
@@ -1849,31 +1870,22 @@ def _seeded_modelo_edit_submission(
     )
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-    from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+    from ...application.modelo.edit_admission import admit_modelo_edit_baseline
+    from ...application.modelo.edit_contract import ModeloEditMutationFamily
     from ...application.modelo.edit_models import (
-        ModeloEditBaselineV1,
+        ModeloEditAdmittedV1,
         ModeloEditScalarAddressV1,
         ModeloEditScalarIntentKind,
-        ModeloEditSchemaIdentityV1,
         ModeloEditSubmissionV1,
-        ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
-    from ...application.modelo.edit_services import calculation_head_digest, work_unit_record_digest
-    from ...application.modelo.edit_value_grammar import (
-        ModeloEditValueChannel,
-        ModeloEditValueFamily,
-        ModeloEditValueGrammarV1,
-    )
-    from ...application.operations.registry import OperationSchemaIdentityV1
     from ...core.casilla_id import validated_casilla_id
-    from ...core.hashing import content_hash_hex
-    from ...domain.calculations.registry.schema_base import CasillaDataType
+    from ..operation_composition import build_production_operation_registry
 
     unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
     seeded_casilla_id = validated_casilla_id("06")
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        calculate_modelo_revision(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -1886,65 +1898,16 @@ def _seeded_modelo_edit_submission(
     current_unit = work_catalogue.get(unit.work_unit_id)
     if current_unit is None:
         raise AssertionError("the edit conformance fixture lost its seeded work unit")
-    casilla_id = next(iter(revision.input_values_by_casilla_id))
-    identity = OperationSchemaIdentityV1(
-        schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint="a" * 64
+    casilla_id = seeded_casilla_id
+    admission = admit_modelo_edit_baseline(
+        work_unit_id=unit.work_unit_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+        operation_contracts=build_production_operation_registry().public_contract_set,
     )
-    compatibility = ModeloEditCompatibilityTupleV1(
-        contract_set_digest="a" * 64,
-        operation_definition_id="modelo.calculate",
-        definition_contract_digest="a" * 64,
-        request_schema=identity,
-        result_schema=identity,
-        review_projection_contract_version=None,
-        review_schema=None,
-        workspace_refresh_target_schema=identity,
-        financial_operand_schema=identity,
-    )
-    permitted_surface = (
-        ModeloEditWritableScalarSurfaceEntryV1(
-            casilla_id=casilla_id,
-            data_type=CasillaDataType.MONEY,
-            allowed_intents=(
-                ModeloEditScalarIntentKind.SET_TYPED_VALUE,
-                ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
-            ),
-            grammar=ModeloEditValueGrammarV1(
-                data_type=CasillaDataType.MONEY.value,
-                family=ModeloEditValueFamily.DECIMAL,
-                channel=ModeloEditValueChannel.DECIMAL,
-                max_fraction_digits=2,
-                money_operand_bound=True,
-            ),
-        ),
-    )
-    issued_at = datetime.now(UTC)
-    baseline = ModeloEditBaselineV1(
-        compatibility=compatibility,
-        bucket_id=current_unit.bucket_id,
-        modelo=current_unit.modelo,
-        filing_year=current_unit.filing_year,
-        period=current_unit.period,
-        work_unit_id=current_unit.work_unit_id,
-        work_unit_record_digest=work_unit_record_digest(current_unit),
-        calculation_head_digest=calculation_head_digest(calculation_catalogue.get(revision.calculation_revision_id)),
-        current_calculation_revision_id=revision.calculation_revision_id,
-        law_selected_revision_id=current_unit.revision_id,
-        schema_identity=ModeloEditSchemaIdentityV1(
-            schema_id="modelo-edit-conformance",
-            schema_fingerprint=content_hash_hex(revision.registry_snapshot_ref.model_dump(mode="json")),
-            completeness_manifest_digest=content_hash_hex({"fixture": "calculated-revision"}),
-        ),
-        schema_version=1,
-        permitted_surface=permitted_surface,
-        permitted_surface_digest=content_hash_hex([entry.model_dump(mode="json") for entry in permitted_surface]),
-        mutation_family=ModeloEditMutationFamily.CALCULATE,
-        issued_at=issued_at,
-        expires_at=issued_at + timedelta(minutes=15),
-        baseline_id=content_hash_hex(
-            {"work_unit_id": current_unit.work_unit_id, "revision_id": revision.calculation_revision_id}
-        ),
-    )
+    assert isinstance(admission, ModeloEditAdmittedV1)
+    baseline = admission.baseline
     submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
@@ -2688,7 +2651,7 @@ def _payload(
         case "modelo.edit.preflight":
             work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            values = {"profile_id": profile_id, "submission": wire_submission}
+            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
         case "modelo.edit.apply_prerequisite":
             work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
@@ -3578,7 +3541,7 @@ def _payload(
         case "modelo.edit.apply":
             work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            values = {"submission": wire_submission}
+            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
         case "modelo.work.file":
             revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(
                 profile_id, operation=operation
@@ -3772,8 +3735,8 @@ def _runtime(
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=execution_timeout,
                 cleanup_timeout=timedelta(minutes=2),
-                financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
-                    root=root / "operations" / "financial_operand_custody",
+                typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
+                    root=root / "operations" / "typed_financial_operand_custody",
                 ),
             )
             try:

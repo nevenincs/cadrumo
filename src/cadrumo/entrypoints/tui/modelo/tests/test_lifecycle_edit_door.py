@@ -18,7 +18,6 @@ from .....application.modelo.action_errors import ModeloEditBaselineStaleError
 from .....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .....application.modelo.edit_apply_contracts import ModeloEditApplyOperationRequestV1
 from .....application.modelo.edit_models import (
     ModeloEditAdmittedV1,
     ModeloEditPreflightEvaluatedV1,
@@ -28,6 +27,7 @@ from .....application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from .....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from .....application.modelo.edit_preflight import OVERRIDES_SOURCE_VALUE
 from .....application.modelo.work_lifecycle import discard_work_unit
 from .....application.modelo.workbench_read import read_modelo_workbench_form
@@ -106,7 +106,7 @@ def test_an_expired_baseline_is_renewed_before_the_typed_intents_are_submitted(t
 
     request = submissions.pop()
     payload = request.payload
-    assert isinstance(payload, ModeloEditApplyOperationRequestV1)
+    assert isinstance(payload, ModeloEditOperatorInputV2)
     submission = payload.submission.to_submission()
     assert isinstance(submission, ModeloEditSubmissionV1)
     assert submission.baseline.expires_at > datetime.now(UTC)

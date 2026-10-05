@@ -44,13 +44,15 @@ from ....application.operations.frontend_requests import (
 )
 from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.replay import OperationReplayLimit
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.deadline_budget import remaining_budget
 from ....application.runtime.operation_access import (
     OperationManagementRequest,
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
+    RuntimeOperationFinancialInput,
     RuntimeOperationManage,
     RuntimeOperationManaged,
     RuntimeOperationObserve,
@@ -167,7 +169,7 @@ def _exchange_deadline(deadline: float | None) -> float:
 
 async def _admit_submission_contract(
     client: RuntimeFrontendClient, definition_id: str, deadline: float, session_id: UUID
-) -> None:
+) -> OperationPublicDefinitionContractV1:
     contract = await await_cancellation_complete(
         asyncio.to_thread(client.contract, definition_id, deadline=deadline),
         task_name="tui-runtime-definition",
@@ -178,6 +180,7 @@ async def _admit_submission_contract(
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     if client.session_id != session_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+    return contract
 
 
 def _submitted_receipt(reply: RuntimeOperationReply) -> RuntimeOperationSubmitted:
@@ -241,20 +244,35 @@ class RuntimeOperationController:
         idempotency_key: str | None = None,
         deadline: float | None = None,
         expected_session_id: UUID | None = None,
+        financial_input: bool = False,
     ) -> RuntimeOperationController:
         """Submit a registered request without transferring response capabilities."""
         session_id = _submission_session(client, expected_session_id)
         exchange_deadline = _exchange_deadline(deadline)
-        await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
-        request = RuntimeOperationSubmit(
-            request_id=uuid4(),
-            profile_id=client.profile_id,
-            session_id=session_id,
-            definition_id=definition_id,
-            subject_ref=subject_ref,
-            payload_json=payload.model_dump_json(),
-            idempotency_key=idempotency_key,
-        )
+        contract = await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
+        if financial_input != (contract.transient_financial_operand is not None):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if financial_input:
+            if idempotency_key is not None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            request = RuntimeOperationFinancialInput(
+                request_id=uuid4(),
+                profile_id=client.profile_id,
+                session_id=session_id,
+                definition_id=definition_id,
+                subject_ref=subject_ref,
+                payload_json=payload.model_dump_json(),
+            )
+        else:
+            request = RuntimeOperationSubmit(
+                request_id=uuid4(),
+                profile_id=client.profile_id,
+                session_id=session_id,
+                definition_id=definition_id,
+                subject_ref=subject_ref,
+                payload_json=payload.model_dump_json(),
+                idempotency_key=idempotency_key,
+            )
         reply = await await_cancellation_complete(
             asyncio.to_thread(client.operation, request, deadline=exchange_deadline),
             task_name="tui-runtime-submission",

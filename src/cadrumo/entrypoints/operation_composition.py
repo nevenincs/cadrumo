@@ -19,12 +19,12 @@ from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
-from ..adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
 from ..adapters.persistence.profile.calculation_revision_override_migration import GuardedCalculationRevisionMigration
 from ..adapters.persistence.profile.catalogue_creation import (
@@ -2071,7 +2071,9 @@ def compose_operation_dependencies(
         lease_duration=_LEASE_DURATION,
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
-        financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(settings=resolved_settings),
+        typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
+            settings=resolved_settings
+        ),
         execution_authority=execution_authority,
     )
 

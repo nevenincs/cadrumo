@@ -33,7 +33,7 @@ from .persistence.replay import (
     OperationReplayStatus,
     PublicReplayStatus,
 )
-from .registry import OperationSchemaIdentityV1
+from .schema_identity import OperationSchemaIdentityV1
 from .secret_submission import OperationSecretRequirement
 
 # The common observation projection is owned by this versioned service, rather

@@ -549,6 +549,63 @@ class ProfileWorkerOperationHost:
             document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
             yield document, authorization
 
+    async def submit_financial_input(
+        self,
+        *,
+        session_id: UUID,
+        frontend: OperationFrontendProjection,
+        definition_id: str,
+        subject_ref: str,
+        input_json: str,
+    ) -> OperationSubmission:
+        """Convert volatile human input before binding or journaling the safe request."""
+        from ...application.modelo.edit_operator_input import prepare_modelo_edit_operand
+        from ...application.operations.financial_operand_contract import OperationFinancialOperandRefusedError
+
+        contract = self.contract(session_id, definition_id)
+        if contract.transient_financial_operand is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        try:
+            with validating_governed_facts(self._pinned()):
+                prepared = prepare_modelo_edit_operand(
+                    definition_id=definition_id,
+                    profile_id=self.custody.identity.binding.profile_id,
+                    subject_ref=subject_ref,
+                    input_json=input_json,
+                )
+        except (ValueError, TypeError, RecursionError, OperationFinancialOperandRefusedError):
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+        input_json = ""
+
+        async def transfer() -> OperationSubmission:
+            try:
+                submitted = await self.submit(
+                    session_id=session_id,
+                    frontend=frontend,
+                    request=OperationRequest(
+                        definition_id=definition_id,
+                        subject_ref=subject_ref,
+                        payload=prepared.request,
+                        idempotency_key=None,
+                    ),
+                )
+                operand = prepared.operand
+                if operand is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                supervisor = self._composed().submission.supervisor
+                try:
+                    await supervisor.bind_typed_financial_operand(submitted.receipt.operation_id, operand)
+                except OperationFinancialOperandRefusedError:
+                    await supervisor.refuse_unstarted_financial_input(submitted.receipt.operation_id)
+                    raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+                finally:
+                    del operand
+                return submitted
+            finally:
+                prepared.release()
+
+        return await await_cancellation_complete(transfer(), task_name="profile-financial-operand-admission")
+
     async def submit_payload(
         self,
         *,

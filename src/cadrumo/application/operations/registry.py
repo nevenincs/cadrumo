@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from enum import StrEnum
 from functools import cached_property
-from typing import Annotated, Literal, Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import (
     BaseModel,
@@ -54,6 +54,7 @@ from .capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from .financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
 from .interactions import OperationInteractionRequest
 from .models import (
     OperationDefinitionId,
@@ -62,6 +63,7 @@ from .models import (
 )
 from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema
+from .schema_identity import OperationPublicSchemaId, OperationSchemaIdentityV1
 
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     strict=True,
@@ -70,44 +72,13 @@ _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     arbitrary_types_allowed=True,
 )
 
-type OperationPublicSchemaId = Annotated[
-    str,
-    Field(min_length=3, max_length=160, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"),
-]
-
-
-class OperationSchemaIdentityV1(BaseModel):
-    """Stable public identity of one exact strict Pydantic JSON schema."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_id: OperationPublicSchemaId
-    schema_version: Annotated[int, Field(ge=1)]
-    schema_fingerprint: ContentDigest
-
-    @classmethod
-    def from_model(
-        cls,
-        *,
-        schema_id: OperationPublicSchemaId,
-        schema_version: int,
-        model_type: type[BaseModel],
-    ) -> OperationSchemaIdentityV1:
-        """Derive the identity from the canonical closed schema of ``model_type``."""
-        schema = strict_model_json_schema(model_type)
-        return cls(
-            schema_id=schema_id,
-            schema_version=schema_version,
-            schema_fingerprint=content_hash_hex(schema),
-        )
-
 
 class OperationPublicDefinitionContractV1(BaseModel):
     """Renderer-neutral public manifest row for one operation definition."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    manifest_version: Literal[1] = 1
+    manifest_version: Literal[2] = 2
     definition_id: OperationDefinitionId
     action_reference: ActionReference | None
     request_schema: OperationSchemaIdentityV1
@@ -131,6 +102,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
     reconciliation_policy: OperationReconciliationPolicy
     permitted_frontends: frozenset[OperationFrontendProjection]
     ephemeral_secret_required: bool
+    transient_financial_operand: OperationTransientFinancialOperandPublicDeclarationV1 | None = None
     definition_contract_digest: ContentDigest
 
     @model_validator(mode="after")
@@ -403,6 +375,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         public_result_type: type[BaseModel],
         access_resolver: OperationAccessResolver,
         result_projector: OperationResultProjector | None = None,
+        request_schema_version: int = 1,
     ) -> OperationPublicDefinitionRegistrationV1:
         """Bind the conventional version-1 ``<definition_id>.request`` and ``.result`` schemas.
 
@@ -415,7 +388,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
             definition=definition,
             request_schema=OperationSchemaBindingV1.bind(
                 schema_id=definition.definition_id + ".request",
-                schema_version=1,
+                schema_version=request_schema_version,
                 model_type=definition.request_type,
             ),
             result_schema=OperationSchemaBindingV1.bind(
@@ -647,13 +620,11 @@ __all__ = [
     "OperationPublicContractSetV1",
     "OperationPublicDefinitionContractV1",
     "OperationPublicDefinitionRegistrationV1",
-    "OperationPublicSchemaId",
     "OperationReconciliationPolicy",
     "OperationRegistry",
     "OperationResultProjector",
     "OperationReviewProjector",
     "OperationSchemaBindingV1",
-    "OperationSchemaIdentityV1",
     "OperationWorkspaceRefreshAdapter",
     "operation_public_schema_reference",
 ]

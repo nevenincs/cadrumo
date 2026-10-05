@@ -48,7 +48,8 @@ from .frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .registry import OperationPublicDefinitionContractV1, OperationRegistry, OperationSchemaIdentityV1
+from .registry import OperationPublicDefinitionContractV1, OperationRegistry
+from .schema_identity import OperationSchemaIdentityV1
 
 if TYPE_CHECKING:
     from .models import OperationTerminalReceipt

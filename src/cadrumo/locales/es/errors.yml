@@ -874,6 +874,7 @@ errors:
       referencia actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo
       ha encontrado una selección de trabajo sin resolver.
+    canonical_operation_financial_operand: No se han podido aceptar los datos financieros.
     canonical_operation_observation_cursor_ahead: El cursor de observación solicitado
       supera el ancla autorizada.
     canonical_operation_observation_unknown_operation: No existe un diario de observaciones

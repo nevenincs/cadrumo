@@ -25,7 +25,8 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationId
-from ...application.operations.registry import OperationPublicDefinitionContractV1, OperationSchemaIdentityV1
+from ...application.operations.registry import OperationPublicDefinitionContractV1
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after
 from ...core.errors.hierarchy import CadrumoError

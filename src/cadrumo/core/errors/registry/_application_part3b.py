@@ -248,6 +248,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.financial_operand_contract.OperationFinancialOperandRefusedError",
+        ErrorCode(
+            code="REFUSED_OPERATION_FINANCIAL_OPERAND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_operation_financial_operand",
+            retryable=False,
+            runbook_id=None,
+            public_message_from_registry=True,
+        ),
+    ),
+    (
         "cadrumo.application.operations.financial_operand_custody.OperationFinancialOperandCustodyError",
         ErrorCode(
             code="INTERNAL_OPERATION_FINANCIAL_OPERAND_CUSTODY",

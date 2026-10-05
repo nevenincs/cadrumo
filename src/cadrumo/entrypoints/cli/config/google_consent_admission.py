@@ -7,11 +7,8 @@ import time
 from uuid import UUID
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
-)
+from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from ....application.user_profile.google_configuration_operation_contracts import (

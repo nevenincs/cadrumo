@@ -16,11 +16,8 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from ...application.operations.models import OperationId
-from ...application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
-)
+from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationTerminalCondition
 from .registered_operation_contracts import RegisteredOperationCompletion, RegisteredOperationProgress

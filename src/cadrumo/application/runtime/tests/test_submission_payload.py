@@ -11,6 +11,7 @@ from cadrumo.application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SUBMISSION_PAYLOAD_MAX_BYTES,
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
+    FinancialOperandInputDescriptor,
     SubmissionPayloadBuffer,
     SubmissionPayloadChunk,
     SubmissionPayloadDescriptor,
@@ -132,3 +133,21 @@ def test_explicit_close_is_idempotent_and_prevents_reuse() -> None:
     assert storage == bytearray()
     with pytest.raises(ValueError, match="closed"):
         buffer.finish()
+
+
+def test_financial_input_is_never_content_hashed_and_still_wipes_its_buffer(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bounded financial input uses transport custody without a low-domain value fingerprint."""
+    from .. import submission_payload
+
+    def forbidden_hash(payload: object) -> str:
+        raise AssertionError("financial input must not be content hashed")
+
+    monkeypatch.setattr(submission_payload, "sha256_hex", forbidden_hash)
+    payload = b'{"amount":"93847562.19"}'
+    descriptor = FinancialOperandInputDescriptor(byte_count=len(payload))
+    assert "digest" not in descriptor.model_dump_json()
+    buffer = SubmissionPayloadBuffer(descriptor)
+    storage = buffer._content
+    buffer.append(_chunk(0, payload))
+    assert buffer.finish() == payload.decode()
+    assert storage == bytearray()

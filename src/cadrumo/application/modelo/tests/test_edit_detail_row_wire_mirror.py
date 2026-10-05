@@ -35,7 +35,6 @@ from ...operations.registry_schema_validation import strict_model_json_schema, v
 from ..edit_apply_contracts import (
     ModeloEditApplyDetailRowAddressV1,
     ModeloEditApplyDetailRowIntentV1,
-    ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
 )
 from ..edit_apply_row_contracts import (
@@ -362,10 +361,14 @@ def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None
         validate_credential_free_schema(strict_model_json_schema(AddressCarryingTheJoinedKey))
 
 
-def test_the_admitted_request_type_carries_the_detail_row_family() -> None:
-    """The real registered request type is admitted WITH detail rows on it."""
-    schema = strict_model_json_schema(ModeloEditApplyOperationRequestV1)
+def test_the_public_request_is_amount_free_and_the_operator_input_carries_detail_rows() -> None:
+    """Native input has the batch; only safe coordinates enter the public request."""
+    from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
+
+    schema = strict_model_json_schema(ModeloEditApplyOperationRequestV2)
     validate_credential_free_schema(schema)
 
+    assert isinstance(schema["properties"], dict)
+    assert "submission" not in schema["properties"]
     submission = ModeloEditApplySubmissionV1.model_fields
     assert "detail_row_intents" in submission

@@ -17,7 +17,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.runtime.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,

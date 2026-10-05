@@ -34,8 +34,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
-from ..operations.financial_operand import OperationTransientFinancialOperandRequirement
-from ..operations.registry import OperationPublicContractSetV1, OperationSchemaIdentityV1
+from ..operations.registry import OperationPublicContractSetV1
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .edit_contract import EditModel, ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
@@ -110,11 +109,9 @@ def _operation_compatibility(
         return _compatibility_refusal(
             "workspace_refresh_target_schema", "compose the edit operation refresh-target schema before admission"
         )
-    financial_operand_schema = OperationSchemaIdentityV1.from_model(
-        schema_id="operation.financial-operand.requirement",
-        schema_version=1,
-        model_type=OperationTransientFinancialOperandRequirement,
-    )
+    if contract.transient_financial_operand is None:
+        return _compatibility_refusal("financial_operand_schema", "compose the typed edit operand before admission")
+    financial_operand_schema = contract.transient_financial_operand.operand_schema
     return ModeloEditCompatibilityTupleV1(
         contract_set_digest=contracts.contract_set_digest,
         operation_definition_id=contract.definition_id,

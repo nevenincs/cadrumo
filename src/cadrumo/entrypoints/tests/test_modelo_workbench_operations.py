@@ -38,10 +38,12 @@ from ...application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.edit_refusal_projection import (
     ModeloEditCalculationPrerequisiteV1,
     ModeloEditRefusalProjectionStore,
 )
+from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
@@ -56,7 +58,6 @@ from ...application.modelo.workbench_operations import (
     ModeloEditApplyPrerequisiteRequest,
     ModeloEditPreflightExecutor,
     ModeloEditPreflightProjectionV1,
-    ModeloEditPreflightRequest,
     ModeloEditRenewalProjectionV1,
     ModeloEditRenewExecutor,
     ModeloEditRenewRequest,
@@ -67,6 +68,8 @@ from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjec
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
+from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
+from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
 from ...core.casilla_id import validated_casilla_id
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
@@ -128,6 +131,9 @@ class _Context:
     events: _Events = field(default_factory=_Events)
     cancellation: _Cancellation = field(default_factory=_Cancellation)
     operands: _Operands = field(default_factory=_Operands)
+    typed_financial_operand: BoundTypedFinancialOperandAccess = field(
+        default_factory=lambda: BoundTypedFinancialOperandAccess(broker=None, declaration=None, requirement=None)
+    )
 
 
 def _run[ResultT: BaseModel](
@@ -147,7 +153,37 @@ def _run[ResultT: BaseModel](
         authority_operation=work.operation,
     )
     request = OperationRequest(definition_id=definition_id, subject_ref=work.work_unit_id, payload=payload)
-    asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+
+    async def execute() -> None:
+        nonlocal context
+        if isinstance(payload, ModeloEditOperatorInputV2):
+            prepared = prepare_modelo_edit_operand(
+                definition_id=definition_id,
+                profile_id=UUID(work.work_unit.bucket_id),
+                subject_ref=work.work_unit_id,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                assert prepared.operand is not None
+                async with deliver_financial_operand(
+                    identity=context.identity,
+                    declaration=modelo_edit_financial_operand(None),
+                    operand=prepared.operand,
+                ) as access:
+                    prepared.release()
+                    context = replace(context, typed_financial_operand=access)
+                    await executor.execute(
+                        OperationRequest(
+                            definition_id=definition_id, subject_ref=work.work_unit_id, payload=prepared.request
+                        ),
+                        cast(OperationExecutorContext, context),
+                    )
+            finally:
+                prepared.release()
+        else:
+            await executor.execute(request, cast(OperationExecutorContext, context))
+
+    asyncio.run(execute())
     (result,) = context.operands.results
     assert isinstance(result, result_type)
     assert result_type.model_validate_json(result.model_dump_json()) == result
@@ -362,9 +398,7 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
             work,
             executor,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditPreflightRequest(
-                profile_id=_profile_id(work), submission=ModeloEditApplySubmissionV1.from_submission(submission)
-            ),
+            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
             ModeloEditPreflightProjectionV1,
         )
         after = work.require_head()

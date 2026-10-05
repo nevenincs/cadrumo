@@ -39,7 +39,11 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+    OperationBaselinePolicy,
+    OperationReplayPolicy,
+)
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -61,11 +65,12 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
-from .edit_apply_contracts import ModeloEditApplySubmissionV1
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
-from .edit_models import ModeloEditPreflightEvaluatedV1, ModeloEditRefusedV1
+from .edit_models import ModeloEditPreflightEvaluatedV1, ModeloEditRefusedV1, ModeloEditSubmissionV1
+from .edit_operation_requests import ModeloEditPreflightRequestV2
 from .edit_preflight import preflight_modelo_edit
 from .edit_refusal_projection import ModeloEditRefusalProjectionStore
+from .edit_transient_operand import modelo_edit_financial_operand
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
@@ -115,13 +120,6 @@ class ModeloEditRenewRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     baseline: ModeloEditApplyBaselineV1
-
-
-class ModeloEditPreflightRequest(CredentialFreeOperationRequest):
-    """Staged typed intents to check against the declaration as it stands."""
-
-    profile_id: UUID
-    submission: ModeloEditApplySubmissionV1
 
 
 class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
@@ -376,26 +374,26 @@ class ModeloEditPreflightExecutor:
         self._ports_factory = ports_factory
 
     async def execute(
-        self, request: OperationRequest[ModeloEditPreflightRequest], context: OperationExecutorContext
+        self, request: OperationRequest[ModeloEditPreflightRequestV2], context: OperationExecutorContext
     ) -> str:
         """Evaluate every intent and the resulting required casillas, naming each finding's address."""
         payload = request.payload
-        baseline = payload.submission.baseline
         _require_subject(
             request.definition_id,
             request.subject_ref,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            baseline.work_unit_id,
+            payload.work_unit_id,
         )
         operation = context.authority_operation
 
-        def read() -> ModeloEditPreflightProjectionV1:
+        def read(submission: ModeloEditSubmissionV1) -> ModeloEditPreflightProjectionV1:
+            baseline = submission.baseline
             bucket_id = _bucket_id(payload.profile_id)
             if baseline.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             ports = self._ports_factory(bucket_id, operation)
             outcome = preflight_modelo_edit(
-                payload.submission.to_submission(),
+                submission,
                 work_catalogue=ports.work_units.load(),
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 tax_id_format=runtime_tax_id_format(authority=operation),
@@ -404,9 +402,16 @@ class ModeloEditPreflightExecutor:
                 result_version=1, profile_id=payload.profile_id, work_unit_id=baseline.work_unit_id, outcome=outcome
             )
 
-        return await _read(
-            context, phase=MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, task_name="modelo-edit-preflight", read=read
-        )
+        async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
+            try:
+                return await _read(
+                    context,
+                    phase=MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+                    task_name="modelo-edit-preflight",
+                    read=lambda operand=submission: read(operand),
+                )
+            finally:
+                del submission
 
 
 class ModeloEditApplyPrerequisiteExecutor:
@@ -478,7 +483,7 @@ _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = Mapping
         MODELO_WORK_FORM_OPERATION_DEFINITION_ID: (ModeloWorkbenchFormRequest, ModeloWorkbenchFormProjectionV1),
         MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID: (ModeloCasillaHelpRequest, ModeloCasillaHelpProjectionV1),
         MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID: (ModeloEditRenewRequest, ModeloEditRenewalProjectionV1),
-        MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID: (ModeloEditPreflightRequest, ModeloEditPreflightProjectionV1),
+        MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID: (ModeloEditPreflightRequestV2, ModeloEditPreflightProjectionV1),
         MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID: (
             ModeloEditApplyPrerequisiteRequest,
             ModeloEditApplyPrerequisiteProjectionV1,
@@ -500,7 +505,14 @@ def _definition(
         result_type=result_type,
         executor_type=executor_type,
         build=build,
-        capabilities=_READ_CAPABILITIES,
+        capabilities=_READ_CAPABILITIES
+        if definition_id != MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+        else _READ_CAPABILITIES.model_copy(
+            update={"replay": OperationReplayPolicy.NONE, "baseline": OperationBaselinePolicy.EXACT_APPROVAL}
+        ),
+        transient_financial_operand=modelo_edit_financial_operand(None)
+        if definition_id == MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+        else None,
         permitted_frontends=_HUMAN_FRONTENDS,
     )
 
@@ -536,7 +548,7 @@ def build_modelo_workbench_operation_definitions(
         ),
         _definition(
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditPreflightRequest,
+            ModeloEditPreflightRequestV2,
             ModeloEditPreflightProjectionV1,
             ModeloEditPreflightExecutor,
             lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory),
@@ -561,6 +573,9 @@ def build_modelo_workbench_operation_registrations(
         OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,
             public_result_type=_SCHEMAS[definition.definition_id][1],
+            request_schema_version=2
+            if definition.definition_id == MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+            else 1,
             access_resolver=access_resolver,
         )
         for definition in definitions
@@ -579,11 +594,8 @@ def _addressed_work_unit(request: OperationRequest[BaseModel], context: Operatio
         if payload.baseline.bucket_id != str(context.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         profile_id, work_unit_id = payload.profile_id, payload.baseline.work_unit_id
-    elif isinstance(payload, ModeloEditPreflightRequest):
-        baseline = payload.submission.baseline
-        if baseline.bucket_id != str(context.profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        profile_id, work_unit_id = payload.profile_id, baseline.work_unit_id
+    elif isinstance(payload, ModeloEditPreflightRequestV2):
+        profile_id, work_unit_id = payload.profile_id, payload.work_unit_id
     else:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if profile_id != context.profile_id:
@@ -677,7 +689,6 @@ __all__ = [
     "ModeloEditApplyPrerequisiteRequest",
     "ModeloEditApplyPrerequisiteV1",
     "ModeloEditPreflightProjectionV1",
-    "ModeloEditPreflightRequest",
     "ModeloEditRenewRequest",
     "ModeloEditRenewalProjectionV1",
     "ModeloWorkbenchFormRequest",

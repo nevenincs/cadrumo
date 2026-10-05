@@ -35,7 +35,7 @@ from ....application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
-from ....application.operations.registry import OperationSchemaIdentityV1
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.review.filter import LedgerReviewStatus
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

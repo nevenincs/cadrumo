@@ -72,7 +72,7 @@ from .calculation_report_export import (
     ModeloCalculationReportResult,
     export_modelo_calculation_report,
 )
-from .edit_apply_contracts import ModeloEditApplyOperationRequestV1, ModeloEditApplyPublicResultV1
+from .edit_apply_contracts import ModeloEditApplyPublicResultV1
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import (
     ModeloEditApplyRequestV1,
@@ -81,9 +81,12 @@ from .edit_models import (
     ModeloEditExecutionResultV1,
     ModeloEditRefusalV1,
     ModeloEditScalarAddressV1,
+    ModeloEditSubmissionV1,
 )
+from .edit_operation_requests import ModeloEditApplyOperationRequestV2
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditPrerequisiteObserver
+from .edit_transient_operand import modelo_edit_financial_operand
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .export_projection import (
@@ -1588,7 +1591,7 @@ class ModeloEditApplyExecutor:
 
     async def execute(
         self,
-        request: OperationRequest[ModeloEditApplyOperationRequestV1],
+        request: OperationRequest[ModeloEditApplyOperationRequestV2],
         context: OperationExecutorContext,
     ) -> str | None:
         """Delegate to apply_modelo_edit and return the settled receipt id.
@@ -1606,9 +1609,8 @@ class ModeloEditApplyExecutor:
         await context.events.phase(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID)
         operation = context.authority_operation
 
-        def apply() -> ModeloEditExecutionResultV1:
+        def apply(submission: ModeloEditSubmissionV1) -> ModeloEditExecutionResultV1:
             with validating_governed_facts(operation):
-                submission = request.payload.submission.to_submission()
                 baseline = submission.baseline
                 return apply_modelo_edit(
                     ModeloEditApplyRequestV1(operation_id=context.identity.operation_id, submission=submission),
@@ -1618,10 +1620,10 @@ class ModeloEditApplyExecutor:
                     result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
                 )
 
-        async def publish() -> str:
+        async def publish(submission: ModeloEditSubmissionV1) -> str:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
-                outcome = await asyncio.to_thread(apply)
+                outcome = await asyncio.to_thread(apply, submission)
                 if isinstance(outcome, ModeloEditExecutionNoEffectV1):
                     # A refused edit changed nothing, and NONE is the truthful report
                     # of that -- distinct from the UNKNOWN carried while the outcome
@@ -1630,7 +1632,7 @@ class ModeloEditApplyExecutor:
                     self._deliver_prerequisite(
                         outcome.refusal,
                         operation_id=str(context.identity.operation_id),
-                        baseline=request.payload.submission.baseline,
+                        baseline=ModeloEditApplyBaselineV1.from_baseline(submission.baseline),
                     )
                     raise modelo_edit_refusal_error(outcome.refusal)
                 await context.events.effect(OperationEffect.UPDATED)
@@ -1642,7 +1644,11 @@ class ModeloEditApplyExecutor:
                     written_at=_utc_now(),
                 )
 
-        return await await_cancellation_complete(publish(), task_name="modelo-edit-apply-publication")
+        async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
+            try:
+                return await await_cancellation_complete(publish(submission), task_name="modelo-edit-apply-publication")
+            finally:
+                del submission
 
     def _deliver_prerequisite(
         self, refusal: ModeloEditRefusalV1, *, operation_id: str, baseline: ModeloEditApplyBaselineV1
@@ -1692,10 +1698,10 @@ def build_modelo_edit_apply_definition(
 
     return OperationDefinition(
         definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-        request_type=ModeloEditApplyOperationRequestV1,
+        request_type=ModeloEditApplyOperationRequestV2,
         result_type=ModeloEditApplyPublicResultV1,
         executor_factory=OperationExecutorFactory(
-            request_type=ModeloEditApplyOperationRequestV1,
+            request_type=ModeloEditApplyOperationRequestV2,
             executor_type=ModeloEditApplyExecutor,
             build=build,
         ),
@@ -1705,10 +1711,10 @@ def build_modelo_edit_apply_definition(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
             deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            replay=OperationReplayPolicy.NONE,
             baseline=OperationBaselinePolicy.EXACT_APPROVAL,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
             permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -1716,7 +1722,8 @@ def build_modelo_edit_apply_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
-        public_error_detail=True,
+        transient_financial_operand=modelo_edit_financial_operand(receipt_repository_factory),
+        public_error_detail=False,
     )
 
 
@@ -1730,7 +1737,7 @@ def build_modelo_edit_apply_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.edit.apply.request",
-            schema_version=1,
+            schema_version=2,
             model_type=definition.request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(

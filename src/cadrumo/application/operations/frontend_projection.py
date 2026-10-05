@@ -29,7 +29,8 @@ from .models import (
     OperationReference,
     OperationRevision,
 )
-from .registry import OperationPublicDefinitionContractV1, OperationSchemaIdentityV1
+from .registry import OperationPublicDefinitionContractV1
+from .schema_identity import OperationSchemaIdentityV1
 
 type OperationPublicPendingInteractionV1 = Annotated[
     OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1 | OperationUnsupportedInteractionV1,
@@ -157,6 +158,8 @@ class OperationPublicProjectionV1(BaseModel):
     close_policy: OperationClosePolicy
     cancellation: OperationCancellation
     cancellable_now: bool
+    financial_operand_pending: bool = False
+    financial_operand_cancelled_before_delivery: bool = False
     cancellation_requested: bool
     cancellation_acknowledged: bool
     execution_deadline_at: datetime | None
@@ -268,7 +271,25 @@ def _validate_projection_progress(projection: OperationPublicProjectionV1) -> No
 
 
 def _validate_projection_cancellation_availability(projection: OperationPublicProjectionV1) -> None:
-    if projection.cancellation is OperationCancellation.UNSUPPORTED and projection.cancellable_now:
+    if projection.financial_operand_pending and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.CREATED
+        or projection.terminal_condition is not None
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("financial pending custody requires a created, uneffected typed invocation")
+    if projection.financial_operand_cancelled_before_delivery and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.TERMINAL
+        or projection.terminal_condition is not OperationTerminalCondition.CANCELLED
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("pre-delivery financial cancellation requires its exact none-effect terminal")
+    if (
+        projection.cancellation is OperationCancellation.UNSUPPORTED
+        and projection.cancellable_now
+        and not projection.financial_operand_pending
+    ):
         raise ValueError("unsupported cancellation cannot be currently available")
     if projection.cancellable_now and (projection.cancellation_requested or projection.cancellation_acknowledged):
         raise ValueError("public cancellation cannot remain currently available after it is requested")

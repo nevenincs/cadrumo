@@ -8,9 +8,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.operations.registry import (
-    OperationSchemaIdentityV1,
-)
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after
 from ...application.runtime.operation_access import (

@@ -30,7 +30,8 @@ from ....application.modelo.workbench_operations import (
 )
 from ....application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1, restore_modelo_workbench_form
 from ....application.modelo.workbench_read import ModeloWorkbenchFormReadV1
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.casilla_id import CasillaId
 from ....core.external_constants import OutputLanguage
@@ -49,6 +50,9 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
     result_type: type[ResultT],
     session_id: UUID,
     deadline: float | None = None,
+    financial_input: bool = False,
+    request_model: type[BaseModel] | None = None,
+    request_version: int = 1,
 ) -> ResultT:
     """Run one recorded read-only worker operation to its terminal state and return its typed result."""
     if deadline is None:
@@ -58,12 +62,13 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
         definition_id=definition_id,
         subject_ref=subject_ref,
         payload=payload,
+        financial_input=financial_input,
         deadline=deadline,
         expected_session_id=session_id,
     )
     await controller.start()
     expected_request = OperationSchemaIdentityV1.from_model(
-        schema_id=definition_id + ".request", schema_version=1, model_type=type(payload)
+        schema_id=definition_id + ".request", schema_version=request_version, model_type=request_model or type(payload)
     )
     state = await await_terminal_projection(
         controller,

@@ -17,14 +17,12 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationInteractionKind
 from ._model_contract import require_strict_frozen_operation_model_graph
+from .financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
 
 if TYPE_CHECKING:
     from .operation_definition import OperationDefinition
-    from .registry import (
-        OperationPublicDefinitionContractV1,
-        OperationPublicDefinitionRegistrationV1,
-        OperationSchemaIdentityV1,
-    )
+    from .registry import OperationPublicDefinitionContractV1, OperationPublicDefinitionRegistrationV1
+    from .schema_identity import OperationSchemaIdentityV1
 
 
 #: Stand-in digest carried only by the provisional contract the real digest is
@@ -314,6 +312,9 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
         "reconciliation_policy": contract.reconciliation_policy.value,
         "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
         "ephemeral_secret_required": contract.ephemeral_secret_required,
+        "transient_financial_operand": None
+        if contract.transient_financial_operand is None
+        else contract.transient_financial_operand.model_dump(mode="json"),
         "refusal_detail_codes": tuple(sorted(contract.refusal_detail_codes)),
     }
 
@@ -330,6 +331,16 @@ def build_public_contract(
 ) -> OperationPublicDefinitionContractV1:
     """Build a public contract through the caller-owned Pydantic class."""
     capabilities = definition.capabilities
+    declaration = definition.transient_financial_operand
+    public_financial_operand = (
+        None
+        if declaration is None
+        else OperationTransientFinancialOperandPublicDeclarationV1(
+            operand_schema=declaration.operand_schema,
+            baseline_schema=declaration.baseline_schema,
+            lifetime_seconds=declaration.lifetime.total_seconds(),
+        )
+    )
     provisional = contract_type.model_construct(
         None,
         definition_id=definition.definition_id,
@@ -354,6 +365,7 @@ def build_public_contract(
         reconciliation_policy=definition.reconciliation_policy,
         permitted_frontends=definition.permitted_frontends,
         ephemeral_secret_required=definition.ephemeral_secret is not None,
+        transient_financial_operand=public_financial_operand,
         refusal_detail_codes=definition.refusal_detail_codes,
         definition_contract_digest=_PROVISIONAL_CONTRACT_DIGEST,
     )
@@ -380,6 +392,7 @@ def build_public_contract(
         reconciliation_policy=provisional.reconciliation_policy,
         permitted_frontends=provisional.permitted_frontends,
         ephemeral_secret_required=provisional.ephemeral_secret_required,
+        transient_financial_operand=provisional.transient_financial_operand,
         refusal_detail_codes=provisional.refusal_detail_codes,
         definition_contract_digest=definition_contract_digest(provisional),
     )

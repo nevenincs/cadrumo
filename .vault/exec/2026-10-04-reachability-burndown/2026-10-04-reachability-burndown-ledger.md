@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a08d089e70963b55f6d1f3dfc65fdc93257fa823d41417daacc26656de336178'
+body_hash: 'sha256:7675893d7c83264b87bc6c7bca569cbd1e6037ce8c119f3813e5ed939d30d1e0'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -801,6 +801,133 @@ related:
 - `S28` `verify:` `pytest legal_article_anchor_grounding and relocated corpus text` -> `pass`
 - `S28` `verify:` `pytest focused S28 owner controls` -> `pass`
 - `S28` `verify:` `ruff and ty S28` -> `pass`
+- `S24` `M` `.vault/adr/2026-09-24-tui-operation-observation-manual-edit-operand-custody-adr.md`
+- `S24` `M` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
+- `S24` `M` `src/cadrumo/adapters/local_runtime/profile_worker_operation_client.py`
+- `S24` `M` `src/cadrumo/adapters/local_runtime/runtime_operation_transport.py`
+- `S24` `M` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/operations/_journal_validation.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/operations/financial_journal_purge.py`
+- `S24` `D` `src/cadrumo/adapters/persistence/operations/financial_operand_custody.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/operations/tests/test_financial_journal_purge.py`
+- `S24` `D` `src/cadrumo/adapters/persistence/operations/tests/test_financial_operand_custody.py`
+- `S24` `D` `src/cadrumo/adapters/persistence/operations/tests/test_financial_operand_executor_custody.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operand_broker.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operand_custody.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operation.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/operations/typed_financial_operand_custody.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/profile/modelos_edit_receipts.py`
+- `S24` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S24` `M` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S24` `D` `src/cadrumo/application/modelo/edit_apply_operand_contracts.py`
+- `S24` `M` `src/cadrumo/application/modelo/edit_contract.py`
+- `S24` `A` `src/cadrumo/application/modelo/edit_operation_requests.py`
+- `S24` `A` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S24` `M` `src/cadrumo/application/modelo/edit_receipt_ports.py`
+- `S24` `A` `src/cadrumo/application/modelo/edit_transient_operand.py`
+- `S24` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
+- `S24` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_edit_detail_row_wire_mirror.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_edit_refusal_projection.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S24` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S24` `M` `src/cadrumo/application/operations/_registry_contracts.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_drain.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_execution.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_host.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_reconciliation.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_refusal.py`
+- `S24` `M` `src/cadrumo/application/operations/_supervisor_settlement.py`
+- `S24` `M` `src/cadrumo/application/operations/composition.py`
+- `S24` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S24` `D` `src/cadrumo/application/operations/financial_operand.py`
+- `S24` `A` `src/cadrumo/application/operations/financial_operand_contract.py`
+- `S24` `M` `src/cadrumo/application/operations/financial_operand_custody.py`
+- `S24` `D` `src/cadrumo/application/operations/financial_operand_submission.py`
+- `S24` `M` `src/cadrumo/application/operations/frontend_contracts.py`
+- `S24` `M` `src/cadrumo/application/operations/frontend_projection.py`
+- `S24` `M` `src/cadrumo/application/operations/frontend_requests.py`
+- `S24` `M` `src/cadrumo/application/operations/observation.py`
+- `S24` `M` `src/cadrumo/application/operations/operation_definition.py`
+- `S24` `M` `src/cadrumo/application/operations/owner.py`
+- `S24` `M` `src/cadrumo/application/operations/persistence/financial_operand_custody.py`
+- `S24` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S24` `M` `src/cadrumo/application/operations/registry.py`
+- `S24` `A` `src/cadrumo/application/operations/schema_identity.py`
+- `S24` `M` `src/cadrumo/application/operations/supervisor.py`
+- `S24` `M` `src/cadrumo/application/operations/supervisor_context.py`
+- `S24` `A` `src/cadrumo/application/operations/tests/financial_operand_delivery.py`
+- `S24` `M` `src/cadrumo/application/operations/tests/test_executor.py`
+- `S24` `D` `src/cadrumo/application/operations/tests/test_financial_operand.py`
+- `S24` `D` `src/cadrumo/application/operations/tests/test_financial_operand_custody.py`
+- `S24` `D` `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py`
+- `S24` `D` `src/cadrumo/application/operations/tests/test_financial_operand_registration.py`
+- `S24` `M` `src/cadrumo/application/operations/tests/test_public_contracts.py`
+- `S24` `M` `src/cadrumo/application/operations/tests/test_registry.py`
+- `S24` `A` `src/cadrumo/application/operations/tests/test_typed_financial_operand_contract.py`
+- `S24` `A` `src/cadrumo/application/operations/typed_financial_operand_context.py`
+- `S24` `A` `src/cadrumo/application/operations/typed_financial_operand_submission.py`
+- `S24` `M` `src/cadrumo/application/overview/tests/test_pipeline_operation.py`
+- `S24` `M` `src/cadrumo/application/runtime/operation_access.py`
+- `S24` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S24` `M` `src/cadrumo/application/runtime/submission_payload.py`
+- `S24` `M` `src/cadrumo/application/runtime/tests/test_submission_payload.py`
+- `S24` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S24` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/config/google_consent_admission.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/config/google_consent_observation.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/registered_operation_admission.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/registered_operation_completion.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/registered_operation_contracts.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/runtime_registered_operation.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/tests/test_registered_operation_secret.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_llm.py`
+- `S24` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/worker_operation_requests.py`
+- `S24` `M` `src/cadrumo/entrypoints/runtime/worker_submission_staging.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_automation_operation_effects.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_automation_operation_integration.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_financial_operand_conformance.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_apply_refusal_settlement.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/aeat_sync/runtime_handoff.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_evidence.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_lifecycle_edit_door.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_await_terminal_projection.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S24` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S24` `M` `src/cadrumo/locales/en/errors.yml`
+- `S24` `M` `src/cadrumo/locales/es/errors.yml`
+- `S24` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S24` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
+- `S24` `verify:` `S24 native transient and ordinary submission stream integration` -> `pass`
+- `S24` `verify:` `S24 refusal and failure custody integration` -> `pass`
+- `S24` `verify:` `S24 registered edit executor matrix` -> `pass`
+- `S24` `verify:` `S24 typed broker recovery shutdown and production supervisor` -> `pass`
+- `S24` `verify:` `S24 public projection negative and lifetime controls` -> `pass`
+- `S24` `verify:` `S24 exact manifest Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -832,3 +959,4 @@ related:
 - `S28` S28 remains open. Exact kernel relocation and finite observation writers pass their controls. Repeated complete registry compilation refuses active Modelo 720 drift owned by another publishing workstream, before article grounding executes. No final gate or closure claimed.
 - `S29` Purge precedes journal hydration on all readers and locked writes. Superseded snapshot 6 remains refused after its amounts are purged. Legacy secure-reference invocation metadata is retired without adopting or replaying its stored request. Identity, lifecycle, effect and settled receipt remain intact. Mutable shared staging prevents the pending per-Step Git checkpoint.
 - `S28` Resolved external Modelo 720 drift: 33 relocated corpus and full article-anchor tests now pass. Reused unchanged 89 passing owner controls and style/type evidence; no suppression or disposition baseline.
+- `S24` Completed the accepted whole ModeloEditSubmissionV1 transient design. Apply and preflight use amount-free V2 requests; typed private grants, exact baseline binding, one-shot executor delivery and bounded shutdown use the supervisor transition lock. Hardened durable custody records contain no financial batch values. Exact co-committed edit receipts alone prove UPDATED after owner loss; all seven custody recovery positions are covered. Retired the scalar prototype and preserved its failure-settlement controls. Human native financial intake and ordinary bulk native regressions both pass. Refusal settlement 8 integration controls pass; four registered edit executor cases pass after migrating preflight to the volatile human input. Broker/recovery/shutdown 15 controls and lifetime/projection-forgery 10 controls pass. Previous connected-unit failures were stale V1/schema expectations and passed in 197 public connected controls plus 8 version controls after correction. Ruff and ty passed for the exact Step manifest; broad imports and final integrated review remain S07.

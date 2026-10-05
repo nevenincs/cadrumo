@@ -25,7 +25,7 @@ from pydantic import BaseModel
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.action_errors import modelo_edit_refusal_error
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1
-from ....application.modelo.edit_apply_contracts import ModeloEditApplyOperationRequestV1, ModeloEditApplySubmissionV1
+from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_contract import ModeloEditMutationFamily
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -35,6 +35,7 @@ from ....application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ....application.modelo.export_projection import ModeloExportPublicResultV3
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
@@ -181,9 +182,7 @@ class ModeloWorkspaceLifecycleDoor:
             OperationRequest(
                 definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
-                payload=ModeloEditApplyOperationRequestV1(
-                    submission=ModeloEditApplySubmissionV1.from_submission(submission)
-                ),
+                payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
             )
         )
         return controller, renewal.baseline

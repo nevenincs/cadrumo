@@ -22,7 +22,7 @@ from ..user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .edit_apply_contracts import ModeloEditApplyOperationRequestV1
+from .edit_operation_requests import ModeloEditApplyOperationRequestV2
 from .m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationRequest,
@@ -105,13 +105,12 @@ def _calculate_target(request: OperationRequest[BaseModel]) -> str | None:
 def _edit_target(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str | None:
     payload = request.payload
     if request.definition_id != MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID or not isinstance(
-        payload, ModeloEditApplyOperationRequestV1
+        payload, ModeloEditApplyOperationRequestV2
     ):
         return None
-    baseline = payload.submission.baseline
-    if baseline.bucket_id != str(context.profile_id):
+    if payload.profile_id != context.profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return baseline.work_unit_id
+    return payload.work_unit_id
 
 
 def _m303_attestation_target(
@@ -175,15 +174,9 @@ def _persisted_metadata_periods(
 
 
 def _require_edit_baseline_coordinates(payload: BaseModel, unit: WorkUnit) -> None:
-    if not isinstance(payload, ModeloEditApplyOperationRequestV1):
+    if not isinstance(payload, ModeloEditApplyOperationRequestV2):
         return
-    baseline = payload.submission.baseline
-    if (
-        baseline.modelo != unit.modelo
-        or baseline.filing_year != unit.filing_year
-        or baseline.period_filing_year != unit.period.filing_year
-        or baseline.period_code != unit.period.code
-    ):
+    if payload.work_unit_id != unit.work_unit_id or str(payload.profile_id) != unit.bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 

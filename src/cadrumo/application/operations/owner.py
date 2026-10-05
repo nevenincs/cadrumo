@@ -20,7 +20,6 @@ from ...core.operations import OperationEffect
 from ...core.operator_progress import OperatorDisplayCode
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
-from .financial_operand_submission import OperationFinancialOperandContextAccess
 from .interactions import OperationResponseIntentValue
 from .models import (
     OperationDiagnosticReference,
@@ -30,6 +29,7 @@ from .models import (
     OperationRevision,
 )
 from .secret_submission import OperationEphemeralSecretAccess
+from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -250,8 +250,8 @@ class OperationExecutorContext(Protocol):
         ...
 
     @property
-    def financial_operand(self) -> OperationFinancialOperandContextAccess:
-        """Runtime-only transient financial operand surface for this operation."""
+    def typed_financial_operand(self) -> BoundTypedFinancialOperandAccess:
+        """Consume the one exact in-memory batch registered for this invocation."""
         ...
 
     @property

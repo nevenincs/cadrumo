@@ -9,11 +9,8 @@ from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.operations.models import OperationId
-from ...application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
-)
+from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.operation_access import (

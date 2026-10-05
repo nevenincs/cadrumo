@@ -22,7 +22,8 @@ from ....application.modelo.work_create_operation import (
 from ....application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.public_period import PublicPeriod
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.workbench_generation_contracts import WorkbenchGenerationV1

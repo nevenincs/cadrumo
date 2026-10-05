@@ -9,12 +9,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     NOW,
     PROFILE_INPUT,
@@ -123,7 +123,7 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
             lease_duration=timedelta(minutes=10),
             execution_timeout=timedelta(minutes=5),
             cleanup_timeout=timedelta(seconds=20),
-            financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+            typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
                 root=subject.store.root / "financial"
             ),
         )
@@ -249,7 +249,7 @@ def test_missing_runtime_owner_refuses_registered_operations_without_effect(
             lease_duration=timedelta(minutes=10),
             execution_timeout=timedelta(minutes=5),
             cleanup_timeout=timedelta(seconds=20),
-            financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+            typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
                 root=subject.store.root / "financial"
             ),
         )

@@ -28,8 +28,8 @@ from ....application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
-    OperationSchemaIdentityV1,
 )
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import (
     RuntimeClientHello,
     RuntimePeer,

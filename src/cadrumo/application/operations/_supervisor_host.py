@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -30,14 +29,6 @@ if TYPE_CHECKING:
     from .authorization import OperationExecutionAuthority
     from .capabilities import OperationRequestStoragePolicy
     from .drain import OperationDrainResult
-    from .financial_operand import (
-        OperationTransientFinancialOperandDelivery,
-        OperationTransientFinancialOperandRequirement,
-    )
-    from .financial_operand_submission import (
-        BoundTransientFinancialOperandAccess,
-        OperationTransientFinancialOperandBroker,
-    )
     from .interactions import (
         OperationApplyResponse,
         OperationConsumedInteraction,
@@ -65,6 +56,7 @@ if TYPE_CHECKING:
     from .refusal_evidence import OperationExecutorResult
     from .registry import OperationPublicDefinitionContractV1, OperationRegistry
     from .secret_submission import EphemeralSecretBroker, OperationSecretRequirement
+    from .typed_financial_operand_submission import OperationTypedFinancialOperandBroker
 
 
 class SupervisorHost:
@@ -95,7 +87,7 @@ class SupervisorHost:
         _durable_change_events: dict[OperationId, asyncio.Event]
         _durable_revisions: dict[OperationId, int]
         _ephemeral_secrets: EphemeralSecretBroker
-        _financial_operands: OperationTransientFinancialOperandBroker | None
+        _typed_financial_operands: OperationTypedFinancialOperandBroker | None
         _resources: dict[OperationId, list[AsyncCloseable]]
         _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
 
@@ -137,12 +129,6 @@ class SupervisorHost:
         def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
 
         def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext: ...
-
-        def _bound_financial_operand(
-            self,
-            identity: OperationIdentity,
-            definition: OperationDefinition,
-        ) -> BoundTransientFinancialOperandAccess: ...
 
         async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None: ...
 
@@ -273,12 +259,6 @@ class SupervisorHost:
         async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
         async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
-
-        async def submit_transient_financial_operand(
-            self,
-            requirement: OperationTransientFinancialOperandRequirement,
-            amount: Decimal,
-        ) -> OperationTransientFinancialOperandDelivery: ...
 
         async def submit_ephemeral_secret(
             self,

@@ -13,12 +13,13 @@ from pydantic import BaseModel, ConfigDict
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import RuntimeOperationRequest, RuntimeOperationSubmitted
 from cadrumo.core.operations import profile_operation_subject
 
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ..errors import CliRefusedBoundaryError
 from ..runtime_registered_operation import run_registered_operation
 

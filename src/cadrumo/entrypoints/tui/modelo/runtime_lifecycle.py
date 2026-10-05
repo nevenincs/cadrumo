@@ -18,6 +18,8 @@ from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, Mod
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
 from ....application.modelo.edit_models import ModeloEditBaselineV1, ModeloEditPreflightResultV1, ModeloEditSubmissionV1
+from ....application.modelo.edit_operation_requests import ModeloEditPreflightRequestV2
+from ....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ....application.modelo.export_projection import ModeloExportPublicResultV3
 from ....application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
@@ -35,13 +37,13 @@ from ....application.modelo.workbench_operations import (
     ModeloEditApplyPrerequisiteRequest,
     ModeloEditApplyPrerequisiteV1,
     ModeloEditPreflightProjectionV1,
-    ModeloEditPreflightRequest,
     ModeloEditRenewalProjectionV1,
     ModeloEditRenewRequest,
 )
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationRequest
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ..operations.controller_port import OperationControllerPort
@@ -167,6 +169,9 @@ class _RuntimeModeloLifecycleBindings:
                 payload=payload,
                 result_type=result_type,
                 session_id=self.session_id,
+                financial_input=isinstance(payload, ModeloEditOperatorInputV2),
+                request_model=ModeloEditPreflightRequestV2 if isinstance(payload, ModeloEditOperatorInputV2) else None,
+                request_version=2 if isinstance(payload, ModeloEditOperatorInputV2) else 1,
             )
         )
         self.require_session()
@@ -181,6 +186,7 @@ class _RuntimeModeloLifecycleBindings:
             subject_ref=request.subject_ref,
             payload=request.payload,
             idempotency_key=request.idempotency_key,
+            financial_input=isinstance(request.payload, ModeloEditOperatorInputV2),
             expected_session_id=self.session_id,
         )
 
@@ -219,9 +225,7 @@ class _RuntimeModeloLifecycleBindings:
     def preflight(self, submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:
         projection = self.read(
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditPreflightRequest(
-                profile_id=self.profile_id, submission=ModeloEditApplySubmissionV1.from_submission(submission)
-            ),
+            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
             ModeloEditPreflightProjectionV1,
         )
         if projection.profile_id != self.profile_id or projection.work_unit_id != self.work_unit_id:

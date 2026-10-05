@@ -8,19 +8,16 @@ from dataclasses import replace
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
+from uuid import UUID
 
 import pytest
-
-from cadrumo.application.modelo.edit_apply_contracts import (
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
-)
 
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...operations.models import OperationRequest
+from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.tests.financial_operand_delivery import deliver_financial_operand
 from .. import operation_definitions
 from .._edit_execution import _pre_effect_refusal
 from ..action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
@@ -32,7 +29,9 @@ from ..edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
 from ..edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
+from ..edit_transient_operand import modelo_edit_financial_operand
 from .test_edit_models import _baseline as admitted_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -137,7 +136,7 @@ def test_the_store_forgets_the_oldest_prerequisite_beyond_its_bound() -> None:
 async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    baseline = admitted_baseline()
+    baseline = admitted_baseline().model_copy(update={"bucket_id": "13000000-0000-4000-8000-000000000730"})
     submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
@@ -152,7 +151,11 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
     request = OperationRequest(
         definition_id=operation_definitions.MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
         subject_ref=baseline.work_unit_id,
-        payload=ModeloEditApplyOperationRequestV1(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+        payload=ModeloEditApplyOperationRequestV2(
+            profile_id=UUID(baseline.bucket_id),
+            work_unit_id=baseline.work_unit_id,
+            financial_baseline_ref=baseline.baseline_id,
+        ),
     )
     refusal = _pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
     monkeypatch.setattr(operation_definitions, "apply_modelo_edit", lambda *args, **kwargs: refusal)
@@ -189,8 +192,16 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
             cancellation=SimpleNamespace(irreversible_section=irreversible_section),
         ),
     )
-    with pytest.raises(ModeloEditRefusedError) as caught:
-        await executor.execute(request, context)
+    async with deliver_financial_operand(
+        identity=OperationIdentity(
+            operation_id="d" * 64, definition_id=request.definition_id, subject_ref=baseline.work_unit_id
+        ),
+        declaration=modelo_edit_financial_operand(None),
+        operand=submission,
+    ) as access:
+        context.typed_financial_operand = access
+        with pytest.raises(ModeloEditRefusedError) as caught:
+            await executor.execute(request, context)
     assert [str(effect) for effect in effects] == ["unknown", "none"]
     assert len(delivered) == 1 and delivered[0].baseline_id == str(baseline.baseline_id)
     assert _BINDING not in str(caught.value.context) and "1388" not in str(caught.value.context)

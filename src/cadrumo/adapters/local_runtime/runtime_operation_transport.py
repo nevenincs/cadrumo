@@ -9,6 +9,7 @@ from ...application.runtime.contracts import (
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationContractReply,
+    RuntimeOperationFinancialInput,
     RuntimeOperationManaged,
     RuntimeOperationObserved,
     RuntimeOperationPage,
@@ -27,6 +28,7 @@ from ...application.runtime.profile_access import (
 from ...application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SUBMISSION_PAYLOAD_MAX_BYTES,
+    FinancialOperandInputDescriptor,
     SubmissionPayloadDescriptor,
 )
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -51,6 +53,8 @@ class RuntimeOperationTransport(RuntimeEnrollmentTransport):
             try:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                if isinstance(request, RuntimeOperationFinancialInput):
+                    return self._submit_payload(request, deadline=deadline)
                 if isinstance(request, RuntimeOperationSubmit):
                     try:
                         streamed = len(canonical_json_bytes(request.model_dump(mode="json"))) > MAXIMUM_FRAME_BYTES
@@ -78,7 +82,7 @@ class RuntimeOperationTransport(RuntimeEnrollmentTransport):
                 raise
 
     def _submit_payload(
-        self, request: RuntimeOperationSubmit, *, deadline: float
+        self, request: RuntimeOperationSubmit | RuntimeOperationFinancialInput, *, deadline: float
     ) -> RuntimeOperationSubmitted | RuntimeAccessRefusal:
         """Stream private UTF-8 under the existing exchange lock and exact readiness."""
         try:
@@ -88,7 +92,11 @@ class RuntimeOperationTransport(RuntimeEnrollmentTransport):
         try:
             if not 2 <= len(content) <= SUBMISSION_PAYLOAD_MAX_BYTES:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            descriptor = SubmissionPayloadDescriptor(byte_count=len(content), payload_digest=sha256_hex(bytes(content)))
+            descriptor = (
+                FinancialOperandInputDescriptor(byte_count=len(content))
+                if isinstance(request, RuntimeOperationFinancialInput)
+                else SubmissionPayloadDescriptor(byte_count=len(content), payload_digest=sha256_hex(bytes(content)))
+            )
             begin = RuntimeOperationSubmitPayload(
                 request_id=request.request_id,
                 profile_id=request.profile_id,
