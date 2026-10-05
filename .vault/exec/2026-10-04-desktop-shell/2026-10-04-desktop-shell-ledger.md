@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:81f52326ebb937f90c6b0dc2571392bcec9827cf2a0153d12903d882c94f1661'
+body_hash: 'sha256:a17caff95796488c2e64cc721843ba5f3092b7c8097a75fc192d8f44537c75ee'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -525,6 +525,21 @@ related:
 - `S10` `verify:` `frontend npm check` -> `pass`
 - `S10` `verify:` `packaged host release rebuild` -> `pass`
 - `S10` `verify:` `native all-target Clippy -D warnings` -> `pass`
+- `S10` `verify:` `interactive run 20261005-200924 (7 pass, 8 fail, 1 skip, 1 info)` -> `fail`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/cli_contract_fixtures.py`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/cli_contract_fixtures.json`
+- `S10` `M` `native/desktop/scripts/tauri.mjs`
+- `S10` `A` `native/desktop/scripts/backend-snapshot.mjs`
+- `S10` `A` `native/desktop/tests/backend-snapshot.test.mjs`
+- `S10` `A` `native/desktop/tests/run-backend.ps1`
+- `S10` `verify:` `run-backend.ps1 Mode Unit current native host 138 tests` -> `pass`
+- `S10` `verify:` `run-backend.ps1 Mode Package eight selected terminal capabilities existing app-v1` -> `pass`
+- `S10` `verify:` `run-backend.ps1 Mode Clippy native all targets warnings denied` -> `pass`
+- `S10` `verify:` `configured node snapshot/build-paths/configuration seven tests` -> `pass`
+- `S10` `verify:` `Python CLI producer freshness Ruff format ty and native rustfmt` -> `pass`
+- `S10` `verify:` `Node syntax PowerShell parser Prettier and scoped git diff check` -> `pass`
 
 ## Notes
 
@@ -609,3 +624,5 @@ related:
 - `S10` User executed prepared command in Session1. Profile creation/runtime handshake, native WebView2 launch, override refusal, docs origin and cleanup pass. Canonical-sign-in fails before password submission: screenshot shows `queue_full;` host status observation collides with another initial status invocation. Host Windows supported flag is compile-time true, identifying failed before.ok assertion. Full acceptance remains open; bounded status concurrency repair in progress. Evidence build/windows-x86-64/e2e-desktop/desktop/test-results/packaged/20261005-190156.
 - `S10` Corrected interactive run's initial `queue_full` status race. Frontend coalesces status/focus calls and waits before single credential mutation; host read-only calls wait within existing total30s deadline off UI thread, mutations remain single-flight. Regression covers failed-slot cleanup, pending-read mutation, real subprocess contention and close fencing. Harness retains initial status evidence and continues independent checks after sign-in failure, with dependent checks explicitly skipped. Fixed test host SHA256 5e94b8fc6e7e8830a331b82de4b0f52fcc762e27741f3f1649868e4ea5ce113d. Actual interactive rerun required; S10 remains open.
 - `S10` Final native lint passed against exact two-module test snapshot; all current regression/build checks pass. Awaiting user desktop rerun.
+- `S10` Operator redirected session to define package/runtime integration proof and separate Tauri development. Scope recorded in desktop-shell audit; no application fixes started from this run. Manager launch remains unproven (fixture-owned runtime), positive sign-in/revocation and active host boundary checks remain open. Original full UI/packaging acceptance obligations retained; no narrowing of recorded verdicts.
+- `S10` Operator explicitly moved frontend development to another session and prohibited full application compilation as the development loop. Current work compiles only native test/lint artifacts and reuses existing app-v1 for real PTYs. Fixes canonical credential refusal and throttle metadata. Logs `build/windows-x86-64/e2e-desktop/backend-*.log.` Native capability passes do not close full WebView/sign-in/manager/package acceptance; no plan checkbox closed.

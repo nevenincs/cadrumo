@@ -12,6 +12,7 @@ import { delimiter, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "./build-paths.mjs";
+import { syncBackendSource } from "./backend-snapshot.mjs";
 import {
   identity as readIdentity,
   profile,
@@ -27,6 +28,12 @@ if (!binaryDir || !isAbsolute(binaryDir))
 const identity = readIdentity();
 const selectedProfile = profile();
 const action = process.argv[2] ?? "build";
+const backendOnly = ["test-unit", "test-package", "clippy-backend"].includes(
+  action,
+);
+const filter = process.argv[3];
+if (backendOnly && (process.argv.length > 4 || filter?.startsWith("-")))
+  throw new Error("Backend tests accept one optional Rust test-name filter.");
 if (action === "run") {
   const result = spawnSync(executable(), process.argv.slice(3), {
     stdio: "inherit",
@@ -44,7 +51,7 @@ for (const directory of [
   resolve(snapshot, "../application/src"),
   resolve(snapshot, "../platform/src"),
 ]) {
-  if (!existsSync(directory)) continue;
+  if (backendOnly || !existsSync(directory)) continue;
   const ownedPath = relative(realpathSync(binaryDir), realpathSync(directory));
   if (!ownedPath || ownedPath.startsWith("..") || isAbsolute(ownedPath))
     throw new Error(
@@ -60,7 +67,10 @@ if (!contract || !isAbsolute(contract))
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
+  CARGO_TARGET_DIR:
+    backendOnly && process.env.CARGO_TARGET_DIR
+      ? process.env.CARGO_TARGET_DIR
+      : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
 };
@@ -73,16 +83,15 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     delimiter +
     (environment[pathKey] ?? "");
 }
-cpSync(
+function copySource(source, destination) {
+  if (backendOnly) syncBackendSource(source, destination, binaryDir);
+  else cpSync(source, destination, { recursive: true });
+}
+copySource(
   resolve(desktop, "../application"),
   resolve(snapshot, "../application"),
-  {
-    recursive: true,
-  },
 );
-cpSync(resolve(desktop, "../platform"), resolve(snapshot, "../platform"), {
-  recursive: true,
-});
+copySource(resolve(desktop, "../platform"), resolve(snapshot, "../platform"));
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: snapshot,
@@ -95,30 +104,55 @@ function run(args) {
 }
 mkdirSync(resolve(snapshot, "src-tauri"), { recursive: true });
 for (const entry of ["Cargo.toml", "Cargo.lock", "build.rs", "src"]) {
-  cpSync(
+  copySource(
     resolve(desktop, "src-tauri", entry),
     resolve(snapshot, "src-tauri", entry),
-    { recursive: true },
   );
 }
 const configDirectory = resolve(snapshot, "src-tauri");
+// tauri-build watches this directory even when no capabilities are declared.
+// A missing watched path makes Cargo rerun the build script on every test.
+if (backendOnly)
+  mkdirSync(resolve(configDirectory, "capabilities"), { recursive: true });
+// Rust host tests exercise the real modules, not a compiled frontend. The
+// inert asset exists only in this test snapshot and is never staged.
+const frontend = backendOnly
+  ? resolve(buildPath("desktop_testing"), "backend-assets")
+  : buildPath("desktop_frontend");
+if (backendOnly) {
+  mkdirSync(frontend, { recursive: true });
+  if (!existsSync(resolve(frontend, "index.html")))
+    writeFileSync(
+      resolve(frontend, "index.html"),
+      "<!doctype html><title>Backend test fixture</title>",
+    );
+}
 const config = tauriConfig(
   JSON.parse(
     readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
   ),
   identity,
-  { configDirectory, frontend: buildPath("desktop_frontend"), icons },
+  { configDirectory, frontend, icons },
 );
-writeFileSync(
-  resolve(configDirectory, "tauri.conf.json"),
-  JSON.stringify(config, null, 2),
-);
-run([
-  "icon",
-  resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
-  "--output",
-  icons,
-]);
+const configFile = resolve(configDirectory, "tauri.conf.json");
+const configText = JSON.stringify(config, null, 2);
+if (
+  !backendOnly ||
+  !existsSync(configFile) ||
+  readFileSync(configFile, "utf8") !== configText
+)
+  writeFileSync(configFile, configText);
+if (
+  !backendOnly ||
+  !existsSync(resolve(icons, "icon.ico")) ||
+  !existsSync(resolve(icons, "icon.png"))
+)
+  run([
+    "icon",
+    resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+    "--output",
+    icons,
+  ]);
 if (action === "build") {
   run([
     "build",
@@ -168,30 +202,30 @@ if (action === "build") {
       `The Cargo host image ${built} differs from the CMake declaration ${declared}.`,
     );
   writeFileSync(artifactFile(), JSON.stringify({ executable: built }));
-} else if (action === "test" || action === "clippy") {
-  const args =
-    action === "test"
-      ? [
-          "test",
-          ...(selectedProfile.debug ? [] : ["--release"]),
-          "--locked",
-          "--features",
-          "live-package-tests",
-          "--",
-          "--nocapture",
-          "--test-threads=1",
-        ]
-      : [
-          "clippy",
-          ...(selectedProfile.debug ? [] : ["--release"]),
-          "--locked",
-          "--all-targets",
-          "--features",
-          "live-package-tests",
-          "--",
-          "-D",
-          "warnings",
-        ];
+} else if (action === "test" || action === "clippy" || backendOnly) {
+  const testing = ["test", "test-unit", "test-package"].includes(action);
+  const live = ["test", "test-package", "clippy"].includes(action);
+  const args = testing
+    ? [
+        "test",
+        ...(selectedProfile.debug ? [] : ["--release"]),
+        "--locked",
+        ...(live ? ["--features", "live-package-tests"] : []),
+        ...(backendOnly && filter ? [filter] : []),
+        "--",
+        "--nocapture",
+        "--test-threads=1",
+      ]
+    : [
+        "clippy",
+        ...(selectedProfile.debug ? [] : ["--release"]),
+        "--locked",
+        "--all-targets",
+        ...(live ? ["--features", "live-package-tests"] : []),
+        "--",
+        "-D",
+        "warnings",
+      ];
   const result = spawnSync("cargo", args, {
     cwd: resolve(snapshot, "src-tauri"),
     env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },

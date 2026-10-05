@@ -133,22 +133,29 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
             {
                 return Err(failure(ErrorCode::ReadFailed));
             }
-            let retry_after_seconds =
-                if code == "THROTTLED" || code == "REFUSED_PROFILE_LOGIN_THROTTLED" {
-                    Some(
-                        context
-                            .get("seconds")
-                            .ok_or_else(|| failure(ErrorCode::ReadFailed))?
-                            .parse()
-                            .map_err(|_| failure(ErrorCode::ReadFailed))?,
-                    )
-                } else {
-                    None
-                };
-            let code = if code == "REFUSED_PROFILE_LOGIN_THROTTLED" {
-                "THROTTLED".into()
+            // The runtime uses lower-case public reasons. Throttling carries
+            // authentication_required plus the typed sign-in provenance; do
+            // not infer it from an arbitrary message or a seconds field alone.
+            let code = match code.as_str() {
+                "credential_rejected" => "CREDENTIAL_REJECTED".into(),
+                "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED".into(),
+                "authentication_required"
+                    if context.get("sign_in_reason").map(String::as_str) == Some("throttled") =>
+                {
+                    "THROTTLED".into()
+                }
+                _ => code,
+            };
+            let retry_after_seconds = if code == "THROTTLED" {
+                Some(
+                    context
+                        .get("seconds")
+                        .ok_or_else(|| failure(ErrorCode::ReadFailed))?
+                        .parse()
+                        .map_err(|_| failure(ErrorCode::ReadFailed))?,
+                )
             } else {
-                code
+                None
             };
             Ok(Outcome::Refused {
                 refusal: Refusal {
@@ -246,6 +253,10 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
         }
     }
 }
+
+#[cfg(test)]
+#[path = "wire_contract_tests.rs"]
+mod contract_tests;
 
 #[cfg(test)]
 mod tests {
