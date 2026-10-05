@@ -148,16 +148,26 @@ if (action === "build") {
   );
   if (binaries?.length !== 1)
     throw new Error("Desktop manifest must declare exactly one executable");
-  writeFileSync(
-    artifactFile(),
-    JSON.stringify({
-      executable: resolve(
-        buildPath("desktop_cargo"),
-        selectedProfile.directory,
-        binaries[0].name + (process.platform === "win32" ? ".exe" : ""),
-      ),
-    }),
+  const built = resolve(
+    buildPath("desktop_cargo"),
+    selectedProfile.directory,
+    binaries[0].name + (process.platform === "win32" ? ".exe" : ""),
   );
+  // CMake declares this image for package staging; a renamed Cargo binary must not stage a stale file.
+  const declared = process.env.CADRUMO_DESKTOP_HOST_EXECUTABLE;
+  if (!declared || !isAbsolute(declared))
+    throw new Error(
+      "Set CADRUMO_DESKTOP_HOST_EXECUTABLE to the host image CMake declares.",
+    );
+  const same =
+    process.platform === "win32"
+      ? resolve(declared).toLowerCase() === built.toLowerCase()
+      : resolve(declared) === built;
+  if (!same)
+    throw new Error(
+      `The Cargo host image ${built} differs from the CMake declaration ${declared}.`,
+    );
+  writeFileSync(artifactFile(), JSON.stringify({ executable: built }));
 } else if (action === "test" || action === "clippy") {
   const args =
     action === "test"

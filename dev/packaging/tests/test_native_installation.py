@@ -58,6 +58,24 @@ def payload_fixture(tmp_path: Path, target: str) -> tuple[Path, Path]:
         },
         "delegated_inventories": {"docs/user": "docs/user/manifest.json"},
         "user_docs": {"directory": "docs/user", "bundled": True},
+        # Only the image the platform mapping declares as the desktop application is registered.
+        "layout": {
+            "paths": {"docs": "docs"},
+            "files": {"package_manifest": "data/package-manifest.json"},
+            "entrypoints": {},
+            "entrypoint_suffix": "",
+            "application_images": [
+                {
+                    "name": "cadrumo",
+                    "placement": ".",
+                    "target": "desktop-host-build",
+                    "artifact": "CADRUMO_DESKTOP_HOST_EXECUTABLE",
+                    "desktop": True,
+                    "signed": True,
+                    "version_arguments": ["--version"],
+                }
+            ],
+        },
     }
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return root, identity_file
@@ -100,6 +118,19 @@ def test_payload_rejects_modified_and_unowned_files(tmp_path: Path) -> None:
     (root / "cadrumo").write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="modified"):
         validate_payload(root, identity_file)
+
+
+def test_only_the_declared_desktop_image_receives_registration(tmp_path: Path) -> None:
+    root, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    validate_payload(root, identity_file, "cadrumo")
+    with pytest.raises(ValueError, match="declares receives desktop registration"):
+        validate_payload(root, identity_file, "docs/user/manifest.json")
+    manifest_file = root / "data/package-manifest.json"
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    manifest["layout"]["application_images"][0]["desktop"] = False
+    manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="declares receives desktop registration"):
+        validate_payload(root, identity_file, "cadrumo")
 
 
 def test_payload_rejects_wrong_target(tmp_path: Path) -> None:

@@ -15,7 +15,7 @@ from dev._paths import REPO_ROOT
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
-from .assemble import assemble
+from .assemble import assemble, image_artifact
 from .build_paths import build_paths
 from .docs_stage import RECONFIGURE
 from .layout import load_layout
@@ -44,6 +44,8 @@ def main() -> None:
     parser.add_argument("--env", action="append", default=[])
     parser.add_argument("--development", action="store_true")
     parser.add_argument("--without-user-docs", action="store_true")
+    # One FILE=ARTIFACT pair per staged application image, resolved by CMake for the selected configuration.
+    parser.add_argument("--image", action="append", default=[])
     argv = sys.argv[1:]
     boundary = argv.index("--") if "--" in argv else len(argv)
     arguments = parser.parse_args(argv[:boundary])
@@ -135,6 +137,8 @@ def build_action(build: Path, arguments: argparse.Namespace) -> Path:
             destination / "app",
             paths["generated"] / "build.json",
             None if arguments.without_user_docs else paths["user_docs_stage"],
+            images=dict(image_artifact(item) for item in arguments.image),
+            binary_dir=build,
             development=arguments.development,
         )
     return destination

@@ -17,6 +17,7 @@ from dev._paths import REPO_ROOT
 from .build_paths import build_paths
 from .hashing import digest
 from .installation_filesystem import file_identity, remove_owned_file
+from .layout import desktop_image
 from .package_inventory import package_inventory, user_docs_bundled
 
 
@@ -58,6 +59,11 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
         raise ValueError(
             "A desktop payload requires bundled user documentation; this package was assembled without it "
             "(CADRUMO_PACKAGE_USER_DOCS=OFF)"
+        )
+    declared = desktop_image(manifest["layout"]) if desktop else None
+    if desktop and (declared is None or desktop != declared.package_path):
+        raise ValueError(
+            "Only the desktop application image the payload's platform mapping declares receives desktop registration"
         )
     for path in root.rglob("*"):
         member(root, path.relative_to(root).as_posix())

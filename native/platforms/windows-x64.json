@@ -15,6 +15,17 @@
     "executable": "python.exe"
   },
   "entrypoint_suffix": ".exe",
+  "application_images": [
+    {
+      "name": "cadrumo",
+      "placement": ".",
+      "target": "desktop-host-build",
+      "artifact": "CADRUMO_DESKTOP_HOST_EXECUTABLE",
+      "desktop": true,
+      "signed": true,
+      "version_arguments": ["--headless", "--", "--version"]
+    }
+  ],
   "files": {
     "development_executable": "python_d.exe",
     "bridge": "cadrumo_python.dll",

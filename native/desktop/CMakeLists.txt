@@ -28,6 +28,21 @@ string(JSON desktop_server SET "${desktop_server}" previewPort ${CADRUMO_DESKTOP
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/desktop-server.json" CONTENT "@desktop_server@\n" @ONLY)
 set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILEPATH "Generated native package contract")
 set(CADRUMO_DESKTOP_PACKAGE_ROOT "" CACHE PATH "Existing native package for desktop development")
+if(NOT DEFINED CADRUMO_STORAGE_ROOT_VARIABLE)
+  # The source build reads this from the storage declaration; the standalone project reads it the same way.
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+    "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
+    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+endif()
+# The host image desktop-host-build links, in Cargo's profile directory for the configuration.
+# The platform mapping's application image names this variable; tauri.mjs refuses a build whose
+# Cargo binary differs from it.
+set(CADRUMO_DESKTOP_HOST_EXECUTABLE
+  "${CADRUMO_PATH_DESKTOP_CARGO}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
+endif()
 
 add_custom_target(desktop-frontend-install
   COMMAND "${CADRUMO_NPM}" ci --no-audit --no-fund
@@ -77,16 +92,22 @@ add_custom_target(desktop-configuration-test
 add_custom_target(desktop-host-build
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_DESKTOP_HOST_EXECUTABLE=${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
   DEPENDS desktop-frontend-build user_docs
+  BYPRODUCTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
+if(TARGET native_contract)
+  # Inside the source build the contract is a build output, not a configured input.
+  add_dependencies(desktop-host-build native_contract)
+endif()
 
 foreach(action IN ITEMS test clippy)
   add_custom_target(desktop-host-${action}
     COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
-      "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
+      "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${action}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 endforeach()

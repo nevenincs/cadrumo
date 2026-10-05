@@ -46,10 +46,82 @@ else()
   set(user_docs_args --without-user-docs)
   message(STATUS "User documentation: absent from the package; desktop payloads refuse it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
 endif()
+# Application images are native executables that are not interpreter hosts, declared by the
+# platform mapping. Each names its CMake target and the variable that holds its artifact path,
+# defined in this scope or the native directory's; the layout owner decides which images stage.
+if(CADRUMO_PACKAGE_USER_DOCS)
+  set(images_with_docs True)
+else()
+  set(images_with_docs False)
+endif()
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "import json; from dataclasses import asdict; from dev.packaging.native.layout import application_images, load_layout, staged_application_images; layout = load_layout(); staged = staged_application_images(layout, user_docs=${images_with_docs}); print(json.dumps([dict(asdict(image), package_path=image.package_path, staged=image in staged) for image in application_images(layout)]))"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE application_images
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+# The desktop project defines desktop-host-build and the variable naming its host image.
+# It needs Node.js and npm, so it is configured only when a desktop image is staged.
+set(desktop_image_staged FALSE)
+string(JSON image_count LENGTH "${application_images}")
+if(image_count GREATER 0)
+  math(EXPR image_last "${image_count} - 1")
+  foreach(index RANGE ${image_last})
+    string(JSON image_desktop GET "${application_images}" ${index} desktop)
+    string(JSON image_staged GET "${application_images}" ${index} staged)
+    if(image_desktop AND image_staged)
+      set(desktop_image_staged TRUE)
+    endif()
+  endforeach()
+endif()
+if(desktop_image_staged)
+  message(STATUS "Desktop application: configured; a desktop image is staged")
+  add_subdirectory("${PROJECT_SOURCE_DIR}/native/desktop" "${PROJECT_BINARY_DIR}/native/desktop")
+else()
+  message(STATUS "Desktop application: not configured; no desktop image is staged")
+endif()
+set(application_image_args)
+set(application_image_dependencies)
+string(JSON image_count LENGTH "${application_images}")
+if(image_count GREATER 0)
+  math(EXPR image_last "${image_count} - 1")
+  foreach(index RANGE ${image_last})
+    foreach(key file target artifact staged)
+      string(JSON image_${key} GET "${application_images}" ${index} ${key})
+    endforeach()
+    if(NOT image_staged)
+      message(STATUS "Application image ${image_file}: omitted; the desktop application needs bundled user documentation")
+      continue()
+    endif()
+    set(image_path "${${image_artifact}}")
+    if(image_path STREQUAL "")
+      get_directory_property(image_path DIRECTORY "${PROJECT_SOURCE_DIR}/native" DEFINITION "${image_artifact}")
+    endif()
+    if(NOT TARGET "${image_target}" OR image_path STREQUAL "")
+      message(FATAL_ERROR "Application image ${image_file} needs CMake target ${image_target} and variable ${image_artifact}")
+    endif()
+    list(APPEND application_image_args --image "${image_file}=${image_path}")
+    list(APPEND application_image_dependencies "${image_target}" "${image_path}")
+    message(STATUS "Application image ${image_file}: staged from ${image_target}")
+    if(BUILD_TESTING)
+      set(image_arguments)
+      string(JSON argument_count LENGTH "${application_images}" ${index} version_arguments)
+      math(EXPR argument_last "${argument_count} - 1")
+      foreach(argument_index RANGE ${argument_last})
+        string(JSON argument GET "${application_images}" ${index} version_arguments ${argument_index})
+        list(APPEND image_arguments "${argument}")
+      endforeach()
+      string(JSON image_package_path GET "${application_images}" ${index} package_path)
+      add_test(NAME bundle.image.${image_file} COMMAND "${CMAKE_COMMAND}" -E env
+        "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+        "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" ${image_arguments})
+      set_tests_properties(bundle.image.${image_file} PROPERTIES RESOURCE_LOCK package_inventory)
+    endif()
+  endforeach()
+endif()
 add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   COMMAND ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
-    ${user_docs_args}
-  DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} python_product ${user_docs_dependencies}
+    ${user_docs_args} ${application_image_args}
+  DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
+    python_product ${user_docs_dependencies}
     ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/build.json"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"

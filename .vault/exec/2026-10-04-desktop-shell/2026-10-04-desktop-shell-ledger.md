@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e768faf41a36312f623661dcdc50cc54dd0d843ec0adbe08d433b68097c687f7'
+body_hash: 'sha256:b23124382a520296bee613a571a4dc3e0096105d6516328e37a15fb26a4873de'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -407,6 +407,29 @@ related:
 - `S19` `verify:` `cargo test --locked (application)` -> `pass`
 - `S19` `verify:` `mutation checks: foreign mapping off and platform type conversion off both caught` -> `pass`
 - `S19` `by:` `vaultspec-high-executor`
+- `S13` `M` `native/platforms/windows-x64.json`
+- `S13` `M` `dev/packaging/native/layout.py`
+- `S13` `M` `dev/packaging/native/assemble.py`
+- `S13` `M` `dev/packaging/native/cmake_build.py`
+- `S13` `M` `dev/packaging/native/installation.py`
+- `S13` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S13` `M` `native/cmake/Packaging.cmake`
+- `S13` `M` `native/desktop/CMakeLists.txt`
+- `S13` `M` `native/desktop/scripts/tauri.mjs`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `A` `dev/packaging/tests/test_native_application_images.py`
+- `S13` `M` `dev/packaging/tests/test_native_installation.py`
+- `S13` `verify:` `pytest dev/packaging/tests/test_native_*.py dev/packaging/native/tests (242 passed, 3 platform skips)` -> `pass`
+- `S13` `verify:` `mutation check: 14 mutations of layout, assemble, windows_verify and installation each killed` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check and ty check on touched Python` -> `pass`
+- `S13` `verify:` `docs OFF: bundle target Release in build/s13-package, python.exe --check-package, ctest bundle rows (4)` -> `pass`
+- `S13` `verify:` `docs ON: generated bundle.vcxproj references desktop-host-build and passes --image cadrumo.exe=<cargo release path>; tauri.mjs refuses a mismatched CADRUMO_DESKTOP_HOST_EXECUTABLE` -> `pass`
+- `S13` `verify:` `docs ON stage via the assemble action run directly: cadrumo.exe at root, manifest sha256 equals the Cargo artifact, --check-package, ctest bundle rows (5, incl. bundle.image.cadrumo.exe), cpack ZIP, artifact_verify with application probe` -> `pass`
+- `S13` `verify:` `distribution configure accepts CADRUMO_DESKTOP_EXECUTABLE=cadrumo.exe and refuses python.exe` -> `pass`
+- `S13` `by:` `implementation-high`
+- `S13` `verify:` `cmake configure docs OFF: desktop project not configured, cadrumo.exe omitted; docs ON: configured and staged` -> `pass`
+- `S13` `verify:` `pytest application images and installation (56 passed, 2 skipped)` -> `pass`
+- `S13` `by:` `orchestrator`
 
 ## Notes
 
@@ -474,3 +497,7 @@ related:
 - `S07` `open_external:` ShellExecute now runs on a blocking worker without COM initialization, as tauri-plugin-opener 2.7.0 does; a DelegateExecute handler needing an STA is unverified until S10
 - `S07` clipboard reads over 1 MiB and wiring of the env refusal and navigation handler in app::run are not unit-reachable; the decision functions are tested
 - `S19` platform cargo clippy -D warnings fails on five pre-existing `missing_safety_doc` findings in native/platform/src/lib.rs:411-514, untouched here; desktop.rs has none
+- `S13` cadrumo.exe is not in `startup_files,` unlike the Step text: it never runs the package bootstrap and checks the interpreter digest itself; decided on evidence at the orchestrator's request; the Step text needs that correction
+- `S13` docs ON stage proven with a synthetic four-language docs tree staged by the real `docs_stage` step and the desktop-host-build command run without its `user_docs` prerequisite; the bundle target was not built end to end with docs ON because the docs build is blocked by a stale authority
+- `S13` import boundary gate: 0 hard findings but status unavailable because `dev/quality/metadata/import_load_targets.json` is stale for src/cadrumo; pre-existing, no src module changed
+- `S13` Desktop subdirectory gated on a staged desktop image so docs-off source builds need neither Node.js nor npm, per CADRUMO-BUILD-RUNTIME review

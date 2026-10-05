@@ -75,7 +75,7 @@ other, such as `cadrumo-preview`; the channel comes from the identity projection
 
 | Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
-| Executables | `P/python.exe`, future `P/cadrumo.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
+| Executables | `P/python.exe`; application images such as `P/cadrumo.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
 | Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
@@ -148,6 +148,47 @@ files. Necessary wheel path additions must be generated from inspected package
 metadata. `-m`, `-c`, scripts, stdin and child startup use the bundled executable.
 The caller's working directory is retained for explicit script/file arguments;
 it is not an implicit import root. This is environment isolation, not a sandbox.
+
+### Application images
+
+The platform mapping's `application_images` list declares the native executables
+that are not interpreter hosts. The `entrypoints` map stays reserved for console
+scripts. Each entry carries:
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Image name; the file name adds the mapping's executable suffix, so `cadrumo` is `cadrumo.exe` on Windows |
+| `placement` | Package-relative directory; only `.`, the package root, is implemented, and the loader refuses any other |
+| `target` | CMake target that builds the image; the stage depends on it |
+| `artifact` | CMake variable, defined in the root or `native/` directory scope, holding the image's absolute build path; a generator expression is allowed |
+| `desktop` | Marks the one image that receives desktop registration; that image needs the bundled documentation |
+| `signed` | The image belongs to the release signing inventory; no signing step consumes it yet |
+| `startup` | Optional, default false; `true` adds the image to `startup_files` |
+| `version_arguments` | Arguments that make the image print the product version |
+
+The loader refuses an unknown or missing field, a duplicate name or artifact
+variable, a second desktop image, a name that is a console entrypoint, and a file
+name that equals, ignoring case, the first component of any declared package path
+or file. Configure lists each image and whether it stages. `bundle` depends on
+each staged image's target and artifact. Assembly copies each artifact into the
+package before the manifest is hashed. It refuses an image without a supplied
+artifact, an artifact that is missing or lies outside the CMake binary directory,
+and an artifact for an image the package does not stage. The package manifest
+hashes each image like any other file. CTest runs each staged image with its
+version arguments as `bundle.image.<file>`. Product ZIP verification requires each
+staged image to be hashed, its startup membership to match its declaration and its
+output to carry the product version.
+
+`cadrumo.exe` comes from `desktop-host-build` through
+`CADRUMO_DESKTOP_HOST_EXECUTABLE`, which the desktop project defines, and
+`scripts/tauri.mjs` refuses a build whose Cargo binary is another file. It is not a
+startup file. It never runs the package bootstrap and checks the interpreter's
+digest itself, so hashing it at every interpreter start would refuse Python over a
+file Python never loads. `python.exe --check-package`, payload validation and ZIP
+verification hash it. With `CADRUMO_PACKAGE_USER_DOCS=OFF` the package omits it,
+because the desktop project always builds the documentation and the desktop serves
+it; ZIP verification then requires its absence. The source build configures the
+desktop project, so configuring it requires `npm` and `node`.
 
 ## Mutable data and reconciliation
 
@@ -750,8 +791,12 @@ binary directory with `CADRUMO_NATIVE_CONTRACT` naming the generated
 `contract.json` of a configured source build, and `CADRUMO_DESKTOP_PACKAGE_ROOT`
 naming an assembled package such as `stage/<Config>/app/`. Set
 `CADRUMO_DEV_PYTHON` when the checkout's development interpreter is not found.
-Package assembly does not stage `cadrumo.exe` yet, so the host runs from its
-Cargo output and finds the package through `CADRUMO_DESKTOP_PACKAGE_ROOT`.
+The standalone project's host runs from its Cargo output and finds the package
+through `CADRUMO_DESKTOP_PACKAGE_ROOT`. The source build configures this project
+only when a desktop image is staged, which requires the documentation; a `bundle`
+with the documentation then stages `cadrumo.exe` at the package root as an
+[application image](#application-images). Without it, configuring the source build
+needs neither Node.js nor npm.
 
 | Target | Operation |
 | --- | --- |
@@ -759,7 +804,7 @@ Cargo output and finds the package through `CADRUMO_DESKTOP_PACKAGE_ROOT`.
 | `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
 | `user_docs` | Build and stage the user documentation, as above |
-| `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; record the executable in `generated/desktop-<Config>.json` |
+| `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; refuse a binary other than `CADRUMO_DESKTOP_HOST_EXECUTABLE` and record it in `generated/desktop-<Config>.json` |
 | `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |
 | `desktop-host-clippy` | Clippy on all targets with warnings denied |
 | `desktop-headless-test` | Byte-for-byte CLI passthrough parity with the package interpreter, under a hostile Python environment |
@@ -894,8 +939,9 @@ Configure with CMake 4.4.3, `-S native/cmake/distribution`, a fresh `-B` directo
 Set `CADRUMO_DEV_PYTHON` explicitly when the checkout's development interpreter is
 not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
-inventory; only that entrypoint receives desktop registration. macOS requires a
-root-level desktop executable. Its runtime backend and WebView containment validation
+inventory, and that file must be the application image the payload manifest's
+platform mapping marks `desktop`, such as `cadrumo.exe` on Windows. Only that image
+receives desktop registration. macOS requires a root-level desktop executable. Its runtime backend and WebView containment validation
 must be completed before a macOS application release.
 
 CPack definitions select MSI/ZIP on Windows, DEB/RPM/TGZ on Linux, and DMG/TGZ on

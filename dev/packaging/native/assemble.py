@@ -7,6 +7,7 @@ import importlib.metadata
 import json
 import os
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
 from packaging.requirements import Requirement
@@ -18,9 +19,42 @@ from dev._paths import REPO_ROOT
 from ..uv_constraints import export_runtime_constraints
 from .docs_stage import verified_stage
 from .hashing import digest
-from .layout import backend, entrypoint_files, load_layout
+from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .stdlib import bundle as bundle_stdlib
+
+
+def image_artifact(argument: str) -> tuple[str, Path]:
+    """Split one FILE=ARTIFACT argument, refusing an empty side."""
+    name, separator, artifact = argument.partition("=")
+    if not separator or not name or not artifact:
+        raise ValueError(f"Application image arguments take FILE=ARTIFACT: {argument!r}")
+    return name, Path(artifact)
+
+
+def stage_application_images(
+    root: Path, images: tuple[ApplicationImage, ...], artifacts: Mapping[str, Path], binary_dir: Path
+) -> list[str]:
+    """Copy each staged application image from the artifact its CMake target built, refusing any gap."""
+    unexpected = sorted(set(artifacts) - {image.file for image in images})
+    if unexpected:
+        raise ValueError(f"Artifacts were supplied for images this package does not stage: {unexpected}")
+    owner = binary_dir.resolve()
+    staged = []
+    for image in images:
+        if image.file not in artifacts:
+            raise ValueError(f"No artifact was supplied for application image {image.file}; build {image.target}")
+        source = artifacts[image.file].resolve()
+        if not source.is_relative_to(owner):
+            raise ValueError(f"Application image artifact lies outside the CMake binary directory: {source}")
+        if not source.is_file():
+            raise FileNotFoundError(f"Application image artifact is missing: {source}; build {image.target}")
+        target = root / image.package_path
+        if target.exists():
+            raise FileExistsError(f"Application image collides with an assembled file: {image.package_path}")
+        shutil.copy2(source, target)
+        staged.append(image.package_path)
+    return staged
 
 
 def assemble(
@@ -31,6 +65,8 @@ def assemble(
     metadata: Path,
     user_docs: Path | None,
     *,
+    images: Mapping[str, Path],
+    binary_dir: Path,
     development: bool = False,
 ) -> None:
     """Relocate native modules while retaining their qualified import names."""
@@ -126,6 +162,9 @@ def assemble(
     entrypoints = sorted(entrypoint_files(contract).values())
     for relative in entrypoints:
         shutil.copy2(build / Path(relative).name, root / relative)
+    # Application images are not interpreter hosts; each enters the startup check only by opting in.
+    staged_images = staged_application_images(contract, user_docs=user_docs is not None)
+    stage_application_images(root, staged_images, images, binary_dir)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +205,7 @@ def assemble(
     startup_files = [
         layout["executable"],
         *entrypoints,
+        *(image.package_path for image in staged_images if image.startup),
         layout["stdlib"],
         files["path_file"],
         files["build_metadata"],
@@ -216,6 +256,8 @@ if __name__ == "__main__":
     documentation.add_argument("--user-docs", type=Path)
     documentation.add_argument("--without-user-docs", action="store_true")
     parser.add_argument("--development", action="store_true")
+    parser.add_argument("--image", action="append", default=[], help="FILE=ARTIFACT for each staged application image")
+    parser.add_argument("--binary-dir", type=Path, required=True)
     args = parser.parse_args()
     assemble(
         args.python,
@@ -224,5 +266,7 @@ if __name__ == "__main__":
         args.destination,
         args.metadata,
         args.user_docs,
+        images=dict(image_artifact(item) for item in args.image),
+        binary_dir=args.binary_dir,
         development=args.development,
     )

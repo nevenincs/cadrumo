@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -14,7 +15,8 @@ from cadrumo.core.storage_environment import storage_directory
 
 from ...command_execution import CommandResult, run_command
 from ..hashing import digest
-from ..layout import entrypoint_files
+from ..layout import application_images, entrypoint_files, staged_application_images
+from ..package_inventory import user_docs_bundled
 from ..verification_paths import verification_destination
 
 PROBE = r"""
@@ -226,12 +228,49 @@ def verify_entrypoints(
     return observed
 
 
+def verify_application_images(
+    destination: Path, manifest: dict[str, Any], execute: Callable[[list[str]], CommandResult]
+) -> dict[str, Any]:
+    """Prove each staged application image is hashed, opts into startup as declared and reports the version."""
+    layout, files = manifest["layout"], manifest["files"]
+    staged = staged_application_images(layout, user_docs=user_docs_bundled(manifest))
+    version = str(manifest["build"]["version"])
+    observed: dict[str, Any] = {}
+    for image in application_images(layout):
+        path = destination / image.package_path
+        if image not in staged:
+            if path.exists() or image.package_path in files:
+                raise AssertionError(f"Application image {image.file} ships in a package that may not stage it")
+            observed[image.file] = {"staged": False}
+            continue
+        if not path.is_file() or files.get(image.package_path) != digest(path):
+            raise AssertionError(f"Application image {image.file} is missing or absent from the package manifest")
+        if (image.package_path in manifest["startup_files"]) != image.startup:
+            raise AssertionError(f"Application image {image.file} startup membership differs from its declaration")
+        result = execute([str(path), *image.version_arguments])
+        if result.returncode or not re.search(rf"(?<![\w.]){re.escape(version)}(?![\w.])", result.stdout):
+            raise AssertionError(
+                f"Application image {image.file} did not report version {version}: exit {result.returncode}, "
+                f"{result.stdout!r} {result.stderr!r}"
+            )
+        observed[image.file] = {
+            "staged": True,
+            "location": image.package_path,
+            "sha256": files[image.package_path],
+            "startup_file": image.startup,
+            "version_arguments": list(image.version_arguments),
+            "version_output": result.stdout.strip(),
+        }
+    return observed
+
+
 def verify(
     package: Path, destination: Path | None = None, *, product: bool = False, build_root: Path | None = None
 ) -> None:
     """Copy and verify an artifact in a fresh isolated staging directory."""
     package = package.resolve(strict=True)
-    layout = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))["layout"]
+    manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
+    layout = manifest["layout"]
     build_root = build_root or storage_directory("CADRUMO_NATIVE_BUILD_ROOT", "development/build/native")
     build_root = build_root.resolve()
     build_root.mkdir(parents=True, exist_ok=True)
@@ -306,6 +345,11 @@ def verify(
         kdf_ready = run(["-c", KDF_READY_PROBE])
         evidence["kdf_pre_secret_readiness"] = json.loads(kdf_ready.stdout)
         evidence["entrypoints"] = verify_entrypoints(destination, layout, cwd, environment, run)
+        evidence["application_images"] = verify_application_images(
+            destination,
+            manifest,
+            lambda argv: run_command(argv, cwd=cwd, environment=environment, timeout_seconds=90),
+        )
     run(["-m", "json.tool", "--help"])
     script = cwd / "explicit script.py"
     script.write_text("import pikepdf; print('script passed')", encoding="utf-8")
