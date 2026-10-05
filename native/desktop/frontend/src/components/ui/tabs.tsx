@@ -45,7 +45,7 @@ function TabsTrigger({
         "relative inline-flex cursor-pointer items-center gap-1.5 px-3 text-base font-medium whitespace-nowrap text-muted-foreground select-none",
         "-outline-offset-2 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
         "data-[state=active]:text-foreground",
-        "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand after:opacity-0 after:transition-opacity data-[state=active]:after:opacity-100",
+        "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand after:opacity-0 after:transition-opacity data-[state=active]:after:opacity-100 forced-colors:after:bg-[Highlight]",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         className,
       )}

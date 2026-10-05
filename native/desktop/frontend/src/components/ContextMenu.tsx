@@ -1,9 +1,18 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ContextMenuItem } from "../ipc/contract";
-import { useMetric } from "../shell/metrics";
 
-// Browser stand-in for the native menu. In the desktop application the host
-// draws the same item list with the operating system's own menu.
+// The shell's own drawing of a context menu, for where the host cannot show a
+// native one. In the desktop application the host draws the same item list
+// with the operating system's menu. It opens at a point, not from a control,
+// so its anchor is an empty element placed there.
 export function ContextMenu({
   items,
   at,
@@ -13,104 +22,50 @@ export function ContextMenu({
   at: { x: number; y: number };
   choose: (id: string | null) => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const idPrefix = useId();
-  // Focus goes back where the menu came from when the person settles it with
-  // the keyboard or a click; a click elsewhere keeps the focus it moved to.
+  // Focus goes back where the menu came from, whichever way it is settled.
   const [returnTo] = useState(() => document.activeElement);
-  const settle = (id: string | null) => {
-    if (returnTo instanceof HTMLElement) returnTo.focus();
-    choose(id);
-  };
-  const [active, setActive] = useState(-1);
-  const enabled = items.flatMap((item, index) =>
-    "separator" in item || !item.enabled ? [] : [index],
-  );
-  // Geometry for clamping the menu to the viewport before it ever paints:
-  // the CSS rules (.native-menu, .menu-sep) own the real layout, these
-  // mirror them in pixels for the position math below.
-  const minWidth = useMetric("--spacing-menu", 220);
-  const edgeGap = useMetric("--menu-edge-gap", 24);
-  const viewportGutter = useMetric("--spacing", 4);
-  const itemHeight = useMetric("--spacing-control-md", 32);
-  const separatorHeight = useMetric("--menu-sep-h", 9);
-  const padding = useMetric("--menu-pad", 10);
-
-  useEffect(() => {
-    ref.current?.focus();
-    const away = (event: PointerEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node))
-        choose(null);
-    };
-    const blur = () => choose(null);
-    window.addEventListener("pointerdown", away, true);
-    window.addEventListener("blur", blur);
-    return () => {
-      window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("blur", blur);
-    };
-  }, [choose]);
-
-  const height = items.reduce(
-    (sum, item) => sum + ("separator" in item ? separatorHeight : itemHeight),
-    padding,
-  );
-  const left = Math.max(
-    viewportGutter,
-    Math.min(at.x, window.innerWidth - (minWidth + edgeGap)),
-  );
-  const top =
-    at.y + height > window.innerHeight
-      ? Math.max(viewportGutter, at.y - height)
-      : at.y;
-  const step = (delta: number) => {
-    if (!enabled.length) return;
-    const index = enabled.indexOf(active);
-    setActive(enabled[(index + delta + enabled.length) % enabled.length] ?? -1);
-  };
-
   return (
-    <div
-      ref={ref}
-      className="native-menu"
-      role="menu"
-      tabIndex={-1}
-      aria-activedescendant={active >= 0 ? `${idPrefix}-${active}` : undefined}
-      style={{ left, top }}
-      onKeyDown={(event) => {
-        event.stopPropagation();
-        event.preventDefault();
-        if (event.key === "Escape") settle(null);
-        else if (event.key === "ArrowDown") step(1);
-        else if (event.key === "ArrowUp") step(-1);
-        else if (event.key === "Enter") {
-          const item = items[active];
-          if (item && !("separator" in item)) settle(item.id);
-        }
+    <DropdownMenu
+      open
+      onOpenChange={(open) => {
+        if (!open) choose(null);
       }}
     >
-      {items.map((item, index) =>
-        "separator" in item ? (
-          <div
-            key={`separator-${index}`}
-            className="menu-sep"
-            role="separator"
-          />
-        ) : (
-          <button
-            key={item.id}
-            id={`${idPrefix}-${index}`}
-            role="menuitem"
-            className={index === active ? "is-active" : ""}
-            disabled={!item.enabled}
-            onMouseEnter={() => setActive(index)}
-            onClick={() => settle(item.id)}
-          >
-            <span>{item.label}</span>
-            {item.shortcut && <kbd aria-hidden="true">{item.shortcut}</kbd>}
-          </button>
-        ),
-      )}
-    </div>
+      <DropdownMenuTrigger asChild>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none fixed size-0"
+          style={{ left: at.x, top: at.y }}
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="native-menu"
+        align="start"
+        sideOffset={0}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (returnTo instanceof HTMLElement) returnTo.focus();
+        }}
+      >
+        {items.map((item, index) =>
+          "separator" in item ? (
+            <DropdownMenuSeparator key={`separator-${index}`} />
+          ) : (
+            <DropdownMenuItem
+              key={item.id}
+              disabled={!item.enabled}
+              onSelect={() => choose(item.id)}
+            >
+              {item.label}
+              {item.shortcut && (
+                <DropdownMenuShortcut aria-hidden="true">
+                  {item.shortcut}
+                </DropdownMenuShortcut>
+              )}
+            </DropdownMenuItem>
+          ),
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -6,6 +6,14 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from "react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/components/ui/cn";
+import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import { IconButton } from "@/components/ui/icon-button";
+import { ResizeHandle } from "@/components/ui/resize-handle";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toast } from "@/components/ui/toast";
 import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
 import { ContextMenu } from "./components/ContextMenu";
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -24,11 +32,7 @@ import type {
   LogRecord,
   LogSourceState,
 } from "./ipc/contract";
-import {
-  IconButton,
-  PaneHeader,
-  type PaneControl,
-} from "./components/PaneHeader";
+import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import {
   DEFAULT_FILTERS,
@@ -77,6 +81,8 @@ import { DARK_TERMINAL, LIGHT_TERMINAL } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
 
 const RECORD_CAP = 10000;
+const COUNT_LIMIT = 99;
+const TOAST_MS = 2400;
 const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
@@ -142,7 +148,6 @@ export function App({ host }: { host: Host }) {
   const [filters, setFilters] = useState<RecordFilters>(DEFAULT_FILTERS);
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
-  const returnFocus = useRef<Element | null>(null);
   const toastTimer = useRef(0);
   const nativeMenus = useRef(host.nativeMenus);
 
@@ -169,10 +174,8 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   useEffect(() => {
     if (gated) return;
-    // Admitted: the next time the gate closes, the dialog opens again, and
-    // the keyboard belongs to the TUI that has just started.
+    // Admitted: the next time the gate closes, the dialog opens again.
     setSignInDismissed(false);
-    requestAnimationFrame(() => terminals.current.tui?.focus());
   }, [gated]);
 
   useEffect(() => {
@@ -239,8 +242,18 @@ export function App({ host }: { host: Host }) {
     };
   }, [host]);
 
-  const locale =
-    environment.state === "ready"
+  // The window's language: the person's own choice where the documentation
+  // is bundled in it, otherwise the language Cadrumo reports.
+  const languages = useMemo(
+    () =>
+      environment.state === "ready"
+        ? environment.value.docs.languages.map((language) => language.code)
+        : [],
+    [environment],
+  );
+  const locale = languages.includes(prefs.language)
+    ? prefs.language
+    : environment.state === "ready"
       ? environment.value.outputLanguage
       : SOURCE_LOCALE;
   const t: Translate = useMemo(() => translator(locale), [locale]);
@@ -261,18 +274,16 @@ export function App({ host }: { host: Host }) {
 
   const docsEntry = useMemo(() => {
     if (environment.state !== "ready") return null;
-    const { docs: d, outputLanguage } = environment.value;
+    const { languages: bundled } = environment.value.docs;
     return (
-      d.languages.find((language) => language.code === outputLanguage) ??
-      d.languages[0] ??
-      null
+      bundled.find((language) => language.code === locale) ?? bundled[0] ?? null
     );
-  }, [environment]);
+  }, [environment, locale]);
 
   const say = useCallback((text: string) => {
     setToast(text);
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2400);
+    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
   const copy = useCallback(
@@ -399,11 +410,7 @@ export function App({ host }: { host: Host }) {
           { mod: true, code: "KeyK", key: "K", scope: "app" },
           { mod: true, shift: true, code: "KeyK", key: "K", scope: "global" },
         ],
-        run: () =>
-          setPaletteOpen((open) => {
-            if (!open) returnFocus.current = document.activeElement;
-            return !open;
-          }),
+        run: () => setPaletteOpen((open) => !open),
       },
       {
         id: "docs.search",
@@ -908,28 +915,8 @@ export function App({ host }: { host: Host }) {
   const panelHeight = clampPanel(
     Math.round(layout.panelRatio * viewportHeight),
   );
-  const dragPanel = (event: ReactMouseEvent) => {
-    event.preventDefault();
-    const startY = event.clientY;
-    const start = panelHeight;
-    document.body.classList.add("dragging-y");
-    const move = (e: PointerEvent) => {
-      const next = start + (startY - e.clientY);
-      if (next < panelMin - panelCollapseThreshold) patch({ panelOpen: false });
-      else
-        patch({
-          panelOpen: true,
-          panelRatio: clampPanel(next) / viewportHeight,
-        });
-    };
-    const up = () => {
-      document.body.classList.remove("dragging-y");
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  };
+  const setPanelHeight = (height: number) =>
+    patch({ panelOpen: true, panelRatio: clampPanel(height) / viewportHeight });
 
   const errorCount = (records ?? []).filter(
     (r) => r.level === "ERROR" || r.level === "CRITICAL",
@@ -954,11 +941,11 @@ export function App({ host }: { host: Host }) {
     labelKey: string,
   ): PaneControl => {
     const on = maximized === area;
-    const chord = primaryChord(byId("view.maximize"));
     return {
       id: "maximize",
       icon: on ? "restore" : "maximize",
-      label: `${on ? t("desktop.pane.restore") : t(labelKey)} (${chord})`,
+      label: on ? t("desktop.pane.restore") : t(labelKey),
+      shortcut: primaryChord(byId("view.maximize")),
       pressed: on,
       run: () => toggleMaximize(area),
     };
@@ -1008,6 +995,7 @@ export function App({ host }: { host: Host }) {
       icon: "book",
       label: t("desktop.rail.docs_home"),
       shortcut: primaryChord(byId("docs.home")),
+      divided: true,
       onClick: () => runAction("docs.home"),
     },
     {
@@ -1024,6 +1012,7 @@ export function App({ host }: { host: Host }) {
       label: t("desktop.rail.console"),
       shortcut: primaryChord(byId("panel.console")),
       pressed: tabOpen("console"),
+      divided: true,
       onClick: () => openTab("console"),
     },
     {
@@ -1088,8 +1077,9 @@ export function App({ host }: { host: Host }) {
     />
   );
 
+  const pane = "pane flex min-h-0 min-w-0 flex-1 flex-col bg-background";
   const docsPane = (
-    <div className="pane pane-docs">
+    <div className={cn(pane, "pane-docs")}>
       <PaneHeader
         title={t("desktop.pane.docs")}
         onToggleMaximize={() => toggleMaximize("docs")}
@@ -1119,15 +1109,25 @@ export function App({ host }: { host: Host }) {
           onMenu={docsMenu}
         />
       ) : environment.state === "unavailable" ? (
-        <p className="pane-note" role="status">
-          {t("desktop.host.unavailable")}
-        </p>
-      ) : null}
+        <Empty role="status">
+          <EmptyMedia>
+            <Icon name="unplug" />
+          </EmptyMedia>
+          <EmptyDescription className="pane-note">
+            {t("desktop.host.unavailable")}
+          </EmptyDescription>
+        </Empty>
+      ) : (
+        <Empty role="status">
+          <Spinner />
+          <EmptyDescription>{t("desktop.docs.loading")}</EmptyDescription>
+        </Empty>
+      )}
     </div>
   );
   const tuiPane = (
     // The TUI paints its own dark theme, so its whole area is a dark scheme.
-    <div className="pane pane-tui" data-scheme="dark">
+    <div className={cn(pane, "pane-tui")} data-scheme="dark">
       <PaneHeader
         title={t("desktop.pane.tui")}
         status={{ phase: status.tui.phase, note: exitNote("tui") }}
@@ -1138,7 +1138,8 @@ export function App({ host }: { host: Host }) {
           {
             id: "close",
             icon: "close",
-            label: `${t("desktop.tui.hide")} (${primaryChord(byId("tui.toggle"))})`,
+            label: t("desktop.tui.hide"),
+            shortcut: primaryChord(byId("tui.toggle")),
             run: () => runAction("tui.toggle"),
           },
         ]}
@@ -1159,14 +1160,22 @@ export function App({ host }: { host: Host }) {
   return (
     <StringsContext.Provider value={t}>
       <TooltipProvider>
-        <div className={`shell scheme-${scheme}`}>
+        <div
+          className={cn(
+            "shell grid h-dvh grid-cols-[auto_1fr] bg-chrome",
+            `scheme-${scheme}`,
+          )}
+        >
           <Rail
             label={t("desktop.rail.label")}
             top={railTop}
             bottom={railBottom}
           />
-          <div className="workspace">
-            <main className="main-area" hidden={maximized === "panel"}>
+          <div className="workspace flex min-h-0 min-w-0 flex-col">
+            <main
+              className="main-area flex min-h-(--docs-min) flex-auto"
+              hidden={maximized === "panel"}
+            >
               <Split
                 orientation={orientation}
                 reversed={prefs.order === "tui"}
@@ -1182,106 +1191,105 @@ export function App({ host }: { host: Host }) {
               />
             </main>
             {layout.panelOpen && !maximized && (
-              <div
+              <ResizeHandle
                 className="panel-separator"
-                role="separator"
-                aria-orientation="horizontal"
+                orientation="horizontal"
                 aria-label={t("desktop.panel.resize")}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round((panelHeight / viewportHeight) * 100)}
-                tabIndex={0}
-                onPointerDown={dragPanel}
-                onKeyDown={(event) => {
-                  // The window-splitter pattern: arrows step, Home and End go
-                  // to the panel's smallest and largest size.
-                  const sizes: Record<string, number> = {
-                    ArrowUp: panelHeight + panelResizeStep,
-                    ArrowDown: panelHeight - panelResizeStep,
-                    Home: panelMin,
-                    End: viewportHeight - docsMin,
-                  };
-                  const next = sizes[event.key];
-                  if (next === undefined) return;
-                  event.preventDefault();
-                  patch({ panelRatio: clampPanel(next) / viewportHeight });
+                value={(panelHeight / viewportHeight) * 100}
+                // The panel sits on the window's bottom edge, so its height
+                // is what lies below the pointer. Dragged well past its
+                // smallest size, it collapses.
+                onDrag={({ y }) => {
+                  const next = viewportHeight - y;
+                  if (next < panelMin - panelCollapseThreshold)
+                    patch({ panelOpen: false });
+                  else setPanelHeight(next);
                 }}
+                onStep={(direction) =>
+                  setPanelHeight(panelHeight - direction * panelResizeStep)
+                }
+                onLimit={(limit) =>
+                  setPanelHeight(
+                    limit === "min" ? panelMin : viewportHeight - docsMin,
+                  )
+                }
+                onReset={() =>
+                  setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
+                }
               />
             )}
             <section
-              className={`panel ${maximized === "panel" ? "is-maximized" : ""}`}
+              className={cn(
+                "panel flex min-h-0 flex-col bg-chrome",
+                maximized === "panel" ? "is-maximized flex-auto" : "flex-none",
+              )}
               hidden={!panelVisible}
               style={
                 maximized === "panel" ? undefined : { height: panelHeight }
               }
               aria-label={t("desktop.panel.label")}
             >
-              <div
-                className="tabstrip"
-                role="tablist"
-                aria-label={t("desktop.panel.label")}
-                onDoubleClick={(event) =>
-                  event.target === event.currentTarget &&
-                  toggleMaximize("panel")
-                }
+              <Tabs
+                value={layout.tab}
+                // Arrow keys move through the tabs and choose; a click or
+                // Enter also hands the keyboard to the chosen view.
+                onValueChange={(tab) => patch({ tab: tab as PanelTab })}
+                className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
+                onDoubleClick={(event) => {
+                  if (!(event.target as HTMLElement).closest("button"))
+                    toggleMaximize("panel");
+                }}
               >
-                {TABS.map(([tab, labelKey, icon], index) => (
-                  <button
-                    key={tab}
-                    id={`tab-${tab}`}
-                    role="tab"
-                    aria-selected={layout.tab === tab}
-                    aria-controls={`panel-${tab}`}
-                    tabIndex={layout.tab === tab ? 0 : -1}
-                    className="tab"
-                    onClick={() => openTab(tab, { toggle: false })}
-                    onKeyDown={(event) => {
-                      if (
-                        event.key !== "ArrowRight" &&
-                        event.key !== "ArrowLeft"
-                      )
-                        return;
-                      const next =
-                        TABS[
-                          (index +
-                            (event.key === "ArrowRight"
-                              ? 1
-                              : TABS.length - 1)) %
-                            TABS.length
-                        ]?.[0];
-                      if (!next) return;
-                      patch({ tab: next });
-                      document.getElementById(`tab-${next}`)?.focus();
-                    }}
-                  >
-                    <Icon name={icon} />
-                    {t(labelKey)}
-                    {tab !== "logs" && exitCode(status[tab]) !== undefined && (
-                      <span className="exit-note">
-                        {t("desktop.session.exited", {
-                          code: exitCode(status[tab]) ?? "?",
-                        })}
-                      </span>
-                    )}
-                    {tab === "logs" && errorCount > 0 && (
-                      <span className="tab-badge">{errorCount}</span>
-                    )}
-                  </button>
-                ))}
-                <span className="tools-spacer" />
+                <TabsList
+                  aria-label={t("desktop.panel.label")}
+                  className="h-full"
+                >
+                  {TABS.map(([tab, labelKey, icon]) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      id={`tab-${tab}`}
+                      aria-controls={`panel-${tab}`}
+                      onClick={() => openTab(tab, { toggle: false })}
+                    >
+                      <Icon name={icon} />
+                      {t(labelKey)}
+                      {tab !== "logs" &&
+                        exitCode(status[tab]) !== undefined && (
+                          <span className="exit-note text-xs font-normal text-faint">
+                            {t("desktop.session.exited", {
+                              code: exitCode(status[tab]) ?? "?",
+                            })}
+                          </span>
+                        )}
+                      {tab === "logs" && errorCount > 0 && (
+                        <Badge variant="count">
+                          {errorCount > COUNT_LIMIT
+                            ? `${COUNT_LIMIT}+`
+                            : errorCount}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <span className="flex-1 self-stretch" />
                 <IconButton
-                  icon={panelMax.icon}
                   label={panelMax.label}
-                  pressed={panelMax.pressed}
-                  run={panelMax.run}
-                />
+                  shortcut={panelMax.shortcut}
+                  aria-pressed={panelMax.pressed}
+                  onClick={panelMax.run}
+                >
+                  <Icon name={panelMax.icon} />
+                </IconButton>
                 <IconButton
-                  icon="chevronDown"
-                  label={`${t("desktop.panel.hide")} (${primaryChord(byId("panel.toggle"))})`}
-                  run={() => runAction("panel.toggle")}
-                />
-              </div>
-              <div className="panel-body">
+                  label={t("desktop.panel.hide")}
+                  shortcut={primaryChord(byId("panel.toggle"))}
+                  onClick={() => runAction("panel.toggle")}
+                >
+                  <Icon name="chevronDown" />
+                </IconButton>
+              </Tabs>
+              <div className="panel-body relative flex min-h-0 flex-1">
                 {terminalPane("console", tabOpen("console"))}
                 {terminalPane("python", tabOpen("python"))}
                 <RecordList
@@ -1310,6 +1318,7 @@ export function App({ host }: { host: Host }) {
               }
               prefs={prefs}
               setPrefs={setPrefs}
+              languages={languages}
               close={() => setSettingsOpen(false)}
               onReset={() => {
                 setPrefs(DEFAULT_PREFS);
@@ -1324,12 +1333,7 @@ export function App({ host }: { host: Host }) {
               actions={actions}
               searchDocs={searchDocs}
               openDoc={openDoc}
-              close={() => {
-                setPaletteOpen(false);
-                const back = returnFocus.current;
-                if (back instanceof HTMLElement)
-                  requestAnimationFrame(() => back.focus());
-              }}
+              close={() => setPaletteOpen(false)}
             />
           )}
           {menu && (
@@ -1355,16 +1359,17 @@ export function App({ host }: { host: Host }) {
               }}
             />
           )}
-          {toast && (
-            <div className="toast" role="status">
-              {toast}
-            </div>
-          )}
+          <Toast>{toast}</Toast>
           <SignInDialog
             account={account}
             open={account.gated && !signInDismissed}
             onOpenChange={(open) => setSignInDismissed(!open)}
-            returnFocus={signInButton}
+            // Dismissed, focus goes to the way back in; signed in, to the
+            // TUI that has just started.
+            onClosed={() => {
+              if (signInButton.current) signInButton.current.focus();
+              else requestAnimationFrame(() => terminals.current.tui?.focus());
+            }}
           />
         </div>
       </TooltipProvider>

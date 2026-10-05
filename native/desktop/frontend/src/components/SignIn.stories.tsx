@@ -19,6 +19,7 @@ function controller(change: Partial<SignInController> = {}): SignInController {
     retrySeconds: 0,
     busy: false,
     remaining: null,
+    signOutFailure: null,
     gated: true,
     submit: async () => undefined,
     signOut: async () => undefined,
@@ -44,7 +45,7 @@ function Screen({ account }: { account: SignInController }) {
         account={account}
         open
         onOpenChange={() => undefined}
-        returnFocus={button}
+        onClosed={() => button.current?.focus()}
       />
     </div>
   );
@@ -161,7 +162,7 @@ export const AccountSection: Story = {
         onSignOut={() => undefined}
       />
       <Account
-        account={{ ...present, refusal: refused("timed_out") }}
+        account={{ ...present, signOutFailure: refused("timed_out") }}
         onSignOut={() => undefined}
       />
     </div>

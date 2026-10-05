@@ -500,6 +500,7 @@ desktop:
   account:
     remaining_access: El acceso de agentes que activaste sigue activo.
     sign_out: Cerrar sesión
+    sign_out_failed: No se ha podido cerrar la sesión ({code}).
     sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
@@ -515,10 +516,12 @@ desktop:
     zoom_reset: Restablecer el zoom de la documentación
   docs:
     frame_title: Documentación de Cadrumo
+    loading: Cargando la documentación…
   host:
     unavailable: Esta parte necesita la aplicación de escritorio.
   logs:
     clear_logger: Quitar el filtro de logger
+    details: Detalles
     dropped: 'Registros antiguos descartados de esta vista: {count}'
     empty: El registro está vacío.
     errors: 'Errores: {count}'
@@ -596,7 +599,9 @@ desktop:
     dark: Oscuro
     docs_and_tui: Documentación y TUI
     first_pane: Primer panel
+    follow_cadrumo: Igual que Cadrumo
     follow_docs: Como la documentación
+    language: Idioma
     layout_reset: Disposición restablecida
     light: Claro
     match_appearance: Según la apariencia

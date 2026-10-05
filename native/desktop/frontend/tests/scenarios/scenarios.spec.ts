@@ -66,10 +66,13 @@ test("signing in: the pending state stays up", async ({ page: target }) => {
   await open(target, "signing-in");
   await password(target).fill("anything");
   await submit(target).click();
-  await expect(password(target)).toBeDisabled();
+  // Nothing is disabled while the answer is awaited, so focus stays put.
+  await expect(password(target)).toHaveAttribute("readonly", "");
   await expect(
     target.getByRole("button", { name: label("desktop.signin.submitting") }),
-  ).toBeDisabled();
+  ).toHaveAttribute("aria-busy", "true");
+  await target.keyboard.press("Tab");
+  await expect(target.locator(".sign-in").locator(":focus")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
@@ -162,7 +165,7 @@ test("runtime unavailable: said plainly, with submission disabled", async ({
   await expect(
     target.getByText(label("desktop.signin.refused.runtime_unavailable")),
   ).toBeVisible();
-  await expect(submit(target)).toBeDisabled();
+  await expect(password(target)).toHaveCount(0);
 });
 
 test("unsupported: no sign-in view, and the TUI starts", async ({

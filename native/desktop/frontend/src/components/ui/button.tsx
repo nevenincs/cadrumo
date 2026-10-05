@@ -5,12 +5,14 @@ import { cn } from "@/components/ui/cn";
 import { Spinner } from "@/components/ui/spinner";
 
 // Heights are the density tokens; the square sizes are for icon-only buttons.
-// A toggle button says so with `aria-pressed`, which is also what styles it.
+// A toggle button says so with `aria-pressed`, which is also what styles it:
+// a pressed button takes the selected surface, a step stronger than hover.
 const buttonVariants = cva(
   [
     "inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap select-none",
     "transition-colors disabled:pointer-events-none disabled:opacity-50",
-    "aria-busy:pointer-events-none",
+    "aria-busy:cursor-progress",
+    "forced-colors:aria-pressed:bg-[Highlight] forced-colors:aria-pressed:text-[HighlightText]",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   ],
   {
@@ -19,14 +21,14 @@ const buttonVariants = cva(
         primary:
           "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/70 active:bg-secondary",
+          "bg-secondary text-secondary-foreground hover:bg-selected active:bg-selected",
         outline:
-          "border border-input bg-card text-foreground hover:bg-accent active:bg-secondary aria-pressed:border-ring aria-pressed:bg-accent",
+          "border border-input bg-card text-foreground hover:bg-accent active:bg-selected aria-pressed:border-ring aria-pressed:bg-selected",
         ghost:
-          "text-muted-foreground hover:bg-accent hover:text-accent-foreground active:bg-secondary aria-pressed:bg-accent aria-pressed:text-accent-foreground",
+          "text-muted-foreground hover:bg-accent hover:text-accent-foreground active:bg-selected aria-pressed:bg-selected aria-pressed:text-accent-foreground",
         destructive:
           "bg-destructive text-primary-foreground hover:bg-destructive/90 active:bg-destructive/80",
-        link: "h-auto px-0 text-brand underline-offset-4 hover:underline",
+        link: "text-foreground underline underline-offset-4 hover:decoration-2",
       },
       size: {
         xs: "h-control-xs px-2 text-sm",
@@ -39,6 +41,8 @@ const buttonVariants = cva(
         "icon-lg": "size-control-lg rounded-lg",
       },
     },
+    // A link sits in a line of text: it takes no height or padding of its own.
+    compoundVariants: [{ variant: "link", className: "h-auto px-0" }],
     defaultVariants: { variant: "primary", size: "md" },
   },
 );
@@ -47,8 +51,9 @@ type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     /** Render the child element as the button, keeping these styles. */
     asChild?: boolean;
-    /** Work this button started is in flight: it shows a spinner, reports
-     * itself busy and takes no further activation. */
+    /** Work this button started is in flight: it shows a spinner and reports
+     * itself busy. It stays focusable, so focus is not lost while the answer
+     * is awaited, and takes no further activation. */
     pending?: boolean;
   };
 
@@ -58,8 +63,8 @@ function Button({
   size = "md",
   asChild = false,
   pending = false,
-  disabled,
   type = "button",
+  onClick,
   children,
   ...props
 }: ButtonProps) {
@@ -70,9 +75,15 @@ function Button({
       data-variant={variant}
       data-size={size}
       type={asChild ? undefined : type}
-      disabled={disabled || pending}
       aria-busy={pending || undefined}
+      aria-disabled={pending || undefined}
       className={cn(buttonVariants({ variant, size }), className)}
+      onClick={
+        pending
+          ? (event: React.MouseEvent<HTMLButtonElement>) =>
+              event.preventDefault()
+          : onClick
+      }
       {...props}
     >
       {pending && !asChild ? (

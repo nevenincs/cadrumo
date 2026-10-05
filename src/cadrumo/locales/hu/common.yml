@@ -485,6 +485,7 @@ desktop:
   account:
     remaining_access: Az általad engedélyezett ügynöki hozzáférés bekapcsolva marad.
     sign_out: Kijelentkezés
+    sign_out_failed: A kijelentkezés nem sikerült ({code}).
     sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
     signed_in: Bejelentkezve
     signed_out: Nincs bejelentkezve
@@ -500,10 +501,12 @@ desktop:
     zoom_reset: Dokumentáció nagyításának visszaállítása
   docs:
     frame_title: Cadrumo-dokumentáció
+    loading: A dokumentáció betöltése…
   host:
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   logs:
     clear_logger: Loggerszűrő törlése
+    details: Részletek
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
     empty: A napló üres.
     errors: 'Hibák: {count}'
@@ -580,7 +583,9 @@ desktop:
     dark: Sötét
     docs_and_tui: Dokumentáció és TUI
     first_pane: Első panel
+    follow_cadrumo: Ugyanaz, mint a Cadrumo
     follow_docs: A dokumentáció szerint
+    language: Nyelv
     layout_reset: Elrendezés visszaállítva
     light: Világos
     match_appearance: A megjelenés szerint

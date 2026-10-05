@@ -1,7 +1,9 @@
 import type { StorybookConfig } from "@storybook/react-vite";
 import { fileURLToPath } from "node:url";
 
-// The shell's typefaces and mark are the documentation's own files.
+// What the catalogue's server may read: this project, and the documentation's
+// own static files, which hold the shell's typefaces and mark.
+const frontend = fileURLToPath(new URL("..", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../../docs/_static", import.meta.url),
 );
@@ -43,7 +45,7 @@ const config: StorybookConfig = {
         ...base.server,
         fs: {
           ...base.server?.fs,
-          allow: [...(base.server?.fs?.allow ?? []), docsStatic],
+          allow: [...(base.server?.fs?.allow ?? []), frontend, docsStatic],
         },
       },
     };

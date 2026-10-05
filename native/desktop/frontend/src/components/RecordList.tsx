@@ -1,8 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
+import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import { Icon } from "@/components/ui/icon";
 
 export const LEVELS: readonly LogLevel[] = [
   "DEBUG",
@@ -34,6 +47,97 @@ export function recordLine(record: LogRecord): string {
   return `${record.timestamp} [${record.level ?? "-"}] ${record.logger ?? record.source}: ${record.message}`;
 }
 
+const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
+  WARNING: "text-warning",
+  ERROR: "text-destructive",
+  CRITICAL: "text-destructive",
+};
+
+// One record. Memoized, so a new batch renders only its own rows: the list
+// holds thousands, and a batch arrives up to ten times a second.
+const Row = memo(function Row({
+  record,
+  open,
+  sourceLabel,
+  detailsLabel,
+  onToggle,
+  onMenu,
+}: {
+  record: LogRecord;
+  open: boolean;
+  /** The name of the record's source, in the chrome language. */
+  sourceLabel: string;
+  detailsLabel: string;
+  onToggle: (seq: number) => void;
+  onMenu: (event: MouseEvent, record: LogRecord) => void;
+}) {
+  const level = (record.level ?? "none").toLowerCase();
+  const failed = record.level === "ERROR" || record.level === "CRITICAL";
+  return (
+    <div
+      className={cn(
+        `record level-${level} source-${record.source}`,
+        "border-l-2 hover:bg-accent",
+        failed ? "border-destructive" : "border-transparent",
+      )}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onMenu(event, record);
+      }}
+    >
+      <div className="grid grid-cols-[7.5em_5.5em_minmax(8em,16em)_1fr] gap-x-3 px-3 py-px @max-xl:grid-cols-[7.5em_5.5em_1fr]">
+        <time className="text-faint">
+          {record.timestamp.slice(11, 23) || record.timestamp}
+        </time>
+        <span
+          className={cn(
+            "font-semibold tracking-wide",
+            record.source === "host"
+              ? "text-brand"
+              : (record.level && LEVEL_TONE[record.level]) || "text-faint",
+          )}
+        >
+          {record.source === "host" ? sourceLabel : (record.level ?? "—")}
+        </span>
+        <span
+          className="truncate text-muted-foreground @max-xl:hidden"
+          title={record.logger ?? undefined}
+        >
+          {record.logger ? shortLogger(record.logger) : sourceLabel}
+        </span>
+        <span
+          className={cn(
+            "min-w-0 wrap-anywhere @max-xl:col-span-3",
+            record.level === "DEBUG" && "text-muted-foreground",
+          )}
+        >
+          {record.message}
+          {record.detail && (
+            <button
+              type="button"
+              className="ml-1 inline-flex cursor-pointer align-middle text-faint hover:text-foreground"
+              aria-expanded={open}
+              aria-label={detailsLabel}
+              onClick={() => onToggle(record.seq)}
+            >
+              <Icon
+                name="forward"
+                size="xs"
+                className={cn("transition-transform", open && "rotate-90")}
+              />
+            </button>
+          )}
+        </span>
+      </div>
+      {open && (
+        <pre className="mx-3 mt-0.5 mb-1.5 overflow-x-auto rounded-md bg-accent px-2.5 py-1.5 text-xs whitespace-pre-wrap text-muted-foreground">
+          {record.detail}
+        </pre>
+      )}
+    </div>
+  );
+});
+
 // Read-only view of the host's log batches. A missing or unreadable source is
 // never presented as an empty log, and an unknown source renders by name.
 export function RecordList({
@@ -55,7 +159,6 @@ export function RecordList({
   shown: boolean;
 }) {
   const t = useStrings();
-  // How close to the end still counts as following the newest record.
   const followSlack = useMetric("--log-follow-slack", 24);
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
@@ -107,17 +210,35 @@ export function RecordList({
   const state =
     sourceState && sourceState !== "unavailable" ? sourceState : null;
 
+  // Stable across batches, so memoized rows are not re-rendered by them.
+  const live = useRef({ onMenu, visible });
+  live.current = { onMenu, visible };
+  const handlers = useMemo(
+    () => ({
+      toggle: (seq: number) =>
+        setExpanded((current) => {
+          const next = new Set(current);
+          if (!next.delete(seq)) next.add(seq);
+          return next;
+        }),
+      menu: (event: MouseEvent, record: LogRecord) =>
+        live.current.onMenu(event, record, live.current.visible),
+    }),
+    [],
+  );
+
   return (
     <div
-      className="logview"
+      className="logview @container flex min-h-0 flex-1 flex-col bg-background"
       hidden={!shown}
       role="tabpanel"
       id="panel-logs"
       aria-labelledby="tab-logs"
     >
-      <div className="logview-tools">
-        <input
-          className="filter-text"
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b px-2.5 py-1.5">
+        <Input
+          className="filter-text w-field max-w-full"
+          controlSize="sm"
           type="search"
           placeholder={t("desktop.logs.filter")}
           aria-label={t("desktop.logs.filter")}
@@ -126,7 +247,8 @@ export function RecordList({
             setFilters({ ...filters, text: event.target.value })
           }
         />
-        <select
+        <NativeSelect
+          controlSize="sm"
           aria-label={t("desktop.logs.minimum_level")}
           value={filters.minLevel}
           onChange={(event) =>
@@ -137,16 +259,18 @@ export function RecordList({
           <option value={1}>{t("desktop.logs.level_info")}</option>
           <option value={2}>{t("desktop.logs.level_warning")}</option>
           <option value={3}>{t("desktop.logs.level_error")}</option>
-        </select>
+        </NativeSelect>
         <div
-          className="source-toggles"
+          className="flex gap-1"
           role="group"
           aria-label={t("desktop.logs.sources")}
         >
           {sources.map((source) => (
-            <button
+            <Button
               key={source}
-              className="chip"
+              variant="outline"
+              size="sm"
+              className="rounded-full"
               aria-pressed={!filters.hiddenSources.includes(source)}
               onClick={() =>
                 setFilters({
@@ -158,22 +282,32 @@ export function RecordList({
               }
             >
               {sourceLabel(source)}
-            </button>
+            </Button>
           ))}
         </div>
         {filters.logger && (
-          <button
-            className="chip chip-active"
-            title={t("desktop.logs.clear_logger")}
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            aria-pressed="true"
             aria-label={t("desktop.logs.clear_logger")}
+            title={t("desktop.logs.clear_logger")}
             onClick={() => setFilters({ ...filters, logger: null })}
           >
-            {shortLogger(filters.logger)} <Icon name="close" size="xs" />
-          </button>
+            {shortLogger(filters.logger)}
+            <Icon name="close" size="xs" />
+          </Button>
         )}
-        <span className="tools-spacer" />
+        <span className="flex-1" />
         {state && (
-          <span className={`source-state state-${state.kind}`}>
+          <span
+            className={cn(
+              "source-state text-xs",
+              `state-${state.kind}`,
+              state.kind === "available" ? "text-faint" : "text-warning",
+            )}
+          >
             {state.kind === "available"
               ? t("desktop.logs.state_available")
               : state.kind === "missing"
@@ -182,17 +316,19 @@ export function RecordList({
           </span>
         )}
         {counts.errors > 0 && (
-          <span className="count count-error">
+          <Badge variant="danger">
             {t("desktop.logs.errors", { count: counts.errors })}
-          </span>
+          </Badge>
         )}
         {counts.warnings > 0 && (
-          <span className="count count-warning">
+          <Badge variant="warning">
             {t("desktop.logs.warnings", { count: counts.warnings })}
-          </span>
+          </Badge>
         )}
-        <button
-          className={`chip ${follow ? "chip-active" : ""}`}
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
           aria-pressed={follow}
           title={t("desktop.logs.follow_hint")}
           onClick={() => {
@@ -202,30 +338,48 @@ export function RecordList({
           }}
         >
           {t("desktop.logs.follow")}
-        </button>
+        </Button>
       </div>
       {sourceState === "unavailable" && (
-        <div className="source-banner state-unavailable" role="status">
-          {t("desktop.host.unavailable")}
-        </div>
+        <Alert
+          className="source-banner state-unavailable mx-2.5 mt-2 w-auto"
+          icon={<Icon name="unplug" />}
+        >
+          <AlertTitle className="font-normal">
+            {t("desktop.host.unavailable")}
+          </AlertTitle>
+        </Alert>
       )}
       {state?.kind === "missing" && (
-        <div className="source-banner state-missing" role="status">
-          {t("desktop.logs.state_missing_detail")}
-        </div>
+        <Alert
+          tone="warning"
+          className="source-banner state-missing mx-2.5 mt-2 w-auto"
+          icon={<Icon name="alert" />}
+        >
+          <AlertTitle className="font-normal">
+            {t("desktop.logs.state_missing_detail")}
+          </AlertTitle>
+        </Alert>
       )}
       {state?.kind === "unreadable" && (
-        <div className="source-banner state-unreadable" role="status">
-          {state.detail
-            ? `${t("desktop.logs.state_unreadable")}: ${state.detail}`
-            : t("desktop.logs.state_unreadable")}
-        </div>
+        <Alert
+          tone="danger"
+          className="source-banner state-unreadable mx-2.5 mt-2 w-auto"
+          icon={<Icon name="alert" />}
+        >
+          <AlertTitle className="font-normal">
+            {state.detail
+              ? `${t("desktop.logs.state_unreadable")}: ${state.detail}`
+              : t("desktop.logs.state_unreadable")}
+          </AlertTitle>
+        </Alert>
       )}
       <div
-        className="logview-list"
+        className="logview-list min-h-0 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text"
         ref={list}
         role="log"
         aria-live="off"
+        tabIndex={0}
         onScroll={() => {
           const el = list.current;
           if (!el) return;
@@ -235,60 +389,26 @@ export function RecordList({
         }}
       >
         {dropped > 0 && (
-          <div className="logview-note">
+          <p className="px-3 py-2 font-sans text-faint">
             {t("desktop.logs.dropped", { count: dropped })}
-          </div>
+          </p>
         )}
         {state?.kind === "available" && visible.length === 0 && (
-          <div className="logview-note">
+          <p className="px-3 py-2 font-sans text-faint">
             {all.length ? t("desktop.logs.no_match") : t("desktop.logs.empty")}
-          </div>
+          </p>
         )}
-        {visible.map((record) => {
-          const open = expanded.has(record.seq);
-          return (
-            <div
-              key={record.seq}
-              className={`record level-${(record.level ?? "none").toLowerCase()} source-${record.source}`}
-              onContextMenu={(event) => {
-                event.preventDefault();
-                onMenu(event, record, visible);
-              }}
-            >
-              <div
-                className="record-line"
-                onClick={() => {
-                  if (!record.detail) return;
-                  const next = new Set(expanded);
-                  if (open) next.delete(record.seq);
-                  else next.add(record.seq);
-                  setExpanded(next);
-                }}
-              >
-                <time>
-                  {record.timestamp.slice(11, 23) || record.timestamp}
-                </time>
-                <span className="level">
-                  {record.source === "host"
-                    ? sourceLabel("host")
-                    : (record.level ?? "—")}
-                </span>
-                <span className="logger" title={record.logger ?? ""}>
-                  {record.logger
-                    ? shortLogger(record.logger)
-                    : sourceLabel(record.source)}
-                </span>
-                <span className="message">
-                  {record.message}
-                  {record.detail && (
-                    <span className="detail-toggle">{open ? " ▾" : " ▸"}</span>
-                  )}
-                </span>
-              </div>
-              {open && <pre className="detail">{record.detail}</pre>}
-            </div>
-          );
-        })}
+        {visible.map((record) => (
+          <Row
+            key={record.seq}
+            record={record}
+            open={expanded.has(record.seq)}
+            sourceLabel={sourceLabel(record.source)}
+            detailsLabel={t("desktop.logs.details")}
+            onToggle={handlers.toggle}
+            onMenu={handlers.menu}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type RefObject } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,12 +89,16 @@ const OTHER = {
   icon: "alert",
 } as const;
 
+// Refusals the password form cannot answer: the way on is the TUI's own flow.
+const HANDED_OVER = new Set(["PROFILE_LOCKED", "KEYRING_UNAVAILABLE"]);
+
 const refusalCode = (refusal: SignInRefusal | null) =>
   refusal?.code.toUpperCase() ?? null;
 
 /**
  * A refusal, said in the shell's own words. A throttle shows its wait as it
- * runs down and leaves when the wait is over.
+ * runs down and leaves when the wait is over; the running number is for the
+ * eye only, so a screen reader hears the wait once, not every second.
  */
 function Refusal({
   refusal,
@@ -107,26 +111,31 @@ function Refusal({
   if (!refusal) return null;
   const code = refusalCode(refusal);
   const entry = (code && REFUSALS[code]) || OTHER;
-  const throttled = code === "THROTTLED";
-  if (throttled && seconds <= 0) return null;
   const total = refusal.retryAfterSeconds ?? 0;
+  if (code === "THROTTLED") {
+    if (seconds <= 0) return null;
+    return (
+      <Alert tone="warning" icon={<Icon name="clock" />}>
+        <span className="sr-only">{t(entry.key, { seconds: total })}</span>
+        <span aria-hidden="true">{t(entry.key, { seconds })}</span>
+        {total > 0 && (
+          <Progress
+            className="mt-1.5"
+            value={total - seconds}
+            max={total}
+            aria-hidden="true"
+          />
+        )}
+      </Alert>
+    );
+  }
   return (
     <Alert
       tone={entry.tone}
       role={entry.tone === "danger" ? "alert" : "status"}
       icon={<Icon name={entry.icon} />}
     >
-      <AlertTitle className="font-normal">
-        {t(entry.key, { code: refusal.code, seconds })}
-      </AlertTitle>
-      {throttled && total > 0 && (
-        <Progress
-          className="mt-1.5"
-          value={total - seconds}
-          max={total}
-          aria-hidden="true"
-        />
-      )}
+      {t(entry.key, { code: refusal.code })}
     </Alert>
   );
 }
@@ -137,18 +146,21 @@ function Refusal({
  * and never retries. The password is read from the field when the form is
  * submitted, handed over as bytes and cleared from the field; it is never
  * held in state here.
+ *
+ * While an answer is pending nothing in it is disabled, so focus stays where
+ * it was: the field is read-only and the button reports itself busy.
  */
 export function SignInDialog({
   account,
   open,
   onOpenChange,
-  returnFocus,
+  onClosed,
 }: {
   account: SignInController;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Where focus goes when the dialog is dismissed. */
-  returnFocus: RefObject<HTMLElement | null>;
+  /** The dialog has closed: put focus where the person continues. */
+  onClosed: () => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
@@ -157,8 +169,7 @@ export function SignInDialog({
   const errorId = useId();
   const status = account.status;
 
-  // A refused submission hands the keyboard back to the field: it was
-  // disabled while the answer was pending, which drops focus.
+  // A refused submission returns the keyboard to the field for the next try.
   const busy = account.busy;
   const wasBusy = useRef(busy);
   useEffect(() => {
@@ -172,116 +183,150 @@ export function SignInDialog({
   const code = refusalCode(account.refusal);
   const rejected = code === "CREDENTIAL_REJECTED";
   const available = status.runtimeAvailable;
-  const locked = account.busy || !available;
+  // Where a password cannot help, the form is not offered.
+  const handedOver = code !== null && HANDED_OVER.has(code);
+  const answerable = available && !handedOver;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setRevealed(false);
+        onOpenChange(next);
+      }}
+    >
       <DialogContent
-        className="sign-in gap-5 p-6"
+        className="sign-in"
         closeLabel={t("desktop.signin.dismiss")}
         onOpenAutoFocus={(event) => {
-          // The password field first; where it cannot be used, the way on.
+          // The password field where there is one, else the way on.
+          const target = input.current ?? handover.current;
+          if (!target) return;
           event.preventDefault();
-          (input.current?.disabled ? handover.current : input.current)?.focus();
+          target.focus();
         }}
         onCloseAutoFocus={(event) => {
-          if (!returnFocus.current) return;
           event.preventDefault();
-          returnFocus.current.focus();
+          onClosed();
         }}
       >
-        <DialogHeader className="gap-4">
-          <Logo />
+        <DialogHeader className="gap-3 pr-0">
+          <Logo className="pr-8" />
           <div className="grid gap-1">
             <DialogTitle>{t("desktop.signin.title")}</DialogTitle>
-            <DialogDescription>{t("desktop.signin.lead")}</DialogDescription>
+            <DialogDescription>
+              {answerable
+                ? t("desktop.signin.lead")
+                : t("desktop.signin.open_tui_hint")}
+            </DialogDescription>
           </div>
         </DialogHeader>
 
-        <form
-          className="grid gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const field = input.current;
-            if (!field || locked || seconds > 0) return;
-            const bytes = new TextEncoder().encode(field.value);
-            field.value = "";
-            setRevealed(false);
-            void account.submit(bytes);
-          }}
-        >
-          {status.active_profile && (
-            <p className="flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full bg-accent py-1 pr-3 pl-2 text-sm text-muted-foreground">
-              <Icon name="user" />
-              <span className="sr-only">{t("desktop.signin.profile")}</span>
-              <span className="truncate font-medium text-foreground">
-                {status.active_profile}
-              </span>
-            </p>
-          )}
+        {status.active_profile && (
+          <Badge variant="soft">
+            <Icon name="user" />
+            <span className="sr-only">{t("desktop.signin.profile")}</span>
+            <span className="truncate">{status.active_profile}</span>
+          </Badge>
+        )}
 
-          <Field data-invalid={rejected} data-disabled={locked}>
-            <FieldLabel htmlFor="profile-password">
-              {t("desktop.signin.password")}
-            </FieldLabel>
-            <PasswordInput
-              ref={input}
-              id="profile-password"
-              name="password"
-              required
-              disabled={locked}
-              aria-invalid={rejected || undefined}
-              aria-describedby={rejected ? errorId : undefined}
-              revealed={revealed}
-              onRevealedChange={setRevealed}
-              showLabel={t("desktop.signin.show_password")}
-              hideLabel={t("desktop.signin.hide_password")}
-            />
-            <FieldError id={errorId}>
-              {rejected && t("desktop.signin.refused.invalid")}
-            </FieldError>
-          </Field>
-
-          {!rejected && <Refusal refusal={account.refusal} seconds={seconds} />}
-          {!available && !account.refusal && (
-            <Alert tone="warning" icon={<Icon name="unplug" />}>
-              <AlertTitle className="font-normal">
-                {t("desktop.signin.refused.runtime_unavailable")}
-              </AlertTitle>
-            </Alert>
-          )}
-
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            pending={account.busy}
-            disabled={seconds > 0 || !available}
+        {answerable ? (
+          <form
+            className="grid gap-4"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              const field = input.current;
+              if (!field || busy || seconds > 0) return;
+              // An empty field is not an attempt: nothing is sent.
+              if (!field.value) {
+                field.focus();
+                return;
+              }
+              const bytes = new TextEncoder().encode(field.value);
+              field.value = "";
+              setRevealed(false);
+              void account.submit(bytes);
+            }}
           >
-            {t(
-              account.busy
-                ? "desktop.signin.submitting"
-                : "desktop.signin.submit",
+            {/* Not shown and not reachable: it tells a password manager
+                which account this password belongs to. */}
+            {status.active_profile && (
+              <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                value={status.active_profile}
+                readOnly
+                hidden
+              />
             )}
-          </Button>
-        </form>
+            <Field data-invalid={rejected}>
+              <FieldLabel htmlFor="profile-password">
+                {t("desktop.signin.password")}
+              </FieldLabel>
+              <PasswordInput
+                ref={input}
+                id="profile-password"
+                name="password"
+                readOnly={busy}
+                aria-busy={busy || undefined}
+                aria-invalid={rejected || undefined}
+                aria-describedby={rejected ? errorId : undefined}
+                revealed={revealed}
+                onRevealedChange={setRevealed}
+                showLabel={t("desktop.signin.show_password")}
+                hideLabel={t("desktop.signin.hide_password")}
+              />
+              <FieldError id={errorId}>
+                {rejected && t("desktop.signin.refused.invalid")}
+              </FieldError>
+            </Field>
 
-        <Separator />
+            {!rejected && (
+              <Refusal refusal={account.refusal} seconds={seconds} />
+            )}
 
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <p className="min-w-40 flex-1 text-sm text-muted-foreground">
-            {t("desktop.signin.open_tui_hint")}
-          </p>
-          <Button
-            ref={handover}
-            variant="outline"
-            size="sm"
-            onClick={account.openTui}
-            disabled={account.busy}
-          >
+            <Button
+              type="submit"
+              className="w-full"
+              pending={busy}
+              disabled={seconds > 0}
+            >
+              {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
+            </Button>
+          </form>
+        ) : account.refusal ? (
+          <Refusal refusal={account.refusal} seconds={seconds} />
+        ) : (
+          <Alert tone="warning" icon={<Icon name="unplug" />}>
+            {t("desktop.signin.refused.runtime_unavailable")}
+          </Alert>
+        )}
+
+        {answerable ? (
+          <>
+            <Separator />
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <p className="min-w-40 flex-1 text-sm text-muted-foreground">
+                {t("desktop.signin.open_tui_hint")}
+              </p>
+              <Button
+                ref={handover}
+                variant="outline"
+                size="sm"
+                aria-disabled={busy || undefined}
+                onClick={busy ? undefined : account.openTui}
+              >
+                {t("desktop.signin.open_tui")}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button ref={handover} className="w-full" onClick={account.openTui}>
             {t("desktop.signin.open_tui")}
           </Button>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -323,7 +368,11 @@ export function SignedOut({
         <Button ref={signInButton} onClick={onSignIn}>
           {t("desktop.signin.submit")}
         </Button>
-        <Button variant="ghost" onClick={account.openTui}>
+        <Button
+          variant="ghost"
+          aria-disabled={account.busy || undefined}
+          onClick={account.busy ? undefined : account.openTui}
+        >
           {t("desktop.signin.open_tui")}
         </Button>
       </div>
@@ -340,15 +389,13 @@ export function Account({
   onSignOut: () => void;
 }) {
   const t = useStrings();
+  const titleId = useId();
   const status = account.status;
   if (!status?.supported) return null;
   const present = status.state === "present";
   return (
-    <section
-      className="account grid gap-2"
-      aria-label={t("desktop.account.title")}
-    >
-      <h3 className="text-sm font-medium text-muted-foreground">
+    <section className="account grid gap-2" aria-labelledby={titleId}>
+      <h3 id={titleId} className="text-sm font-medium text-muted-foreground">
         {t("desktop.account.title")}
       </h3>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -386,12 +433,16 @@ export function Account({
       {account.remaining &&
         account.remaining.remainingAccess.automationEnabled !== false && (
           <Alert icon={<Icon name="info" />}>
-            <AlertDescription className="text-foreground">
-              {t("desktop.account.remaining_access")}
-            </AlertDescription>
+            {t("desktop.account.remaining_access")}
           </Alert>
         )}
-      <Refusal refusal={account.refusal} seconds={account.retrySeconds} />
+      {account.signOutFailure && (
+        <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
+          {t("desktop.account.sign_out_failed", {
+            code: account.signOutFailure.code,
+          })}
+        </Alert>
+      )}
     </section>
   );
 }

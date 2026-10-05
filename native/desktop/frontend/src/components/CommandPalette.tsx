@@ -1,8 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
+import { Kbd } from "@/components/ui/kbd";
+import { Spinner } from "@/components/ui/spinner";
 import type { DocsResultKind, DocsSearchResult } from "../ipc/contract";
 import { primaryChord, scoreAction, type Action } from "../shell/actions";
 import { useStrings } from "../shell/strings";
-import { Icon } from "@/components/ui/icon";
 
 /** Docs search provider; null until the documentation can answer queries. */
 export type DocsSearch =
@@ -23,9 +34,10 @@ const kindOrder = (kind: DocsResultKind) => {
   return at === -1 ? KIND_ORDER.length : at;
 };
 
-type Row =
-  | { type: "doc"; result: DocsSearchResult }
-  | { type: "action"; action: Action };
+const SEARCH_DEBOUNCE_MS = 120;
+const MIN_QUERY = 2;
+const ACTIONS_WHEN_SEARCHING = 6;
+const ACTIONS_WHEN_IDLE = 14;
 
 function Highlighted({
   text,
@@ -47,7 +59,12 @@ function Highlighted({
     <>
       {parts.map((part, index) =>
         part.mark ? (
-          <mark key={index}>{part.text}</mark>
+          <mark
+            key={index}
+            className="bg-transparent font-semibold text-foreground underline decoration-ring underline-offset-2"
+          >
+            {part.text}
+          </mark>
         ) : (
           <span key={index}>{part.text}</span>
         ),
@@ -56,7 +73,12 @@ function Highlighted({
   );
 }
 
+const ROW_ICON = "text-faint in-data-[selected=true]:text-brand";
+
 // One palette for the whole window: shell actions plus documentation search.
+// It is a modal dialog over a command list: focus stays in the input, the
+// arrow keys move the choice, Enter runs it, and closing it returns focus to
+// where it was opened from.
 export function CommandPalette({
   actions,
   searchDocs,
@@ -69,50 +91,46 @@ export function CommandPalette({
   close: () => void;
 }) {
   const t = useStrings();
-  const input = useRef<HTMLInputElement>(null);
-  const list = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
     state: "idle" | "searching" | "done" | "unavailable";
     results: DocsSearchResult[];
-  }>({
-    state: "idle",
-    results: [],
-  });
-  const [active, setActive] = useState(0);
+  }>({ state: "idle", results: [] });
   const trimmed = query.trim();
-  const searching = trimmed.length >= 2;
-
-  useEffect(() => input.current?.focus(), []);
+  const searching = trimmed.length >= MIN_QUERY && searchDocs !== null;
 
   // Debounced; a newer query supersedes an older one.
   useEffect(() => {
     if (!searching || !searchDocs) return;
     let current = true;
     const timer = window.setTimeout(() => {
-      setDocs((d) => ({ ...d, state: "searching" }));
+      setDocs((held) => ({ ...held, state: "searching" }));
       searchDocs(trimmed)
         .then((results) => current && setDocs({ state: "done", results }))
         .catch(() => current && setDocs({ state: "unavailable", results: [] }));
-    }, 120);
+    }, SEARCH_DEBOUNCE_MS);
     return () => {
       current = false;
       window.clearTimeout(timer);
     };
   }, [trimmed, searching, searchDocs]);
 
-  const rows = useMemo<Row[]>(() => {
-    const matched = actions
-      .filter(
-        (action) => !action.hidden && (!action.enabled || action.enabled()),
-      )
-      .map((action) => [action, scoreAction(action, query)] as const)
-      .filter(([, score]) => score > 0)
-      .sort((x, y) => y[1] - x[1])
-      .slice(0, trimmed ? 6 : 14)
-      .map(([action]): Row => ({ type: "action", action }));
-    const docRows: Row[] =
-      searching && searchDocs
+  const matched = useMemo(
+    () =>
+      actions
+        .filter(
+          (action) => !action.hidden && (!action.enabled || action.enabled()),
+        )
+        .map((action) => [action, scoreAction(action, query)] as const)
+        .filter(([, score]) => score > 0)
+        .sort((x, y) => y[1] - x[1])
+        .slice(0, trimmed ? ACTIONS_WHEN_SEARCHING : ACTIONS_WHEN_IDLE)
+        .map(([action]) => action),
+    [actions, query, trimmed],
+  );
+  const found = useMemo(
+    () =>
+      searching
         ? docs.results
             .map((result, rank) => ({ result, rank }))
             .sort(
@@ -120,165 +138,144 @@ export function CommandPalette({
                 kindOrder(x.result.kind) - kindOrder(y.result.kind) ||
                 x.rank - y.rank,
             )
-            .map(({ result }) => ({ type: "doc", result }))
-        : [];
-    return [...docRows, ...matched];
-  }, [actions, query, trimmed, searching, searchDocs, docs.results]);
+            .map(({ result }) => result)
+        : [],
+    [searching, docs.results],
+  );
 
-  useEffect(() => setActive(0), [query]);
-  useEffect(() => {
-    list.current
-      ?.querySelector(`[data-index="${active}"]`)
-      ?.scrollIntoView({ block: "nearest" });
-  }, [active]);
-
-  const choose = (row: Row | undefined) => {
+  const run = (action: () => void) => {
     close();
-    if (!row) return;
-    if (row.type === "action") row.action.run();
-    else openDoc(row.result.url);
+    action();
   };
-
   const kindLabel = (kind: DocsResultKind) => {
     const key = KIND_LABELS[kind];
     return key ? t(key) : null;
   };
-  const renderRow = (row: Row, index: number) => (
-    <div
-      key={row.type === "action" ? row.action.id : `${row.result.url}#${index}`}
-      id={`palette-row-${index}`}
-      data-index={index}
-      role="option"
-      aria-selected={index === active}
-      className={`palette-row ${index === active ? "is-active" : ""}`}
-      onMouseMove={() => setActive(index)}
-      onClick={() => choose(row)}
-    >
-      <span className="palette-icon">
-        <Icon
-          name={
-            row.type === "action"
-              ? row.action.icon
-              : row.result.kind === "page"
-                ? "page"
-                : "term"
-          }
-          size="md"
-        />
-      </span>
-      <span className="palette-text">
-        <span className="palette-title">
-          {row.type === "action" ? row.action.label : row.result.title}
-          {row.type === "doc" && kindLabel(row.result.kind) && (
-            <span className="palette-kind">{kindLabel(row.result.kind)}</span>
-          )}
-        </span>
-        {row.type === "doc" && row.result.crumb && (
-          <span className="palette-crumb">{row.result.crumb}</span>
-        )}
-        {row.type === "doc" && row.result.excerpt && (
-          <span className="palette-excerpt">
-            <Highlighted text={row.result.excerpt} ranges={row.result.ranges} />
-          </span>
-        )}
-      </span>
-      {row.type === "action" && primaryChord(row.action) && (
-        <kbd className="palette-chord">{primaryChord(row.action)}</kbd>
-      )}
-    </div>
-  );
-
-  const docCount = rows.filter((row) => row.type === "doc").length;
 
   return (
-    <div
-      className="palette-backdrop"
-      onPointerDown={(event) => event.target === event.currentTarget && close()}
-    >
-      <div
-        className="palette"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("desktop.palette.label")}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.stopPropagation();
-            close();
-          } else if (event.key === "ArrowDown") {
-            event.preventDefault();
-            setActive((index) => Math.min(rows.length - 1, index + 1));
-          } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            setActive((index) => Math.max(0, index - 1));
-          } else if (event.key === "Enter") {
-            event.preventDefault();
-            choose(rows[active]);
-          }
-        }}
+    <Dialog open onOpenChange={(open) => !open && close()}>
+      <DialogContent
+        placement="top"
+        className="palette flex w-palette flex-col gap-0 overflow-hidden rounded-2xl p-0"
+        aria-describedby={undefined}
       >
-        <div className="palette-input">
-          <Icon name="search" size="lg" />
-          <input
-            ref={input}
+        <DialogTitle className="sr-only">
+          {t("desktop.palette.label")}
+        </DialogTitle>
+        <Command
+          shouldFilter={false}
+          loop
+          label={t("desktop.palette.label")}
+          className="max-h-palette-max"
+        >
+          <CommandInput
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onValueChange={setQuery}
             placeholder={t("desktop.palette.placeholder")}
             aria-label={t("desktop.palette.placeholder")}
-            role="combobox"
-            aria-expanded="true"
-            aria-controls="palette-results"
-            aria-activedescendant={
-              rows.length ? `palette-row-${active}` : undefined
-            }
-          />
-          <kbd>Esc</kbd>
-        </div>
-        <div
-          className="palette-results"
-          id="palette-results"
-          role="listbox"
-          ref={list}
-        >
-          {searching && searchDocs && (
-            <section>
-              <h3>
-                {t("desktop.palette.documentation")}
-                {docs.state === "searching" && (
-                  <span className="palette-status">
-                    {t("desktop.palette.searching")}
-                  </span>
-                )}
-              </h3>
-              {docs.state === "unavailable" && (
-                <p className="palette-empty">
-                  {t("desktop.palette.unavailable")}
+          >
+            <Kbd>Esc</Kbd>
+          </CommandInput>
+          <CommandList>
+            <div className="palette-results grid gap-1">
+              {searching && (
+                <section>
+                  <CommandGroup
+                    heading={
+                      <>
+                        {t("desktop.palette.documentation")}
+                        {docs.state === "searching" && (
+                          <span className="flex items-center gap-1.5 font-normal tracking-normal normal-case">
+                            <Spinner className="size-icon-xs" />
+                            {t("desktop.palette.searching")}
+                          </span>
+                        )}
+                      </>
+                    }
+                  >
+                    {found.map((result, index) => (
+                      <CommandItem
+                        key={`${result.url}#${index}`}
+                        value={`doc:${index}:${result.url}`}
+                        onSelect={() => run(() => openDoc(result.url))}
+                      >
+                        <Icon
+                          name={result.kind === "page" ? "page" : "term"}
+                          size="md"
+                          className={ROW_ICON}
+                        />
+                        <span className="grid min-w-0 flex-1 gap-0.5">
+                          <span className="palette-title flex items-baseline gap-2 font-medium">
+                            <span className="truncate">{result.title}</span>
+                            {kindLabel(result.kind) && (
+                              <Badge>{kindLabel(result.kind)}</Badge>
+                            )}
+                          </span>
+                          {result.crumb && (
+                            <span className="truncate text-xs text-faint">
+                              {result.crumb}
+                            </span>
+                          )}
+                          {result.excerpt && (
+                            <span className="truncate text-sm text-muted-foreground">
+                              <Highlighted
+                                text={result.excerpt}
+                                ranges={result.ranges}
+                              />
+                            </span>
+                          )}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                  {docs.state === "unavailable" && (
+                    <p className="px-2.5 py-1.5 text-faint" role="status">
+                      {t("desktop.palette.unavailable")}
+                    </p>
+                  )}
+                  {docs.state === "done" && found.length === 0 && (
+                    <p className="px-2.5 py-1.5 text-faint" role="status">
+                      {t("desktop.palette.no_results", { query: trimmed })}
+                    </p>
+                  )}
+                </section>
+              )}
+              {matched.length > 0 && (
+                <section>
+                  <CommandGroup heading={t("desktop.palette.actions")}>
+                    {matched.map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        value={`action:${action.id}`}
+                        onSelect={() => run(action.run)}
+                      >
+                        <Icon
+                          name={action.icon}
+                          size="md"
+                          className={ROW_ICON}
+                        />
+                        <span className="palette-title min-w-0 flex-1 truncate font-medium">
+                          {action.label}
+                        </span>
+                        {primaryChord(action) && (
+                          <Kbd className="palette-chord">
+                            {primaryChord(action)}
+                          </Kbd>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </section>
+              )}
+              {matched.length === 0 && !searching && (
+                <p className="px-2.5 py-1.5 text-faint" role="status">
+                  {t("desktop.palette.type_to_search")}
                 </p>
               )}
-              {docs.state === "done" && docCount === 0 && (
-                <p className="palette-empty">
-                  {t("desktop.palette.no_results", { query: trimmed })}
-                </p>
-              )}
-              {rows
-                .slice(0, docCount)
-                .map((row, index) => renderRow(row, index))}
-            </section>
-          )}
-          {rows.length > docCount && (
-            <section>
-              <h3>{t("desktop.palette.actions")}</h3>
-              {rows
-                .slice(docCount)
-                .map((row, index) => renderRow(row, docCount + index))}
-            </section>
-          )}
-          {rows.length === 0 && !searching && (
-            <p className="palette-empty">
-              {t("desktop.palette.type_to_search")}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
+            </div>
+          </CommandList>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
 }

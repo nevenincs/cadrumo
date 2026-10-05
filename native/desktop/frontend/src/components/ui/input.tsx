@@ -2,13 +2,15 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components/ui/cn";
 
+// A form control's height is `controlSize`, because `size` is the native
+// attribute of the element it draws.
 const inputVariants = cva(
   [
     "w-full min-w-0 rounded-md border border-input bg-card text-base text-foreground",
     "transition-colors placeholder:text-faint",
     "selection:bg-primary selection:text-primary-foreground",
-    "disabled:cursor-not-allowed disabled:opacity-50",
-    "aria-invalid:border-destructive aria-invalid:outline-destructive",
+    "disabled:cursor-not-allowed disabled:opacity-50 read-only:cursor-default",
+    "aria-invalid:border-destructive",
   ],
   {
     variants: {

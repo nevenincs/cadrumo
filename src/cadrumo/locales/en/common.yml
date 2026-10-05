@@ -478,6 +478,7 @@ desktop:
   account:
     remaining_access: Agent access you enabled stays on.
     sign_out: Sign out
+    sign_out_failed: Signing out didn't work ({code}).
     sign_out_hint: Signs you out of every Cadrumo window.
     signed_in: Signed in
     signed_out: Not signed in
@@ -493,10 +494,12 @@ desktop:
     zoom_reset: Reset docs zoom
   docs:
     frame_title: Cadrumo documentation
+    loading: Loading the documentation…
   host:
     unavailable: This part needs the desktop application.
   logs:
     clear_logger: Clear logger filter
+    details: Details
     dropped: 'Older records dropped from this view: {count}'
     empty: The log is empty.
     errors: 'Errors: {count}'
@@ -573,7 +576,9 @@ desktop:
     dark: Dark
     docs_and_tui: Docs and TUI
     first_pane: First pane
+    follow_cadrumo: Same as Cadrumo
     follow_docs: Follow docs
+    language: Language
     layout_reset: Layout reset
     light: Light
     match_appearance: Match appearance

@@ -2,7 +2,10 @@ import * as React from "react";
 import { Progress as ProgressPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
 
-/** Determinate progress, 0 to `max`. Name it with `aria-label`. */
+/**
+ * Determinate progress, 0 to `max`. Name it with `aria-label`. The bar takes
+ * the current colour, so inside a toned alert it carries that tone.
+ */
 function Progress({
   className,
   value,
@@ -23,7 +26,7 @@ function Progress({
     >
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
-        className="size-full origin-left bg-brand transition-transform duration-(--motion-base) ease-linear"
+        className="size-full origin-left bg-current transition-transform duration-(--motion-base) ease-linear"
         style={{ transform: `scaleX(${share})` }}
       />
     </ProgressPrimitive.Root>

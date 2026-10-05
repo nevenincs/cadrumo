@@ -14,8 +14,14 @@ export const TERMINAL_FONT_SIZES: readonly TerminalFontSize[] = [
   "x-large",
 ];
 
+/** The language preference that follows Cadrumo's own output language. */
+export const FOLLOW_LANGUAGE = "follow";
+
 export type Prefs = {
   appearance: "follow" | "light" | "dark";
+  /** A language code, or `FOLLOW_LANGUAGE`. A code the documentation is not
+   * bundled in is ignored where the preference is used. */
+  language: string;
   terminals: "match" | "dark";
   orientation: "row" | "column";
   order: "docs" | "tui";
@@ -35,6 +41,7 @@ export type Layout = {
 
 export const DEFAULT_PREFS: Prefs = {
   appearance: "follow",
+  language: FOLLOW_LANGUAGE,
   terminals: "match",
   orientation: "row",
   order: "docs",
@@ -51,6 +58,7 @@ export const DEFAULT_LAYOUT: Layout = {
 };
 
 const STORE = "cadrumo-shell-layout";
+const LANGUAGE_CODE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 const TABS: readonly PanelTab[] = ["console", "python", "logs"];
 
 function pick<T>(value: unknown, allowed: readonly T[], fallback: T): T {
@@ -93,6 +101,10 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         ["follow", "light", "dark"] as const,
         DEFAULT_PREFS.appearance,
       ),
+      language:
+        typeof p.language === "string" && LANGUAGE_CODE.test(p.language)
+          ? p.language
+          : DEFAULT_PREFS.language,
       terminals: pick(
         p.terminals,
         ["match", "dark"] as const,

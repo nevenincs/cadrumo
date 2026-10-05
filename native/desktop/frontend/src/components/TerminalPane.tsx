@@ -10,6 +10,8 @@ import {
 } from "../shell/host";
 import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
+import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import { Icon } from "@/components/ui/icon";
 
 export type TerminalStatus =
   | { phase: "starting" }
@@ -260,7 +262,7 @@ export function TerminalPane({
 
   return (
     <div
-      className="terminal-frame"
+      className="terminal-frame relative min-h-0 flex-1"
       hidden={!shown}
       style={{ background: theme.background }}
       aria-label={label}
@@ -272,14 +274,19 @@ export function TerminalPane({
       {/* Without a host there is no session to show: keep the terminal's
           size for fitting but draw only the note, not an idle cursor. */}
       <div
-        className="terminal-host"
+        className="terminal-host absolute inset-y-1.5 right-1 left-3"
         ref={container}
         style={unavailable ? { visibility: "hidden" } : undefined}
       />
       {unavailable && (
-        <p className="terminal-note" role="status">
-          {t("desktop.host.unavailable")}
-        </p>
+        <Empty role="status" className="absolute inset-0">
+          <EmptyMedia>
+            <Icon name="unplug" />
+          </EmptyMedia>
+          <EmptyDescription className="terminal-note">
+            {t("desktop.host.unavailable")}
+          </EmptyDescription>
+        </Empty>
       )}
     </div>
   );

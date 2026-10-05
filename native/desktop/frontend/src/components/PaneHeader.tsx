@@ -1,64 +1,83 @@
+import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
 
 export type PaneControl = {
   id: string;
   icon: IconName;
   label: string;
+  shortcut?: string;
   pressed?: boolean;
   run: () => void;
 };
 
-type Props = {
-  title: string;
-  /** Session phase dot and exit note, for terminal areas. */
-  status?: { phase: string; note?: string };
-  controls: PaneControl[];
-  onToggleMaximize: () => void;
+/** A terminal session's phase, as the header and tabs show it. */
+export type SessionPhase =
+  "starting" | "running" | "exited" | "failed" | "unavailable";
+
+const PHASES: Record<SessionPhase, string> = {
+  starting: "bg-faint",
+  running: "bg-success",
+  exited: "ring-1 ring-faint ring-inset",
+  failed: "ring-1 ring-destructive ring-inset",
+  unavailable: "ring-1 ring-faint ring-inset",
 };
 
-// Slim header for a workspace area; double-click toggles maximize.
+/** A session's state as a dot: filled while it runs, hollow once it has ended. */
+export function SessionDot({ phase }: { phase: SessionPhase }) {
+  return (
+    <span
+      data-phase={phase}
+      aria-hidden="true"
+      className={cn("size-1.5 shrink-0 rounded-full", PHASES[phase])}
+    />
+  );
+}
+
+/**
+ * The slim header of a workspace area: its title, a session's state where it
+ * has one, and its controls. Double-clicking the bar toggles maximize.
+ */
 export function PaneHeader({
   title,
   status,
   controls,
   onToggleMaximize,
-}: Props) {
+}: {
+  title: string;
+  status?: { phase: SessionPhase; note?: string };
+  controls: PaneControl[];
+  onToggleMaximize: () => void;
+}) {
   return (
     <div
-      className="pane-head"
+      className="pane-head flex h-control-md shrink-0 items-center gap-2 border-b bg-chrome pr-1 pl-3 text-muted-foreground select-none"
       onDoubleClick={(event) => {
         if (!(event.target as HTMLElement).closest("button"))
           onToggleMaximize();
       }}
     >
-      {status && (
-        <span className={`dot phase-${status.phase}`} aria-hidden="true" />
+      {status && <SessionDot phase={status.phase} />}
+      <span className="pane-title truncate font-semibold text-foreground">
+        {title}
+      </span>
+      {status?.note && (
+        <span className="exit-note truncate text-xs text-faint">
+          {status.note}
+        </span>
       )}
-      <span className="pane-title">{title}</span>
-      {status?.note && <span className="exit-note">{status.note}</span>}
-      <span className="tools-spacer" />
+      <span className="flex-1" />
       {controls.map((control) => (
-        <IconButton key={control.id} {...control} />
+        <IconButton
+          key={control.id}
+          label={control.label}
+          shortcut={control.shortcut}
+          aria-pressed={control.pressed}
+          onClick={control.run}
+        >
+          <Icon name={control.icon} />
+        </IconButton>
       ))}
     </div>
-  );
-}
-
-export function IconButton({
-  icon,
-  label,
-  pressed,
-  run,
-}: Omit<PaneControl, "id">) {
-  return (
-    <button
-      className="icon-button"
-      title={label}
-      aria-label={label}
-      aria-pressed={pressed}
-      onClick={run}
-    >
-      <Icon name={icon} size="sm" />
-    </button>
   );
 }

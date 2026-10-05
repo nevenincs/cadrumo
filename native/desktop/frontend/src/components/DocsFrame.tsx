@@ -337,7 +337,12 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     );
 
     return (
-      <iframe ref={frame} className="docs-frame" title={title} src={entry} />
+      <iframe
+        ref={frame}
+        className="docs-frame w-full flex-1 border-0 bg-background"
+        title={title}
+        src={entry}
+      />
     );
   },
 );

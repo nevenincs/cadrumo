@@ -493,6 +493,7 @@ desktop:
   account:
     remaining_access: L'accés d'agents que vas activar continua actiu.
     sign_out: Tanca la sessió
+    sign_out_failed: No s'ha pogut tancar la sessió ({code}).
     sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
     signed_in: Sessió iniciada
     signed_out: Sense sessió iniciada
@@ -508,10 +509,12 @@ desktop:
     zoom_reset: Restableix el zoom de la documentació
   docs:
     frame_title: Documentació de Cadrumo
+    loading: S'està carregant la documentació…
   host:
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
   logs:
     clear_logger: Treu el filtre de logger
+    details: Detalls
     dropped: 'Registres antics descartats d''aquesta vista: {count}'
     empty: El registre és buit.
     errors: 'Errors: {count}'
@@ -589,7 +592,9 @@ desktop:
     dark: Fosc
     docs_and_tui: Documentació i TUI
     first_pane: Primer panell
+    follow_cadrumo: Igual que Cadrumo
     follow_docs: Com la documentació
+    language: Idioma
     layout_reset: Disposició restablerta
     light: Clar
     match_appearance: Segons l'aparença

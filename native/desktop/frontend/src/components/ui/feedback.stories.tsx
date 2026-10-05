@@ -57,7 +57,7 @@ export const Status: Story = {
         <Badge variant="count">2</Badge>
         <Badge variant="count">99+</Badge>
         <Badge>Neutral</Badge>
-        <Badge variant="brand">Term</Badge>
+        <Badge variant="soft">Demo profile</Badge>
         <Badge variant="success">Signed in</Badge>
         <Badge variant="warning">3 warnings</Badge>
         <Badge variant="danger">2 errors</Badge>

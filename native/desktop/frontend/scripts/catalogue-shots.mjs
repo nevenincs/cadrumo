@@ -39,6 +39,12 @@ const context = await browser.newContext({
   deviceScaleFactor: Number(values.scale),
 });
 const page = await context.newPage();
+// A story that cannot load something is not the application as it is drawn.
+const refused = [];
+page.on("response", (response) => {
+  if (response.status() >= 400 && !response.url().endsWith("/favicon.ico"))
+    refused.push(`${response.status()} ${response.url()}`);
+});
 let failures = 0;
 for (const story of stories)
   for (const scheme of values.schemes.split(","))
@@ -49,6 +55,13 @@ for (const story of stories)
         await page.goto(url, { waitUntil: "networkidle" });
         await page.waitForSelector("#storybook-root > *", { timeout: 15000 });
         await page.evaluate(() => document.fonts.ready);
+        const fonts = await page.evaluate(() =>
+          [...document.fonts]
+            .filter((font) => font.status === "error")
+            .map((font) => font.family),
+        );
+        if (fonts.length) throw new Error(`fonts failed: ${fonts.join(", ")}`);
+        if (refused.length) throw new Error(refused.splice(0).join("; "));
         await page.screenshot({ path: file, fullPage: true });
         console.log(file);
       } catch (error) {

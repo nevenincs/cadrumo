@@ -1,5 +1,8 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { Toolbar } from "radix-ui";
+import { Badge } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
+import { Separator } from "@/components/ui/separator";
 
 export type RailItem = {
   id: string;
@@ -8,10 +11,49 @@ export type RailItem = {
   shortcut?: string;
   pressed?: boolean;
   badge?: number;
+  /** Starts a new cluster: a divider is drawn before this item. */
+  divided?: boolean;
   onClick: () => void;
 };
 
-// Icon-only vertical toolbar: one tab stop, arrow keys move within it.
+const BADGE_LIMIT = 99;
+
+function RailButton({ item }: { item: RailItem }) {
+  return (
+    <>
+      {item.divided && <Separator className="my-1 w-5" />}
+      <Toolbar.Button asChild>
+        <IconButton
+          label={item.label}
+          shortcut={item.shortcut}
+          size="lg"
+          side="right"
+          aria-pressed={item.pressed}
+          onClick={item.onClick}
+          // The chosen item carries a bar on the rail's edge as well as its
+          // surface, so the choice does not rest on a tint alone.
+          className="rail-button relative before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-pressed:before:opacity-100"
+        >
+          <Icon name={item.icon} size="lg" />
+          {item.badge ? (
+            <Badge
+              variant="count"
+              className="absolute -top-0.5 -right-0.5 ring-2 ring-chrome"
+            >
+              {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
+            </Badge>
+          ) : null}
+        </IconButton>
+      </Toolbar.Button>
+    </>
+  );
+}
+
+/**
+ * The icon rail: a vertical toolbar. It is one tab stop; the arrow keys,
+ * Home and End move within it. Every item is named by its tooltip, which
+ * also shows its shortcut.
+ */
 export function Rail({
   label,
   top,
@@ -21,53 +63,24 @@ export function Rail({
   top: RailItem[];
   bottom: RailItem[];
 }) {
-  const bar = useRef<HTMLElement>(null);
-  const items = [...top, ...bottom];
-  const [stop, setStop] = useState(0);
-  // The tab stop is kept in state, so it survives the item list changing.
-  const current = Math.min(stop, items.length - 1);
-
-  const move = (event: KeyboardEvent) => {
-    const count = items.length;
-    let next: number | null = null;
-    if (event.key === "ArrowDown") next = (current + 1) % count;
-    if (event.key === "ArrowUp") next = (current - 1 + count) % count;
-    if (event.key === "Home") next = 0;
-    if (event.key === "End") next = count - 1;
-    if (next === null || !bar.current) return;
-    event.preventDefault();
-    setStop(next);
-    bar.current.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
-  };
-
-  const render = (item: RailItem, index: number) => (
-    <button
-      key={item.id}
-      className={`rail-button ${item.pressed ? "is-pressed" : ""}`}
-      aria-label={item.label}
-      aria-pressed={item.pressed}
-      tabIndex={index === current ? 0 : -1}
-      onFocus={() => setStop(index)}
-      onClick={item.onClick}
-      data-tip={item.shortcut ? `${item.label}  ${item.shortcut}` : item.label}
-    >
-      <Icon name={item.icon} size="lg" />
-      {item.badge ? (
-        <span className="rail-badge">
-          {item.badge > 99 ? "99+" : item.badge}
-        </span>
-      ) : null}
-    </button>
-  );
-
   return (
-    <nav className="rail" aria-label={label} ref={bar} onKeyDown={move}>
-      <div className="rail-group">
-        {top.map((item, index) => render(item, index))}
-      </div>
-      <div className="rail-group">
-        {bottom.map((item, index) => render(item, top.length + index))}
-      </div>
+    <nav className="rail border-r bg-chrome" aria-label={label}>
+      <Toolbar.Root
+        orientation="vertical"
+        aria-label={label}
+        className="flex h-full flex-col items-center justify-between py-2"
+      >
+        <div className="rail-group flex flex-col items-center gap-1">
+          {top.map((item) => (
+            <RailButton key={item.id} item={item} />
+          ))}
+        </div>
+        <div className="rail-group flex flex-col items-center gap-1">
+          {bottom.map((item) => (
+            <RailButton key={item.id} item={item} />
+          ))}
+        </div>
+      </Toolbar.Root>
     </nav>
   );
 }

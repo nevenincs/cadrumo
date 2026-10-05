@@ -74,6 +74,18 @@
   --spacing-badge: 1rem;
 }
 
+/* A finger needs more than a mouse does. Where the main pointer is coarse
+   every control grows one step, through the same tokens. */
+@media (pointer: coarse) {
+  :root {
+    --spacing-control-xs: 2.25rem;
+    --spacing-control-sm: 2.5rem;
+    --spacing-control-md: 2.75rem;
+    --spacing-control-lg: 3rem;
+    --spacing-rail: 3.75rem;
+  }
+}
+
 :root {
   /* ── Structural measures the layout code reads as pixel numbers at run
      time (src/shell/metrics.ts). ─────────────────────────────────── */
@@ -89,10 +101,8 @@
   --resize-step: 1.5rem;
   /* How close to its end the log still counts as following the newest record. */
   --log-follow-slack: 1.5rem;
-  /* The browser menu stand-in's own geometry, mirrored for placing it. */
-  --menu-edge-gap: 1.5rem;
-  --menu-sep-h: 0.5625rem;
-  --menu-pad: 0.625rem;
+  /* Where a top-placed dialog sits: the same gap is kept below it. */
+  --overlay-top: 12vh;
 
   /* ── Layers, lowest first. Overlays are portalled to the document body,
      so only these few need an order. ─────────────────────────────── */

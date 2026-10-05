@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/components/ui/cn";
+import { Icon } from "@/components/ui/icon";
 import { Label } from "@/components/ui/label";
 
 /**
@@ -43,7 +44,10 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   );
 }
 
-/** The reason a field's value was not accepted; it renders nothing when empty. */
+/**
+ * The reason a field's value was not accepted, marked by an icon as well as
+ * its colour. It renders nothing when empty.
+ */
 function FieldError({
   className,
   children,
@@ -54,10 +58,14 @@ function FieldError({
     <p
       role="alert"
       data-slot="field-error"
-      className={cn("text-sm text-destructive", className)}
+      className={cn(
+        "flex items-start gap-1.5 text-sm text-destructive",
+        className,
+      )}
       {...props}
     >
-      {children}
+      <Icon name="alert" size="xs" className="mt-0.5" />
+      <span>{children}</span>
     </p>
   );
 }

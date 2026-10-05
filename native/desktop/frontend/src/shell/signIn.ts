@@ -26,17 +26,25 @@ function refusalFrom(error: unknown): SignInRefusal {
   };
 }
 
+const COUNTDOWN_TICK_MS = 250;
+
+/** The seconds left of a refusal's wait. No timer runs unless one is owed. */
 function useCountdown(refusal: SignInRefusal | null) {
+  const total = refusal?.retryAfterSeconds ?? 0;
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
-    const until = Date.now() + (refusal?.retryAfterSeconds ?? 0) * 1000;
-    const tick = () =>
-      setSeconds(Math.max(0, Math.ceil((until - Date.now()) / 1000)));
+    if (total <= 0) return;
+    const until = Date.now() + total * 1000;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      setSeconds(left);
+      if (left === 0) window.clearInterval(timer);
+    };
+    const timer = window.setInterval(tick, COUNTDOWN_TICK_MS);
     tick();
-    const timer = window.setInterval(tick, 250);
     return () => window.clearInterval(timer);
-  }, [refusal]);
-  return seconds;
+  }, [refusal, total]);
+  return total > 0 ? seconds : 0;
 }
 
 /** Only public presence and refusals live here; no password or runtime session. */
@@ -46,6 +54,10 @@ export function useSignIn(host: Host) {
   const [busy, setBusy] = useState(false);
   const [handover, setHandover] = useState(false);
   const [remaining, setRemaining] = useState<SignOutResult | null>(null);
+  // A sign-out that failed is its own fact: it is not a sign-in refusal.
+  const [signOutFailure, setSignOutFailure] = useState<SignInRefusal | null>(
+    null,
+  );
   const request = useRef(0);
   const mounted = useRef(true);
   const statusRead = useRef<{
@@ -120,6 +132,7 @@ export function useSignIn(host: Host) {
     setBusy(true);
     setRefusal(null);
     setRemaining(null);
+    setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
       const result = await host.signIn(password);
@@ -140,12 +153,13 @@ export function useSignIn(host: Host) {
     invalidate();
     setBusy(true);
     setRefusal(null);
+    setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
       setRemaining(await host.signOut());
       setHandover(false);
     } catch (error) {
-      setRefusal(refusalFrom(error));
+      setSignOutFailure(refusalFrom(error));
     } finally {
       await refresh(true);
       submitting.current = false;
@@ -159,6 +173,7 @@ export function useSignIn(host: Host) {
     retrySeconds,
     busy,
     remaining,
+    signOutFailure,
     gated:
       host.available &&
       !handover &&

@@ -2,17 +2,18 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components/ui/cn";
 
-// Inline feedback: a quiet surface whose icon and title carry the tone.
+// Inline feedback: a quiet surface whose icon carries the tone. The tone sets
+// the current colour of the icon and of a progress bar inside, never of the
+// text, which stays readable ink.
 const alertVariants = cva(
-  "flex w-full items-start gap-2 rounded-md bg-accent px-3 py-2 text-base text-foreground [&>svg]:mt-0.5 [&>svg]:size-icon-sm [&>svg]:shrink-0",
+  "flex w-full items-start gap-2 rounded-md bg-accent px-3 py-2 text-base [&>svg]:mt-0.5 [&>svg]:size-icon-sm [&>svg]:shrink-0",
   {
     variants: {
       tone: {
-        neutral: "[&>svg]:text-muted-foreground",
-        success: "[&>svg]:text-success",
-        warning: "[&>svg]:text-warning",
-        danger:
-          "[&>svg]:text-destructive **:data-[slot=alert-title]:text-destructive",
+        neutral: "text-muted-foreground",
+        success: "text-success",
+        warning: "text-warning",
+        danger: "text-destructive",
       },
     },
     defaultVariants: { tone: "neutral" },
@@ -21,7 +22,8 @@ const alertVariants = cva(
 
 /**
  * `role="status"` by default, announced politely; pass `role="alert"` for a
- * failure the person must hear at once. `icon` leads the text.
+ * failure the person must hear at once. `icon` leads the text. The children
+ * are the message: plain text for one line, or a title and a description.
  */
 function Alert({
   className,
@@ -41,7 +43,9 @@ function Alert({
       {...props}
     >
       {icon}
-      <div className="grid min-w-0 flex-1 gap-0.5">{children}</div>
+      <div className="grid min-w-0 flex-1 gap-0.5 text-foreground">
+        {children}
+      </div>
     </div>
   );
 }

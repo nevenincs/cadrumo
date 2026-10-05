@@ -21,6 +21,8 @@ function SegmentedControl({
   );
 }
 
+// The chosen segment lifts above the track: a lighter surface with an edge,
+// stronger text, and the system's own highlight where colours are forced.
 function SegmentedControlItem({
   className,
   ...props
@@ -31,7 +33,8 @@ function SegmentedControlItem({
       className={cn(
         "h-control-sm min-w-0 flex-1 cursor-pointer truncate rounded-md px-2 text-base text-muted-foreground select-none",
         "transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
-        "data-[state=checked]:bg-card data-[state=checked]:text-foreground data-[state=checked]:shadow-raised",
+        "data-[state=checked]:bg-raised data-[state=checked]:font-medium data-[state=checked]:text-foreground data-[state=checked]:shadow-raised",
+        "forced-colors:data-[state=checked]:bg-[Highlight] forced-colors:data-[state=checked]:text-[HighlightText]",
         className,
       )}
       {...props}

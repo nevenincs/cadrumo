@@ -247,7 +247,9 @@ test("explicit sign-in waits for a pending status read and submits once", async 
   await target
     .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .click();
-  await expect(password).toBeDisabled();
+  // Pending: the field holds, without leaving the tab order.
+  await expect(password).toHaveAttribute("readonly", "");
+  await expect(target.locator(".sign-in").locator(":focus")).toHaveCount(1);
   expect((await signInState(target)).submissions).toBe(0);
   await target.evaluate(() =>
     (
@@ -409,9 +411,10 @@ test("TUI handover remains available for locked profiles and refreshes on focus"
       window as unknown as { __signInTest: { exitTui: () => void } }
     ).__signInTest.exitTui(),
   );
-  await expect(
-    target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeVisible();
+  // Back at the gate, with the status read again: still locked, still said.
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
   expect((await signInState(target)).statusReads).toBeGreaterThan(reads);
 });
 
@@ -429,12 +432,11 @@ test("runtime-unavailable remains distinct from unknown presence", async ({
   await expect(
     target.getByText(label("desktop.signin.refused.runtime_unavailable")),
   ).toBeVisible();
+  // With no runtime to ask, a password is not asked for.
   await expect(
-    target.getByRole("button", {
-      name: label("desktop.signin.submit"),
-      exact: true,
-    }),
-  ).toBeDisabled();
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  expect((await signInState(target)).submissions).toBe(0);
   expect((await signInState(target)).tuiStarts).toBe(0);
 });
 
