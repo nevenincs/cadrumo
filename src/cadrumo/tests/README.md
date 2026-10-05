@@ -120,7 +120,7 @@ per function, so a module can hold both labelled and unlabelled cases.
 | `docs` | Documentation build, stubs, and docstring structure. | `-m docs` |
 | `serial` | Isolation-sensitive tests that mutate process-global state; they flake under `-n auto`. | `just test-integration-serial` |
 | `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
-| `external_tool` | Tests needing a tool or data the dependency set does not install (LibreOffice; the npm Hunspell dictionaries; a real PowerShell on POSIX; a stock OpenSSL). | `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal`, `just test-calculation-summary-pdf` |
+| `external_tool` | Tests needing a tool or data the dependency set does not install (LibreOffice; the npm Hunspell dictionaries; a real PowerShell on POSIX; a stock OpenSSL; an explicitly selected native macOS peer fixture or disposable GNOME Secret Service collection). | `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal`, `just test-calculation-summary-pdf`, `just test-native-host-facilities` |
 | `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
 | `windows_only` | Tests whose subject exists only on Windows (console launcher stubs, the native runtime, process and login surfaces). | `just test-windows` |
 | `resident_service` | Tests that query the running resident search service. | `just test-resident-service` |

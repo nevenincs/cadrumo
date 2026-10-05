@@ -477,10 +477,15 @@ test-packaging-source:
 # Structural packaging tests are the portable, non-serial contract population.
 # Every marker is explicit because this directory mixes unit, integration,
 # serial, performance, and capability-qualified tests.
+# The native packaging tool keeps its own contracts in `tests` packages beside
+# its modules, so its whole tree is swept rather than one directory named, and
+# `native/tests` holds the smoke scripts the packaged interpreter runs rather
+# than pytest modules. A test written into either is collected here instead of
+# by nothing.
 [doc('Run portable non-serial packaging contract tests with explicit marker boundaries.')]
 [group('test')]
 test-packaging-contracts:
-    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
+    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests
 
 [doc('Run packaging dependency, source, and contract preflight as independent verdicts.')]
 [group('test')]
@@ -571,10 +576,13 @@ test-packaging-ci:
     @uv run --no-sync python -m dev.packaging.campaign --profile ci
     @uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
 
+# `windows_only` is excluded because the one such case here drives the
+# development environment's installed launchers, not the sealed cohort, and
+# `test-windows` owns it: that is the recipe a Windows runner executes.
 [doc('Run packaging artifact qualification against one sealed temporary cohort.')]
 [group('test')]
 test-installed-oracles: build-packaging-cohort
-    @uv run --no-sync pytest -v -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "integration and serial and not windows_only" dev/packaging/tests/test_installed_oracles.py
 
 [doc('Run non-performance serial packaging contracts against the sealed cohort.')]
 [group('test')]
@@ -901,7 +909,7 @@ test-product: test-pytest-harness test-unit test-integration-parallel test-integ
 
 [private]
 _test-registry-collect:
-    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" --timeout=300 src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" --timeout=300 src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [private]
 _test-registry-load:
@@ -913,7 +921,7 @@ _test-registry-calculations-parallel:
 
 [private]
 _test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
@@ -940,7 +948,7 @@ test-repository-contracts:
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
 test-release-tooling:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests --ignore=dev/packaging/tests/test_installed_oracles.py
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
 
 # Split into a deterministic half and a `perf` half because the two have
@@ -1088,7 +1096,7 @@ test-gate base="origin/main":
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
 test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run the committed cli-sequence goldens gate when changes since BASE can alter documented output; reuses a recorded clean verdict.')]
 [group('test')]
@@ -1133,12 +1141,22 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
 test-native-host:
     uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
+
+# The opt-in native-host cases, which need a facility no runner provides: an
+# explicitly selected native macOS peer fixture, and a disposable GNOME Secret
+# Service collection on Linux. `test-native-host` above runs them too, as part
+# of the whole cohort for one host; this recipe selects ONLY them, so they have
+# an owner that selects nothing the portable lanes already run.
+[doc('Run the opt-in native macOS peer and Linux GNOME Secret Service cases on their owning host.')]
+[group('test')]
+test-native-host-facilities:
+    uv run --no-sync pytest -v -n0 -m "external_tool and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]

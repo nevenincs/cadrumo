@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from ..export_fragment_provenance_projection import _normalise_semantic_map_record
 from ..semantic_map import load_semantic_map_for_revision
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_positive_casilla_gate_changes_only_its_present_record_projection() -> None:

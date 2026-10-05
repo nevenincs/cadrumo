@@ -143,6 +143,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-channel-artifacts",
         "test-packaging-ci",
         "test-windows",
+        "test-native-host-facilities",
         "test-os-keychain",
         "test-resident-service",
         "test-registry-live",
