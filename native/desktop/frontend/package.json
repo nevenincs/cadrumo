@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "bootstrap": "node scripts/bootstrap.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && eslint . && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts ../tests --ignore-unknown",
+    "pretest": "vite build",
     "test": "playwright test"
   },
   "dependencies": {
