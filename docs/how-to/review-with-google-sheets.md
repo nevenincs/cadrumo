@@ -188,11 +188,11 @@ These are no longer available:
 
 | Removed | Use instead |
 |---|---|
-| `aeat config google register` and its client file | Nothing. The application carries its own Google client. |
-| `aeat config google credential-source` and service-account access | `aeat config google login` |
-| `aeat config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | Nothing. Cadrumo creates its folder at sign-in. |
-| `aeat config google login --refresh-only` | `aeat config google login` |
-| `aeat app ledger evidence pull` and `pull-all` | Download the document, then `aeat app ledger evidence add`; see [Attach supporting documents](ledger-evidence.md). |
+| `config google register` and its client file | Nothing. The application carries its own Google client. |
+| `config google credential-source` and service-account access | `aeat config google login` |
+| `config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | Nothing. Cadrumo creates its folder at sign-in. |
+| `config google login --refresh-only` | `aeat config google login` |
+| `app ledger evidence pull` and `pull-all` | Download the document, then `aeat app ledger evidence add`; see [Attach supporting documents](ledger-evidence.md). |
 | `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | Nothing. It had no effect. |
 
 Scripts that read command output should also note these changes. `config

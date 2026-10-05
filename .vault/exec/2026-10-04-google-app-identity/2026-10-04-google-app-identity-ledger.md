@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b921dfd7547a1df7e8fa80e3c64e1b0f38ef27182be1cec09031a275749d079'
+body_hash: 'sha256:41d9713249a30864d1071e91fa8ecd2172e7e61d1663cae79471692f63dd22c3'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -475,6 +475,14 @@ related:
 - `S09` `verify:` `pytest: documented-command conformance (363) and the sequence goldens of the Google how-to regenerated in earlier Steps` -> `pass`
 - `S09` `verify:` `pytest dev/docs/tests/test_docs_catalogue_drift.py` -> `fail`
 - `S09` `by:` `CADRUMO-GOOGLE-OATH`
+- `S12` `verify:` `pytest user_profile, google configuration composition and root folder tests (610 passed)` -> `pass`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/outbound/google/root_folder.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/google/tests/test_root_folder.py`
+- `S05` `verify:` `pytest conformance google and spreadsheet, native journey, google and storage adapters (438 passed)` -> `pass`
+- `S02` `M` `src/cadrumo/domain/transactions/models.py`
+- `S10` `M` `.vault/audit/2026-10-05-google-app-identity-audit.md`
+- `S09` `verify:` `pytest documented-command and educational-docs conformance (367 passed)` -> `pass`
 
 ## Notes
 
@@ -554,3 +562,10 @@ related:
 - `S09` Correction to notes under S01, S06 and S08 that said the technical articles would be rewritten here: they were not. Each article states that it describes an analysed source snapshot and does not certify the current branch, so this Step left them as written. Session tui-87 has since said the product owner asked it to scrub the client-registration text from docs/technical and env/.env.example; that work is theirs and is not part of this plan.
 - `S09` The catalogue drift gate fails on four pages this plan did not change (connect-an-agent, review-calculation-values, identity-and-naming, workstation-setup). The three pages changed here no longer appear in it.
 - `S09` The generated CLI reference under docs/cli and `docs/_static` is not tracked in this repository, so no committed copy of it needed regenerating.
+- `S12` Reopened by the plan-close review (audit 2026-10-05-google-app-identity-audit, finding refusal-effect-accounting, high). The first S12 released every boundary admitted without a write on any refusal; consent and token exchange are admitted that way and can leave a grant. A boundary is now released only when the refusal proves nothing was applied. The test mode that endorsed the old rule was replaced by read-uncertain (unknown) and read-not-applied (none).
+- `S05` Review follow-up (audit finding stored-root-not-visible, medium): a stored root Drive does not show is now the `root_folder_not_owned` refusal with the fact `visible_to_application` false, where it was a not-found error that operations settled as a failure.
+- `S05` just check-import-boundaries exits 1 at plan close on a malformed ratchet entry and a finding in the LLM adapter tests, neither in this plan's paths; no hard finding in the files changed here.
+- `S02` Review follow-up (audit finding withdrawn-names-in-comments, low): three comments still named the withdrawn document-link and folder-pull surfaces. Comment text only.
+- `S10` Review finding live-proof-commit-subject (low): the subject of commit 0e779076a5 says the export is proven against Google. It is not; the live run has no passing result. The commit was not rewritten because other sessions have committed above it.
+- `S10` Review finding environment-template-leftovers (low) was resolved outside this plan in d4afc04204, and the technical articles were rewritten outside this plan in b2eb275594.
+- `S09` Defect of this Step, reported by another session after the review (audit finding removed-commands-cited-as-live, medium): the upgrade table cited the five removed commands with the executable in front, and the documented-command gate resolves every such citation against the live CLI, so the page failed that gate from 73a64eda93 on. S09 had not run that gate. The removed commands are now named without the executable and the five rows retranslated.

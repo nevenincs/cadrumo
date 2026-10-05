@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 11:08+0200\n"
+"POT-Creation-Date: 2026-10-05 12:06+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -437,36 +437,36 @@ msgid "Use instead"
 msgstr "Usa en su lugar"
 
 #: ../../how-to/review-with-google-sheets.md:170
-msgid "`aeat config google register` and its client file"
-msgstr "`aeat config google register` y su fichero de cliente"
+msgid "`config google register` and its client file"
+msgstr "`config google register` y su fichero de cliente"
 
 #: ../../how-to/review-with-google-sheets.md:170
 msgid "Nothing. The application carries its own Google client."
 msgstr "Nada. La aplicación incluye su propio cliente de Google."
 
 #: ../../how-to/review-with-google-sheets.md:170
-msgid "`aeat config google credential-source` and service-account access"
-msgstr "`aeat config google credential-source` y el acceso con cuenta de servicio"
+msgid "`config google credential-source` and service-account access"
+msgstr "`config google credential-source` y el acceso con cuenta de servicio"
 
 #: ../../how-to/review-with-google-sheets.md:170
 msgid "`aeat config google login`"
 msgstr "`aeat config google login`"
 
 #: ../../how-to/review-with-google-sheets.md:170
-msgid "`aeat config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
-msgstr "`aeat config google folder set` y `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
+msgid "`config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
+msgstr "`config google folder set` y `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 
 #: ../../how-to/review-with-google-sheets.md:170
 msgid "Nothing. Cadrumo creates its folder at sign-in."
 msgstr "Nada. Cadrumo crea su carpeta al iniciar sesión."
 
 #: ../../how-to/review-with-google-sheets.md:170
-msgid "`aeat config google login --refresh-only`"
-msgstr "`aeat config google login --refresh-only`"
+msgid "`config google login --refresh-only`"
+msgstr "`config google login --refresh-only`"
 
 #: ../../how-to/review-with-google-sheets.md:170
-msgid "`aeat app ledger evidence pull` and `pull-all`"
-msgstr "`aeat app ledger evidence pull` y `pull-all`"
+msgid "`app ledger evidence pull` and `pull-all`"
+msgstr "`app ledger evidence pull` y `pull-all`"
 
 #: ../../how-to/review-with-google-sheets.md:170
 msgid ""
