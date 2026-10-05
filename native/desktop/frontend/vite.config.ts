@@ -1,17 +1,19 @@
 import { buildPath } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
+import { docsFixture } from "./dev/docs-fixture/plugin";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+const root = fileURLToPath(new URL(".", import.meta.url));
+const docsStatic = fileURLToPath(
+  new URL("../../../docs/_static", import.meta.url),
+);
+
 export default defineConfig(({ mode }) => {
   const identity = readIdentity();
   const ports = server();
-  const environment = loadEnv(
-    mode,
-    fileURLToPath(new URL(".", import.meta.url)),
-    "CADRUMO_DESKTOP_",
-  );
+  const environment = loadEnv(mode, root, "CADRUMO_DESKTOP_");
   const allowedHosts = (
     process.env.CADRUMO_DESKTOP_ALLOWED_HOSTS ??
     environment.CADRUMO_DESKTOP_ALLOWED_HOSTS ??
@@ -32,6 +34,9 @@ export default defineConfig(({ mode }) => {
       allowedHosts,
       port: ports.devPort,
       strictPort: true,
+      // The shell's typefaces are the documentation's own files, outside
+      // this project; the development server serves nothing else from there.
+      fs: { allow: [root, docsStatic] },
     },
     preview: {
       host: ports.host,
@@ -41,6 +46,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      docsFixture(),
       {
         name: "canonical-desktop-content",
         transformIndexHtml() {
