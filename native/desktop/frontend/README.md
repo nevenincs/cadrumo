@@ -58,7 +58,7 @@ The server offers two pages.
   which fabricates nothing: every backend capability reports itself
   unavailable.
 - `/scenarios.html` is the development entry. It mounts the same application on
-  the scenario host and shows a dashed **Simulated host** control in the bottom
+  the scenario host and shows a **Simulated host** control in the bottom
   corner for switching scenario and language.
 
 Edit a component and the open page updates in place.
@@ -97,6 +97,7 @@ Select one in the control or in the address:
 | `lang`     | `en`, `es`, `ca`, `hu` | The output language the host reports                                |
 | `latency`  | milliseconds           | The fixed delay before a sign-in or sign-out answer, 600 by default |
 | `bar`      | `off`                  | Hide the scenario control, for a clean screenshot                   |
+| `records`  | a count                | Fill the log with that many generated records, up to its ring size  |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
@@ -129,6 +130,108 @@ refuses any module under `src/dev/` or `dev/` and any story
 (`dev/product-boundary.ts`), the linter refuses the import, and
 `tests/bundle.spec.ts` checks the built output.
 
+## The component catalogue
+
+```sh
+npm run storybook
+```
+
+The catalogue is Storybook on the shell's own theme, at port 6006 of the
+bootstrapped address (`-- --port <port>` chooses another). Its toolbar switches
+the colour scheme and the chrome language, and every story is drawn on a real
+shell surface inside the application's own providers.
+
+| Group       | Holds                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| Foundations | Colour roles, type, spacing, radii, density, elevation and every icon                                           |
+| Primitives  | Buttons, fields, feedback, overlays and navigation: the components under `src/components/ui/`                   |
+| Shell       | Sign-in, the command palette, settings, the rail, pane headers, the split and the log view, each in every state |
+
+A story sits beside its component as `<Name>.stories.tsx` and takes fixed
+data: a story proves presentation, never a host. `npm run storybook:build`
+writes a static catalogue under the build directory; it is never packaged.
+
+With the catalogue running, `npm run shots` photographs every story in both
+schemes into the build directory's `test-results/catalogue`, and fails on a
+story that did not render, a typeface that did not load or a refused request.
+
+| Option      | Default      | Meaning                                    |
+| ----------- | ------------ | ------------------------------------------ |
+| `--filter`  | every story  | A regular expression over story ids        |
+| `--schemes` | `light,dark` | The colour schemes to photograph           |
+| `--locales` | `en`         | The chrome languages, from `en,es,ca,hu`   |
+| `--width`   | `1280`       | Viewport width; `--height` defaults to 800 |
+| `--scale`   | `1`          | Device pixel ratio                         |
+
+## The design system
+
+One theme drives every element. A component names a role or a token and never
+a value, so a change of palette, density or type reaches everything at once.
+
+| Layer       | Where                       | Rule                                                                                        |
+| ----------- | --------------------------- | ------------------------------------------------------------------------------------------- |
+| Colour      | `src/generated/palette.css` | Generated from the documentation theme, which is the colour authority; never edited by hand |
+| Roles       | `src/theme.css`             | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
+| Tokens      | `src/tokens.css`            | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
+| Primitives  | `src/components/ui/`        | shadcn/ui components on Radix, restyled to roles and tokens; they know nothing of Cadrumo   |
+| Components  | `src/components/`           | The shell's own parts, built only from primitives                                           |
+| Composition | `src/App.tsx`, `src/shell/` | State, the action registry and the host port; the only layer that talks to a `Host`         |
+
+The linter holds the layers apart: a primitive imports no component, a
+component imports no composition, only the Tauri adapter imports
+`@tauri-apps/*`, and nothing in the product imports `src/dev/` or a story.
+
+Conventions a new component follows:
+
+- **Colour** comes from a role utility such as `bg-card` or
+  `text-muted-foreground`. Hover and the chosen surface (`accent`, `selected`)
+  are washes of ink over whatever they sit on. Faint text has no contrast to
+  spare for a tinted surface: on a chosen row use the secondary text colour.
+- **Size** comes from the density tokens: `h-control-xs` for a button in a
+  header, `sm` in a toolbar, `md` in a dialog, `lg` for the rail and tab rows.
+  Under a coarse pointer every step is at least a fingertip, with no change in
+  the component.
+- **State** is said by the element and styled from what it says:
+  `aria-pressed` for a toggle, `aria-expanded` for a button that opens a
+  surface, `aria-current` for the current row. A chosen item carries a bar as
+  well as a surface, so no state rests on a tint alone.
+- **Icons** come from the one registry in `src/components/ui/icon.tsx`, by
+  name. An icon-only control is an `IconButton`, which always has a name and a
+  tooltip.
+- **Focus** is the single outline declared in `src/theme.css`; a component
+  may move it inward, never restyle it.
+- **Text** is a chrome string. Add it in English, Spanish, Catalan and
+  Hungarian through `python -m dev.locales set-batch`, declare its key in
+  `dev/locales/desktop_chrome.py`, and run the bootstrap again.
+
+To add a primitive from the shadcn registry, run its CLI from this directory
+(`components.json` points it at `src/components/ui/`), then restyle what it
+wrote to roles and tokens and remove any dependency it added beyond the ones
+already declared. The class merger is the local `@/components/ui/cn`.
+
+### Keyboard
+
+Every pointer path has a keyboard path through the same action.
+
+| Keys                                  | Does                                                               |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| Ctrl+K, or Ctrl+Shift+K in a terminal | Open the palette: documentation search and every action            |
+| F6, Shift+F6                          | Move between the documentation, the TUI, the bottom panel and rail |
+| Ctrl+Shift+T                          | Show or hide the TUI                                               |
+| Ctrl+`                                | Show or hide the bottom panel                                      |
+| Ctrl+Shift+1, 2, 3                    | Console, Python shell, Logs                                        |
+| Ctrl+Shift+M                          | Maximize the focused area, or restore the layout                   |
+| Ctrl+,                                | Settings                                                           |
+| Alt+Home, Alt+Left, Alt+Right         | Documentation home, back and forward                               |
+| Ctrl+=, Ctrl+-, Ctrl+0                | Documentation zoom                                                 |
+| Ctrl+Shift+C, Ctrl+Shift+V            | Copy and paste in a terminal                                       |
+
+On macOS the primary modifier is Command. The rail and the tab row are one tab
+stop each, moved through with the arrow keys. A splitter takes the arrow keys,
+Home, End and Enter. The log's records are one tab stop: arrows, Home and End
+move, Enter opens a record's detail, and the menu key opens its menu. A modal
+surface owns the keyboard: no chord reaches the shell from under one.
+
 ## Check and test
 
 ```sh
@@ -140,25 +243,118 @@ The test run builds the production bundle itself, then runs two Playwright
 projects:
 
 - `product` drives the production build through `vite preview`, with no host or
-  with a faked Tauri transport (`tests/desktop.spec.ts`), and checks the built
-  output (`tests/bundle.spec.ts`).
+  with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
+  own content security policy, and checks the built output
+  (`tests/bundle.spec.ts`).
 - `scenarios` drives `/scenarios.html` on the development server
   (`tests/scenarios/`). It reuses a development server that is already running.
+
+| File in `tests/scenarios/` | Holds the shell to                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `scenarios.spec.ts`        | What each scenario presents, and the sign-in rules: one submission, no retry               |
+| `accessibility.spec.ts`    | An axe audit of every major surface in both schemes                                        |
+| `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
+| `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |
 
 Run one project with `npm test -- --project=scenarios`. Both servers start for
 either project, and the build runs each time.
 
+### Speed and memory
+
+```sh
+npm run benchmark -- --check
+```
+
+The benchmark builds the product and a minified scenario page, then measures
+bundle size, start-up, idle memory, the palette, a splitter drag, a log of ten
+thousand records, and forty rounds of opening and closing the overlays to show
+that nothing accumulates. It writes `test-results/benchmark/benchmark.json`
+in the build directory. Each number has a loose budget in the script, and
+`--check` fails the run when one is exceeded. The numbers describe the machine
+they were taken on: compare runs, not hosts.
+
+## Stable hooks
+
+The packaged acceptance run (`native/desktop/tests/`) drives the real window by
+these, so a redesign keeps them. They are contracts, not styling.
+
+| Hook                                                     | Contract                                                                          |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `.rail-group`                                            | The first holds search, docs home, TUI, console, Python, logs; the last, settings |
+| `.palette`, its `combobox`                               | The palette and its one input                                                     |
+| `.palette-results > section`                             | The first section is the documentation's while a query searches it                |
+| `.palette-title`, `.palette-chord`                       | A row's title; a chord is on action rows only                                     |
+| `.settings`                                              | Its first `radiogroup` is appearance: follow, light, dark; Escape closes it       |
+| `#profile-password`, `.sign-in button[type=submit]`      | The sign-in form                                                                  |
+| `#tab-<kind>`, `[data-terminal="<kind>"]`                | A panel tab and its terminal, `hidden` while not shown                            |
+| `.xterm-screen`, `.xterm-rows`, `.xterm-helper-textarea` | xterm's own elements                                                              |
+| `.docs-frame`, `.pane-docs .pane-title`                  | The documentation frame and its pane's title                                      |
+| `.panel-separator`, `.logview-list`                      | The bottom panel's handle and the log's list                                      |
+
+The browser tests also select `.pane-tui`, `.pane-head`, `section.panel`,
+`.main-area`, `.tabstrip`, `.split` with `split-row` or `split-column`,
+`.split-separator`, `.logview`, `.filter-text`, `.record`, `.source-banner`,
+`.terminal-note`, `.terminal-host` and `.rail`.
+
+## What only the desktop window can show
+
+Nothing above runs the Tauri host. The browser work is settled; these remain
+to be checked in a built desktop package, on an interactive desktop, with
+`desktop-packaged-test`:
+
+- **Sign-in against the runtime.** One submission reaches the runtime, a
+  refusal is not retried, and the canonical refusal codes arrive as the shell
+  expects them. The last packaged run failed here on the letter case of a code
+  (see below); the browser tests cannot see the host's answer.
+- **Native menus.** The host draws context menus; the shell's own menu is the
+  stand-in the browser shows. The menu key on a log record sends the row's
+  position, which only the host can place.
+- **Content security policy and the `cadrumo-docs` scheme.** The browser test
+  applies the policy from the configuration template to the production bundle;
+  the window applies the generated one to the packaged documentation origin.
+- **Terminals.** Real PTY sessions, their timing, IME and clipboard, and F6
+  leaving a focused terminal, which here is exercised against fixture sessions.
+- **The documentation bridge.** F6 and the other chords pressed inside the
+  packaged documentation are forwarded by its bridge script; the fixture site
+  loads the same script, the packaged pages are a different build of it.
+- **WebView differences.** The benchmark and the tests run in Chromium.
+  WebKit, on macOS and Linux, has no scroll anchoring: a log that is not
+  following may creep while records arrive. Check it there, with reduced
+  motion and with the system at 200 percent.
+- **A screen reader pass** of the sign-in dialog, the palette and the log.
+
+### The packaged run of 2026-10-05 20:09
+
+The findings of the last packaged run before this work, one by one. No
+packaged assertion was changed.
+
+| Finding                           | Cause                                                                                              | Where it is settled                                    |
+| --------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `canonical-sign-in`               | The host answered `credential_rejected`; the assertion expects the canonical `CREDENTIAL_REJECTED` | Host or harness; the shell compares the canonical code |
+| `python-prompt`, `python-unicode` | The Python session's first prompt and typed input arrived later than the harness waited            | Native: session start-up timing                        |
+| `console-runtime`                 | The console did not resolve the packaged runtime on its path                                       | Native: package environment                            |
+| `token`                           | The probe flags a `CadrumoDocs` global in the documentation page                                   | Documentation bridge script                            |
+| `logs-flyout`                     | The harness waits for `[data-terminal="logs"]`; the log is `#panel-logs`, which is not a terminal  | Harness defect, reported, not edited here              |
+| `localized-docs-home`             | Docs home did not reach the localized entry; the cause was not established from the run            | Native: to rerun                                       |
+| `settings-docs-appearance`        | The target crashed during the check                                                                | Native: to rerun                                       |
+
+That run's result files were removed with its build directory, so this table
+is from the notes taken when it was read; a fresh run replaces it.
+
 ## Layout
 
-| Path                         | Holds                                                                |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `index.html`, `src/main.tsx` | The production entry                                                 |
-| `scenarios.html`, `src/dev/` | The development entry, the scenario host and its fixtures            |
-| `dev/docs-fixture/`          | The stand-in documentation site and the server plugin that serves it |
-| `dev/product-boundary.ts`    | The build check that keeps development modules out of the product    |
-| `src/App.tsx`, `src/shell/`  | Composition, the action registry, layout state and the host port     |
-| `src/components/`            | The shell's components                                               |
-| `src/ipc/contract.ts`        | The published host and bridge contract, types only                   |
-| `src/generated/`             | Generated chrome strings and palette; never edited by hand           |
-| `scripts/bootstrap.mjs`      | The build directory bootstrap                                        |
-| `tests/`                     | The browser tests                                                    |
+| Path                                | Holds                                                                 |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `index.html`, `src/main.tsx`        | The production entry                                                  |
+| `scenarios.html`, `src/dev/`        | The development entry, the scenario host and its fixtures             |
+| `dev/docs-fixture/`                 | The stand-in documentation site and the server plugin that serves it  |
+| `dev/product-boundary.ts`           | The build check that keeps development modules out of the product     |
+| `src/App.tsx`, `src/shell/`         | Composition, the action registry, layout state and the host port      |
+| `src/tokens.css`, `src/theme.css`   | The design tokens and the colour roles                                |
+| `src/components/ui/`                | The primitives                                                        |
+| `src/components/`                   | The shell's components and their stories                              |
+| `.storybook/`, `src/dev/catalogue/` | The catalogue's configuration and its foundations stories             |
+| `src/ipc/contract.ts`               | The published host and bridge contract, types only                    |
+| `src/generated/`                    | Generated chrome strings and palette; never edited by hand            |
+| `scripts/`                          | The bootstrap, the catalogue launcher, its screenshots, the benchmark |
+| `tests/`                            | The browser tests                                                     |

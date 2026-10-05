@@ -336,3 +336,20 @@ test("a console fixture session takes input and restarts after exit", async ({
     target.getByRole("tab", { name: label("desktop.rail.console") }),
   ).not.toContainText(label("desktop.session.exited", { code: 0 }));
 });
+
+test("the palette's first section is the documentation's while a query searches it", async ({
+  page: target,
+}) => {
+  // The packaged acceptance run reads documentation results from the first
+  // section; an action that matches the same query must never stand there.
+  await open(target, "empty");
+  await target.keyboard.press("Control+KeyK");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.rail.logs"));
+  const sections = palette.locator(".palette-results > section");
+  await expect(sections).toHaveCount(2);
+  await expect(sections.first().getByRole("option")).toHaveCount(0);
+  await expect(sections.last().getByRole("option").first()).toContainText(
+    label("desktop.rail.logs"),
+  );
+});

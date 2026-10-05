@@ -814,6 +814,7 @@ needs neither Node.js nor npm.
 | `desktop-frontend-install` | `npm ci` in the frontend |
 | `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
+| `desktop-frontend-generated` | Write the chrome strings and the palette into the frontend source: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |
 | `user_docs` | Build and stage the user documentation, as above |
 | `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; refuse a binary other than `CADRUMO_DESKTOP_HOST_EXECUTABLE` and record it in `generated/desktop-<Config>.json` |
 | `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |

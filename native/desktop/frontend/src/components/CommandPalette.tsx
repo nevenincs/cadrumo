@@ -227,56 +227,61 @@ export function CommandPalette({
           )}
           <CommandList hidden={found.length + matched.length === 0}>
             <div className="palette-results grid gap-1">
-              {found.length > 0 && (
+              {/* While a query searches the documentation its section is the
+                  first one, results or not: what reads the first section
+                  never finds actions there in the meantime. */}
+              {searching && (
                 <section>
-                  <CommandGroup
-                    heading={
-                      <>
-                        {t("desktop.palette.documentation")}
-                        {docs.state === "searching" && (
-                          <span className="flex items-center gap-1.5 font-normal tracking-normal normal-case">
-                            <Spinner className="size-icon-xs" />
-                            {t("desktop.palette.searching")}
-                          </span>
-                        )}
-                      </>
-                    }
-                  >
-                    {found.map((result, index) => (
-                      <CommandItem
-                        key={`${result.url}#${index}`}
-                        value={`doc:${index}:${result.url}`}
-                        onSelect={() => run(() => openDoc(result.url))}
-                      >
-                        <Icon
-                          name={result.kind === "page" ? "page" : "term"}
-                          size="md"
-                          className={ROW_ICON}
-                        />
-                        <span className="grid min-w-0 flex-1 gap-0.5">
-                          <span className="palette-title flex items-baseline gap-2 font-medium">
-                            <span className="truncate">{result.title}</span>
-                            {kindLabel(result.kind) && (
-                              <Badge>{kindLabel(result.kind)}</Badge>
+                  {found.length > 0 && (
+                    <CommandGroup
+                      heading={
+                        <>
+                          {t("desktop.palette.documentation")}
+                          {docs.state === "searching" && (
+                            <span className="flex items-center gap-1.5 font-normal tracking-normal normal-case">
+                              <Spinner className="size-icon-xs" />
+                              {t("desktop.palette.searching")}
+                            </span>
+                          )}
+                        </>
+                      }
+                    >
+                      {found.map((result, index) => (
+                        <CommandItem
+                          key={`${result.url}#${index}`}
+                          value={`doc:${index}:${result.url}`}
+                          onSelect={() => run(() => openDoc(result.url))}
+                        >
+                          <Icon
+                            name={result.kind === "page" ? "page" : "term"}
+                            size="md"
+                            className={ROW_ICON}
+                          />
+                          <span className="grid min-w-0 flex-1 gap-0.5">
+                            <span className="palette-title flex items-baseline gap-2 font-medium">
+                              <span className="truncate">{result.title}</span>
+                              {kindLabel(result.kind) && (
+                                <Badge>{kindLabel(result.kind)}</Badge>
+                              )}
+                            </span>
+                            {result.crumb && (
+                              <span className="truncate text-xs text-muted-foreground">
+                                {result.crumb}
+                              </span>
+                            )}
+                            {result.excerpt && (
+                              <span className="truncate text-sm text-muted-foreground">
+                                <Highlighted
+                                  text={result.excerpt}
+                                  ranges={result.ranges}
+                                />
+                              </span>
                             )}
                           </span>
-                          {result.crumb && (
-                            <span className="truncate text-xs text-muted-foreground">
-                              {result.crumb}
-                            </span>
-                          )}
-                          {result.excerpt && (
-                            <span className="truncate text-sm text-muted-foreground">
-                              <Highlighted
-                                text={result.excerpt}
-                                ranges={result.ranges}
-                              />
-                            </span>
-                          )}
-                        </span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
                 </section>
               )}
               {matched.length > 0 && (
