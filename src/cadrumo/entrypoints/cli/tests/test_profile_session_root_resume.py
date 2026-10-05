@@ -16,9 +16,9 @@ refusal branches — absent, idle-elapsed, absolute-elapsed — are decided
 before the OS keychain is ever consulted, so they run anywhere and are
 asserted by refusal-reason name. Silent RESUME genuinely needs the
 keychain, because unwrapping the record's DEK requires the session key
-held there; on a host with no usable credential store those tests fail
-at an explicit precondition naming that cause rather than misreporting a
-resume defect.
+held there; on a host with no usable credential store those tests are
+skipped, under a warning, at an explicit precondition naming that cause
+rather than misreporting a resume defect.
 """
 
 from __future__ import annotations

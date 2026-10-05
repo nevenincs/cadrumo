@@ -1110,8 +1110,10 @@ test-integration-serial:
 # only way to select them. The capability is a property of the logon session: run
 # this from an INTERACTIVE DESKTOP SESSION. A headless CI runner, or an agent
 # reaching the host over SSH, holds a network logon that carries no credentials,
-# so the store refuses every call and these cases fail at an explicit precondition
-# naming the missing custody -- which is a true report of the host, not a defect.
+# so the store refuses every call and the cases that need it are SKIPPED at an
+# explicit precondition, each under a warning naming the missing custody. A green
+# run carrying those warnings verified nothing about custody: it is a true report
+# of the host, not coverage.
 #
 # Runs with -n0 deliberately. The OS credential store is MACHINE-global, and these
 # cases mint and remove session keys under fixed bucket ids, so xdist workers delete

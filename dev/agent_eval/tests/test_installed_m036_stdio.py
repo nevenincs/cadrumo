@@ -71,6 +71,7 @@ from cadrumo.domain.calculations.registry.censo_modelos import (
     active_036_ownership_from_registry,
 )
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -321,6 +322,7 @@ async def _assert_human_operation_refused(
 
 @pytest.mark.anyio
 async def test_installed_mcp_releases_only_safe_m036_query_rows(tmp_path: Path) -> None:
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native = native_automation_secret_store(backend)
     assert native.backend is backend

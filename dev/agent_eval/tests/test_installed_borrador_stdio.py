@@ -70,6 +70,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -285,6 +286,7 @@ async def _assert_human_operation_refused(
 
 @pytest.mark.anyio
 async def test_installed_mcp_queries_borrador_without_releasing_source_provenance(tmp_path: Path) -> None:
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native = native_automation_secret_store(backend)
     assert native.backend is backend

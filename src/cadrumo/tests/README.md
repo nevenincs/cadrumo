@@ -139,8 +139,12 @@ reaching the host over SSH, each hold a network logon that carries no
 credentials: a real credential backend is selected and then refuses
 every call, so no session key can be custodied there at all. Run these
 tests from an interactive desktop session. Selected on a host that
-cannot custody one, they fail at an explicit precondition naming the
-missing capability - a true report of the host, never a defect.
+cannot custody one, each case that needs the store is skipped at an
+explicit precondition, `require_os_credential_store()`, under an
+`OsCredentialStoreRefusedWarning` naming the measured refusal - a true
+report of the host, never a defect and never coverage. The precondition
+is called per case, not keyed on the label, so a labelled case that
+asserts the refusal path itself still runs there.
 
 Label only what is irreducibly capability-bound. A case provable
 *without* the capability must stay unlabelled, or it silently leaves
