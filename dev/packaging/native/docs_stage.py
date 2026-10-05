@@ -158,6 +158,12 @@ class ServedMediaTypes:
         return self.extensions.get(extension) if dot else None
 
 
+def _is_header_value(value: str) -> bool:
+    # The scheme sends the type as a Content-Type header, which admits only
+    # visible ASCII, space and tab.
+    return all(character == "	" or " " <= character <= "~" for character in value)
+
+
 def served_media_types(declaration: Mapping[str, Any]) -> ServedMediaTypes:
     """Read the documentation scheme's media-type table from the user_docs declaration."""
     table = declaration.get("media_types")
@@ -170,7 +176,13 @@ def served_media_types(declaration: Mapping[str, Any]) -> ServedMediaTypes:
             raise DocsPackagingError(f"user_docs.media_types.{section} must map keys to media types")
         typed: dict[str, str] = {}
         for key, media in entries.items():
-            if not key or any(character in key for character in forbidden) or not isinstance(media, str) or not media:
+            if (
+                not key
+                or any(character in key for character in forbidden)
+                or not isinstance(media, str)
+                or not media
+                or not _is_header_value(media)
+            ):
                 raise DocsPackagingError(f"user_docs.media_types.{section} has an invalid entry: {key!r}")
             typed[key] = media
         sections[section] = typed

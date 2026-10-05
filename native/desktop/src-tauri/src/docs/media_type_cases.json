@@ -57,6 +57,8 @@
     {"names": {"a/b.json": "application/json"}, "extensions": {"html": "text/html"}},
     {"names": {"a\\b.json": "application/json"}, "extensions": {"html": "text/html"}},
     {"names": {"": "application/json"}, "extensions": {"html": "text/html"}},
-    {"names": {"entry.json": ""}, "extensions": {"html": "text/html"}}
+    {"names": {"entry.json": ""}, "extensions": {"html": "text/html"}},
+    {"names": {}, "extensions": {"html": "text/html\r\nX-Injected: 1"}},
+    {"names": {}, "extensions": {"html": "text/html; charset=\u00fc"}}
   ]
 }

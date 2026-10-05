@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1931b29a174132014b27260adefa02f47bc07c875bb17549e494c7b14263cca9'
+body_hash: 'sha256:bffad1c5384754f9afcb19cb112fbfd5541326f1baeac959b30381c81be1b0f8'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -351,6 +351,13 @@ related:
 - `S19` `verify:` `linux mutation check: zero grace, no stale-socket sweep, session-blind socket name, never reporting other-session each fail a test` -> `pass`
 - `S19` `verify:` `rustfmt --check on touched Rust files` -> `pass`
 - `S19` `by:` `high-executor`
+- `S05` `M` `native/desktop/src-tauri/src/docs/media.rs`
+- `S05` `M` `native/desktop/src-tauri/src/docs/media_type_cases.json`
+- `S05` `M` `dev/packaging/native/docs_stage.py`
+- `S05` `verify:` `pytest docs references and staging (84 passed) with header-injection and non-ASCII refusal cases shared with Rust` -> `pass`
+- `S05` `verify:` `desktop-host-clippy` -> `pass`
+- `S05` `verify:` `desktop-host-test 111 passed, 2 known package-input failures (no docs/user, no aeat in the scratch package)` -> `pass`
+- `S05` `by:` `orchestrator`
 
 ## Notes
 

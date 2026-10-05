@@ -112,7 +112,10 @@ fn section(
                     "user_docs.media_types.{label} has an invalid entry: {key:?}"
                 ))
             };
-            if key.is_empty() || key.contains(forbidden) || media.is_empty() {
+            // Content-Type admits only visible ASCII, space and tab; the staging
+            // declaration reader applies the same rule.
+            let header_text = media.chars().all(|c| c == '\t' || (' '..='~').contains(&c));
+            if key.is_empty() || key.contains(forbidden) || media.is_empty() || !header_text {
                 return Err(invalid());
             }
             let media = HeaderValue::from_str(&media).map_err(|_| invalid())?;
