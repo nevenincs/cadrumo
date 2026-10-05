@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e64122f54d1586da8cea1bf9ca9566f73abda86f922ecd5a4fb3034568c2ee52'
+body_hash: 'sha256:799693e8c1bb9e1939628142ed5553a49c81ddbc1b16d0bc62e933437de53694'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `runtime-manager-architecture` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S06` `R` `src/cadrumo/adapters/local_runtime/manager_commands.py` -> `src/cadrumo/adapters/local_runtime/containment_commands.py`
 - `S06` `R` `src/cadrumo/adapters/local_runtime/tests/test_manager_command_sync.py` -> `src/cadrumo/adapters/local_runtime/tests/test_containment_command_sync.py`
@@ -210,6 +184,15 @@ related:
 - `S11` `verify:` `two-session start race 40 rounds, crashed claim holder, Quit suppression` -> `pass`
 - `S11` `verify:` `mutation checks (non-canonical encoder, wrong lock open mode) fail as expected` -> `pass`
 - `S11` `verify:` `session record vectors pytest 6 passed; ruff; ty` -> `pass`
+- `S23` `M` `native/manager/src/session/ownership.rs`
+- `S23` `M` `native/manager/src/supervision/supervisor.rs`
+- `S23` `M` `native/manager/tests/session_ownership.rs`
+- `S23` `M` `native/manager/tests/supervision.rs`
+- `S23` `verify:` `cargo test manager fixture-test-mode 121 Windows tests` -> `pass`
+- `S23` `verify:` `cargo test manager supervision and session_ownership 42 final tests` -> `pass`
+- `S23` `verify:` `cargo clippy manager all-targets fixture-test-mode -D warnings` -> `pass`
+- `S23` `verify:` `cargo fmt manager check and git diff check` -> `pass`
+- `S23` `verify:` `vaultspec-core vault check all feature runtime-manager-architecture` -> `pass`
 
 ## Notes
 
@@ -223,3 +206,4 @@ related:
 - `S09` Exit reasons come from the generated contract.rs via `include!(env!(CADRUMO_CONTRACT_RS));` the CMake build of the manager needs Part B's Manager.cmake wiring (not yet included in native/CMakeLists, so the bundle is unaffected). ADR stop-delivery hypothesis corrected: the Ctrl+C handler must be registered after AttachConsole (a handler installed before attach does not apply to a console-less process), kept for the whole attachment, removed after FreeConsole. `unsafe_code` changed from forbid to deny with allows only in supervision/windows.rs, the POSIX kill module and the fixture. Interim fixed environment allow-list until S08; Windows-only fixture coverage; a foreign runtime is final for run() in this Step.
 - `S07` Part B closes the Step. Fixed a Part A Manager.cmake defect that split escaped LIB/INCLUDE semicolons. Fixture target dir is `CADRUMO_PATH_CARGO/manager-fixture` inside the declared cargo output. ProductName is the channel display name (CADRUMO Preview on preview). Signing gap: signed=true is validated only; no signing inventory exists in packaging. CompanyName omitted pending a publisher projection. Desktop packaging path not exercised (docs off).
 - `S11` POSIX/Linux paths compile-checked only (no Rust toolchain in WSL). Adds unix-only libc 0.2.190 (same as sibling crates). supervision::json made pub(crate) for reuse. Follow-ons added to the plan: gate supervisor restarts through the start claim, register manager .runtime records in the Python storage taxonomy, and record the session lock/claim/Quit grammar as a cross-version contract. Token-user/owner-only descriptor code duplicates native/platform desktop.rs; a shared helper needs the platform owner.
+- `S23` Windows verification only; no Linux compile check. Toolchain C:/Users/hello/.cargo/bin/cargo.exe; target build/b5-manager-cargo; generated contract and identity build/windows-x86-64/b1/generated. main.rs remains version-only; composition and B4 S04/S22/S24 contracts remain open. `run_with_permit` transfers the initial claim safely through pre-readiness retry.

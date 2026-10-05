@@ -10,7 +10,8 @@ use cadrumo_manager::session::ManagerSession;
 use cadrumo_manager::session::claim::StartClaim;
 use cadrumo_manager::session::instance::claim_session;
 use cadrumo_manager::session::ownership::{
-    Located, ObservedRuntime, Ownership, Role, RuntimeLocator, StartKind,
+    Located, ObservedRuntime, Ownership, Role, RuntimeLocator, StartKind, WaitReason,
+    reserve_restart,
 };
 use cadrumo_manager::session::quit::{QuitMarker, QuitState, read_quit_marker, record_quit};
 use cadrumo_manager::supervision::supervisor::SessionActivity;
@@ -121,6 +122,65 @@ impl SessionActivity for Activity {
     fn is_active(&self) -> bool {
         self.0.load(Ordering::SeqCst)
     }
+}
+
+#[test]
+fn restart_reservation_observes_a_runtime_that_won_the_handoff() {
+    let root = Root::new("restart-takeover");
+    let world = World::default();
+    world.set(Some((42, "other")));
+    let mut locator = WorldLocator {
+        world,
+        session: "own".into(),
+        before: None,
+        calls: 0,
+    };
+    let active = Activity(Arc::new(AtomicBool::new(true)));
+    let Role::Observe(observed) = reserve_restart(&root.0, &active, &mut locator) else {
+        panic!("another session's runtime must only be observed");
+    };
+    assert_eq!(observed.pid(), 42);
+    assert!(StartClaim::take(&root.0, Duration::ZERO).unwrap().is_some());
+}
+
+#[test]
+fn restart_reservation_rechecks_activity_after_acquiring_the_claim() {
+    struct Disconnecting(AtomicU32);
+    impl SessionActivity for Disconnecting {
+        fn is_active(&self) -> bool {
+            self.0.fetch_add(1, Ordering::SeqCst) == 0
+        }
+    }
+    let root = Root::new("restart-disconnect");
+    let mut locator = WorldLocator {
+        world: World::default(),
+        session: "own".into(),
+        before: None,
+        calls: 0,
+    };
+    assert!(matches!(
+        reserve_restart(&root.0, &Disconnecting(AtomicU32::new(0)), &mut locator),
+        Role::Wait(WaitReason::Inactive)
+    ));
+    assert_eq!(locator.calls, 0);
+    assert!(StartClaim::take(&root.0, Duration::ZERO).unwrap().is_some());
+}
+
+#[test]
+fn restart_permit_rechecks_activity_after_backoff() {
+    let root = Root::new("restart-backoff-disconnect");
+    let active = Activity(Arc::new(AtomicBool::new(true)));
+    let mut locator = WorldLocator {
+        world: World::default(),
+        session: "own".into(),
+        before: None,
+        calls: 0,
+    };
+    let Role::Start(permit) = reserve_restart(&root.0, &active, &mut locator) else {
+        panic!("active session gets the restart permit");
+    };
+    active.0.store(false, Ordering::SeqCst);
+    assert_eq!(permit.refusal(&active), Some(WaitReason::Inactive));
 }
 
 /// One simulated session's manager.

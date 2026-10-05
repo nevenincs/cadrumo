@@ -16,6 +16,9 @@ use super::protocol::{
 };
 use super::restart::{RestartClass, RestartHistory, RestartPolicy};
 use super::stop::{StopSignal, StopSignalError};
+use crate::session::ownership::{
+    BootRecordLocator, Role, StartPermit, WaitReason, reserve_restart,
+};
 use std::io::{ErrorKind, Read, Write};
 use std::process::{ChildStdin, ChildStdout};
 use std::sync::Arc;
@@ -110,6 +113,10 @@ pub enum StandDownReason {
 /// How supervision ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Outcome {
+    /// Ownership must be reassessed before another launch is attempted.
+    RestartDeferred(WaitReason),
+    /// A live runtime appeared before this manager reserved its restart.
+    OwnershipChanged,
     /// A requested stop completed.
     Stopped {
         effects: Effects,
@@ -149,6 +156,8 @@ pub enum StopPath {
 /// What the core observed, in order; later Steps log and display these.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Event {
+    RestartDeferred(WaitReason),
+    OwnershipChanged,
     Launched {
         pid: u32,
         version: String,
@@ -424,6 +433,7 @@ pub struct Supervisor {
     history: RestartHistory,
     generation: u64,
     reprobed: bool,
+    restart_permit: Option<StartPermit>,
 }
 
 impl Supervisor {
@@ -444,6 +454,7 @@ impl Supervisor {
             history: RestartHistory::default(),
             generation: 0,
             reprobed: false,
+            restart_permit: None,
         }
     }
 
@@ -458,6 +469,27 @@ impl Supervisor {
 
     /// Supervise until a requested stop, a stand-down, a foreign owner or the ceiling.
     pub fn run(&mut self) -> Outcome {
+        let outcome = self.run_owned();
+        self.restart_permit = None;
+        outcome
+    }
+
+    /// Transfer the initial ownership claim into the supervisor. This keeps pre-ready
+    /// failures and retries under the same claim, without a caller holding a competing
+    /// guard while this blocking method runs. The root must be the exact pinned root
+    /// for which ownership granted the permit.
+    pub fn run_with_permit(&mut self, permit: StartPermit) -> std::io::Result<Outcome> {
+        if permit.storage_root() != self.target.storage_root() {
+            return Err(std::io::Error::new(
+                ErrorKind::InvalidInput,
+                "the start permit belongs to another storage root",
+            ));
+        }
+        self.restart_permit = Some(permit);
+        Ok(self.run())
+    }
+
+    fn run_owned(&mut self) -> Outcome {
         let mut adopting = false;
         loop {
             let ended = if adopting {
@@ -465,13 +497,24 @@ impl Supervisor {
                 // Inputs still queued from the launch that reported OWNER_BUSY are stale.
                 self.generation += 1;
                 match self.adopt() {
-                    Ok(opened) => self.watch(RuntimeProcess::Adopted(opened), None),
+                    Ok(opened) => {
+                        self.restart_permit = None;
+                        self.watch(RuntimeProcess::Adopted(opened), None)
+                    }
                     Err(reason) => {
                         self.emit(Event::Foreign(reason));
                         return Outcome::Foreign(reason);
                     }
                 }
             } else {
+                if let Some(reason) = self
+                    .restart_permit
+                    .as_ref()
+                    .and_then(|permit| permit.refusal(self.collaborators.session.as_ref()))
+                {
+                    self.emit(Event::RestartDeferred(reason));
+                    return Outcome::RestartDeferred(reason);
+                }
                 match self.launch() {
                     Some(ended) => ended,
                     None => {
@@ -495,6 +538,9 @@ impl Supervisor {
                 Decision::StandDown(reason) => return self.stand_down(reason),
                 Decision::VersionMismatch => {
                     if self.reprobe() {
+                        if let Some(outcome) = self.reserve_restart() {
+                            return outcome;
+                        }
                         continue;
                     }
                     return self.stand_down(StandDownReason::VersionMismatch);
@@ -517,6 +563,31 @@ impl Supervisor {
         Outcome::StoodDown(reason)
     }
 
+    fn reserve_restart(&mut self) -> Option<Outcome> {
+        if self.restart_permit.is_some() {
+            return None;
+        }
+        let root = self.target.storage_root();
+        match reserve_restart(
+            root,
+            self.collaborators.session.as_ref(),
+            &mut BootRecordLocator::new(root),
+        ) {
+            Role::Start(permit) => {
+                self.restart_permit = Some(permit);
+                None
+            }
+            Role::Wait(reason) => {
+                self.emit(Event::RestartDeferred(reason));
+                Some(Outcome::RestartDeferred(reason))
+            }
+            Role::OwnSession { .. } | Role::Observe(_) => {
+                self.emit(Event::OwnershipChanged);
+                Some(Outcome::OwnershipChanged)
+            }
+        }
+    }
+
     /// Re-probe once per mismatch run and retarget the launch; false when already tried.
     fn reprobe(&mut self) -> bool {
         if self.reprobed {
@@ -535,6 +606,9 @@ impl Supervisor {
 
     /// Wait the admitted backoff while honouring requests; `Some` ends supervision.
     fn back_off(&mut self, class: RestartClass) -> Option<Outcome> {
+        if let Some(outcome) = self.reserve_restart() {
+            return Some(outcome);
+        }
         let Some(delay) = self.history.admit(&self.config.restart, Instant::now()) else {
             self.emit(Event::Failed { last: class });
             return Some(Outcome::Failed { last: class });
@@ -756,6 +830,7 @@ impl Supervisor {
             next_ping: now,
         };
         self.reprobed = false;
+        self.restart_permit = None;
         self.emit(Event::Ready {
             pid: watch.pid,
             boot_id: ready.boot_id.clone(),

@@ -6,7 +6,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd627500fab90ab8f6f6dfaaa1090d6fe9e14512cd938e78db7b5d1ae335c893'
+body_hash: 'sha256:501bdc795f2e443d20e42525196799048f23bb0f4e3cab43640d3883af5d5a00'
 related:
   - '[[2026-10-03-runtime-manager-architecture-research]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-plan]]'
   - '[[2026-10-04-runtime-manager-architecture-requirements-research]]'
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
+  - '[[2026-10-05-runtime-manager-architecture-audit]]'
 ---
 
 # `runtime-manager-architecture` feature index
@@ -26,6 +27,10 @@ Auto-generated index of all documents tagged with `#runtime-manager-architecture
 
 - `2026-10-04-runtime-manager-architecture-adr` - `runtime-manager-architecture` adr: `Per-user runtime manager` | (**status:** `accepted`)
 - `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` - `runtime-manager-architecture` adr: `Runtime supervisor contract` | (**status:** `accepted`)
+
+### audit
+
+- `2026-10-05-runtime-manager-architecture-audit` - `runtime-manager-architecture` audit: `Manager lane checkpoint review`
 
 ### exec
 

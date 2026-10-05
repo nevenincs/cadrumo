@@ -64,6 +64,59 @@ pub trait RuntimeLocator: Send {
 #[derive(Debug)]
 pub struct StartPermit {
     _claim: StartClaim,
+    storage_root: PathBuf,
+}
+
+impl StartPermit {
+    pub fn storage_root(&self) -> &Path {
+        &self.storage_root
+    }
+
+    /// Recheck mutable start conditions after a delay, while still holding the claim.
+    pub fn refusal(&self, activity: &dyn SessionActivity) -> Option<WaitReason> {
+        if !activity.is_active() {
+            return Some(WaitReason::Inactive);
+        }
+        match read_quit_marker(&self.storage_root) {
+            QuitState::Present(_) => Some(WaitReason::Quit),
+            QuitState::Unreadable => Some(WaitReason::QuitUnreadable),
+            QuitState::Absent => None,
+        }
+    }
+}
+
+/// Reserve a restart before its backoff begins. A returned permit remains held through
+/// the delay and launch, until readiness or abandonment. Recheck ownership after taking
+/// the claim: another session may have won the interval since the old process exited.
+pub fn reserve_restart(
+    storage_root: &Path,
+    activity: &dyn SessionActivity,
+    locator: &mut dyn RuntimeLocator,
+) -> Role {
+    if !activity.is_active() {
+        return Role::Wait(WaitReason::Inactive);
+    }
+    let claim = match StartClaim::take(storage_root, Duration::ZERO) {
+        Ok(Some(claim)) => claim,
+        Ok(None) => return Role::Wait(WaitReason::StartingElsewhere),
+        Err(error) => return Role::Wait(WaitReason::ClaimUnavailable(error.kind())),
+    };
+    if !activity.is_active() {
+        return Role::Wait(WaitReason::Inactive);
+    }
+    match read_quit_marker(storage_root) {
+        QuitState::Present(_) => return Role::Wait(WaitReason::Quit),
+        QuitState::Unreadable => return Role::Wait(WaitReason::QuitUnreadable),
+        QuitState::Absent => {}
+    }
+    match locator.locate() {
+        Located::Nothing => Role::Start(StartPermit {
+            _claim: claim,
+            storage_root: storage_root.to_path_buf(),
+        }),
+        Located::OwnSession { pid } => Role::OwnSession { pid },
+        Located::OtherSession(observed) => Role::Observe(observed),
+    }
 }
 
 /// Why a manager neither starts nor observes the runtime.
@@ -185,7 +238,10 @@ impl Ownership {
             drop(claim);
             return Role::Wait(reason);
         }
-        Role::Start(StartPermit { _claim: claim })
+        Role::Start(StartPermit {
+            _claim: claim,
+            storage_root: self.storage_root.clone(),
+        })
     }
 
     fn running(&mut self) -> Option<Role> {

@@ -5,6 +5,9 @@
 //! are removed afterwards; every fixture process is ended during teardown.
 #![cfg(windows)]
 
+use cadrumo_manager::session::claim::StartClaim;
+use cadrumo_manager::session::ownership::{BootRecordLocator, Role, WaitReason, reserve_restart};
+use cadrumo_manager::session::quit::{QuitMarker, record_quit};
 use cadrumo_manager::supervision::adoption::{ForeignReason, InstalledVersion, InstalledVersions};
 use cadrumo_manager::supervision::environment::WINDOWS_ALLOWED;
 use cadrumo_manager::supervision::exit::{ExitReason, RuntimeExit};
@@ -116,6 +119,7 @@ struct Case {
     session: bool,
     probe: Option<&'static str>,
     installed: bool,
+    initial_permit: bool,
 }
 
 impl Default for Case {
@@ -139,6 +143,7 @@ impl Default for Case {
             session: true,
             probe: None,
             installed: true,
+            initial_permit: false,
         }
     }
 }
@@ -172,7 +177,22 @@ impl Case {
         let (events, observed) = mpsc::channel();
         let mut supervisor = Supervisor::new(self.config, target, collaborators, events);
         let handle = supervisor.handle();
-        let running = thread::spawn(move || supervisor.run());
+        let permit = self.initial_permit.then(|| {
+            let Role::Start(permit) = reserve_restart(
+                root.path(),
+                &Session(self.session),
+                &mut BootRecordLocator::new(root.path()),
+            ) else {
+                panic!("initial start permit");
+            };
+            permit
+        });
+        let running = thread::spawn(move || match permit {
+            Some(permit) => supervisor
+                .run_with_permit(permit)
+                .expect("matching pinned root"),
+            None => supervisor.run(),
+        });
         let started = Instant::now();
         let mut seen = Vec::new();
         loop {
@@ -368,6 +388,127 @@ fn a_crash_restarts_with_backoff_and_leaves_effects_unknown() {
         1
     );
     assert_eq!(root.launches(), 2);
+}
+
+#[test]
+fn restart_holds_the_claim_through_backoff_and_releases_it_at_readiness() {
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let mut ready = 0;
+    let (seen, outcome) = Case::default().run(&root, |event, handle| match event {
+        Event::RestartScheduled { .. } => {
+            assert!(
+                StartClaim::take(root.path(), Duration::ZERO)
+                    .unwrap()
+                    .is_none()
+            );
+        }
+        Event::Ready { .. } => {
+            ready += 1;
+            if ready == 2 {
+                assert!(
+                    StartClaim::take(root.path(), Duration::ZERO)
+                        .unwrap()
+                        .is_some()
+                );
+                handle.request(Request::Stop);
+            }
+        }
+        _ => {}
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(restarts(&seen), [RestartClass::Unexpected]);
+    assert_eq!(root.launches(), 2);
+}
+
+#[test]
+fn a_contended_restart_claim_never_launches_again() {
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let held = StartClaim::take(root.path(), Duration::ZERO)
+        .unwrap()
+        .unwrap();
+    let (seen, outcome) = Case::default().run(&root, |_, _| {});
+    assert_eq!(
+        outcome,
+        Outcome::RestartDeferred(WaitReason::StartingElsewhere)
+    );
+    assert!(restarts(&seen).is_empty());
+    assert_eq!(root.launches(), 1);
+    drop(held);
+}
+
+#[test]
+fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let mut case = Case::default();
+    case.config.restart.initial_backoff = Duration::from_millis(500);
+    case.config.restart.maximum_backoff = Duration::from_millis(500);
+    let (_, outcome) = case.run(&root, |event, _| {
+        if matches!(event, Event::RestartScheduled { .. }) {
+            record_quit(
+                root.path(),
+                &QuitMarker {
+                    user: "test-user".into(),
+                    session: "1".into(),
+                    set_at_ms: 1,
+                },
+            )
+            .unwrap();
+        }
+    });
+    assert_eq!(outcome, Outcome::RestartDeferred(WaitReason::Quit));
+    assert_eq!(root.launches(), 1);
+    assert!(
+        StartClaim::take(root.path(), Duration::ZERO)
+            .unwrap()
+            .is_some()
+    );
+}
+
+#[test]
+fn stopping_during_backoff_releases_the_restart_claim() {
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let (_, outcome) = Case::default().run(&root, |event, handle| {
+        if matches!(event, Event::RestartScheduled { .. }) {
+            handle.request(Request::Stop);
+        }
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(root.launches(), 1);
+    assert!(
+        StartClaim::take(root.path(), Duration::ZERO)
+            .unwrap()
+            .is_some()
+    );
+}
+
+#[test]
+fn an_initial_permit_survives_a_pre_ready_failure_without_self_contention() {
+    let root = Root::new(&["exit code=1", "serve"]);
+    let case = Case {
+        initial_permit: true,
+        ..Case::default()
+    };
+    let (seen, outcome) = case.run(&root, |event, handle| match event {
+        Event::RestartScheduled { .. } => {
+            assert!(
+                StartClaim::take(root.path(), Duration::ZERO)
+                    .unwrap()
+                    .is_none()
+            );
+        }
+        Event::Ready { .. } => {
+            handle.request(Request::Stop);
+        }
+        _ => {}
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(root.launches(), 2);
+    assert_eq!(restarts(&seen), [RestartClass::LaunchFailure]);
+    assert!(
+        StartClaim::take(root.path(), Duration::ZERO)
+            .unwrap()
+            .is_some()
+    );
 }
 
 #[test]

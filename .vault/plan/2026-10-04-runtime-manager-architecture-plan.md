@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:a59b720102018730c6c45f115b820a8894c6c0b12faca589f76d6e6637fe96a3'
+body_hash: 'sha256:98174c317d89469b15e128fff4d6b3ad085c985d8b69d5b8d7384410de248a3f'
 ---
 
 # `runtime-manager-architecture` plan
@@ -75,7 +75,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 - [x] `P02.S11` - Implement session ownership: per-session lock, per-user kernel-released start claim and Quit marker conformance-tested against the Python custody primitives, observe-only other sessions and active-session handoff; `native/manager/, contract generator conformance tests`.
 - [ ] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
 - [ ] `P02.S13` - Implement the tray surface, manager log and per-user preference with strings from the canonical locale catalogues; `native/manager/, src/cadrumo/locales/ via the dev.locales workflow`.
-- [ ] `P02.S23` - Gate supervisor restarts through the per-user start claim so an observing session cannot relaunch during the owner's backoff; `native/manager/src/supervision/supervisor.rs, native/manager/src/session/ownership.rs, owning tests`.
+- [x] `P02.S23` - Gate supervisor restarts through the per-user start claim so an observing session cannot relaunch during the owner's backoff; `native/manager/src/supervision/supervisor.rs, native/manager/src/session/ownership.rs, owning tests`.
 - [ ] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
 
 ### Phase `P03` - Installation and client remedies
