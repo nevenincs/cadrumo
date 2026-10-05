@@ -54,6 +54,23 @@ for (const story of stories)
       try {
         await page.goto(url, { waitUntil: "networkidle" });
         await page.waitForSelector("#storybook-root > *", { timeout: 15000 });
+        // A story may act before it is ready to be looked at: typing a query,
+        // moving the choice. Its render ends when that has finished.
+        const phase = await page
+          .waitForFunction(
+            () => {
+              const at = window.__STORYBOOK_PREVIEW__?.currentRender?.phase;
+              return ["completed", "afterEach", "finished", "errored"].includes(
+                at,
+              )
+                ? at
+                : false;
+            },
+            null,
+            { timeout: 15000 },
+          )
+          .then((handle) => handle.jsonValue());
+        if (phase === "errored") throw new Error("the story failed to render");
         await page.evaluate(() => document.fonts.ready);
         const fonts = await page.evaluate(() =>
           [...document.fonts]
