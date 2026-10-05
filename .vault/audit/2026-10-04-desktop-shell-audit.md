@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee2d5073dd01b96938d9b28d9f7e9feb15e974137a00d32e24803fb5aa6d4b55'
+body_hash: 'sha256:7ce514a06a7591377068f08bf815c8ef358fd2411fc9a4abc58978329967e1da'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -133,6 +133,9 @@ The host inherits `WEBVIEW2_USER_DATA_FOLDER`, `WEBVIEW2_BROWSER_EXECUTABLE_FOLD
 
 Verdict PENDING for full S16: the host conservatively reports non-Windows sign-in unsupported until the backend exposes authoritative GNOME observer capability. Actual packaged CLI/UI secret isolation and end-to-end sign-in remain unverified under S16/S10. The runner owns only its direct CLI child; inspected current login/status/logout leaves connect to the existing runtime and do not spawn descendants, but descendant pipe containment is not established. S16 stays open. S12 manager-start integration is separately pending; no dead UI control was added.
 
+### packaged-cli-argument-correction | low | Canonical JSON selection fixed before interactive acceptance
+
+2026-10-05 acceptance preparation found that the S16 host invoked an unsupported leaf `--json` argument. The host now passes the canonical root `--format json` before `config <leaf>`, retaining stdin-only secrets and the verified executable/environment. The earlier unit evidence did not exercise the real CLI parser. The separate WebView2 test host builds successfully from the corrected source; SHA256 `e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687`, log `build/windows-x86-64/e2e-desktop/host-build.log`. Full S16/S10 verdict remains PENDING until the current package is driven from an interactive desktop.
 
 ## Recommendations
 

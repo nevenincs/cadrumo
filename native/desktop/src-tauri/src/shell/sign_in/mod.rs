@@ -60,11 +60,10 @@ impl SignIn {
 
     fn run(&self, leaf: &'static str, secret: Option<Zeroizing<Vec<u8>>>) -> Result<wire::Outcome> {
         let mut command = self.child.as_ref().map_err(Clone::clone)?.command();
-        command.args(["config", leaf]);
+        command.args(["--format", "json", "config", leaf]);
         if secret.is_some() {
             command.arg("--secrets-stdin");
         }
-        command.arg("--json");
         let output = self.children.run(command, secret)?;
         wire::decode(leaf, &output)
     }

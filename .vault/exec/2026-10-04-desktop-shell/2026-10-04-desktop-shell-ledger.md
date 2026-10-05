@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:2129b62b8c4f30b89ce3a554889dffbb001696ec6408e2a61b5cab164b941d4f'
+body_hash: 'sha256:8c0e0f7be1482aacce1b0b6cfdd254cd07f93eb44413f5aa4b182fb8fd5ec918'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -466,6 +466,8 @@ related:
 - `S16` `verify:` `cargo clippy desktop locked all-targets -D warnings` -> `pass`
 - `S16` `verify:` `cargo fmt desktop check` -> `pass`
 - `S16` `verify:` `git diff check desktop src-tauri` -> `pass`
+- `S16` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S16` `verify:` `cmake --build build/windows-x86-64/e2e-desktop --config Release --target desktop-packaged-host` -> `pass`
 
 ## Notes
 
@@ -539,3 +541,4 @@ related:
 - `S13` Desktop subdirectory gated on a staged desktop image so docs-off source builds need neither Node.js nor npm, per CADRUMO-BUILD-RUNTIME review
 - `S17` Browser boundary fixtures verify presentation, not native package acceptance. Isolated build/d2-desktop uses ports 15370/15371. S16/S10 retain native/platform and packaged acceptance; S12 retains manager-start integration; S09 retains live desktop-host smoke. Canonical S18 translations reused, and 26 now-consumed keys removed from awaiting-consumer declaration.
 - `S16` Windows host checkpoint only: S16 stays open for authoritative GNOME observer capability and packaged CLI/UI acceptance. Exact tested snapshot and generated contract at build/s16-desktop-host; logs test-all.log test-sign-in.log clippy.log. SHA256 of all seven changed files matched tested snapshot. Runner reaps its direct aeat child; current login/status/logout leaves connect to existing runtime and spawn no descendants. No descendant containment proof. Non-Windows sign-in conservatively unsupported pending backend capability.
+- `S16` Acceptance preparation found the host used unsupported leaf --json; corrected to the canonical root --format json before config. Built test host SHA256 e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687. S16 remains open pending real interactive packaged sign-in and non-Windows capability acceptance.
