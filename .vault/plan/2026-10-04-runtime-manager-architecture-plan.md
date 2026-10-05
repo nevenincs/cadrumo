@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:cba5cc1398bcb6fdcca2bc2a0c52d0500e501a741742daa11f3e0dea413b67c5'
+body_hash: 'sha256:a59b720102018730c6c45f115b820a8894c6c0b12faca589f76d6e6637fe96a3'
 ---
 
 # `runtime-manager-architecture` plan
@@ -120,6 +120,10 @@ Write ownership is disjoint:
 - P03 touches packaging generation and client remedies.
 
 Coordinate any `native/application` or `native/platform` edits with the desktop-shell and packaging owners. Commit by pathspec, because the worktree is shared.
+
+2026-10-05 lane dispatch: the operator authorized B5, followed by D1 and D2, with no lanes beyond B1-B5/D1-D2. B1-B4 remain external concurrent owners. B5 owns `native/manager/**`, starting at S23 and consuming B1 package contracts, B2 platform/environment APIs and B4 state/protocol declarations. Its first checkpoint checks B4-owned S04 ordered settle, S22 exact counts and S24 manager record schemas. S08/S10/S12/S13 advance only where prerequisites are available. Requests touching native/application, native/platform, packaging or locales go to those owners. The coordinator serializes this session's vault, ledger and commit writes and owns shared verification; workers use separate Cargo outputs. External B1-B4 agents are not visible here: shared files and supplied handovers establish their state.
+
+B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._end_session` still requests `SESSION_END_SETTLE` through the normal drain; the supervisor exposes Stop/StopIfIdle but no SessionEnd request. Python and Rust heartbeat still carry `hosted_profiles`, not exact operations. B4 must supply the final S04/S22 behavior and count contract before B5 changes that wire schema. Manager taxonomy entries are present in working changes; the current Rust Quit marker is `{schema_version: 1, session, user, set_at_ms}`, bounded to 4096 bytes, with ASCII identifier bounds and an integer timestamp up to 2^53-1. S24 remains open until B4 records and verifies the cross-version grammar. S23 restart-claim gating is independently ready; live manager integration is not claimed complete.
 
 ## Verification
 

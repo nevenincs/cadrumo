@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:ffc1c825d68d12e86072cc4f28beed27bd1fbdd04e11d708afb3bc4d49ed75ed'
+body_hash: 'sha256:8aafd64867c2e92f139fb42bd1d2ba97daba6a4a0fe0d9fd21bce1100d2e9e93'
 ---
 
 # `desktop-shell` plan
@@ -147,6 +147,8 @@ Group B, after S02 lands, four executors: S04 (`src/terminal/`, `native/applicat
 Group C: S09 is owned by the CADRUMO-BUILD-TAURI-DESIGNER session (user-confirmed 2026-10-04) and may start as soon as S08's `contract.ts` exists; no other Step writes under `native/desktop/frontend/src`, `frontend/tests/desktop.spec.ts`, `frontend/package.json` or `frontend/vite.config.ts`, and S08 touches only `src/ipc/contract.ts` and `src/generated/`. S13 waits for S01 to land (shared `native/cmake/Packaging.cmake` and `native/CONTRACT.md`) and coordinates every patch to `assemble.py`, `layout.py`, the platform mapping and `Packaging.cmake` with CADRUMO-BUILD-RUNTIME, who owns the console entrypoint lines in those files: re-read before each patch and preserve their lines. S10 waits for S01, S04-S07, S09 and S13 (the packaged `cadrumo.exe` must be in the stage), and for S01 to have landed before it edits `native/desktop/CMakeLists.txt`. S11 waits for S01 and S13 (same file) and runs last before the integrated review. S12 is held and unassigned.
 
 Builds and tests from parallel executors use distinct `CADRUMO_CMAKE_BINARY_DIR` values; Cargo output under one binary directory is never shared by two executors at once. Vault, ledger and commit mutations are serialized by the orchestrator. Other writers share this worktree (runtime session, designer session, Preflight auto-commit): re-read before patching, never stash, reset, clean or overwrite.
+
+2026-10-05 lane dispatch: the operator authorized B5, then D1 and D2, with independent work overlapping backend completion. D1 owns `native/desktop/src-tauri/**` and `native/desktop/tests/**`, starting at S16. D2 owns `native/desktop/frontend/**` including `src/ipc/contract.ts`, the existing docs bridge and locale authoring surfaces, starting at S17 and assessing remaining S09 work. They agree host/TypeScript contracts before dependent edits. D2 collects B4 pending locale keys from handovers or current call sites and uses the canonical locale workflow. B1 retains packaging/CMake; B2 retains native/platform and native/application. These assignments supersede earlier session labels for these surfaces. The coordinator serializes this session's vault, ledger and commit writes and owns shared acceptance; workers use separate build output. No additional lanes are launched.
 
 ## Verification
 
