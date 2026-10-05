@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8bda2a3acfd1a5ea6f4f8ea538b1735615754231f2126b00fb6539507aa11875'
+body_hash: 'sha256:8bb91f4d80d36742c8d80370a1af14273a81cbe47f48deb6e25be74cc4dfb982'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -142,6 +142,10 @@ Verdict PENDING for full S16: the host conservatively reports non-Windows sign-i
 2026-10-05 root reviewed the S10 extension across actual CLI profile creation, manually owned contained runtime, production handshake, raw password form, shared status/logout parity, live argv/log/docs isolation and narrow fixture cleanup. No runtime-session override, service or bridge is installed. Setup failures cannot report cleanup PASS. Typed CLI error evidence is bounded and scrubbed. Three real frontend flows now check palette selection against the exact authenticated docs reply, localized Home and appearance handback.
 
 The first final-source harness regression reproduced an EPERM browser-profile teardown failure after 19 assertions passed. Root verified and terminated only that test process tree. The correction closes the browser gracefully, attempts every release even after individual errors and bounds cleanup retries; reviewed rerun passes 20 tests, exit 0 (`build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log`). Formatting, syntax, Ruff and diff checks pass. These are harness/stand-in checks, not product acceptance. S10/S16 remain PENDING for the full package on the interactive desktop; the user has agreed to run the prepared command. Manager-backed S12 also remains pending production manager composition and B4 shutdown/count/schema contracts.
+
+### ledger-prerequisite-contract-fixes | low | Successful changed-ID updates and repeated merge argv corrected
+
+2026-10-05 full documentation prerequisite exposed two current backend defects, independently reproduced with current contracts. Update correlation rejected a successful amount/narrative edit because the resulting content-derived ID differs from the submitted source ID. The result now carries its authoritative resolved source identity; correlation retains source-prefix, profile, result-reference, effect and patch checks, and no-effect results must retain identity. CLI merge now normalizes repeated option values to the strict tuple request. Root reviewed all seven changed files; these paths had no prior external edits. Focused and related suites pass 37 tests including actual command parsing, changed-ID wire roundtrip, mismatched-source refusal and encrypted-repository integration. Ruff, formatting, ty and diff checks pass. Full S10 acceptance remains PENDING: fresh workers/packages and a clean docs gate are still required; this review does not accept other observed golden differences or runtime timeouts.
 
 ## Recommendations
 

@@ -64,7 +64,9 @@ def require_ledger_update_correlation(
         or completed.refusal_code is not None
         or completed.effect is not expected_effect
         or projection.profile_id != profile_id
-        or not transaction.transaction_id.startswith(prefix)
+        or projection.source_transaction_id is None
+        or not projection.source_transaction_id.startswith(prefix)
+        or (expected_effect is OperationEffect.NONE and transaction.transaction_id != projection.source_transaction_id)
         or not _matches_patch(worker_patch, patch_fields, transaction, projection)
     )
     if invalid:

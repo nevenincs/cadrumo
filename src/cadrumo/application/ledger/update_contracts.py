@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
@@ -178,6 +179,7 @@ class LedgerUpdateOperationResult(BaseModel):
 
     outcome: Literal["updated", "validation_error"]
     profile_id: UUID
+    source_transaction_id: TransactionId | None = None
     transaction: LedgerTransactionProjection | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_UPDATE_EVENT_IDS)] = ()
@@ -217,13 +219,21 @@ class LedgerUpdateExecutionResult(BaseModel):
 
 
 def _require_updated_result(result: LedgerUpdateOperationResult) -> None:
-    if result.transaction is None or result.review_status is None or result.validation_messages:
-        raise ValueError("updated ledger result requires its transaction and review status")
+    if (
+        result.source_transaction_id is None
+        or result.transaction is None
+        or result.review_status is None
+        or result.validation_messages
+    ):
+        raise ValueError("updated ledger result requires its source transaction, transaction and review status")
+    if not result.bucket_event_ids and result.transaction.transaction_id != result.source_transaction_id:
+        raise ValueError("an unchanged ledger result must retain the source transaction identity")
 
 
 def _require_update_refusal_result(result: LedgerUpdateOperationResult) -> None:
     if (
-        result.transaction is not None
+        result.source_transaction_id is not None
+        or result.transaction is not None
         or result.review_status is not None
         or result.bucket_event_ids
         or result.group_label is not None

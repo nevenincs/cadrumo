@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from contextlib import nullcontext
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
 import typer
+from typer.testing import CliRunner
 
 from ....application.ledger.merge_operation import (
     LEDGER_MERGE_OPERATION_DEFINITION_ID,
@@ -15,9 +17,12 @@ from ....application.ledger.merge_operation import (
     LedgerMergeRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .. import _command_runtime, _profile_authentication_gate, ledger_lifecycle_cli
 from .. import runtime_ledger_merge as bridge
+from ..command_specs import COMMAND_GRAPH
 from ..errors import CliRefusedBoundaryError
 from ..registered_operation_contracts import RegisteredOperationCompletion
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -97,6 +102,38 @@ def test_bridge_normalizes_prefixes_and_correlates_merge(monkeypatch: pytest.Mon
     assert request.child_ids == ("b" * 12, "c" * 13)
     assert request.reason == "revert split"
     assert request.actor == "operator"
+
+
+def test_repeated_child_id_argv_reaches_the_strict_merge_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    submitted: list[LedgerMergeRequest] = []
+    _bind(
+        monkeypatch,
+        RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=_projection(),
+            effect=OperationEffect.UPDATED,
+        ),
+        submitted,
+    )
+    monkeypatch.setattr(_profile_authentication_gate, "preflight_parsed_leaf", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(_command_runtime, "_governed_fact_scope", lambda *_args: nullcontext())
+    monkeypatch.setattr(ledger_lifecycle_cli, "emit_envelope", lambda *_args, **_kwargs: None)
+    result = CliRunner().invoke(
+        build_command_subtree(COMMAND_GRAPH, "app_ledger"),
+        [
+            "merge",
+            "--child-id",
+            "B" * 12,
+            "--child-id",
+            "c" * 13,
+            "--reason",
+            "undo split",
+            "--yes",
+        ],
+    )
+    assert result.exit_code == 0, (result.output, result.exception)
+    assert len(submitted) == 1
+    assert submitted[0].child_ids == ("b" * 12, "c" * 13)
 
 
 @pytest.mark.parametrize("invalid_case", ["profile", "source_child", "child_count", "effect", "terminal"])

@@ -187,7 +187,7 @@ async def _commit_update(
             )
         except ValidationError as exc:
             return await _refuse_invalid_update(payload, exc, context=context)
-        return await _finish_update(payload, result, context=context)
+        return await _finish_update(payload, result, source_transaction_id=transaction_id, context=context)
 
 
 def _validate_update_projection(
@@ -204,6 +204,7 @@ def _validate_update_projection(
             transaction=current,
             bucket_event_ids=(),
         ),
+        source_transaction_id=transaction_id,
     )
 
 
@@ -229,15 +230,18 @@ async def _finish_update(
     payload: LedgerUpdateRequest,
     result: ManualLedgerTransactionResult,
     *,
+    source_transaction_id: str,
     context: OperationExecutorContext,
 ) -> str:
-    projected = _operation_result(payload.profile_id, result)
+    projected = _operation_result(payload.profile_id, result, source_transaction_id=source_transaction_id)
     await context.events.effect(OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE)
     result_ref = LedgerUpdateExecutionResult(outcome="updated", profile_id=payload.profile_id, result=projected)
     return await context.operands.put(result_ref, written_at=now())
 
 
-def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerUpdateOperationResult:
+def _operation_result(
+    profile_id: UUID, result: ManualLedgerTransactionResult, *, source_transaction_id: str
+) -> LedgerUpdateOperationResult:
     """Validate identity and the complete canonical display projection."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
     if (
@@ -250,6 +254,7 @@ def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -
     return LedgerUpdateOperationResult(
         outcome="updated",
         profile_id=profile_id,
+        source_transaction_id=source_transaction_id,
         transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,

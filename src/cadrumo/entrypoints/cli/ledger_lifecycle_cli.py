@@ -678,7 +678,7 @@ def ledger_merge(
 
     result = run_ledger_merge(
         ctx,
-        child_ids=child_id,
+        child_ids=tuple(child_id),
         reason=reason,
         actor=actor,
     )

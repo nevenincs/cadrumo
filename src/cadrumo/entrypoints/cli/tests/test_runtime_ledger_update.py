@@ -31,17 +31,51 @@ _TRANSACTION_ID = "a" * 64
 _OPERATION_ID = "f" * 64
 
 
-def _projection(*, group_label: str = "Travel") -> LedgerUpdateOperationResult:
-    transaction = LedgerTransactionProjection.model_construct(
-        transaction_id=_TRANSACTION_ID,
+def _projection(
+    *, group_label: str = "Travel", transaction_id: str = _TRANSACTION_ID, source_transaction_id: str = _TRANSACTION_ID
+) -> LedgerUpdateOperationResult:
+    transaction = LedgerTransactionProjection(
+        transaction_id=transaction_id,
+        date="2026-04-16",
         booked_date="2026-04-16",
         value_date=None,
         amount="121.00",
         direction="INCOMING",
+        currency="EUR",
+        counterparty="Client",
+        description="Corrected description",
+        business_classification="PERSONAL",
+        business_pct=None,
+        category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+        iva_category=None,
+        counterparty_country=None,
+        counterparty_identification_state=None,
+        irpf_category=None,
+        m210_income_classification=None,
+        usage_ratio_id=None,
+        prorrata_reference=None,
+        purchase_invoice_evidence_id=None,
+        invoice_id=None,
+        attachment_ids=(),
+        notes="",
+        lifecycle_state="ACTIVE",
+        classified_by="manual",
+        classified_at=None,
+        classification_reason="",
+        classification_confidence=None,
+        source_jurisdiction=None,
+        value_in_eur=None,
+        fx_rate=None,
+        created_at="2026-04-16T00:00:00+00:00",
+        modified_at="2026-04-16T00:00:00+00:00",
     )
-    return LedgerUpdateOperationResult.model_construct(
+    return LedgerUpdateOperationResult(
         outcome="updated",
         profile_id=_PROFILE,
+        source_transaction_id=source_transaction_id,
         transaction=transaction,
         review_status=LedgerReviewStatus.PENDING,
         bucket_event_ids=("e" * 64,),
@@ -125,5 +159,36 @@ def test_bridge_rejects_a_group_label_that_does_not_match_the_request(monkeypatc
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke()
 
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == "runtime_invalid_frame"
+
+
+def test_bridge_accepts_the_changed_content_id_of_a_successful_update(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = _projection(transaction_id="b" * 64)
+    projection = LedgerUpdateOperationResult.model_validate_json(projection.model_dump_json())
+    _bind(
+        monkeypatch,
+        RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID, projection=projection, effect=OperationEffect.UPDATED
+        ),
+        [],
+    )
+    assert _invoke() == projection
+
+
+def test_bridge_refuses_a_wrong_source_even_when_the_new_id_matches_the_requested_prefix(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _bind(
+        monkeypatch,
+        RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=_projection(source_transaction_id="c" * 64),
+            effect=OperationEffect.UPDATED,
+        ),
+        [],
+    )
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        _invoke()
     assert refused.value.context is not None
     assert refused.value.context["reason"] == "runtime_invalid_frame"
