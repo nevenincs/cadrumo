@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8801732e03637854aeadf97d2cc49c1b2b43c8702f6ffa73b66fc13624e35a0f'
+body_hash: 'sha256:c82f06a47e94c1ada8884fd079a3ef4628ef6f735619367f0a2f4247541ed984'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -211,6 +211,11 @@ related:
 - `S10` `verify:` `manager admission and entrypoint tests (8)` -> `pass`
 - `S10` `verify:` `manager all-target fixture Clippy` -> `pass`
 - `S10` `verify:` `manager fmt` -> `pass`
+- `S10` `M` `native/manager/src/supervision/supervisor.rs`
+- `S10` `M` `native/manager/tests/supervision.rs`
+- `S10` `M` `native/manager/tests/fixture/runtime.rs`
+- `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1` -> `pass`
+- `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1 -Check clippy` -> `pass`
 
 ## Notes
 
@@ -227,3 +232,4 @@ related:
 - `S23` Windows verification only; no Linux compile check. Toolchain C:/Users/hello/.cargo/bin/cargo.exe; target build/b5-manager-cargo; generated contract and identity build/windows-x86-64/b1/generated. main.rs remains version-only; composition and B4 S04/S22/S24 contracts remain open. `run_with_permit` transfers the initial claim safely through pre-readiness retry.
 - `S08` Partial S08 checkpoint: canonical native/platform installed-default resolver and Strict child environment replace manager's duplicated allowlist. Only filtered output is lazily cached for restarts, authority is package-pinned, and diagnostics omit environment values. Final 85 affected tests and release checks passed on Windows in build/b5-manager-cargo with B1-generated contract/identity; executor completion 22caa0 and 7edfba. S08 stays open for bounded interpreter identity/version probes and shared Settings projection; production entrypoint composition and B4 shutdown/count/schema contracts remain absent.
 - `S10` Partial S10 only: bare startup checks native session, full-token elevation and interactive desktop evidence before state or child work; --version remains available. Job escape, session-end and real runtime composition remain unimplemented. B4 ordered settle, exact operation counts and manager record grammars are still prerequisites.
+- `S10` Principal partial implementation: private session-end request, synchronized restart suppression, deadline escalation and truthful uncomposed entrypoint refusal. 133 Rust tests pass. OS window/session integration and installed discovery are unfinished; S10 stays open. No final bundle or real OS logout acceptance claimed.

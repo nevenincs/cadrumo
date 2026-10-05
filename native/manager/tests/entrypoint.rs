@@ -18,7 +18,7 @@ fn version_reports_the_projected_manager_name_and_version() {
 }
 
 #[test]
-fn bare_start_enforces_native_admission() {
+fn bare_start_never_reports_success_without_runtime_composition() {
     let output = Command::new(MANAGER).output().expect("run the manager");
     #[cfg(windows)]
     if let Err(refusal) = cadrumo_manager::admission::require_current() {
@@ -30,10 +30,11 @@ fn bare_start_enforces_native_admission() {
         );
         return;
     }
-    assert!(output.status.success(), "{output:?}");
-    assert!(
-        output.stdout.is_empty() && output.stderr.is_empty(),
-        "{output:?}"
+    assert_eq!(output.status.code(), Some(69), "{output:?}");
+    assert!(output.stdout.is_empty(), "{output:?}");
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "manager_composition_unavailable\n"
     );
 }
 

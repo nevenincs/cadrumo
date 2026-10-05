@@ -397,6 +397,7 @@ mod fixture {
                 Some("stop") => announcer.stopping(SUPERVISOR_STOP),
                 Some("stop-if-idle") if busy => announcer.line("{\"type\":\"busy\"}"),
                 Some("stop-if-idle") => announcer.stopping(SUPERVISOR_STOP),
+                Some("session-end") if hung && hard_hang => {}
                 Some("session-end") => announcer.stopping(SESSION_END_SETTLE),
                 _ => announcer.line("{\"type\":\"refused\",\"code\":\"malformed\"}"),
             }

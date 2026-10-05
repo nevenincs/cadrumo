@@ -21,9 +21,9 @@ use crate::session::ownership::{
 };
 use std::io::{ErrorKind, Read, Write};
 use std::process::{ChildStdin, ChildStdout};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, SyncSender, TrySendError};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -43,6 +43,8 @@ pub struct SupervisorConfig {
     pub accept_tick_ceiling: Duration,
     /// How long a stop may take: the runtime's drain plus its own watchdog, with margin.
     pub drain_bound: Duration,
+    /// Deadline for the runtime's ordered session-end settlement before containment.
+    pub session_end_bound: Duration,
     /// How long to wait for a terminated process to be reported ended.
     pub termination_bound: Duration,
     /// Upper bound of one wait between exit polls.
@@ -59,6 +61,7 @@ impl Default for SupervisorConfig {
             accept_tick_ceiling: Duration::from_secs(30),
             // The runtime drains for 15 s and its watchdog forces an exit 2 s later.
             drain_bound: Duration::from_secs(25),
+            session_end_bound: Duration::from_secs(3),
             termination_bound: Duration::from_secs(5),
             poll_interval: Duration::from_millis(100),
             restart: RestartPolicy::default(),
@@ -92,6 +95,8 @@ pub enum Request {
     Stop,
     /// Stop the runtime only if no operation is in flight; otherwise keep supervising.
     StopIfIdle,
+    /// Settle an ending OS session and permanently suppress this supervisor's restarts.
+    SessionEnd,
 }
 
 /// Whether in-flight effects settled, or remain for reconciliation.
@@ -143,6 +148,8 @@ pub enum StopCause {
     IdleRequested,
     /// The manager asked to stop.
     Requested,
+    /// Session teardown outranks every ordinary drain or restart reason.
+    SessionEnd,
 }
 
 /// How a stop reached the runtime.
@@ -242,11 +249,17 @@ enum Input {
 
 /// Sends requests to a running supervisor from another thread.
 #[derive(Clone)]
-pub struct SupervisorHandle(Sender<Input>);
+pub struct SupervisorHandle(Sender<Input>, Arc<AtomicBool>, Arc<Mutex<()>>);
 
 impl SupervisorHandle {
     /// Queue `request`; false once the supervisor is gone.
     pub fn request(&self, request: Request) -> bool {
+        if request == Request::SessionEnd {
+            let _launch = self.2.lock().unwrap_or_else(|error| error.into_inner());
+            // Publish before queueing: a concurrent exit/backoff must not relaunch
+            // while the control message is behind old channel announcements.
+            self.1.store(true, Ordering::SeqCst);
+        }
         self.0.send(Input::Control(request)).is_ok()
     }
 }
@@ -261,6 +274,11 @@ struct Ended {
 
 impl Ended {
     fn effects(&self) -> Effects {
+        if self.cause == Some(StopCause::SessionEnd) {
+            // The closed supervisor grammar reports an exit reason, not exact
+            // worker settlement or lease outcomes. Those remain runtime-owned.
+            return Effects::Unknown;
+        }
         let drained = matches!(
             self.exit,
             RuntimeExit::Reason(
@@ -289,7 +307,9 @@ enum Decision {
 
 fn decide(exit: RuntimeExit, cause: Option<StopCause>) -> Decision {
     match cause {
-        Some(StopCause::Requested | StopCause::IdleRequested) => return Decision::Stopped,
+        Some(StopCause::Requested | StopCause::IdleRequested | StopCause::SessionEnd) => {
+            return Decision::Stopped;
+        }
         Some(StopCause::Hang) => return Decision::Restart(RestartClass::Hang),
         Some(StopCause::Defect) => return Decision::Restart(RestartClass::Unexpected),
         None => {}
@@ -434,6 +454,8 @@ pub struct Supervisor {
     generation: u64,
     reprobed: bool,
     restart_permit: Option<StartPermit>,
+    session_ending: Arc<AtomicBool>,
+    launch_gate: Arc<Mutex<()>>,
 }
 
 impl Supervisor {
@@ -455,12 +477,18 @@ impl Supervisor {
             generation: 0,
             reprobed: false,
             restart_permit: None,
+            session_ending: Arc::new(AtomicBool::new(false)),
+            launch_gate: Arc::new(Mutex::new(())),
         }
     }
 
     /// A handle that sends requests to this supervisor while it runs.
     pub fn handle(&self) -> SupervisorHandle {
-        SupervisorHandle(self.sender.clone())
+        SupervisorHandle(
+            self.sender.clone(),
+            Arc::clone(&self.session_ending),
+            Arc::clone(&self.launch_gate),
+        )
     }
 
     fn emit(&self, event: Event) {
@@ -491,7 +519,13 @@ impl Supervisor {
 
     fn run_owned(&mut self) -> Outcome {
         let mut adopting = false;
+        let mut prior_effects = Effects::Settled;
         loop {
+            if self.session_ending.load(Ordering::SeqCst) {
+                return Outcome::Stopped {
+                    effects: prior_effects,
+                };
+            }
             let ended = if adopting {
                 adopting = false;
                 // Inputs still queued from the launch that reported OWNER_BUSY are stale.
@@ -525,7 +559,16 @@ impl Supervisor {
                     }
                 }
             };
+            if self.session_ending.load(Ordering::SeqCst) {
+                // Acceptance may race the process-exit poll before its cause is
+                // recorded. The reason code is not a worker settlement receipt.
+                self.emit(Event::EffectsUnknown { pid: ended.pid });
+                return Outcome::Stopped {
+                    effects: Effects::Unknown,
+                };
+            }
             let effects = ended.effects();
+            prior_effects = effects;
             if effects == Effects::Unknown {
                 self.emit(Event::EffectsUnknown { pid: ended.pid });
             }
@@ -606,6 +649,11 @@ impl Supervisor {
 
     /// Wait the admitted backoff while honouring requests; `Some` ends supervision.
     fn back_off(&mut self, class: RestartClass) -> Option<Outcome> {
+        if self.session_ending.load(Ordering::SeqCst) {
+            return Some(Outcome::Stopped {
+                effects: Effects::Unknown,
+            });
+        }
         if let Some(outcome) = self.reserve_restart() {
             return Some(outcome);
         }
@@ -621,7 +669,14 @@ impl Supervisor {
                 return None;
             }
             match self.inputs.recv_timeout(remaining) {
-                // Nothing runs, so either request is complete at once.
+                // A session-end request must not erase the failed process's
+                // unresolved effects merely because no process is running now.
+                Ok(Input::Control(Request::SessionEnd)) => {
+                    return Some(Outcome::Stopped {
+                        effects: Effects::Unknown,
+                    });
+                }
+                // Nothing runs, so an ordinary stop is complete at once.
                 Ok(Input::Control(_)) => {
                     return Some(Outcome::Stopped {
                         effects: Effects::Settled,
@@ -635,7 +690,19 @@ impl Supervisor {
 
     /// Launch and watch one runtime; `None` when the image could not be started.
     fn launch(&mut self) -> Option<Ended> {
-        let mut child = match self.target.spawn() {
+        let launched = {
+            // Linearize launch with SessionEnd acceptance. A request accepted
+            // before this gate cannot be followed by a new child process.
+            let _launch = self
+                .launch_gate
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if self.session_ending.load(Ordering::SeqCst) {
+                return None;
+            }
+            self.target.spawn()
+        };
+        let mut child = match launched {
             Ok(child) => child,
             Err(error) => {
                 self.emit(Event::LaunchFailed { kind: error.kind() });
@@ -707,6 +774,9 @@ impl Supervisor {
             announced: None,
         };
         loop {
+            if self.session_ending.load(Ordering::SeqCst) {
+                self.begin_stop(&mut watch, StopCause::SessionEnd);
+            }
             if let Some(exit) = watch.runtime.try_exit() {
                 return self.ended(&watch, exit, false);
             }
@@ -730,6 +800,9 @@ impl Supervisor {
                     self.begin_stop(&mut watch, StopCause::Requested)
                 }
                 Ok(Input::Control(Request::StopIfIdle)) => self.stop_if_idle(&mut watch),
+                Ok(Input::Control(Request::SessionEnd)) => {
+                    self.begin_stop(&mut watch, StopCause::SessionEnd)
+                }
                 Ok(Input::Line { .. } | Input::Closed { .. })
                 | Err(RecvTimeoutError::Timeout | RecvTimeoutError::Disconnected) => {}
             }
@@ -896,14 +969,20 @@ impl Supervisor {
 
     /// Ask for the drain over the channel, else by stop signal, and bound the wait.
     fn begin_stop(&self, watch: &mut Watch, cause: StopCause) {
+        let upgrading = cause == StopCause::SessionEnd && watch.cause != Some(cause);
         watch.cause = watch.cause.max(Some(cause));
-        if watch.stop_deadline.is_some() {
+        if watch.stop_deadline.is_some() && !upgrading {
             return;
         }
+        let command = if cause == StopCause::SessionEnd {
+            Command::SessionEnd
+        } else {
+            Command::Stop
+        };
         let over_channel = watch
             .channel
             .as_ref()
-            .is_some_and(|channel| channel.send(Command::Stop));
+            .is_some_and(|channel| channel.send(command));
         let path = if over_channel {
             StopPath::Channel
         } else {
@@ -912,7 +991,17 @@ impl Supervisor {
                 Err(error) => StopPath::Undelivered(error),
             }
         };
-        watch.stop_deadline = Some(Instant::now() + self.config.drain_bound);
+        let bound = if cause == StopCause::SessionEnd {
+            self.config.session_end_bound
+        } else {
+            self.config.drain_bound
+        };
+        let deadline = Instant::now() + bound;
+        watch.stop_deadline = Some(
+            watch
+                .stop_deadline
+                .map_or(deadline, |old| old.min(deadline)),
+        );
         self.emit(Event::StopRequested {
             pid: watch.pid,
             cause,
@@ -1046,6 +1135,17 @@ mod tests {
             ended(code(0xC000_0005), None, false).effects(),
             Effects::Unknown
         );
+        assert_eq!(
+            ended(code(66), Some(StopCause::SessionEnd), false).effects(),
+            Effects::Unknown
+        );
+        for exit in [code(0), code(64), code(65), code(71)] {
+            assert_eq!(
+                ended(exit, Some(StopCause::SessionEnd), false).effects(),
+                Effects::Unknown
+            );
+            assert_eq!(decide(exit, Some(StopCause::SessionEnd)), Decision::Stopped);
+        }
     }
 
     #[test]

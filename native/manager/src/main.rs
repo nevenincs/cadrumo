@@ -11,6 +11,7 @@ use std::{
 };
 
 const USAGE_ERROR: u8 = 2;
+const COMPOSITION_UNAVAILABLE: u8 = 69;
 #[cfg(windows)]
 const ADMISSION_REFUSED: u8 = 77;
 
@@ -20,7 +21,10 @@ fn start() -> ExitCode {
         let _ = writeln!(io::stderr(), "{}", refusal.code());
         return ExitCode::from(ADMISSION_REFUSED);
     }
-    ExitCode::SUCCESS
+    // Admission alone does not start or supervise a runtime. Until installed
+    // discovery and the session surfaces are composed, never report success.
+    let _ = writeln!(io::stderr(), "manager_composition_unavailable");
+    ExitCode::from(COMPOSITION_UNAVAILABLE)
 }
 
 fn main() -> ExitCode {

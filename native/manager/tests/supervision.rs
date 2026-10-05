@@ -123,6 +123,7 @@ struct Case {
     probe: Option<&'static str>,
     installed: bool,
     initial_permit: bool,
+    end_before_start: bool,
 }
 
 impl Default for Case {
@@ -134,6 +135,7 @@ impl Default for Case {
                 heartbeat_staleness: Duration::from_millis(600),
                 accept_tick_ceiling: Duration::from_millis(500),
                 drain_bound: Duration::from_millis(1500),
+                session_end_bound: Duration::from_millis(500),
                 termination_bound: Duration::from_secs(5),
                 poll_interval: Duration::from_millis(10),
                 restart: RestartPolicy {
@@ -147,6 +149,7 @@ impl Default for Case {
             probe: None,
             installed: true,
             initial_permit: false,
+            end_before_start: false,
         }
     }
 }
@@ -180,6 +183,9 @@ impl Case {
         let (events, observed) = mpsc::channel();
         let mut supervisor = Supervisor::new(self.config, target, collaborators, events);
         let handle = supervisor.handle();
+        if self.end_before_start {
+            assert!(handle.request(Request::SessionEnd));
+        }
         let permit = self.initial_permit.then(|| {
             let Role::Start(permit) = reserve_restart(
                 root.path(),
@@ -258,6 +264,115 @@ fn stop_on_ready(n: usize) -> impl FnMut(&Event, &SupervisorHandle) {
 const SETTLED: Outcome = Outcome::Stopped {
     effects: Effects::Settled,
 };
+
+#[test]
+fn session_end_uses_the_runtime_command_without_inventing_settlement_evidence() {
+    let root = Root::new(&["serve"]);
+    let (seen, outcome) = Case::default().run(&root, |event, handle| {
+        if matches!(event, Event::BootRecordConfirmed { .. }) {
+            assert!(handle.request(Request::SessionEnd));
+        }
+    });
+    assert_eq!(
+        outcome,
+        Outcome::Stopped {
+            effects: Effects::Unknown
+        }
+    );
+    assert_eq!(root.launches(), 1);
+    assert!(restarts(&seen).is_empty());
+    assert_eq!(
+        exits(&seen),
+        [RuntimeExit::Reason(ExitReason::SessionEndSettle)]
+    );
+    assert_eq!(
+        count(&seen, |event| matches!(
+            event,
+            Event::StopRequested {
+                cause: StopCause::SessionEnd,
+                path: StopPath::Channel,
+                ..
+            }
+        )),
+        1
+    );
+}
+
+#[test]
+fn session_end_before_start_does_not_launch_a_runtime() {
+    let root = Root::new(&["serve"]);
+    let case = Case {
+        end_before_start: true,
+        ..Case::default()
+    };
+    let (seen, outcome) = case.run(&root, |_, _| {});
+    assert_eq!(outcome, SETTLED);
+    assert!(seen.is_empty());
+    assert_eq!(root.launches(), 0);
+}
+
+#[test]
+fn session_end_during_backoff_keeps_unknown_effects_and_releases_claim() {
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let mut case = Case::default();
+    case.config.restart.initial_backoff = Duration::from_secs(2);
+    case.config.restart.maximum_backoff = Duration::from_secs(2);
+    let (_, outcome) = case.run(&root, |event, handle| {
+        if matches!(event, Event::RestartScheduled { .. }) {
+            assert!(handle.request(Request::SessionEnd));
+        }
+    });
+    assert_eq!(
+        outcome,
+        Outcome::Stopped {
+            effects: Effects::Unknown
+        }
+    );
+    assert_eq!(root.launches(), 1);
+    assert!(
+        StartClaim::take(root.path(), Duration::ZERO)
+            .unwrap()
+            .is_some()
+    );
+}
+
+#[test]
+fn session_end_upgrades_a_hang_stop_without_restart_or_false_settlement() {
+    let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
+    let (seen, outcome) = Case::default().run(&root, |event, handle| {
+        if matches!(
+            event,
+            Event::StopRequested {
+                cause: StopCause::Hang,
+                ..
+            }
+        ) {
+            assert!(handle.request(Request::SessionEnd));
+        }
+    });
+    assert_eq!(
+        outcome,
+        Outcome::Stopped {
+            effects: Effects::Unknown
+        }
+    );
+    assert_eq!(root.launches(), 1);
+    assert!(restarts(&seen).is_empty());
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::Terminated { .. })),
+        1
+    );
+    assert_eq!(
+        count(&seen, |event| matches!(
+            event,
+            Event::StopRequested {
+                cause: StopCause::SessionEnd,
+                ..
+            }
+        )),
+        1
+    );
+}
 
 #[test]
 fn stop_drains_a_ready_runtime_over_the_channel() {
