@@ -370,6 +370,8 @@ errors:
       évhez és időszakhoz.
     modelo_work_selector: A bevallás kiválasztása sikertelen.
     modelo_work_selector_unit_not_found: A kiválasztott bevallás nem található.
+    windows_credential_api: A Windows Hitelesítőadat-kezelő nem tudta végrehajtani
+      a hitelesítő adaton végzett műveletet.
   fail:
     canonical_auth_diagnostic_persistence: A hitelesítési diagnosztikát nem sikerült
       menteni.
@@ -671,6 +673,8 @@ errors:
     integrity_storage_validation: Egy tárolási paraméter nem ment át az érvényesítésen.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importálj archívumot nem megbízható forrásból.
+    windows_credential_record: A Windows hitelesítő adat nem felel meg a titkos adattárolás
+      előírt formátumának.
   internal:
     canonical_authority_cache_cycle: A hatósági komponensbetöltő rekurzív betöltési
       ciklust észlelt.
@@ -865,6 +869,8 @@ errors:
       lett betöltve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a bevallás számítását,
       mert az még nem nyújtható be.
+    ledger_source_jurisdiction_required: A könyvelési tétel hozzáadása előtt add meg
+      az adózó adóügyi joghatóságát.
     locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.
@@ -958,6 +964,11 @@ errors:
     profile_passphrase_rotation: A profil jelszavát nem sikerült megváltoztatni.
     profile_recovery: A helyreállítási kérést nem sikerült végrehajtani.
     profile_registration: A profil regisztrációja nem sikerült.
+    prorrata_preflight: A prorrata módosítása nem ment át az előzetes ellenőrzésen.
+      A folytatás előtt javítsd a jelzett értékeket.
+    purchase_invoice_evidence_snapshot_changed: A beszerzési számla bizonyítéka az
+      ellenőrzés óta megváltozott. Újabb próbálkozás előtt ellenőrizd az aktuális
+      rekordot.
     reconciliation_declaration_source_unsupported: Bevallásból való egyeztetés még
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt

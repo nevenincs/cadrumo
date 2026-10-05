@@ -50,7 +50,7 @@ from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..time.utc import UtcInstant
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
-#: minted by :func:`core.observability.context._mint_run_id`. Declared once here
+#: carried by :class:`RunTrace`. Declared once here
 #: so the observability records, the workflow link, and the on-disk run-directory
 #: guard in :mod:`core.observability.store` describe one identity rather than
 #: several independent conventions.

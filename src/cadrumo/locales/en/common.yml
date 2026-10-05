@@ -987,7 +987,7 @@ sheets:
       codigo_cuenta: Securities account / loan operation no.
       codigo_emisor: Issuer code
       codigo_provincia: Province code
-      community_vat_number: EU operator VAT number
+      community_iva_number: EU operator VAT number
       compensaciones: Compensations
       complement: Address complement
       complemento_infancia_clave: Child support supplement

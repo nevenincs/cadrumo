@@ -1024,7 +1024,7 @@ sheets:
       codigo_cuenta: Código cuenta valores / n.º operación préstamo
       codigo_emisor: Código emisor
       codigo_provincia: Código de provincia
-      community_vat_number: NIF del operador comunitario
+      community_iva_number: NIF del operador comunitario
       compensaciones: Compensaciones
       complement: Complemento del domicilio
       complemento_infancia_clave: Complemento de ayuda a la infancia

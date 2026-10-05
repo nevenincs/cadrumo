@@ -160,12 +160,18 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "malformed NIF and date; refusing it at the request boundary would "
         "mask the other two behind the first"
     ),
-    "application/ledger/update_operation.py::currency": (
+    "application/ledger/update_contracts.py::currency": (
         "a canonical-text patch whose sibling date and decimal fields REFUSE "
         "non-canonical text rather than normalising it, which _canonical_currency "
         "enforces here for the same reason: the operator is editing one stored "
         "row and is told which token is wrong, where a folding annotation would "
         "silently rewrite it"
+    ),
+    "application/ledger/own_account_operation.py::currency": (
+        "the secure request and masked public result obey the registered operation "
+        "contract, which forbids the canonical BeforeValidator's core-schema hook; "
+        "OwnBankAccountDetails owns the canonical IsoCurrencyCode policy when "
+        "the worker builds account details, and from_account projects that validated code"
     ),
     "application/ledger/invoice_evidence_operation_dtos.py::currency": (
         "the wire projection of invoice_draft_records, read off a document "

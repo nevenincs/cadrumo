@@ -17,6 +17,7 @@ from ...time.clock import now
 from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 from ..errors import RunContextMissingError
 from ..models import RunEvent, RunEventKind, RunEventPayload
+from .run_scope import RecordedRunContextInfo
 
 _logger = get_logger("cadrumo.core.observability")
 
@@ -76,7 +77,7 @@ def record_event(
             current contextvar.
     """
     ctx = RUN_CONTEXT_VAR.get(None)
-    if ctx is None:
+    if not isinstance(ctx, RecordedRunContextInfo):
         raise RunContextMissingError(
             f"record_event({kind.value}) called outside an active run_context()",
         )

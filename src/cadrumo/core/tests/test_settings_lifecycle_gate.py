@@ -74,7 +74,13 @@ from typing import Final, NamedTuple
 
 import pytest
 
-from ...tests.inventory import aeat_relative, ast_for_path, package_python_files, production_python_files
+from ...tests.inventory import (
+    aeat_relative,
+    ast_for_path,
+    package_python_files,
+    production_python_files,
+    releases_parsed_sources,
+)
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -211,6 +217,7 @@ PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
 )
 
 
+@releases_parsed_sources
 @cache
 def _production_literal_sites() -> tuple[LiteralSite, ...]:
     sites: list[LiteralSite] = []
@@ -394,6 +401,7 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
 )
 
 
+@releases_parsed_sources
 @cache
 def _package_chain_sites() -> tuple[ChainSite, ...]:
     sites: list[ChainSite] = []

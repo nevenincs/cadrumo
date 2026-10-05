@@ -1121,9 +1121,8 @@ application:
       footer_notice: 'Cálculo local de Cadrumo: no es evidencia oficial de la AEAT'
       grade_development_mock: desarrollo (no presentable)
       grade_reviewed: revisada
-      identity_development_mock: 'Identidad de software de desarrollo (programa {program},
-        NIF de desarrollador {developer_tax_id}): el fichero de presentación de este
-        modelo no es presentable en la AEAT.'
+      identity_development_mock: 'Identidad de software de desarrollo: el fichero
+        de presentación de este modelo no es presentable en la AEAT.'
       identity_none: El diseño de registro de este modelo no reserva identidad de
         software.
       identity_reviewed: 'Identidad de software revisada: el fichero de presentación

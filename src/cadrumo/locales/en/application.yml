@@ -1045,9 +1045,8 @@ application:
       footer_notice: 'Cadrumo local calculation: not official AEAT evidence'
       grade_development_mock: development (not presentable)
       grade_reviewed: reviewed
-      identity_development_mock: 'Development software identity (program {program},
-        developer NIF {developer_tax_id}): the filing file for this modelo cannot
-        be presented at AEAT.'
+      identity_development_mock: 'Development software identity: the filing file for
+        this modelo cannot be presented at AEAT.'
       identity_none: This modelo's record design reserves no software identity.
       identity_reviewed: 'Reviewed software identity: the filing file for this modelo
         carries a registered software identity.'

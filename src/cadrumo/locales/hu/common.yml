@@ -1009,7 +1009,7 @@ sheets:
       codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
       codigo_emisor: Kibocsátó kódja
       codigo_provincia: Tartomány kódja
-      community_vat_number: Közösségi adószám
+      community_iva_number: Közösségi adószám
       compensaciones: Kompenzációk
       complement: Címkiegészítés
       complemento_infancia_clave: Gyermeknevelési kiegészítés

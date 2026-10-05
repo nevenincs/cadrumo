@@ -364,6 +364,8 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
+    windows_credential_api: Windows Credential Manager could not complete the credential
+      operation.
   fail:
     canonical_auth_diagnostic_persistence: Authentication diagnostics could not be
       persisted.
@@ -660,6 +662,8 @@ errors:
     integrity_storage_validation: A storage parameter failed validation.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    windows_credential_record: The Windows credential record does not satisfy the
+      required secret storage format.
   internal:
     canonical_authority_cache_cycle: The authority component loader detected a recursive
       load cycle.
@@ -853,6 +857,8 @@ errors:
       safely purged. Its operation is unavailable. No edit value was loaded.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    ledger_source_jurisdiction_required: Provide the taxpayer jurisdiction before
+      adding this ledger transaction.
     locale_catalogue_capture_not_current: This locale catalogue capture is no longer
       current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
@@ -945,6 +951,10 @@ errors:
     profile_passphrase_rotation: The profile password could not be changed.
     profile_recovery: The recovery request could not be completed.
     profile_registration: The profile could not be registered.
+    prorrata_preflight: The prorrata mutation failed its preflight validation. Correct
+      the reported values before continuing.
+    purchase_invoice_evidence_snapshot_changed: The purchase invoice evidence changed
+      after review. Review the current record before trying again.
     reconciliation_declaration_source_unsupported: Reconciliation from a declaration
       is not available yet.
     reconciliation_drift: Reconciliation detected arithmetic or identity drift across

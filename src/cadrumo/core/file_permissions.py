@@ -98,6 +98,11 @@ def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool)
         rewritten.AddAccessAllowedAceEx(
             win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
         )
+    control, _revision = descriptor.GetSecurityDescriptorControl()
+    if control & win32security.SE_DACL_PROTECTED and current is not None and _same_dacl(current, rewritten):
+        # Reapplying an inheritable DACL propagates through existing children.
+        # A root already carrying this exact boundary needs no such traversal.
+        return
     win32security.SetNamedSecurityInfo(
         str(path),
         win32security.SE_FILE_OBJECT,
@@ -106,6 +111,14 @@ def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool)
         None,
         rewritten,
         None,
+    )
+
+
+def _same_dacl(current: PyACL, rewritten: PyACL) -> bool:
+    """Compare every ordered ACE, including its flags, access mask and SID."""
+    count = current.GetAceCount()
+    return count == rewritten.GetAceCount() and all(
+        current.GetAce(index) == rewritten.GetAce(index) for index in range(count)
     )
 
 

@@ -1119,9 +1119,8 @@ application:
       footer_notice: 'Càlcul local de Cadrumo: no és evidència oficial de l''AEAT'
       grade_development_mock: desenvolupament (no presentable)
       grade_reviewed: revisada
-      identity_development_mock: 'Identitat de programari de desenvolupament (programa
-        {program}, NIF del desenvolupador {developer_tax_id}): el fitxer de presentació
-        d''aquest model no es pot presentar a l''AEAT.'
+      identity_development_mock: 'Identitat de programari de desenvolupament: el fitxer
+        de presentació d''aquest model no es pot presentar a l''AEAT.'
       identity_none: El disseny de registre d'aquest model no reserva cap identitat
         de programari.
       identity_reviewed: 'Identitat de programari revisada: el fitxer de presentació

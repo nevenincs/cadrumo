@@ -8,6 +8,16 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.prorrata_register.mutation_steps.ProrrataPreflightRefusalError",
+        ErrorCode(
+            code="REFUSED_PRORRATA_PREFLIGHT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.prorrata_preflight",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.mcp_query_contracts.ModeloBindingValueContractUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED",

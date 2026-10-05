@@ -1014,7 +1014,7 @@ sheets:
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
-      community_vat_number: NIF de l'operador comunitari
+      community_iva_number: NIF de l'operador comunitari
       compensaciones: Compensacions
       complement: Complement del domicili
       complemento_infancia_clave: Complement d'ajuda a la infància

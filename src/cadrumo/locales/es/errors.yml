@@ -398,6 +398,8 @@ errors:
     modelo_work_selector: El selector de trabajo de modelo falló.
     modelo_work_selector_unit_not_found: No se encontró la unidad de trabajo de modelo
       seleccionada.
+    windows_credential_api: El Administrador de credenciales de Windows no pudo completar
+      la operación con la credencial.
   fail:
     canonical_auth_diagnostic_persistence: No se pudieron guardar los diagnósticos
       de autenticación.
@@ -715,6 +717,8 @@ errors:
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    windows_credential_record: La credencial de Windows no cumple el formato requerido
+      para el almacenamiento de secretos.
   internal:
     canonical_authority_cache_cycle: El cargador de componentes de autoridad detectó
       un ciclo de carga recursivo.
@@ -922,6 +926,8 @@ errors:
       de edición.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    ledger_source_jurisdiction_required: Indica la jurisdicción fiscal del contribuyente
+      antes de añadir este movimiento al libro.
     locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya
       no está vigente.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
@@ -1019,6 +1025,10 @@ errors:
     profile_passphrase_rotation: No se ha podido cambiar la contraseña del perfil.
     profile_recovery: No se pudo completar la solicitud de recuperación.
     profile_registration: No se ha podido registrar el perfil.
+    prorrata_preflight: El cambio de prorrata no superó la validación previa. Corrige
+      los valores indicados antes de continuar.
+    purchase_invoice_evidence_snapshot_changed: La evidencia de la factura de compra
+      cambió después de la revisión. Revisa el registro actual antes de volver a intentarlo.
     reconciliation_declaration_source_unsupported: La conciliación a partir de una
       declaración todavía no está disponible.
     reconciliation_drift: La conciliación detectó una discrepancia aritmética o de

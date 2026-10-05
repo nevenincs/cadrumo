@@ -28,7 +28,7 @@ from ..config import Settings, load_settings, override_settings, settings_overri
 from ..directory_scan import iter_directory
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import STORAGE_ROOT
-from ..storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
+from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -175,7 +175,7 @@ def test_fresh_runtime_namespace_is_private_and_existing_permissions_are_preserv
 
 
 def test_the_root_mode_is_the_declared_owner_only_mode() -> None:
-    assert STORAGE_ROOT_MODE == STORAGE_ROOT.posix_directory_mode == 0o700
+    assert STORAGE_ROOT.posix_directory_mode == 0o700
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")

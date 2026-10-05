@@ -164,10 +164,16 @@ _SENSITIVE_ASSIGNMENT_RE = re.compile(
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PLACEHOLDER_PATTERN = r"%[-#+ 0-9.]*[a-zA-Z]"
-_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(_PLACEHOLDER_PATTERN)
+_PLACEHOLDER_PATTERN = r"%(?:\([^)]+\))?[-#+ 0-9]*(?:\*|\d+)?(?:\.(?:\*|\d*))?[hlL]?[diouxXeEfFgGcrsa]"
+_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(rf"%%|{_PLACEHOLDER_PATTERN}")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(rf"^{_PLACEHOLDER_PATTERN}$")
-_PERCENT_PLACEHOLDER_RE = re.compile(rf"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})")
+_PERCENT_PLACEHOLDER_RE = re.compile(
+    rf"%%|(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})"
+)
+_FORMAT_OPERAND_RE = re.compile(
+    r"%(?:\((?P<mapping>[^)]+)\))?[-#+ 0-9]*(?P<width>\*)?"
+    r"(?:\.(?P<precision>\*|\d*))?[hlL]?(?P<conversion>[diouxXeEfFgGcrsa])"
+)
 
 #: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
 #: when the image travels inline rather than as a bare field.
@@ -269,7 +275,7 @@ def _redact_around_placeholders(key: str | None, value: str) -> str:
 
     A value that is nothing but a placeholder carries no secret and is
     returned untouched, which is the ``credential=%s`` format-string shape the
-    paired :func:`_scrub_positional_args` pass redacts at the argument instead.
+    paired :func:`_scrub_positional_format` pass redacts at the argument instead.
     """
     if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(value.strip()):
         return value
@@ -277,6 +283,8 @@ def _redact_around_placeholders(key: str | None, value: str) -> str:
     pieces: list[str] = []
     cursor = 0
     for placeholder in _PERCENT_PLACEHOLDER_ONLY_RE.finditer(value):
+        if placeholder.group(0) == "%%":
+            continue  # An escaped percent is literal secret text, not an operand.
         if value[cursor : placeholder.start()].strip():
             pieces.append(marker)
         pieces.append(placeholder.group(0))
@@ -417,18 +425,102 @@ def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-L
     return redacted if redacted != rendered else value
 
 
-# ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
-# logging.LogRecord positional-args tuple, whose element types are arbitrary
-# %-formatting operands -- `object`, not `Any`: typeshed already annotates
-# `LogRecord.args` as `tuple[object, ...] | ...`, and `Any` here erased the
-# element type of everything this helper returned.
-def _scrub_positional_args(message: str, args: tuple[object, ...]) -> tuple[object, ...]:
-    """Scrub tuple-style logging args using keys inferred from ``message``."""
-    placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
-    return tuple(
-        _scrub_value(arg, key=placeholders[index].group("key") if index < len(placeholders) else None)
-        for index, arg in enumerate(args)
-    )
+def _scrub_format_operand(
+    value: object, key: str | None, placeholder: str, *, redacted: bool = False
+) -> tuple[object, str]:
+    """Keep the conversion compatible with a redacted operand.
+
+    A numeric credential becomes a string marker. Numeric conversions cannot
+    consume it, and string precision must not truncate the marker. Replacing
+    that one conversion preserves the other operands' diagnostic formatting.
+    """
+    scrubbed = _scrub_value(value, key=key)
+    operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+    if operand is not None and (
+        redacted
+        or _looks_sensitive_key(key)
+        or (
+            isinstance(scrubbed, str)
+            and (not isinstance(value, str) or scrubbed != value)
+            and operand.group("conversion") not in "sra"
+        )
+    ):
+        mapping = operand.group("mapping")
+        return scrubbed, f"%({mapping})s" if mapping is not None else "%s"
+    return scrubbed, placeholder
+
+
+def _scrub_positional_format(message: str, args: tuple[object, ...]) -> tuple[str, tuple[object, ...]]:
+    """Scrub operands and their conversions together, including star widths."""
+    pieces: list[str] = []
+    scrubbed_args: list[object] = []
+    cursor = 0
+    index = 0
+    for match in _PERCENT_PLACEHOLDER_RE.finditer(message):
+        placeholder = match.group("placeholder")
+        if placeholder is None:  # %% consumes no argument.
+            continue
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None or operand.group("mapping") is not None:
+            continue
+        stars = int(operand.group("width") == "*") + int(operand.group("precision") == "*")
+        if index + stars >= len(args):
+            break  # Retain the stdlib's refusal of an invalid format/arity.
+        value, conversion = _scrub_format_operand(args[index + stars], match.group("key"), placeholder)
+        pieces.append(message[cursor : match.start("placeholder")])
+        pieces.append(conversion)
+        cursor = match.end("placeholder")
+        if conversion == placeholder:
+            scrubbed_args.extend(args[index : index + stars])
+        scrubbed_args.append(value)
+        index += stars + 1
+    pieces.append(message[cursor:])
+    scrubbed_args.extend(_scrub_value(value) for value in args[index:])
+    return "".join(pieces), tuple(scrubbed_args)
+
+
+def _scrub_mapping_format(message: str, args: Mapping[str, object]) -> tuple[str, dict[str, object]]:
+    """Scrub mapping operands, preserving each use's conversion independently."""
+    scrubbed_args = {str(key): _scrub_value(value, key=str(key)) for key, value in args.items()}
+    redacted_keys: set[str] = set()
+
+    def replace(match: re.Match[str]) -> str:
+        placeholder = match.group("placeholder")
+        if placeholder is None:
+            return match.group(0)
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None:
+            return match.group(0)
+        mapping_key = operand.group("mapping")
+        if mapping_key is None or mapping_key not in args:
+            return match.group(0)
+        key = match.group("key") if _looks_sensitive_key(match.group("key")) else mapping_key
+        value, conversion = _scrub_format_operand(args[mapping_key], key, placeholder)
+        # A key used in a sensitive assignment must stay redacted in all uses.
+        if _looks_sensitive_key(key):
+            scrubbed_args[mapping_key] = value
+            redacted_keys.add(mapping_key)
+        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
+
+    rewritten = _PERCENT_PLACEHOLDER_RE.sub(replace, message)
+
+    # A later sensitive assignment may redact a key previously used numerically.
+    def compatible(match: re.Match[str]) -> str:
+        placeholder = match.group("placeholder")
+        if placeholder is None:
+            return match.group(0)
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None:
+            return match.group(0)
+        mapping_key = operand.group("mapping")
+        if mapping_key is None or mapping_key not in scrubbed_args:
+            return match.group(0)
+        _, conversion = _scrub_format_operand(
+            scrubbed_args[mapping_key], None, placeholder, redacted=mapping_key in redacted_keys
+        )
+        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
+
+    return _PERCENT_PLACEHOLDER_RE.sub(compatible, rewritten), scrubbed_args
 
 
 def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
@@ -442,7 +534,7 @@ def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
 def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
     """Scrub record arguments, retaining placeholder-aware positional arity."""
     if is_object_list_or_tuple(record.args) and isinstance(message, str):
-        scrubbed_args = _scrub_positional_args(message, tuple(record.args))
+        record.msg, scrubbed_args = _scrub_positional_format(message, tuple(record.args))
         # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
         # | Mapping[str, object] | None``; ``list`` is not in the
         # union even though logging accepts it at runtime.
@@ -451,7 +543,10 @@ def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
         record.args = tuple(scrubbed_args)
         return
     if isinstance(record.args, Mapping):
-        record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
+        if isinstance(message, str):
+            record.msg, record.args = _scrub_mapping_format(message, record.args)
+        else:
+            record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
         return
     if isinstance(record.args, tuple | list):
         # Residual tuple/list args reach only when ``record.msg`` is not a
@@ -775,7 +870,7 @@ def configure_logging() -> None:
             "filters": {
                 "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},
                 "drop_operator_document": {"()": f"{__name__}.DropOperatorDocumentEchoFilter"},
-                "third_party_debug": {"()": f"{__name__}._ThirdPartyDebugFilter"},
+                "third_party_debug": {"()": _ThirdPartyDebugFilter},
             },
             "handlers": configured_handlers,
             "root": {

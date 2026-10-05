@@ -1080,9 +1080,8 @@ application:
       footer_notice: 'Cadrumo helyi számítás: nem hivatalos AEAT-bizonyíték'
       grade_development_mock: fejlesztői (nem benyújtható)
       grade_reviewed: ellenőrzött
-      identity_development_mock: 'Fejlesztői szoftverazonosító (program: {program},
-        fejlesztői NIF: {developer_tax_id}): ennek a nyomtatványnak a benyújtási fájlja
-        nem nyújtható be az AEAT-hoz.'
+      identity_development_mock: 'Fejlesztői szoftverazonosító: e modell bevallási
+        fájlja nem nyújtható be az AEAT-hoz.'
       identity_none: A nyomtatvány rekordterve nem tartalmaz helyet szoftverazonosítónak.
       identity_reviewed: 'Ellenőrzött szoftverazonosító: a nyomtatvány benyújtási
         fájlja regisztrált szoftverazonosítót tartalmaz.'

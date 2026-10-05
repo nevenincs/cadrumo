@@ -59,8 +59,8 @@ constants into their grammar rather than re-typing the names)."""
 EVENTS_APPEND_LOCK = threading.Lock()
 
 
-# Run ids are minted by :func:`core.observability.context._mint_run_id`
-# as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
+# Run ids follow the canonical shape declared by the observability models
+# (16 lowercase hex characters). Validate every run_id reaching the filesystem
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
 # configured runs directory.
@@ -72,9 +72,7 @@ def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> Neve
 def validate_run_id(run_id: str) -> str:
     """Return ``run_id`` if it matches the canonical shape, else raise.
 
-    The canonical shape is 16 lowercase hex characters — the form
-    minted by
-    :func:`core.observability.context._mint_run_id`. Validating
+    The observability models declare 16 lowercase hex characters. Validating
     every id reaching this layer prevents path-traversal escapes
     through ``runs_dir / run_id``.
 

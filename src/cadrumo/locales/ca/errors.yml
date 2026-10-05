@@ -401,6 +401,8 @@ errors:
     modelo_work_selector: El selector de treball de model ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de model
       seleccionada.
+    windows_credential_api: L'Administrador de credencials de Windows no ha pogut
+      completar l'operació amb la credencial.
   fail:
     canonical_auth_diagnostic_persistence: No s'han pogut desar els diagnòstics d'autenticació.
     canonical_catalogue_invoice_persistence: No s'ha pogut desar el catàleg de factures.
@@ -725,6 +727,8 @@ errors:
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    windows_credential_record: La credencial de Windows no compleix el format requerit
+      per a l'emmagatzematge de secrets.
   internal:
     canonical_authority_cache_cycle: El carregador de components d'autoritat ha detectat
       un cicle de càrrega recursiu.
@@ -932,6 +936,8 @@ errors:
       valor d’edició.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    ledger_source_jurisdiction_required: Indica la jurisdicció fiscal del contribuent
+      abans d'afegir aquest moviment al llibre.
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
       no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
@@ -1028,6 +1034,11 @@ errors:
     profile_passphrase_rotation: No s'ha pogut canviar la contrasenya del perfil.
     profile_recovery: No s'ha pogut completar la sol·licitud de recuperació.
     profile_registration: No s'ha pogut registrar el perfil.
+    prorrata_preflight: El canvi de prorrata no ha superat la validació prèvia. Corregeix
+      els valors indicats abans de continuar.
+    purchase_invoice_evidence_snapshot_changed: L'evidència de la factura de compra
+      ha canviat després de la revisió. Revisa el registre actual abans de tornar-ho
+      a intentar.
     reconciliation_declaration_source_unsupported: La conciliació a partir d'una declaració
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
