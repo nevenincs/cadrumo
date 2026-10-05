@@ -130,17 +130,25 @@ Record the tested commit, platform, date and pass/fail outcomes with the release
 evidence. Do not copy callback URLs, tokens, authorization codes or profile keys.
 A successful login alone does not establish all of these controls.
 
+The current desktop release plan is unsigned: the publisher has no code-signing
+certificate and is deferring trusted signing. Do not describe these artifacts
+as publisher-signed or ask users to trust a self-signed certificate as proof of
+Cadrumo's identity. A self-signed certificate may exercise a development signing
+pipeline, but it is not a production trust anchor. No signing certificate is
+required to complete the Google OAuth setup above.
+
 The release workflow already declares build-provenance attestations for Python
 distributions and PyPI Trusted Publishing. Confirm their actual production run
 before claiming verified provenance. They do not establish the publisher of a
-native executable on the user's machine. For each desktop platform shipped:
+native executable on the user's machine. When trusted desktop signing is
+introduced, the remaining setup for each platform is:
 
 - Windows: provision a publisher code-signing identity, protect its signing
   access, and sign and timestamp the executables and installer.
 - macOS: configure Developer ID signing and notarization for the shipped app.
 - Linux: authenticate the chosen package/repository channel and its metadata.
 
-Release engineering must wire those identities into the actual distribution
+Release engineering must then wire those identities into the actual distribution
 path and test modified-artifact and wrong-signer rejection. Any updater must
 verify authenticated metadata and artifacts against trusted publisher keys,
 with an explicit rollback policy. Checksums supplied alongside an untrusted
