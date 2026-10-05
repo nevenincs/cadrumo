@@ -234,9 +234,22 @@ export class SignInFixture {
     observer.catch(() => undefined); // Retain the failure for the awaited cleanup below.
     try {
       const before = await session.call("sign_in_status");
-      assert.equal(before.ok, true);
-      assert.equal(before.value.state, "absent");
-      assert.equal(before.value.supported, true);
+      this.results.evidence("sign-in-initial-status.json", before);
+      assert.equal(
+        before.ok,
+        true,
+        `initial host sign-in status failed: ${before.error?.code ?? "unknown"}`,
+      );
+      assert.equal(
+        before.value.state,
+        "absent",
+        "initial sign-in status must be absent",
+      );
+      assert.equal(
+        before.value.supported,
+        true,
+        "native sign-in support must be available",
+      );
       const rejected = await this.submit(session, this.wrong);
       assert.equal(rejected.kind, "refused");
       assert.equal(rejected.code, "CREDENTIAL_REJECTED");

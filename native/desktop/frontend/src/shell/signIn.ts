@@ -47,6 +47,11 @@ export function useSignIn(host: Host) {
   const [handover, setHandover] = useState(false);
   const [remaining, setRemaining] = useState<SignOutResult | null>(null);
   const request = useRef(0);
+  const mounted = useRef(true);
+  const statusRead = useRef<{
+    generation: number;
+    promise: Promise<void>;
+  } | null>(null);
   const submitting = useRef(false);
   const currentRefusal = refusal ?? status?.refusal ?? null;
   const retrySeconds = useCountdown(currentRefusal);
@@ -56,24 +61,50 @@ export function useSignIn(host: Host) {
 
   const refresh = useCallback(
     async (afterMutation = false) => {
-      if (!host.available || (submitting.current && !afterMutation)) return;
-      const generation = ++request.current;
-      try {
-        const next = await host.signInStatus();
-        if (generation === request.current) setStatus(next);
-      } catch (error) {
-        if (generation === request.current)
-          setStatus({ ...unknownStatus, refusal: refusalFrom(error) });
+      if (
+        !mounted.current ||
+        !host.available ||
+        (submitting.current && !afterMutation)
+      )
+        return;
+      while (statusRead.current) {
+        const pending = statusRead.current;
+        await pending.promise;
+        if (!mounted.current) return;
+        if (pending.generation === request.current) return;
       }
+      if (
+        !mounted.current ||
+        !host.available ||
+        (submitting.current && !afterMutation)
+      )
+        return;
+      const generation = ++request.current;
+      const promise = Promise.resolve().then(async () => {
+        try {
+          const next = await host.signInStatus();
+          if (generation === request.current) setStatus(next);
+        } catch (error) {
+          if (generation === request.current)
+            setStatus({ ...unknownStatus, refusal: refusalFrom(error) });
+        } finally {
+          if (statusRead.current?.generation === generation)
+            statusRead.current = null;
+        }
+      });
+      statusRead.current = { generation, promise };
+      await promise;
     },
     [host],
   );
 
   useEffect(() => {
+    mounted.current = true;
     void refresh();
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
     return () => {
+      mounted.current = false;
       invalidate();
       window.removeEventListener("focus", focus);
     };
@@ -90,6 +121,7 @@ export function useSignIn(host: Host) {
     setRefusal(null);
     setRemaining(null);
     try {
+      await statusRead.current?.promise;
       const result = await host.signIn(password);
       if (result.kind === "refused") setRefusal(result);
     } catch (error) {
@@ -109,6 +141,7 @@ export function useSignIn(host: Host) {
     setBusy(true);
     setRefusal(null);
     try {
+      await statusRead.current?.promise;
       setRemaining(await host.signOut());
       setHandover(false);
     } catch (error) {

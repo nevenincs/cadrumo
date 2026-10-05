@@ -427,7 +427,6 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
       "real password form signs in through the packaged CLI",
       () => signIn.signIn(session, input, hostPid),
     );
-    if (authenticated.verdict !== PASS) return;
 
     // Terminals -------------------------------------------------------------
     await check(
@@ -485,6 +484,11 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
       "tui-alternate-screen",
       "the TUI pane enters the alternate screen",
       async () => {
+        if (authenticated.verdict !== PASS)
+          return {
+            verdict: SKIP,
+            detail: "canonical sign-in failed; TUI remains gated",
+          };
         const state = await waitFor(
           async () => {
             const value = await session.terminal("tui");
@@ -1506,12 +1510,22 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     await check(
       "canonical-sign-out",
       "global sign-out uses the packaged CLI and preserves remaining access",
-      () => signIn.signOut(session),
+      () =>
+        authenticated.verdict === PASS
+          ? signIn.signOut(session)
+          : { verdict: SKIP, detail: "canonical sign-in did not complete" },
     );
     await check(
       "sign-in-secret-isolation",
       "passwords stay out of arguments, logs, diagnostics and the docs frame",
-      () => signIn.isolation(session, input, projected),
+      () =>
+        authenticated.verdict === PASS
+          ? signIn.isolation(session, input, projected)
+          : {
+              verdict: SKIP,
+              detail:
+                "complete secret-isolation acceptance depends on canonical sign-in",
+            },
     );
 
     // Close with a paused session ------------------------------------------------

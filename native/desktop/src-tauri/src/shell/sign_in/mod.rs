@@ -13,8 +13,8 @@ use cadrumo_application::{
 use serde::Deserialize;
 use std::{collections::BTreeMap, sync::Arc};
 use tauri::{
-    State,
     ipc::{InvokeBody, Request},
+    State,
 };
 use zeroize::Zeroizing;
 
@@ -64,7 +64,11 @@ impl SignIn {
         if secret.is_some() {
             command.arg("--secrets-stdin");
         }
-        let output = self.children.run(command, secret)?;
+        let output = if leaf == "sign-in-status" {
+            self.children.read(command)?
+        } else {
+            self.children.run(command, secret)?
+        };
         wire::decode(leaf, &output)
     }
 }

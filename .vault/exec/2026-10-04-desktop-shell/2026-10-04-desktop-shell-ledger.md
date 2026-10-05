@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4c20765c9129f93bc39fb2bf7493a36843e87117363e622e0a58cd6362d0e92'
+body_hash: 'sha256:81f52326ebb937f90c6b0dc2571392bcec9827cf2a0153d12903d882c94f1661'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -514,6 +514,17 @@ related:
 - `S10` `verify:` `PowerShell interactive wrapper syntax` -> `pass`
 - `S10` `verify:` `final packaged harness regression (20)` -> `pass`
 - `S10` `verify:` `final harness Ruff format ty syntax` -> `pass`
+- `S10` `verify:` `interactive packaged acceptance 20261005-190156 (6 pass, 1 fail, 1 info)` -> `fail`
+- `S10` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S10` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S10` `verify:` `frontend focused browser regression (7)` -> `pass`
+- `S10` `verify:` `native sign_in subprocess and wire tests (11)` -> `pass`
+- `S10` `verify:` `packaged harness regression (20)` -> `pass`
+- `S10` `verify:` `frontend npm check` -> `pass`
+- `S10` `verify:` `packaged host release rebuild` -> `pass`
+- `S10` `verify:` `native all-target Clippy -D warnings` -> `pass`
 
 ## Notes
 
@@ -595,3 +606,6 @@ related:
 - `S10` Fresh GUI candidate app-v1 assembled from rebuilt product wheels; full docs gate remains failed. Setup exposed missing profile-custody adapter composition in test helper, corrected at pointer observation. Subsequent real runtime hello and teardown pass, but canonical CLI sign-in-status returns `runtime_unavailable;` exact retained diagnostic pending root cause. Interactive handoff not yet ready; no session bridge or runtime bypass.
 - `S10` Conclusive status-diagnostic-v3.log separates successful canonical client connection from sign-in-status refusal. Native `windows_desktop_logon._native_token_fields_are_supported` explicitly excludes session zero; native-session-observation.log traces `runtime_unavailable` to that check. Runtime alive before/after CLI, identical endpoint identity, helper teardown exit0 and exact receipt absence confirmed. Requires real signed-in desktop; user already agreed to run prepared command. No bridge or observation override. Docs gate and manager-start S12 still open.
 - `S10` Harness frozen for interactive handoff. Evidence build/windows-x86-64/e2e-desktop/harness-tests-handoff.log; scope remains harness assertions, not actual UI acceptance.
+- `S10` User executed prepared command in Session1. Profile creation/runtime handshake, native WebView2 launch, override refusal, docs origin and cleanup pass. Canonical-sign-in fails before password submission: screenshot shows `queue_full;` host status observation collides with another initial status invocation. Host Windows supported flag is compile-time true, identifying failed before.ok assertion. Full acceptance remains open; bounded status concurrency repair in progress. Evidence build/windows-x86-64/e2e-desktop/desktop/test-results/packaged/20261005-190156.
+- `S10` Corrected interactive run's initial `queue_full` status race. Frontend coalesces status/focus calls and waits before single credential mutation; host read-only calls wait within existing total30s deadline off UI thread, mutations remain single-flight. Regression covers failed-slot cleanup, pending-read mutation, real subprocess contention and close fencing. Harness retains initial status evidence and continues independent checks after sign-in failure, with dependent checks explicitly skipped. Fixed test host SHA256 5e94b8fc6e7e8830a331b82de4b0f52fcc762e27741f3f1649868e4ea5ce113d. Actual interactive rerun required; S10 remains open.
+- `S10` Final native lint passed against exact two-module test snapshot; all current regression/build checks pass. Awaiting user desktop rerun.

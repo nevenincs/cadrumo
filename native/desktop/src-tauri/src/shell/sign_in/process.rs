@@ -4,8 +4,8 @@ use std::{
     io::{Read, Write},
     process::{Child, Command, Stdio},
     sync::{
-        Mutex,
         atomic::{AtomicBool, Ordering},
+        Mutex,
     },
     thread,
     time::{Duration, Instant},
@@ -47,7 +47,22 @@ impl Children {
         Ok(())
     }
 
-    pub fn run(&self, mut command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
+    pub fn run(&self, command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
+        self.execute(command, secret, false)
+    }
+
+    /// Status is read-only: wait for the current command without replaying it.
+    pub fn read(&self, command: Command) -> Result<Output> {
+        self.execute(command, None, true)
+    }
+
+    fn execute(
+        &self,
+        mut command: Command,
+        secret: Option<Zeroizing<Vec<u8>>>,
+        wait_for_slot: bool,
+    ) -> Result<Output> {
+        let start = Instant::now();
         command
             .stdin(if secret.is_some() {
                 Stdio::piped()
@@ -62,16 +77,26 @@ impl Children {
             command.creation_flags(0x08000000);
         }
         let (stdin, stdout, stderr) = {
-            let mut active = self
-                .active
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?;
-            if active.closed {
-                return Err(failure(ErrorCode::SessionUnavailable));
-            }
-            if active.busy {
-                return Err(failure(ErrorCode::QueueFull));
-            }
+            let mut active = loop {
+                let active = self
+                    .active
+                    .lock()
+                    .map_err(|_| failure(ErrorCode::LockPoisoned))?;
+                if active.closed {
+                    return Err(failure(ErrorCode::SessionUnavailable));
+                }
+                if start.elapsed() >= DEADLINE {
+                    return Err(failure(ErrorCode::TimedOut));
+                }
+                if !active.busy {
+                    break active;
+                }
+                if !wait_for_slot {
+                    return Err(failure(ErrorCode::QueueFull));
+                }
+                drop(active);
+                thread::sleep(Duration::from_millis(10));
+            };
             let mut child = command
                 .spawn()
                 .map_err(|_| failure(ErrorCode::SpawnFailed))?;
@@ -97,7 +122,7 @@ impl Children {
             });
             let out = scope.spawn(|| read(stdout, &overflow));
             let err = scope.spawn(|| read(stderr, &overflow));
-            let status = self.wait(&overflow);
+            let status = self.wait(&overflow, start);
             // Always terminate/reap before joining pipe threads, including limit,
             // timeout and window-close paths. No child bytes enter diagnostics.
             let cleanup = {
@@ -140,8 +165,7 @@ impl Children {
         outcome
     }
 
-    fn wait(&self, overflow: &AtomicBool) -> Result<bool> {
-        let start = Instant::now();
+    fn wait(&self, overflow: &AtomicBool, start: Instant) -> Result<bool> {
         loop {
             let mut active = self
                 .active
@@ -259,6 +283,39 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
+    fn status_waits_for_a_real_child_without_replaying_a_password() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let mutation = scope.spawn(|| children.run(
+                powershell("$value=[Console]::In.ReadToEnd(); Start-Sleep -Milliseconds 600; [Console]::Out.Write($value)"),
+                Some(Zeroizing::new(b"one-password".to_vec())),
+            ));
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while children.active.lock().unwrap().child.is_none() {
+                assert!(Instant::now() < deadline);
+                thread::sleep(Duration::from_millis(10));
+            }
+            let status =
+                scope.spawn(|| children.read(powershell("[Console]::Out.Write('status')")));
+            assert_eq!(
+                children
+                    .run(
+                        powershell("exit 0"),
+                        Some(Zeroizing::new(b"duplicate".to_vec()))
+                    )
+                    .err()
+                    .unwrap()
+                    .code,
+                ErrorCode::QueueFull
+            );
+            assert_eq!(&*mutation.join().unwrap().unwrap().stdout, b"one-password");
+            assert_eq!(&*status.join().unwrap().unwrap().stdout, b"status");
+        });
+        assert!(children.active.lock().unwrap().child.is_none());
+    }
+
+    #[cfg(windows)]
+    #[test]
     fn close_reaps_a_real_blocked_child_and_fences_new_commands() {
         let children = Children::default();
         thread::scope(|scope| {
@@ -269,8 +326,13 @@ mod tests {
                 thread::sleep(Duration::from_millis(10));
             }
             let start = Instant::now();
+            let queued = scope.spawn(|| children.read(powershell("exit 0")));
             children.stop().unwrap();
             assert!(running.join().unwrap().is_err());
+            assert_eq!(
+                queued.join().unwrap().err().unwrap().code,
+                ErrorCode::SessionUnavailable
+            );
             assert!(start.elapsed() < Duration::from_secs(5));
         });
         assert!(children.active.lock().unwrap().child.is_none());

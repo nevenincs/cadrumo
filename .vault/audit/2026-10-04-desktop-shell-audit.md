@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e46204cd7bc23a7b421261255c25ed91fe465a36ad15d12eb3dbf84114ece2e'
+body_hash: 'sha256:9d8b5f82710e06e980e86aa876155260825bcd852143a968db37bb1bbe05cbce'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -162,6 +162,10 @@ GUI candidate app-v1 passes --check-package and test host release builds with SH
 ### session-zero-status-refusal-resolved | low | 2026-10-05
 
 The previous packaged setup refusal is now attributed to native login admission, not endpoint absence: status-diagnostic-v3.log proves canonical connection succeeds, then sign_in_status alone raises runtime_unavailable. Native observer rejects session zero explicitly; direct frozen-package observation traces the same check. Runtime remains alive before/after CLI and helper teardown exits zero. Harness now retains bounded lowercase refusal reasons, reports process liveness and verifies exact-profile receipt absence after cleanup. Full GUI acceptance requires the signed-in desktop command the user agreed to run. Package and WebView2 test host are prepared; failed docs gate and incomplete manager composition remain separate open acceptance obligations.
+
+### startup-signin-status-contention | medium | 2026-10-05
+
+Interactive run 20261005-190156 reached Session1, verified runtime setup, WebView2 and docs origin, then failed initial host status before any password submission. Screenshot records queue_full. Frontend startup and focus refresh could overlap, with the later failure invalidating the earlier valid result; host single-flight guard also refused independent status reads. Corrective review: frontend shares pending observations, preserves mutation generations, clears failed reads and avoids post-unmount refresh. Credential mutations wait for the current UI observation and submit once. Host read-only commands wait off the UI thread under the existing total30s budget; mutation invocations retain immediate contention refusal. Seven focused browser regressions and frontend build/TypeScript/ESLint pass. Native regression and rebuilt-host results are recorded in the execution ledger when complete. Actual interactive rerun remains required; no acceptance step closed.
 
 ## Recommendations
 

@@ -20,9 +20,13 @@ const label = (key: string) => english[key] ?? key;
 
 // A transport boundary fixture for presentation tests, never a live sign-in
 // acceptance claim. The actual Tauri adapter and React shell run unchanged.
-async function signInHost(target: Page, supported = true) {
+async function signInHost(
+  target: Page,
+  supported = true,
+  deferInitial = false,
+) {
   await target.addInitScript(
-    ({ supported, docs }) => {
+    ({ supported, docs, deferInitial }) => {
       const state = {
         presence: "absent",
         supported,
@@ -35,12 +39,15 @@ async function signInHost(target: Page, supported = true) {
         retryAfterSeconds: null as number | null,
         submissions: 0,
         statusReads: 0,
+        statusError: "",
+        activeStatusReads: 0,
+        signOuts: 0,
         tuiStarts: 0,
         tuiCloses: 0,
         rawPassword: false,
         tokenHeader: false,
         secretCleared: false,
-        deferStatus: false,
+        deferStatus: deferInitial,
         releaseStatus: null as (() => void) | null,
         exitTui: null as (() => void) | null,
       };
@@ -68,6 +75,8 @@ async function signInHost(target: Page, supported = true) {
                 };
               case "sign_in_status": {
                 ++state.statusReads;
+                if (state.activeStatusReads > 0) throw { code: "queue_full" };
+                ++state.activeStatusReads;
                 const snapshot = {
                   supported: state.supported,
                   state: state.presence,
@@ -81,6 +90,8 @@ async function signInHost(target: Page, supported = true) {
                     state.releaseStatus = resolve;
                   });
                 }
+                --state.activeStatusReads;
+                if (state.statusError) throw { code: state.statusError };
                 return snapshot;
               }
               case "sign_in_submit": {
@@ -105,6 +116,7 @@ async function signInHost(target: Page, supported = true) {
                 return { kind: "signed-in" };
               }
               case "sign_out":
+                ++state.signOuts;
                 state.presence = "absent";
                 return {
                   remainingAccess: {
@@ -147,7 +159,7 @@ async function signInHost(target: Page, supported = true) {
         },
       });
     },
-    { supported, docs: DOCS },
+    { supported, docs: DOCS, deferInitial },
   );
   await serveDocs(target);
   await target.goto("/");
@@ -159,6 +171,95 @@ const signInState = (target: Page) =>
       (window as unknown as { __signInTest: Record<string, unknown> })
         .__signInTest,
   );
+
+test("startup focus events share one pending sign-in status read", async ({
+  page: target,
+}) => {
+  await signInHost(target, true, true);
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBe(1);
+  await target.evaluate(async () => {
+    for (let index = 0; index < 5; index++)
+      window.dispatchEvent(new Event("focus"));
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+  });
+  expect((await signInState(target)).statusReads).toBe(1);
+  await target.evaluate(() =>
+    (
+      window as unknown as { __signInTest: { releaseStatus: () => void } }
+    ).__signInTest.releaseStatus(),
+  );
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  expect((await signInState(target)).submissions).toBe(0);
+  await expect(target.locator(".sign-in")).not.toContainText("queue_full");
+});
+
+test("a failed status read releases its slot for the next focus refresh", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { statusError: "queue_full" },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(target.locator(".sign-in")).toContainText("queue_full");
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { statusError: "" },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(target.locator(".sign-in")).not.toContainText("queue_full");
+  expect((await signInState(target)).statusReads).toBe(3);
+  expect((await signInState(target)).submissions).toBe(0);
+});
+
+test("explicit sign-in waits for a pending status read and submits once", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  const password = target.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  await password.fill("secret á漢");
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { deferStatus: true },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBe(2);
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(password).toBeDisabled();
+  expect((await signInState(target)).submissions).toBe(0);
+  await target.evaluate(() =>
+    (
+      window as unknown as { __signInTest: { releaseStatus: () => void } }
+    ).__signInTest.releaseStatus(),
+  );
+  await expect(
+    target.getByText(label("desktop.signin.refused.invalid")),
+  ).toBeVisible();
+  expect((await signInState(target)).submissions).toBe(1);
+  expect((await signInState(target)).statusReads).toBe(3);
+});
 
 test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusal status", async ({
   page: target,
@@ -243,6 +344,12 @@ test("throttling counts down without retry and a successful sign-in hands over t
       exact: true,
     })
     .click();
+  expect((await signInState(target)).signOuts).toBe(0);
+  await target.evaluate(() =>
+    (
+      window as unknown as { __signInTest: { releaseStatus: () => void } }
+    ).__signInTest.releaseStatus(),
+  );
   await expect(
     target.getByText(label("desktop.account.remaining_access")),
   ).toBeVisible();
