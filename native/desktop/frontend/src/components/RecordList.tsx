@@ -452,7 +452,7 @@ export const RecordList = memo(function RecordList({
           )}
           <span className="flex-1" />
           {state?.kind === "available" && (
-            <span className="source-state state-available shrink-0 text-xs text-faint">
+            <span className="shrink-0 text-xs text-faint">
               {t("desktop.logs.state_available")}
             </span>
           )}

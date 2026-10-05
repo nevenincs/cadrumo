@@ -57,8 +57,7 @@ export function Split({
   const both = aShown && bShown;
   const shareA = !aShown ? 0 : bShown ? ratio : 1;
   const step = reversed ? -KEYBOARD_RESIZE_STEP : KEYBOARD_RESIZE_STEP;
-  const pane =
-    "split-pane relative flex min-h-0 min-w-0 shrink grow-0 overflow-hidden";
+  const pane = "relative flex min-h-0 min-w-0 shrink grow-0 overflow-hidden";
 
   return (
     <div

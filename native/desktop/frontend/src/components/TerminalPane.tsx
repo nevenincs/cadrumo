@@ -262,7 +262,7 @@ export function TerminalPane({
 
   return (
     <div
-      className="terminal-frame relative min-h-0 flex-1"
+      className="relative min-h-0 flex-1"
       hidden={!shown}
       style={{ background: theme.background }}
       aria-label={label}

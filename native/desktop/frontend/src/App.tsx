@@ -1282,18 +1282,14 @@ export function App({ host }: { host: Host }) {
           <EmptyMedia>
             <Icon name="unplug" />
           </EmptyMedia>
-          <EmptyDescription className="pane-note">
-            {t("desktop.host.unavailable")}
-          </EmptyDescription>
+          <EmptyDescription>{t("desktop.host.unavailable")}</EmptyDescription>
         </Empty>
       ) : environment.state === "failed" ? (
         <Empty role="alert">
           <EmptyMedia>
             <Icon name="alert" />
           </EmptyMedia>
-          <EmptyDescription className="pane-note">
-            {t("desktop.host.failed")}
-          </EmptyDescription>
+          <EmptyDescription>{t("desktop.host.failed")}</EmptyDescription>
         </Empty>
       ) : (
         <Empty role="status">
@@ -1338,12 +1334,7 @@ export function App({ host }: { host: Host }) {
   return (
     <StringsContext.Provider value={t}>
       <TooltipProvider>
-        <div
-          className={cn(
-            "shell grid h-dvh grid-cols-[auto_1fr] bg-chrome",
-            `scheme-${scheme}`,
-          )}
-        >
+        <div className="shell grid h-dvh grid-cols-[auto_1fr] bg-chrome">
           <header className="sr-only">
             <h1>{identity.name}</h1>
           </header>
@@ -1352,7 +1343,7 @@ export function App({ host }: { host: Host }) {
             top={railTop}
             bottom={railBottom}
           />
-          <div className="workspace flex min-h-0 min-w-0 flex-col">
+          <div className="flex min-h-0 min-w-0 flex-col">
             <main
               className="main-area flex min-h-(--docs-min) flex-auto"
               hidden={maximized === "panel"}
@@ -1374,7 +1365,7 @@ export function App({ host }: { host: Host }) {
             <section
               className={cn(
                 "panel @container/panel flex min-h-0 flex-col bg-chrome",
-                maximized === "panel" ? "is-maximized flex-auto" : "flex-none",
+                maximized === "panel" ? "flex-auto" : "flex-none",
               )}
               hidden={!panelVisible}
               style={
@@ -1500,7 +1491,7 @@ export function App({ host }: { host: Host }) {
                   <Icon name="chevronDown" />
                 </IconButton>
               </Tabs>
-              <div className="panel-body relative flex min-h-0 flex-1">
+              <div className="relative flex min-h-0 flex-1">
                 {terminalPane("console", tabOpen("console"))}
                 {terminalPane("python", tabOpen("python"))}
                 <RecordList
