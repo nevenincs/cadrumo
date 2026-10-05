@@ -92,6 +92,12 @@ _pin_storage_override("CADRUMO_DEV_CACHE_ROOT", "development/cache")
 _TEST_LOG_ROOT = _pin_storage_override("CADRUMO_TEST_LOG_ROOT", "development")
 _pin_storage_override("CADRUMO_DOCS_BUILD_ROOT", "development/build/docs")
 _TEMP_BASE = _pin_storage_override("CADRUMO_TEMP_DIR", "tmp")
+# Browser binaries are provisioned assets shared by isolated test profiles.
+# Pin both the product probe and direct Playwright starts before private roots
+# replace the operator's storage root.
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(
+    _pin_storage_override("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "components/playwright")
+)
 _SCRATCH_BASE = os.environ.get("CADRUMO_SCRATCH_BASE", "").strip()
 if _SCRATCH_BASE:
     os.environ["CADRUMO_SCRATCH_BASE"] = str(storage_directory("CADRUMO_SCRATCH_BASE", "tmp", root=_BASE_STORAGE_ROOT))

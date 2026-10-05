@@ -1,7 +1,7 @@
 """Package-level pytest fixtures for every test under ``src/cadrumo/``.
 
-Hosts the ``source_tree_ast`` session-scoped fixture that ratchet
-inventories consume to amortise the AST parse cost across the suite.
+Hosts the ``source_tree_ast`` module-scoped fixture that ratchet
+inventories consume to share AST parsing within each structural gate.
 The fixture lives at the package root because pytest's conftest discovery
 walks up from each test file. Tests are distributed across domain-local
 ``tests/`` subtrees throughout ``src/cadrumo/``; a conftest inside
@@ -135,9 +135,9 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def source_tree_ast() -> Mapping[Path, ast.AST]:
-    """Return a session mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.
+    """Return a module-lifetime mapping of ``src/cadrumo/`` files to their ASTs.
 
     Covers the package files outside ``__pycache__`` and the ``_data/`` payload
     tree, each read as UTF-8 with ``errors='replace'`` (so a stray encoding
@@ -150,6 +150,10 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     that never threads this fixture through its helpers still shares the parse.
     Parsing lazily is what lets a package-scoped gate run without first paying
     for every other module in the tree.
+
+    Candidate discovery shares the source caches' module lifetime, so the next
+    gate discovers additions and removals instead of reusing a stale session
+    list. Sources must remain stable during each gate's own module.
 
     Consumers retain their own filter predicates (e.g. ``test_*.py``
     only, or exclude certain subdirs). The fixture is the AST cache;
