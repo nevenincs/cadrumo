@@ -21,6 +21,7 @@ from ..adapters.outbound.google.session_store import (
     save_token,
 )
 from ..adapters.outbound.google.sign_in_state import load_sign_in_record
+from ..adapters.outbound.storage import errors as storage_errors
 from ..adapters.outbound.storage.errors import OutboundStorageError
 from ..adapters.outbound.storage.factory import get_storage_provider, google_credentials_for
 from ..application.operator_actions.models import PreconditionVerdict
@@ -126,7 +127,9 @@ def build_google_configuration_operation_ports(
             refusal = _closed_refusal(error, request, _LocalFacts())
             if refusal is None:
                 raise
-            raise GoogleConfigurationRefusedError(refusal) from None
+            raise GoogleConfigurationRefusedError(
+                refusal, provider_write_not_applied=_proves_no_provider_write(error)
+            ) from None
 
     def run(
         request: GoogleConfigurationRequest,
@@ -154,7 +157,9 @@ def build_google_configuration_operation_ports(
             refusal = _closed_refusal(error, request, local)
             if refusal is None:
                 raise
-            raise GoogleConfigurationRefusedError(refusal) from None
+            raise GoogleConfigurationRefusedError(
+                refusal, provider_write_not_applied=_proves_no_provider_write(error)
+            ) from None
 
     return GoogleConfigurationOperationPorts(
         profile_id=profile_id, operation=operation, run=run, prepare_consent=prepare_consent
@@ -162,6 +167,34 @@ def build_google_configuration_operation_ports(
 
 
 __all__ = ["build_google_configuration_operation_ports"]
+
+
+# Failures that prove a provider write did not take effect: the provider answered
+# with a refusal, or the failure was raised before any request was sent. Matched
+# by exact type, so a base class never qualifies. Network, unavailability and
+# integrity failures are absent on purpose: the request may have been applied.
+_NO_PROVIDER_WRITE_ERROR_TYPES: frozenset[type[Exception]] = frozenset(
+    {
+        google_errors.GoogleAuthClientMetadataUnavailableError,
+        google_errors.GoogleAuthNonInteractiveError,
+        google_errors.GoogleAuthProfileUnboundError,
+        google_errors.GoogleAuthScopeInsufficientError,
+        google_errors.GoogleAuthSignInRequiredError,
+        google_errors.GoogleAuthValidationError,
+        storage_errors.OutboundStorageConflictError,
+        storage_errors.OutboundStorageNotFoundError,
+        storage_errors.OutboundStoragePathTooLongError,
+        storage_errors.OutboundStoragePermissionError,
+        storage_errors.OutboundStorageQuotaError,
+        storage_errors.OutboundStorageValidationError,
+        GoogleConfigurationExportDisabledError,
+    }
+)
+
+
+def _proves_no_provider_write(error: Exception) -> bool:
+    """Return whether ``error`` proves an admitted provider write did not take effect."""
+    return type(error) in _NO_PROVIDER_WRITE_ERROR_TYPES
 
 
 def _append_google_local_refusal(local: _LocalFacts, key: str, updates: dict[str, object]) -> None:

@@ -11,7 +11,10 @@ from uuid import UUID, uuid4
 import pytest
 from google.oauth2.credentials import Credentials as OAuthCredentials
 
-from ...adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
+from ...adapters.outbound.google.errors import (
+    GoogleAuthClientMetadataUnavailableError,
+    GoogleAuthSignInRequiredError,
+)
 from ...adapters.outbound.google.google_configuration_refusal import google_configuration_refusal_error
 from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from ...adapters.outbound.google.session_store import (
@@ -31,11 +34,21 @@ from ...adapters.outbound.google.tests.installation_client_support import (
     use_installation_client_file,
     write_installation_client,
 )
-from ...adapters.outbound.storage.errors import OutboundStorageConflictError
+from ...adapters.outbound.storage.errors import (
+    OutboundStorageConflictError,
+    OutboundStorageError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageQuotaError,
+    OutboundStorageUnavailableError,
+)
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...application.user_profile import google_configuration_operation_contracts as contracts
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.google_configuration_operation_refusal import GoogleConfigurationRefusedError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from .. import google_configuration_operation_composition as composition
@@ -319,3 +332,47 @@ def test_a_sign_in_whose_folder_cannot_be_created_stores_nothing(
         assert load_token(str(_PROFILE)) is None
         assert load_metadata(str(_PROFILE)) is None
         assert load_drive_config(str(_PROFILE)) is None
+
+
+@pytest.mark.parametrize(
+    ("error", "proves_no_write"),
+    (
+        pytest.param(OutboundStoragePermissionError("refused (HTTP 403)"), True, id="provider-refused-403"),
+        pytest.param(OutboundStorageNotFoundError("not found (HTTP 404)"), True, id="provider-refused-404"),
+        pytest.param(OutboundStorageConflictError("conflict (HTTP 409)"), True, id="provider-refused-409"),
+        pytest.param(OutboundStorageQuotaError("quota (HTTP 429)"), True, id="provider-refused-429"),
+        pytest.param(GoogleAuthSignInRequiredError("grant ended"), True, id="grant-ended-before-send"),
+        pytest.param(OutboundStorageNetworkError("connection lost"), False, id="connection-lost"),
+        pytest.param(OutboundStorageUnavailableError("backend unavailable (HTTP 503)"), False, id="provider-5xx"),
+        pytest.param(OutboundStorageIntegrityError("readback mismatch"), False, id="readback-mismatch"),
+        pytest.param(OutboundStorageError("unclassified provider failure"), False, id="unclassified"),
+    ),
+)
+def test_only_a_provider_answer_that_refused_the_request_proves_no_write_happened(
+    error: CadrumoError,
+    proves_no_write: bool,
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A timeout, a lost connection, a server error or a failed readback leaves the write in doubt."""
+
+    def failing_provider(**_kwargs: object):
+        raise error
+
+    monkeypatch.setattr(composition, "get_storage_provider", failing_provider)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)):
+        ports = composition.build_google_configuration_operation_ports(
+            profile_id=_PROFILE, operation=authority_operation
+        )
+        with pytest.raises(GoogleConfigurationRefusedError) as refused:
+            ports.run(
+                contracts.GoogleProbeRequest(profile_id=_PROFILE, read_only=True),
+                commit=lambda save, *, changed: save(),
+                before_handoff=lambda action, *, writes=False: None,
+                acknowledged=lambda action, *, writes=False: None,
+                terminal_admission=None,
+            )
+
+    assert refused.value.provider_write_not_applied is proves_no_write
+    assert refused.value.projection.provider_code == error.code.code

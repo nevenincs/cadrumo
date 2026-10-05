@@ -160,6 +160,20 @@ class _GoogleConfigurationEffectTracker:
     def commit[ResultT](self, save: Callable[[], ResultT], *, changed: Callable[[ResultT], bool]) -> ResultT:
         return asyncio.run_coroutine_threadsafe(self._save_local(save, changed), self._loop).result()
 
+    def settle_refusal(self, *, provider_write_not_applied: bool) -> OperationEffect:
+        """Return the effect a refusal leaves behind.
+
+        A boundary admitted as read-only cannot have changed anything, however
+        it ended. An admitted write is released only when the refusal proves
+        the provider did not apply it; otherwise it stays pending and the
+        effect stays unknown. An interrupted local save is never released.
+        """
+        self._pending = [
+            (action, writes) for action, writes in self._pending if writes and not provider_write_not_applied
+        ]
+        settled = self.effect()
+        return OperationEffect.PARTIAL if settled is OperationEffect.UPDATED else settled
+
     async def record_failure(self) -> None:
         current = self.effect()
         if current is OperationEffect.UPDATED:
@@ -281,9 +295,7 @@ class GoogleConfigurationExecutor:
             except GoogleConfigurationRefusedError as error:
                 if type(error) is not GoogleConfigurationRefusedError:
                     raise
-                settled = tracker.effect()
-                if settled is OperationEffect.UPDATED:
-                    settled = OperationEffect.PARTIAL
+                settled = tracker.settle_refusal(provider_write_not_applied=error.provider_write_not_applied)
                 return await self._store_refusal(request, context, error.projection, settled)
             return await self._store_success(request, context, payload, projection, tracker)
         except BaseException:

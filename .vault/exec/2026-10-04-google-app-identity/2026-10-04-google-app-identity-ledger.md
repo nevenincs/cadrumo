@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbf6714c4d0eaf1c5ffee8885321f5cac2632856eaa18a41c93ce09f941503f1'
+body_hash: 'sha256:b7cfa5c3f17cb0dbf55810d30ab26ae9129f637c8f9914e5e2b5a609c1b5cc96'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -440,6 +440,17 @@ related:
 - `S11` `verify:` `pytest: Google adapter suite, storage factory and Google composition tests (326); registered-executor conformance Google and spreadsheet cases (19); native Google journey` -> `pass`
 - `S11` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
 - `S11` `by:` `CADRUMO-GOOGLE-OATH`
+- `S12` `M` `src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`
+- `S12` `M` `src/cadrumo/application/user_profile/google_configuration_executor.py`
+- `S12` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S12` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S12` `verify:` `pytest unit and integration: user-profile application and Google composition tests (595), covering refusal after a read, refusal a provider answer proves unapplied, ambiguous refusal and success` -> `pass`
+- `S12` `verify:` `pytest integration: registered-executor conformance Google and spreadsheet cases through the real supervisor, native Google journey, consent bridge (39)` -> `pass`
+- `S12` `verify:` `ruff check, ruff format --check and ty on touched files; just check-types` -> `pass`
+- `S12` `verify:` `just check-import-boundaries` -> `fail`
+- `S12` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -501,3 +512,7 @@ related:
 - `S11` The file's contents were not read, printed or logged by the implementing session; only its size and digest were checked. The shipped-file test asserts the shape of the client ID and nothing else.
 - `S11` The session fixture that keeps the installation without a client during tests stays, so the native journey no longer attempts sign-in at all; the refusal for an installation without a client is covered by the composition and conformance tests.
 - `S11` Correction to the S05 rows above: five paths logged there belong to other sessions and are not in the S05 commit `(test_boot_record.py,` `acceleration_receipt_crypto.py,` `test_sign_in_generation.py,` `typed_financial_operand_submission.py,` `test_currency_fields_use_one_annotation.py).` The rows were built from the whole working tree; the commit was rebuilt without them as d90a8a3a17 before anything followed it.
+- `S12` No shared contract changed. The effect accounting is private to the Google configuration executor, the proof flag rides on that family's own refusal error and is not part of the stored or public refusal detail, and the supervisor already accepted an effect event stream that goes from unknown back to none.
+- `S12` What counts as proof is an exact-type list in the composition: the provider's own refusals (permission, not found, conflict, quota), failures raised before any request (validation, missing client, ended sign-in, profile and terminal preconditions, disabled export), and nothing else. Network, unavailability, integrity and unclassified failures leave an admitted write unknown.
+- `S12` A boundary admitted as read-only is released on any refusal, because a read cannot have changed anything however it ended. This is why the probe that refuses on the missing client now settles with no effect; the two conformance expectations for that case were changed from unknown to none.
+- `S12` check-import-boundaries reported zero hard findings and all contracts kept, but its verdict was unavailable because another session changed the source tree while it ran.

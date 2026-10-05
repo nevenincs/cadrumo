@@ -223,9 +223,7 @@ GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
         _case(GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
         _case(GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
-        _case(
-            GOOGLE_PROBE_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.UNKNOWN, GOOGLE_CONFIGURATION_REFUSAL_CODE
-        ),
+        _case(GOOGLE_PROBE_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
         _case(GOOGLE_STATUS_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
     ),
     prepare=_prepare,
@@ -301,7 +299,7 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 event.effect
                 for event in outcome.observed.event_page.events
                 if isinstance(event, OperationPublicEffectEventV1)
-            ) == (OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UNKNOWN)
+            ) == (OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.NONE)
 
     expected: GoogleConfigurationOutcome | None = None
     if result is not None:
@@ -318,11 +316,9 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.REFUSED
             if suffix in {"login", "probe"}
             else OperationTerminalCondition.SUCCEEDED,
-            OperationEffect.UPDATED
-            if suffix == "logout"
-            else OperationEffect.UNKNOWN
-            if suffix == "probe"
-            else OperationEffect.NONE,
+            # The probe refuses on the missing client while a read-only handoff is
+            # open, which leaves no effect in doubt.
+            OperationEffect.UPDATED if suffix == "logout" else OperationEffect.NONE,
             ("config.google." + suffix,),
             "REFUSED_GOOGLE_CONFIGURATION" if suffix in {"login", "probe"} else None,
         )

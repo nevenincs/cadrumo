@@ -196,12 +196,30 @@ class GoogleConfigurationRefusalProjection(BaseModel):
 class GoogleConfigurationRefusedError(CadrumoError):
     """Registered REFUSED carrier for encrypted original-provider detail."""
 
-    def __init__(self, projection: GoogleConfigurationRefusalProjection) -> None:
-        """Keep only the strict immutable projection from recognized canonical producers."""
+    def __init__(
+        self, projection: GoogleConfigurationRefusalProjection, *, provider_write_not_applied: bool = False
+    ) -> None:
+        """Keep only the strict immutable projection from recognized canonical producers.
+
+        Args:
+            projection: The closed refusal detail.
+            provider_write_not_applied: Whether the refusal itself proves that a
+                provider write admitted before it did not take effect: the
+                provider answered that it refused the request, or the refusal
+                was raised before any request was sent. A timeout, a lost
+                connection or an incomplete response proves nothing and
+                leaves this false.
+        """
         self._projection = GoogleConfigurationRefusalProjection.model_validate(
             projection.model_dump(mode="python"), strict=True
         )
+        self._provider_write_not_applied = provider_write_not_applied
         super().__init__()
+
+    @property
+    def provider_write_not_applied(self) -> bool:
+        """Whether this refusal proves an admitted provider write did not take effect."""
+        return self._provider_write_not_applied
 
     @property
     def projection(self) -> GoogleConfigurationRefusalProjection:
