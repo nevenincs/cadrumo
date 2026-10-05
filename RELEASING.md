@@ -89,7 +89,13 @@ These checks belong to the publisher, not to each Cadrumo user. Keep the bundled
 Desktop OAuth client metadata public. Do not replace it with a Web client, hide
 it in build secrets, or bypass repository push protection to publish it.
 
-In the Google Cloud project that owns the bundled client:
+On 2026-10-05, the publisher confirmed that the Google client is already a
+Desktop client, verified and published. Its metadata is tracked at
+`src/cadrumo/_data/google/oauth_client.json`. Console setup is complete by
+publisher confirmation; the OAuth review did not independently inspect the
+authenticated Console. No client recreation or repeat verification is pending.
+
+When changing that Google Cloud project's configuration in future:
 
 1. Open **Google Auth Platform > Clients** and confirm the client is of type
    **Desktop app** and its ID matches the bundled installation metadata.
@@ -105,8 +111,7 @@ In the Google Cloud project that owns the bundled client:
 
 See Google's [native application setup](https://developers.google.com/identity/protocols/oauth2/native-app)
 and [brand verification instructions](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification).
-Console configuration and production acceptance require account access; local
-tests cannot establish either.
+Local tests cannot establish live provider acceptance of a changed application.
 
 Before publishing, use a designated Google account and a disposable Cadrumo
 profile containing synthetic data, from an interactive desktop terminal:
