@@ -288,8 +288,11 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         ("partial", OperationEffect.PARTIAL),
         # A write was admitted and nothing proves what became of it.
         ("uncertain", OperationEffect.UNKNOWN),
-        # A read was admitted; however it ended, it changed nothing.
-        ("read-refused", OperationEffect.NONE),
+        # A boundary admitted without a write is not thereby harmless: a consent
+        # whose answer is lost can leave a grant behind, so it stays unknown too.
+        ("read-uncertain", OperationEffect.UNKNOWN),
+        # The same boundary, refused in a way that proves nothing was applied.
+        ("read-not-applied", OperationEffect.NONE),
         # A write was admitted and the provider answered that it refused it.
         ("write-not-applied", OperationEffect.NONE),
         # The same, after an earlier change in this operation had already landed.
@@ -321,17 +324,15 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
     ) -> contracts.GoogleConfigurationProjection:
         if mode.startswith("partial"):
             commit(lambda: True, changed=lambda value: value)
-        if mode == "read-refused":
-            before_handoff("files.list")
-        if mode.endswith(("uncertain", "write-not-applied")) or mode == "acknowledged":
+        if mode.startswith("read"):
+            before_handoff("oauth.token-exchange")
+        elif mode.endswith(("uncertain", "write-not-applied")) or mode == "acknowledged":
             before_handoff("files.create", writes=True)
             assert not fence.inside  # actual provider call belongs here
             if mode == "acknowledged":
                 acknowledged("files.create", writes=True)
         if mode != "acknowledged":
-            raise GoogleConfigurationRefusedError(
-                _refusal(), provider_write_not_applied=mode.endswith("write-not-applied")
-            )
+            raise GoogleConfigurationRefusedError(_refusal(), provider_write_not_applied=mode.endswith("not-applied"))
         return contracts.GoogleProbeProjection(
             profile_id=_PROFILE, reachable=True, writable=True, read_only=False, root_folder_id="root"
         )

@@ -163,14 +163,15 @@ class _GoogleConfigurationEffectTracker:
     def settle_refusal(self, *, provider_write_not_applied: bool) -> OperationEffect:
         """Return the effect a refusal leaves behind.
 
-        A boundary admitted as read-only cannot have changed anything, however
-        it ended. An admitted write is released only when the refusal proves
-        the provider did not apply it; otherwise it stays pending and the
-        effect stays unknown. An interrupted local save is never released.
+        An admitted boundary is released only when the refusal itself proves
+        that nothing was applied on the provider's side; otherwise it stays
+        pending and the effect stays unknown. How the boundary was admitted
+        is not proof: a consent or a token exchange is admitted without a
+        write and can still leave a grant behind when its answer is lost. An
+        interrupted local save is never released.
         """
-        self._pending = [
-            (action, writes) for action, writes in self._pending if writes and not provider_write_not_applied
-        ]
+        if provider_write_not_applied:
+            self._pending.clear()
         settled = self.effect()
         return OperationEffect.PARTIAL if settled is OperationEffect.UPDATED else settled
 
