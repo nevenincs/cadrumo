@@ -3,15 +3,16 @@ tags:
   - '#adr'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3196439e558265e395dbb45ca922db09d61431aa3dc3aff33969f6bccd4aad88'
+body_hash: 'sha256:b38ec14df5e713f091f8f8d2b09d071f7ddad2f11da0258d3fc9314cf5aaa16a'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
   - '[[2026-10-03-runtime-manager-architecture-research]]'
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
 ---
 
 # `runtime-without-service-manager` adr: runtime management is deferred to application provisioning | (**status:** `accepted`)
@@ -42,9 +43,9 @@ Preserve the runtime executable, isolated bootstrap, verified local IPC and hand
 
 Transient worker containment remains part of runtime safety, including native Job Objects and Linux transient worker scopes. Login observation remains an admission input. Neither authorizes persistent runtime registration or a health-management interface.
 
-Scheduled tasks are unsupported, including temporary testing, authentication, desktop-session bridges and recovery workarounds. Do not create, register, run or recreate them. There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access or an unavailable runtime must be reported, never worked around through OS registration.
+Scheduled tasks are unsupported, including temporary testing, authentication, desktop-session bridges and recovery workarounds. Do not create, register, run or recreate them. There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access is reported, never bridged through scheduled tasks or services. An unavailable runtime is the per-user manager's to recover.
 
-Application bundling, building and provisioning will decide the runtime launch and management policy later. Until then clients connect to an explicitly started runtime and report typed unavailability when no verified endpoint exists. This decision adds no automatic spawn or replacement manager.
+Management controls on the runtime transport stay excluded. The runtime hosts only the private supervisor contract in `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Product lifecycle management, including login registration, belongs to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`. Clients connect to a verified runtime and report typed unavailability when no verified endpoint exists; they never start one.
 
 The operator authorized an explicit development session override on 2026-10-03. Core Settings owns `CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE`; exactly `1` replaces native desktop/login-session admission with a same-account, runtime-boot-scoped development lifetime. The default setting is strict; the development environment template explicitly enables the override. The runtime selects the policy at startup, not from client requests. Native peer ownership, endpoint/version/storage identity, profile credentials, API-key grants, connection/session authorization, encrypted custody and worker containment remain mandatory. Stop or runtime replacement retires the development lifetime. Runtime integration and CLI/MCP fixtures explicitly opt in through this same policy; native session-policy tests keep strict admission. This override does not launch or register any runtime.
 
@@ -67,3 +68,5 @@ Runtime hosting and admission need a secure process boundary. Runtime management
 The runtime remains the shared execution and custody authority. Clients require a running runtime until provisioning defines launch policy. Profile authentication, grant/session administration and operation visibility remain available through that boundary.
 
 The earlier service-installation and health-management approach is withdrawn. Management is deferred, not permanently prohibited: reconsider it only with application bundling, building and provisioning. Acceptance records the operator-authorized scope; code removal and cross-platform verification must be reported separately.
+
+Amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr`. That record resolves the launch and management deferral. The removal of the old scheduled-task management, the development session override and the test-owned lifetimes stand unchanged.

@@ -12,12 +12,13 @@ related:
   - '[[2026-09-23-profile-password-custody-passphrase-reset-adr]]'
   - '[[2026-07-24-profile-login-session-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:a76fcb6ed83ff552f5887f2ff70a8a9492fc6fb5d167253224cf940034a3c009'
+body_hash: 'sha256:db405a79456dc8fd4e23f38cd0fefecd2aa94ae26f8b2525ca71d6ab20395f0c'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -100,7 +101,7 @@ Root creation and selection journals capture exact old pointer existence, bytes,
 
 ### Sessions and profile handover
 
-The keyring may store only a random session key under service `cadrumo:profile-session:v1` and account profile UUID. It wraps an already password-unlocked DEK for a default 15-minute idle and four-hour absolute lifetime. Session AAD binds profile UUID, custody generation/digest, authentication time, deadlines, schema, and purpose. Custody generation changes revoke sessions.
+The keyring may store only a random session key under service `cadrumo:profile-session:v2` and account `<profile UUID>:<session UUID>`. It wraps an already password-unlocked DEK for a default 15-minute idle and four-hour absolute lifetime. Session AAD binds profile UUID, custody generation/digest, authentication time, deadlines, schema, and purpose. Custody generation changes revoke sessions.
 
 Profile B authenticates into transaction-owned candidate memory and staged session state while profile A remains unchanged. Failure before the active-reference swap destroys B's candidate state and leaves A byte-for-byte and semantically intact. Success atomically swaps the active reference, promotes B's staged session, attempts optional keyring acceleration, cleans candidate artifacts, and only then retires A. Keyring failure leaves a valid process B session.
 
@@ -143,3 +144,5 @@ The human-session keyring-only restriction and deadlines in Sessions and profile
 Profile handover is scoped to one frontend context and its candidate session. Other authorized runtime sessions are not redirected by its active-reference swap. Password/recovery reset, password rotation and deletion invalidate delegated grants through the new lifecycle policy, including fail-closed cleanup when native key removal is unavailable.
 
 Portable backups exclude all automation records and protected secrets, in addition to existing session exclusions; restore never restores delegation. Existing password/recovery formats, KDF/sentinel rules, transactional publication, local deletion scope and the limit on detecting coherent full-state rollback remain unchanged. The new decision owns the delegated contract and its CLI/TUI controls.
+
+Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human acceleration receipt also binds the originating login and the profile's durable sign-in generation. It is minted only after its session is published, stamped with the generation captured at publication. Only the runtime profile host mints, extends or deletes it. Frontends present the proof and never unwrap the DEK. The throttle rule, where missing or corrupt state means clear, is unchanged.

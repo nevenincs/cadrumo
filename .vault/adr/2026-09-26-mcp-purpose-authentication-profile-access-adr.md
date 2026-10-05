@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ae038b89f704669b6d13d909163aadbdc038bc0896c406ac6d5f2d2f8c3384d'
+body_hash: 'sha256:285cfee7b69ce8c4e3b55a1aebe1021ab34a6bdfad58c98d6e92550e50e4f919'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-08-13-cli-action-envelope-successor-adr]]"
   - "[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]"
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
 ---
 
 # `mcp-purpose-authentication` adr: profile API keys, delegated sessions and CLI/TUI parity | (**status:** `accepted`)
@@ -149,12 +150,13 @@ Access sessions are short, with a five-minute maximum lease, clipped to parent/g
 | Lock/log out of this session | End that session and its descendants; clear its private presentation state |
 | Reconnect after session lock using a valid API key | May obtain a new independent session; a session lock does not revoke its root grant |
 | Human logout or idle/absolute expiry | End that human session and attended descendants; disclose independently enabled automation |
+| Human sign-out (`2026-10-04-application-sign-in-adr`) | Advance the profile's human sign-in generation, delete the human receipt, and end every human and attended session of the profile; disclose independently enabled automation; API grants unaffected |
 | Revoke one key | End sessions derived from that key, refuse new admission and pause dependent jobs; other separately authorized keys remain scoped |
 | Revoke a grant or all profile automation | Remove its usable unlock capability, revoke descendants and pause affected work |
-| Lock this profile everywhere | Invalidate all profile sessions and suspend every automation unlock until fresh password-authorized resume |
+| Lock this profile everywhere | Invalidate all profile sessions, advance the human sign-in generation and delete the human receipt, and suspend every automation unlock until fresh password-authorized resume |
 | Resume a globally locked profile | Fresh password proof; show and explicitly select automation grants to reactivate within their original scope/end date |
 | Password rotation/reset, recovery reset or profile deletion | Revoke all automation grants/unlock material; require re-enrollment if the profile remains |
-| OS lock | End attended access; continue unattended work only if its enrollment explicitly permits it |
+| OS lock | End attended access; on positive lock evidence also advance the human sign-in generation and delete the human receipt; continue unattended work only if its enrollment explicitly permits it |
 | Originating OS logout | Invalidate dependent human/attended sessions and descendants; do not revoke independent API grants |
 | Unattended login eligibility or required credential facilities unavailable/unknown | Fence dependent work; another login or surviving user manager is insufficient |
 | Last eligible logout | Fence private admission/effects, bounded runtime shutdown and custody release; no permanent grant revocation or profile-global suspension |
@@ -197,3 +199,5 @@ Scope amendment accepted 2026-10-03 under the operator's instruction: CLI/TUI pa
 Cadrumo gains an optional delegated unlock path and a visible administration surface. It incurs credential-store portability, enrollment atomicity, revocation, generation and crash-recovery obligations. Background access is explicit and independently revocable.
 
 Local API authentication cannot guarantee perpetual AEAT authentication, filing readiness or hostile same-user isolation. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. Acceptance records the design; the plan separately records authorization for product implementation. It is not evidence that API keys or runtime behavior already work.
+
+Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human login receipt is the runtime-owned shared sign-in. It is bound to the originating login and to a durable sign-in generation, and revoked by human sign-out and positive lock-down. Automatic resume defaults to interactive surfaces. That is a client-side default, not an authority control: agents authenticate with enrolled API keys or explicit attended delegation.

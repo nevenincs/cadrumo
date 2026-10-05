@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d551f36d5a97150dddf86b7872de9f949e90069d9cb4da1aec66d2220531644'
+body_hash: 'sha256:514c4b1f4b0bef92a37605ff80177173d698bc0de9afc61450709a20339664e6'
 related:
   - '[[2026-09-04-reachability-burndown-adr]]'
   - '[[2026-09-04-reachability-burndown-reference]]'
@@ -59,6 +59,8 @@ related:
   - '[[2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit]]'
   - '[[2026-09-09-reachability-burndown-zero-closure-review-audit]]'
+  - '[[2026-10-04-reachability-burndown-ledger]]'
+  - '[[2026-10-04-reachability-burndown-plan]]'
 ---
 
 # `reachability-burndown` feature index
@@ -122,6 +124,14 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit` - 2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit
 - `2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit` - 2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit
 - `2026-09-09-reachability-burndown-zero-closure-review-audit` - `reachability-burndown` audit: `exact zero closure review`
+
+### exec
+
+- `2026-10-04-reachability-burndown-ledger` - `reachability-burndown` ledger
+
+### plan
+
+- `2026-10-04-reachability-burndown-plan` - `reachability-burndown` plan
 
 ### reference
 

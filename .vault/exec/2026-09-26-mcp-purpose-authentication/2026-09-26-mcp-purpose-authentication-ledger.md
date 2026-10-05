@@ -3,10 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
 body_hash: 'sha256:8814eb8e34c10db15bd42a980b4ae6fe7ebef15174957cdfeffa0f125423ebbd'
-body_hash: 'sha256:e95a169e2b38a516411c86a25466cf312e569eba81603f42b88d6017281d31a0'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---

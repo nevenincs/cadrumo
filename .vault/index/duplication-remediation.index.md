@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:45377cab37bee1a1aa2799e9f13ddecddc5ec538a9de7ac207d2e4a589c0e499'
+body_hash: 'sha256:91d7a0e3f2f1a8fcc7fa952a1601d27236ae51b1197a01a9a4e45e2fee03c066'
 related:
   - '[[2026-10-02-duplication-remediation-audit]]'
   - '[[2026-10-02-duplication-remediation-ledger]]'
@@ -24,7 +24,7 @@ Auto-generated index of all documents tagged with `#duplication-remediation`.
 
 ### adr
 
-- `2026-10-03-duplication-remediation-hashing-proof-boundaries-adr` - `duplication-remediation` adr: `Canonical tooling hashes and independent installed proof` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+- `2026-10-03-duplication-remediation-hashing-proof-boundaries-adr` - `duplication-remediation` adr: `Canonical tooling hashes and independent installed proof` | (**status:** `accepted`)
 - `2026-10-03-duplication-remediation-m200-stock-verification-adr` - `duplication-remediation` adr: `Bound positive elective M200 compensation by present opening stock` | (**status:** `accepted`)
 
 ### audit

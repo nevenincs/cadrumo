@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:1968093002008e671fbb93fd667090af82b6c413d3dec670544db6e5c5898185'
+body_hash: 'sha256:d612999a1f1b25ed2763a03c6d30871c8db3511a75e75bc649737640ebd99541'
 ---
 
 # `tui-all-mcp-integration` plan
@@ -40,8 +40,6 @@ Decision coverage: the accepted MCP purpose and profile-access decisions govern 
 ## Parallelization
 
 S01 (MCP discovery) and S04 historical source review are assigned to the history worker. S02 platform containment is assigned to the platform worker. S03 broader application/CLI/TUI/persistence changes are assigned to the baseline worker. They may run concurrently with disjoint source ownership supplied in dispatch. The supervisor owns all shared metadata, later snapshots, conftest/dev/config edits, plan, ledger and commits. Serialize Git and Vaultspec mutations. S05 combined verification, review and landing follows implementation and disposition reconciliation. The supervisor owns expensive or stateful checks; workers run only coordinated or independent focused checks.
-
-
 
 ## Verification
 

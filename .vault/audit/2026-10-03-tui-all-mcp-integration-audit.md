@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:27b0ba8511f46bac991d84e1a6a62b5f8eabdaff753fd6e11fff1877bbb952dd'
+body_hash: 'sha256:786b98881c11a1c5e47b03f88465b7786c28432d584c7ff46ba93d8ebdd19ae9'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -224,7 +224,6 @@ Independent integrated review found no new high/critical source defect on frozen
 Finish the concrete conformance families, diagnose and complete the installed withholding continuation, corroborate generated registry reproduction, rerun the configured checks against frozen inputs, and obtain the final integrated code review. Preserve failed and unavailable runs beside passing evidence and retain their actual causes. Finish per-path integration commit mappings and coherent provenance-bearing checkpoints. Close only Steps whose required proof passes. Coordinate the final destination update if its writer remains active; the exact landing operation and dependency must stay explicit.
 
 Current review status is PENDING. Static review has no unresolved critical or high defect; combined verification and landing remain open.
-
 
 ## Baseline checkpoint after user priority change
 

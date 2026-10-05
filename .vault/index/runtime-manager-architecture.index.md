@@ -4,11 +4,15 @@ tags:
   - '#index'
   - '#runtime-manager-architecture'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e34b201958af75364985d2b4b4fbba6ed1c040dc6883841e36e318a773950fba'
+body_hash: 'sha256:1f5ac840bde5df42f85fd22c813e55434d1e028368e8badbcf48a22142597882'
 related:
   - '[[2026-10-03-runtime-manager-architecture-research]]'
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
+  - '[[2026-10-04-runtime-manager-architecture-plan]]'
+  - '[[2026-10-04-runtime-manager-architecture-requirements-research]]'
+  - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
 ---
 
 # `runtime-manager-architecture` feature index
@@ -17,6 +21,16 @@ Auto-generated index of all documents tagged with `#runtime-manager-architecture
 
 ## Documents
 
+### adr
+
+- `2026-10-04-runtime-manager-architecture-adr` - `runtime-manager-architecture` adr: `Per-user runtime manager` | (**status:** `accepted`)
+- `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` - `runtime-manager-architecture` adr: `Runtime supervisor contract` | (**status:** `accepted`)
+
+### plan
+
+- `2026-10-04-runtime-manager-architecture-plan` - `runtime-manager-architecture` plan
+
 ### research
 
 - `2026-10-03-runtime-manager-architecture-research` - `runtime-manager-architecture` research: `Windows runtime host options: service, scheduled task, on-demand agent`
+- `2026-10-04-runtime-manager-architecture-requirements-research` - `runtime-manager-architecture` research: `Runtime manager requirements and platform mechanisms`

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-10-03'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:15c44d0260712aad794deafc1bd661680663a21561c589018833e87e0bf079b2'
+body_hash: 'sha256:c3e8cd77f4b6a87b7bd61fda5cdd6f55ae2699c626bd781e186607f5e0207bcd'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -135,6 +135,8 @@ related:
   - '[[2026-08-25-registry-completeness-closure-tracker-ownership-correction-audit]]'
   - '[[2026-08-26-registry-completeness-closure-s87-two-channel-cutover-review-audit]]'
   - '[[2026-08-29-registry-completeness-closure-gate-staleness-sweep-audit]]'
+  - '[[2026-10-05-registry-completeness-closure-native-and-communication-proof-adr]]'
+  - '[[2026-10-05-registry-completeness-closure-native-and-communication-proof-research]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -147,6 +149,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-adr` - `registry-completeness-closure` adr: `one derived release predicate for shipped registry completeness` | (**status:** `accepted`)
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr` - `registry-completeness-closure` adr: `S33 two-channel filing export proof` | (**status:** `accepted`)
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-adr` - `registry-completeness-closure` adr: `native and communication proof` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
 
 ### audit
 
@@ -281,3 +284,4 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-research` - `registry-completeness-closure` research: `shipped corpus closure boundary`
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-research` - `registry-completeness-closure` research: `S33 two-channel filing export proof research`
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-research` - `registry-completeness-closure` research: `native and communication proof`
