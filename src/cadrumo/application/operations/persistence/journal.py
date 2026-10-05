@@ -75,6 +75,7 @@ class OperationPersistedSnapshot(BaseModel):
     request_reference: ContentDigest
     admission_provenance_reference: ContentDigest | None = None
     credential_free_request_json: str | None = None
+    manual_edit_values_purged: Literal[True] | None = None
     secret_requirement: OperationSecretRequirement | None = None
     financial_requirement: OperationTransientFinancialOperandRequirementV1 | None = None
     executor_entered_at: datetime | None = None

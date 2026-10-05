@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7675893d7c83264b87bc6c7bca569cbd1e6037ce8c119f3813e5ed939d30d1e0'
+body_hash: 'sha256:9e34b4bca7d5c2bda4743cba702f8e3bc2f44be790329e3162d314040cae10db'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -928,6 +928,8 @@ related:
 - `S24` `verify:` `S24 typed broker recovery shutdown and production supervisor` -> `pass`
 - `S24` `verify:` `S24 public projection negative and lifetime controls` -> `pass`
 - `S24` `verify:` `S24 exact manifest Ruff and ty` -> `pass`
+- `S24` `A` `src/cadrumo/application/operations/tests/financial_operand_models.py`
+- `S24` `verify:` `S24 previously verified current production supervisor and purge fixtures` -> `pass`
 
 ## Notes
 
@@ -960,3 +962,4 @@ related:
 - `S29` Purge precedes journal hydration on all readers and locked writes. Superseded snapshot 6 remains refused after its amounts are purged. Legacy secure-reference invocation metadata is retired without adopting or replaying its stored request. Identity, lifecycle, effect and settled receipt remain intact. Mutable shared staging prevents the pending per-Step Git checkpoint.
 - `S28` Resolved external Modelo 720 drift: 33 relocated corpus and full article-anchor tests now pass. Reused unchanged 89 passing owner controls and style/type evidence; no suppression or disposition baseline.
 - `S24` Completed the accepted whole ModeloEditSubmissionV1 transient design. Apply and preflight use amount-free V2 requests; typed private grants, exact baseline binding, one-shot executor delivery and bounded shutdown use the supervisor transition lock. Hardened durable custody records contain no financial batch values. Exact co-committed edit receipts alone prove UPDATED after owner loss; all seven custody recovery positions are covered. Retired the scalar prototype and preserved its failure-settlement controls. Human native financial intake and ordinary bulk native regressions both pass. Refusal settlement 8 integration controls pass; four registered edit executor cases pass after migrating preflight to the volatile human input. Broker/recovery/shutdown 15 controls and lifetime/projection-forgery 10 controls pass. Previous connected-unit failures were stale V1/schema expectations and passed in 197 public connected controls plus 8 version controls after correction. Ruff and ty passed for the exact Step manifest; broad imports and final integrated review remain S07.
+- `S24` Corrected checkpoint ownership capture: retain the already tested S29 purge marker, the already tested awaiting-custody notice transition, and the shared synthetic typed-batch fixture. Working behavior is unchanged; the cached staged capture had omitted these pieces.
