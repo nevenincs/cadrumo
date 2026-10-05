@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3749bfd4e73597c23f5361b93034f28e6283a6b49002dad4f53ce2f37a976bc'
+body_hash: 'sha256:a80cefa244ead5684b9eab6fee1354637baf43593ef1610239a4270aef5ea2e1'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -97,6 +97,20 @@ related:
 - `S02` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
 - `S02` `verify:` `runtime suites -m integration` -> `fail`
 - `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S03` `A` `src/cadrumo/adapters/local_runtime/boot_record.py`
+- `S03` `A` `src/cadrumo/adapters/local_runtime/tests/test_boot_record.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S03` `verify:` `focused boot-record, supervised, installation and storage gate pytest 141 passed 2 skipped` -> `pass`
+- `S03` `verify:` `Windows creation time checked against GetProcessTimes` -> `pass`
+- `S03` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S03` `verify:` `just check-persistence-write-paths; just check-module-reachability` -> `pass`
+- `S03` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -104,3 +118,4 @@ related:
 - `S01` Exit reasons apply in every launch mode, not only under --supervised; the supervisor-contract ADR scope line reads 'Without that flag ... unchanged' and needs the operator's confirmation or a supervised gate in a later Step. Import gate could not complete (import-linter exit 127, stale targets, tree changed). Mixed files committed with only this Step's lines; the HEAD `test_login_lifecycle` case was already broken by another writer's pending rename.
 - `S06` S06 content landed in commit 345b768233 (another session's commit swept the shared index); content verified identical to the staged Step.
 - `S02` Integration residue (8 failures, 3 errors in automation approval, password rotation, refusal detail, projection pages, operation secret, modelo lifecycle) sits in modules carrying another writer's uncommitted custody and operations edits and touches no symbol this Step changed; not provable against HEAD in the shared tree. Heartbeat reports `hosted_profiles` as an upper bound for in-flight operations; exact counts added as a follow-on Step. Windows plain-interpreter dev launcher does not pass pipes through its relaunch; supervised mode targets the packaged single-process host.
+- `S03` Import gate failed on stale `import_load_targets` metadata (another writer's uncommitted file), a mid-run tree change and two other workers' test files. Boot record registered as a taxonomy member only (no .runtime directory path definition, which would pull installation.json into scope); creation time is platform-native and can exceed 2^53 on Windows (the manager parses it as u64); package directory is null outside an installed package. Taxonomy files committed with only this Step's hunks.

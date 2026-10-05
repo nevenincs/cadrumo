@@ -14,6 +14,12 @@ from uuid import uuid4
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.adapters.local_runtime.boot_record import (
+    RuntimeBootRecord,
+    RuntimeBootRecordPublication,
+    RuntimeBootRecordUnavailable,
+    read_runtime_boot_record,
+)
 from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.core.logging import get_logger
 
@@ -125,6 +131,18 @@ def _ready() -> RuntimeReady:
     return RuntimeReady(boot_id=uuid4(), pid=os.getpid(), version="test", storage_identity="b" * 64, admission="native")
 
 
+def _publication(root: Path, ready: RuntimeReady) -> RuntimeBootRecordPublication:
+    record = RuntimeBootRecord(
+        boot_id=ready.boot_id,
+        pid=ready.pid,
+        process_created=1,
+        version=ready.version,
+        package_directory=None,
+        admission=ready.admission,
+    )
+    return RuntimeBootRecordPublication(storage_root=root, record=record)
+
+
 def test_idle_fence_stops_only_without_hosted_profiles(tmp_path: Path) -> None:
     stop = RuntimeStop()
     profiles = _profiles(tmp_path, stop)
@@ -169,9 +187,15 @@ def test_supervisor_commands_drive_ready_heartbeat_busy_and_stop(tmp_path: Path)
         runtime.start()
         serving = _Serving()
         ready = _ready()
-        runtime.attach(serving, profiles=profiles, ready=ready)
+        runtime.attach(
+            serving, profiles=profiles, ready=ready, publish_boot_record=_publication(tmp_path, ready).publish
+        )
+        assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
         serving.ready.set()
         assert pipes.receive() == ready
+        # The record was published before the line that announced readiness.
+        published = read_runtime_boot_record(storage_root=tmp_path)
+        assert isinstance(published, RuntimeBootRecord) and published.boot_id == ready.boot_id
 
         profile_id = uuid4()
         profiles._profiles[profile_id] = cast("RuntimeProfileHost", object())
@@ -191,6 +215,51 @@ def test_supervisor_commands_drive_ready_heartbeat_busy_and_stop(tmp_path: Path)
         runtime.finish(int(RuntimeExitReason.DRAIN_WATCHDOG))
         pipes.close("announcements")
         assert pipes.next_line() == b""
+
+
+def test_an_unpublished_boot_record_ends_the_runtime_without_ready(tmp_path: Path) -> None:
+    stop = RuntimeStop()
+    profiles = _profiles(tmp_path, stop)
+    with _channel(stop) as (pipes, channel):
+        runtime = SupervisedRuntime(stop, channel)
+        runtime.start()
+        serving = _Serving()
+        ready = _ready()
+        # A storage root that does not exist cannot hold the record.
+        publication = _publication(tmp_path / "missing", ready)
+        runtime.attach(serving, profiles=profiles, ready=ready, publish_boot_record=publication.publish)
+        serving.ready.set()
+        assert pipes.receive() == RuntimeStopping(reason=RuntimeExitReason.UNEXPECTED_FAILURE)
+        assert stop.reason is RuntimeExitReason.UNEXPECTED_FAILURE
+        runtime.finish(int(RuntimeExitReason.UNEXPECTED_FAILURE))
+        pipes.close("announcements")
+        assert pipes.next_line() == b""
+
+
+def test_a_withdrawn_boot_record_is_never_published_or_announced(tmp_path: Path) -> None:
+    stop = RuntimeStop()
+    profiles = _profiles(tmp_path, stop)
+    with _channel(stop) as (pipes, channel):
+        runtime = SupervisedRuntime(stop, channel)
+        runtime.start()
+        serving = _Serving()
+        ready = _ready()
+        publication = _publication(tmp_path, ready)
+        publication.withdraw()
+        attempted = Event()
+
+        def publish() -> bool:
+            try:
+                return publication.publish()
+            finally:
+                attempted.set()
+
+        runtime.attach(serving, profiles=profiles, ready=ready, publish_boot_record=publish)
+        serving.ready.set()
+        assert attempted.wait(5)
+        stop.request(RuntimeExitReason.SUPERVISOR_STOP)
+        assert pipes.receive() == RuntimeStopping(reason=RuntimeExitReason.SUPERVISOR_STOP)
+        assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
 
 
 def test_heartbeat_before_serving_has_no_tick_and_session_end_names_its_reason() -> None:

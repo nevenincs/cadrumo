@@ -7,6 +7,7 @@ fixture process and kills it during teardown, including on assertion failure.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import json
 import os
 import signal
@@ -22,6 +23,12 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.adapters.local_runtime.boot_record import (
+    RuntimeBootRecord,
+    RuntimeBootRecordPublication,
+    RuntimeBootRecordUnavailable,
+    read_runtime_boot_record,
+)
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.tests.process_support import fixture_arguments, launch_fixture, native_python
@@ -167,9 +174,51 @@ def _boot_of(client: VerifiedRuntimeConnection) -> UUID:
     return client.session(request, deadline=time.monotonic() + 3).runtime_boot_id
 
 
+def _windows_creation_milliseconds(pid: int) -> int:
+    """Read a live process's creation time through pywin32 as whole milliseconds of FILETIME ticks."""
+    import win32api
+    import win32process
+
+    # PROCESS_QUERY_LIMITED_INFORMATION observes without a termination right.
+    handle = win32api.OpenProcess(0x1000, False, pid)
+    try:
+        created = win32process.GetProcessTimes(handle)["CreationTime"]
+    finally:
+        win32api.CloseHandle(handle)
+    assert isinstance(created, datetime.datetime)
+    elapsed = created - datetime.datetime(1601, 1, 1, tzinfo=datetime.UTC)
+    return ((elapsed.days * 86_400 + elapsed.seconds) * 10_000_000 + elapsed.microseconds * 10) // 10_000
+
+
+def _assert_boot_record_names(root: Path, ready: RuntimeReady) -> None:
+    record = read_runtime_boot_record(storage_root=root)
+    assert isinstance(record, RuntimeBootRecord)
+    assert (record.boot_id, record.pid, record.version, record.admission) == (
+        ready.boot_id,
+        ready.pid,
+        ready.version,
+        ready.admission,
+    )
+    # A source checkout is not a versioned package.
+    assert record.package_directory is None
+    if sys.platform == "win32":
+        # pywin32 truncates the kernel creation time to milliseconds.
+        assert record.process_created // 10_000 == _windows_creation_milliseconds(ready.pid)
+
+
 @pytest.mark.asyncio
 async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path) -> None:
     endpoint = _endpoint(tmp_path)
+    earlier = RuntimeBootRecord(
+        boot_id=uuid4(),
+        pid=1,
+        process_created=1,
+        version=version("cadrumo"),
+        package_directory=None,
+        admission="native",
+    )
+    # An earlier boot that ended without cleanup left its record behind.
+    assert RuntimeBootRecordPublication(storage_root=tmp_path, record=earlier).publish()
     try:
         async with _supervised(tmp_path, endpoint.storage_identity) as process:
             ready = await _ready(process)
@@ -177,6 +226,8 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
             assert ready.version == version("cadrumo")
             assert ready.storage_identity == endpoint.storage_identity
             assert ready.admission == "development"
+            # The record is in place, and replaced, when ready is observed.
+            _assert_boot_record_names(tmp_path, ready)
             client = _connect(endpoint)
             try:
                 assert _boot_of(client) == ready.boot_id
@@ -194,6 +245,8 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
             assert await _exit_code(process) == RuntimeExitReason.SUPERVISOR_STOP
             # Diagnostics went to the redacted log; the launcher received none.
             assert await _remaining_output(process) == (b"", b"")
+            # A clean exit removes the record.
+            assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
     finally:
         endpoint.close()
 
@@ -212,11 +265,12 @@ async def test_an_idle_runtime_stops_for_stop_if_idle_and_session_end(
     endpoint = _endpoint(tmp_path)
     try:
         async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            await _ready(process)
+            _assert_boot_record_names(tmp_path, await _ready(process))
             await _send(process, command)
             assert await _announcement(process) == RuntimeStopping(reason=reason)
             assert await _exit_code(process) == reason
             assert await _remaining_output(process) == (b"", b"")
+            assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
     finally:
         endpoint.close()
 

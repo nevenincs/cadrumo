@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:1637f6214339488661594229acf0dc405fe5b91685e7062c7611e499071e1eb5'
+body_hash: 'sha256:9d009b4a8e24d113ca93b1763e9c322a51409e769acd359a6b65b10406950a87'
 ---
 
 # `runtime-manager-architecture` plan
@@ -58,7 +58,7 @@ Runtime-side supervised mode, boot record, settle and exit reasons from the supe
 
 - [x] `P01.S01` - Add the runtime exit-reason table with reserved ranges and project it to Rust through the contract generator; `src/cadrumo/application/runtime/contracts.py, contract generator projection, owning tests`.
 - [x] `P01.S02` - Add the --supervised mode with private non-inheritable protocol streams, fd 0/1/2 rewired to null, hooks routed through redacted logging, and the ready/heartbeat/stopping protocol with ping/stop/stop-if-idle/session-end; `src/cadrumo/entrypoints/runtime/main.py, new supervised-channel module under src/cadrumo/entrypoints/runtime/, src/cadrumo/adapters/local_runtime/server.py, owning tests`.
-- [ ] `P01.S03` - Publish and remove the non-private boot record with custody local-record primitives and register it with the manager records in the storage taxonomy; `src/cadrumo/adapters/local_runtime/installation.py neighbour module, storage taxonomy owner, owning tests`.
+- [x] `P01.S03` - Publish and remove the non-private boot record with custody local-record primitives and register it with the manager records in the storage taxonomy; `src/cadrumo/adapters/local_runtime/installation.py neighbour module, storage taxonomy owner, owning tests`.
 - [ ] `P01.S04` - Implement the ordered session-end settle: fence admissions, terminate and confirm the worker job, record ORPHANED or UNKNOWN and release only confirmed leases, then exit; `src/cadrumo/application/operations/_supervisor_drain.py, src/cadrumo/entrypoints/runtime/profile_connection_drain.py, owning tests`.
 - [ ] `P01.S05` - Re-enable Ctrl+C processing at startup, give non-worker children their own console under --supervised, and refuse a full elevated token under --supervised; `src/cadrumo/entrypoints/runtime/main.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py, src/cadrumo/adapters/outbound/browser_runtime/installer.py, owning tests`.
 - [x] `P01.S06` - Rename manager_commands.py to containment_commands.py with NativeManagerCommand, ManagerCommandResult and run_manager_command_sync, updating all consumers atomically; `src/cadrumo/adapters/local_runtime/manager_commands.py, linux_worker_process.py, macos_worker_process.py, their tests and fixtures`.

@@ -639,6 +639,20 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
+    _location(
+        # A supervised runtime's non-private identity claim, replaced on each
+        # boot and removed on a clean exit, so it is one bounded file. Reclaim
+        # must not delete a live runtime's record, and a boot must not move a
+        # replay's digest.
+        StorageCategory.RUNTIME_BOOT_RECORD,
+        ".runtime/boot.json",
+        consumer_module="adapters/local_runtime/boot_record.py",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
 )
 
 

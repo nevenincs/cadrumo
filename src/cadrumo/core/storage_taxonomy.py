@@ -272,6 +272,11 @@ class StorageCategory(StrEnum):
     PROFILE_CUSTODY_LABEL_HEAD = "profile-custody-label-head"
     LOCAL_READER_FITNESS_VERDICTS = "local-reader-fitness-verdicts"
 
+    # ── Fixed layout: runtime-written records under ``.runtime/`` ───────────
+    # Distinct from ``RUNTIME_SOCKETS``: that directory holds POSIX endpoints;
+    # these records sit beside the installation identity in ``.runtime/``.
+    RUNTIME_BOOT_RECORD = "runtime-boot-record"
+
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
     BUCKET_DATABASE_FILE = "bucket.db-file"

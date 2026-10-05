@@ -209,6 +209,11 @@ class SupervisorChannel:
         except Full:
             self._logger.warning("supervisor announcement dropped: channel queue full")
 
+    @property
+    def logger(self) -> logging.Logger:
+        """Return the redacted logger that receives this channel's diagnostics."""
+        return self._logger
+
     def close(self, *, timeout: float) -> None:
         """Let queued announcements drain for at most ``timeout`` seconds."""
         try:
@@ -278,10 +283,27 @@ class SupervisedRuntime:
         self._channel.start(self._handle)
         Thread(target=self._announce_stop, name="runtime-supervisor-stop", daemon=True).start()
 
-    def attach(self, serving: SupervisedServing, *, profiles: SupervisedProfiles, ready: RuntimeReady) -> None:
-        """Report ``ready`` once ``serving`` owns the endpoint, and serve heartbeats from it."""
+    def attach(
+        self,
+        serving: SupervisedServing,
+        *,
+        profiles: SupervisedProfiles,
+        ready: RuntimeReady,
+        publish_boot_record: Callable[[], bool],
+    ) -> None:
+        """Publish the boot record, then report ``ready``, once ``serving`` owns the endpoint.
+
+        Heartbeats are served from ``serving`` from now on. ``publish_boot_record``
+        returns False when the record may no longer be published; a failure to
+        publish ends the runtime instead of reporting ``ready``.
+        """
         self._serving, self._profiles = serving, profiles
-        Thread(target=self._announce_ready, args=(serving, ready), name="runtime-supervisor-ready", daemon=True).start()
+        Thread(
+            target=self._announce_ready,
+            args=(serving, ready, publish_boot_record),
+            name="runtime-supervisor-ready",
+            daemon=True,
+        ).start()
 
     def finish(self, exit_code: int) -> None:
         """Announce the final reason unless a stop already did, then drain briefly."""
@@ -289,13 +311,24 @@ class SupervisedRuntime:
             self._send_stopping(RuntimeExitReason(exit_code))
         self._channel.close(timeout=_FINAL_FLUSH_SECONDS)
 
-    def _announce_ready(self, serving: SupervisedServing, ready: RuntimeReady) -> None:
+    def _announce_ready(
+        self, serving: SupervisedServing, ready: RuntimeReady, publish_boot_record: Callable[[], bool]
+    ) -> None:
         while not self._stop.is_set():
             if serving.ready.wait(0.05):
                 with self._announced:
-                    if not self._stopping_sent:
+                    if not self._stopping_sent and self._published(publish_boot_record):
                         self._channel.announce(ready)
                 return
+
+    def _published(self, publish_boot_record: Callable[[], bool]) -> bool:
+        try:
+            return publish_boot_record()
+        except Exception as error:
+            # A supervisor must never adopt a runtime whose identity claim is missing.
+            self._channel.logger.error("runtime boot record was not published", exc_info=error)
+            self._stop.request(RuntimeExitReason.UNEXPECTED_FAILURE)
+            return False
 
     def _announce_stop(self) -> None:
         self._stop.wait()

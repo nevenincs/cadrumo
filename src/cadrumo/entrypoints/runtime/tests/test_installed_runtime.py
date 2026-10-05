@@ -23,6 +23,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.local_runtime.boot_record import RuntimeBootRecordUnavailable, read_runtime_boot_record
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.posix import posix_owner_uid
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
@@ -201,6 +202,8 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
             deadline=time.monotonic() + 3,
         )
         assert status.runtime_boot_id != first_boot
+        # Only a supervised runtime publishes a boot record.
+        assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
         assert {path.name for path in tmp_path.iterdir()} <= {"logs"}, (
             "transport startup may write diagnostics but must not initialize private profile storage"
         )

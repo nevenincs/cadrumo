@@ -14,6 +14,7 @@ from threading import Event
 from typing import Any
 from uuid import UUID, uuid4
 
+from ...adapters.local_runtime.boot_record import RuntimeBootRecordPublication, current_runtime_boot_record
 from ...adapters.local_runtime.linux_login import linux_login_inventory
 from ...adapters.local_runtime.login_policy import compose_runtime_login_policy
 from ...adapters.local_runtime.posix import posix_owner_uid
@@ -142,6 +143,7 @@ def _serve_runtime_endpoint(
         login_inventory=login_policy.inventory,
     )
     attach = None
+    publication = None
     if supervision is not None:
         ready = RuntimeReady(
             boot_id=boot_id,
@@ -150,11 +152,29 @@ def _serve_runtime_endpoint(
             storage_identity=endpoint.storage_identity,
             admission=login_policy.admission,
         )
-        attach = partial(supervision.attach, profiles=profiles, ready=ready)
+        publication = RuntimeBootRecordPublication(
+            storage_root=root,
+            record=current_runtime_boot_record(
+                boot_id=boot_id, version=installed_version, admission=login_policy.admission
+            ),
+        )
+        attach = partial(supervision.attach, profiles=profiles, ready=ready, publish_boot_record=publication.publish)
     with startup_phase(_LOGGER, "registry_prepare"):
         profiles.prepare_registry()
     with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
-        _serve_transport(endpoint, installed_version, stop, profiles, boot_id, attach)
+        try:
+            _serve_transport(endpoint, installed_version, stop, profiles, boot_id, attach)
+        finally:
+            if publication is not None:
+                _withdraw_boot_record(publication)
+
+
+def _withdraw_boot_record(publication: RuntimeBootRecordPublication) -> None:
+    try:
+        publication.withdraw()
+    except RuntimeRefusalError as error:
+        # A record left behind names a dead process, which adoption refuses.
+        _LOGGER.warning("runtime boot record was not removed", exc_info=error)
 
 
 def _release_runtime_endpoint(
