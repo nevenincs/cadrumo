@@ -41,7 +41,11 @@ function TooltipContent({
         sideOffset={sideOffset}
         className={cn(
           "z-(--layer-tooltip) flex w-fit max-w-64 origin-(--radix-tooltip-content-transform-origin) items-center gap-2 rounded-md bg-foreground px-2 py-1 text-sm text-background shadow-overlay",
-          "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+          // It arrives by a transition from its starting style and leaves at
+          // once. A keyframe animation would keep it mounted while it ends,
+          // and a tooltip on its way out is still the topmost layer: it would
+          // take an Escape meant for the dialog beneath it.
+          "transition-[opacity,scale] starting:scale-95 starting:opacity-0",
           className,
         )}
         {...props}

@@ -791,3 +791,80 @@ test("a forced appearance reaches the documentation through the bridge", async (
     .toBe("dark");
   await expect(target.locator("html")).toHaveAttribute("data-scheme", "dark");
 });
+
+// The window's own content security policy, read from the Tauri configuration
+// template, with the documentation origin framed as the build frames it. The
+// component foundation positions overlays with inline styles and injects a
+// few style elements; this proves the policy admits all of it as it stands.
+test("the shell runs under the window's content security policy without a violation", async ({
+  page: target,
+}) => {
+  const template = JSON.parse(
+    readFileSync(local("../../src-tauri/tauri.conf.json.in"), "utf8"),
+  ) as { app: { security: { csp: string } } };
+  const policy = template.app.security.csp.replace(
+    "frame-src 'none'",
+    `frame-src ${DOCS}`,
+  );
+  expect(policy).toContain(`frame-src ${DOCS}`);
+  await target.route(
+    (url) => url.pathname === "/" || url.pathname.endsWith("/index.html"),
+    async (route) => {
+      if (route.request().url().startsWith(DOCS)) return route.fallback();
+      const response = await route.fetch();
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          "content-security-policy": policy,
+        },
+      });
+    },
+  );
+  await target.addInitScript(() => {
+    const seen: string[] = [];
+    (window as unknown as { __violations: string[] }).__violations = seen;
+    document.addEventListener("securitypolicyviolation", (event) =>
+      seen.push(`${event.violatedDirective} ${event.blockedURI}`),
+    );
+  });
+  await signInHost(target);
+  // The sign-in dialog, its tooltip and its refusal.
+  const password = target.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  await expect(password).toBeVisible();
+  await target
+    .getByRole("button", { name: label("desktop.signin.show_password") })
+    .focus();
+  await expect(target.getByRole("tooltip")).toBeVisible();
+  await password.fill("secret á漢");
+  await target.keyboard.press("Enter");
+  await expect(
+    target.getByText(label("desktop.signin.refused.invalid")),
+  ).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  // The palette and settings: every overlay the shell opens by itself.
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  await expect(
+    target.getByRole("dialog", { name: label("desktop.palette.label") }),
+  ).toBeVisible();
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await expect(target.locator(".settings")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
+    "Stand-in documentation",
+  );
+  await expect(target.locator(".xterm").first()).toBeVisible();
+  expect(
+    await target.evaluate(
+      () => (window as unknown as { __violations: string[] }).__violations,
+    ),
+  ).toEqual([]);
+});
