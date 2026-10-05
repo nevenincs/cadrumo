@@ -10,6 +10,8 @@ export type RailItem = {
   label: string;
   shortcut?: string;
   pressed?: boolean;
+  /** For a button that opens a surface: whether that surface is open. */
+  expanded?: boolean;
   badge?: number;
   /** What the badge counts, said in full for the accessible name. */
   badgeLabel?: string;
@@ -36,10 +38,13 @@ function RailButton({ item }: { item: RailItem }) {
           size="lg"
           side="right"
           aria-pressed={item.pressed}
+          aria-expanded={item.expanded}
+          aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
           onClick={item.onClick}
           // The chosen item carries a bar on the rail's edge as well as its
-          // surface, so the choice does not rest on a tint alone.
-          className="rail-button relative before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-pressed:before:opacity-100"
+          // surface, so the choice does not rest on a tint alone. A button
+          // whose surface is open is marked the same way.
+          className="relative before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-expanded:bg-selected aria-expanded:text-accent-foreground aria-expanded:before:opacity-100 aria-pressed:before:opacity-100"
         >
           <Icon name={item.icon} size="lg" />
           {item.badge ? (
@@ -72,11 +77,12 @@ export function Rail({
   bottom: RailItem[];
 }) {
   return (
-    <nav className="rail border-r bg-chrome" aria-label={label}>
+    <nav className="rail w-rail border-r bg-chrome" aria-label={label}>
       <Toolbar.Root
         orientation="vertical"
-        aria-label={label}
-        className="flex h-full flex-col items-center justify-between py-2"
+        // The side padding, not centring, places the buttons: the chosen
+        // item's bar then sits exactly on the rail's outer edge.
+        className="flex h-full flex-col items-start justify-between px-1.5 py-2"
       >
         <div className="rail-group flex flex-col items-center gap-1">
           {top.map((item) => (

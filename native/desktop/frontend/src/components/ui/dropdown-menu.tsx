@@ -55,8 +55,13 @@ function DropdownMenuItem({
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        "flex min-h-control-sm cursor-pointer items-center gap-2 rounded-sm px-2.5 text-base outline-none select-none",
-        "focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex min-h-control-sm cursor-pointer items-center gap-2 rounded-sm px-2.5 text-base outline-none select-none",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        // The item the keyboard or the pointer is on: the chosen-row surface
+        // and bar, as a command row has.
+        "data-[highlighted]:bg-selected data-[highlighted]:text-accent-foreground",
+        "before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 data-[highlighted]:before:opacity-100",
+        "forced-colors:data-[highlighted]:bg-[Highlight] forced-colors:data-[highlighted]:text-[HighlightText]",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         className,
       )}

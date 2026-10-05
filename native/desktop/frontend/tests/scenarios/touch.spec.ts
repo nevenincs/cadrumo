@@ -11,7 +11,8 @@ test.use({
   isMobile: true,
 });
 
-const FINGER = 36;
+// The smallest side a control may have under a finger.
+const FINGER = 44;
 
 const open = (target: Page, scenario = "signed-in") =>
   target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
@@ -36,21 +37,61 @@ test("the pointer is coarse and every control is finger sized", async ({
   expect(
     await target.evaluate(() => matchMedia("(pointer: coarse)").matches),
   ).toBe(true);
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .tap();
   const controls = target.locator(
-    ".rail button, .pane-head button, .tabstrip button",
+    ".rail button, .pane-head button, .tabstrip button, .logview button, .logview input, .logview select",
   );
   const count = await controls.count();
-  expect(count).toBeGreaterThan(8);
+  expect(count).toBeGreaterThan(12);
   for (let index = 0; index < count; index++) {
     const control = controls.nth(index);
     if (!(await control.isVisible())) continue;
     const box = await control.boundingBox();
-    expect(
-      box?.height,
-      (await control.getAttribute("aria-label")) ?? "tab",
-    ).toBeGreaterThanOrEqual(FINGER);
+    const name =
+      (await control.getAttribute("aria-label")) ??
+      (await control.textContent()) ??
+      "control";
+    expect(box?.height, name).toBeGreaterThanOrEqual(FINGER);
+    // A tab is as wide as its name; everything else is at least a finger
+    // wide as well.
+    if ((await control.getAttribute("role")) !== "tab")
+      expect(box?.width, name).toBeGreaterThanOrEqual(FINGER);
   }
 });
+
+// In the source language and in the one with the longest words.
+for (const language of ["en", "hu"])
+  test(`the log keeps room for its records on a small screen (${language})`, async ({
+    page: target,
+  }) => {
+    await target.goto(
+      `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
+    );
+    await target.getByRole("navigation").first().locator("button").nth(5).tap();
+    const list = target.locator(".logview-list");
+    // The newest record: the log follows its end.
+    await expect(list.locator(".record").last()).toBeVisible();
+    const sizes = await target.evaluate(() => {
+      const panel = document.querySelector("section.panel");
+      const rows = document.querySelector(".logview-list");
+      return {
+        panel: panel?.getBoundingClientRect().height ?? 0,
+        list: rows?.getBoundingClientRect().height ?? 0,
+        bottom: rows?.getBoundingClientRect().bottom ?? 0,
+        scrolledBy: document.documentElement.scrollTop,
+        tall: document.documentElement.scrollHeight > window.innerHeight,
+      };
+    });
+    // The bars never take more than they leave: a few records stay in view,
+    // inside the window, and the window itself does not scroll.
+    expect(sizes.list, language).toBeGreaterThanOrEqual(60);
+    expect(sizes.bottom, language).toBeLessThanOrEqual(844);
+    expect(sizes.tall, language).toBe(false);
+    expect(sizes.scrolledBy, language).toBe(0);
+  });
 
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,

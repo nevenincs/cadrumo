@@ -509,6 +509,8 @@ desktop:
   action:
     docs_back: Atrás
     docs_forward: Adelante
+    focus_next: Ir al área siguiente
+    focus_previous: Ir al área anterior
     logs_errors: Mostrar solo errores en los registros
     logs_reset: Quitar los filtros de los registros
     zoom_in: Ampliar la documentación
@@ -518,6 +520,7 @@ desktop:
     frame_title: Documentación de Cadrumo
     loading: Cargando la documentación…
   host:
+    failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
   logs:
     clear_logger: Quitar el filtro de logger
@@ -532,13 +535,13 @@ desktop:
     level_error: Solo errores
     level_info: Info y más graves
     level_warning: Avisos y más graves
+    loading: Cargando el registro…
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
     source_host: Escritorio
     source_python: Python
     sources: Orígenes
     state_available: cadrumo.log
-    state_missing: Aún no hay archivo de registro
     state_missing_detail: Aún no hay archivo de registro. Los registros aparecerán
       cuando un proceso de Cadrumo escriba uno.
     state_unreadable: No se puede leer el registro
@@ -555,6 +558,7 @@ desktop:
     select_all: Seleccionar todo
   palette:
     actions: Acciones
+    close: Cerrar la búsqueda
     documentation: Documentación
     kind_casilla: Casilla
     kind_cli: Comando

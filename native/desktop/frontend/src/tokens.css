@@ -75,11 +75,11 @@
 }
 
 /* A finger needs more than a mouse does. Where the main pointer is coarse
-   every control grows one step, through the same tokens. */
+   no control is smaller than a fingertip, through the same tokens. */
 @media (pointer: coarse) {
   :root {
-    --spacing-control-xs: 2.25rem;
-    --spacing-control-sm: 2.5rem;
+    --spacing-control-xs: 2.75rem;
+    --spacing-control-sm: 2.75rem;
     --spacing-control-md: 2.75rem;
     --spacing-control-lg: 3rem;
     --spacing-rail: 3.75rem;
@@ -131,4 +131,12 @@
   --term-font-medium: 13px;
   --term-font-large: 14px;
   --term-font-xlarge: 16px;
+}
+
+/* With finger-sized controls the bottom panel's own bars are taller, so its
+   floor rises to keep a few rows of content under them. */
+@media (pointer: coarse) {
+  :root {
+    --panel-min: 13.75rem;
+  }
 }

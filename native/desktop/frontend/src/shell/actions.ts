@@ -43,6 +43,9 @@ export type Action = {
   hidden?: boolean;
   enabled?: () => boolean;
   run: () => void;
+  /** What choosing it by name does, where that differs from its chord: a
+   * chord toggles a view, its name in the palette shows it. */
+  choose?: () => void;
 };
 
 export type FocusArea = "terminal" | "docs" | "chrome";

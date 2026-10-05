@@ -502,6 +502,8 @@ desktop:
   action:
     docs_back: Enrere
     docs_forward: Endavant
+    focus_next: Ves a l'àrea següent
+    focus_previous: Ves a l'àrea anterior
     logs_errors: Mostra només els errors als registres
     logs_reset: Treu els filtres dels registres
     zoom_in: Amplia la documentació
@@ -511,6 +513,7 @@ desktop:
     frame_title: Documentació de Cadrumo
     loading: S'està carregant la documentació…
   host:
+    failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
   logs:
     clear_logger: Treu el filtre de logger
@@ -525,13 +528,13 @@ desktop:
     level_error: Només errors
     level_info: Info i més greus
     level_warning: Avisos i més greus
+    loading: S'està carregant el registre…
     minimum_level: Nivell mínim
     no_match: Cap registre no coincideix amb aquests filtres.
     source_host: Escriptori
     source_python: Python
     sources: Orígens
     state_available: cadrumo.log
-    state_missing: Encara no hi ha cap fitxer de registre
     state_missing_detail: Encara no hi ha cap fitxer de registre. Els registres apareixeran
       quan un procés de Cadrumo n'escrigui un.
     state_unreadable: No es pot llegir el registre
@@ -548,6 +551,7 @@ desktop:
     select_all: Selecciona-ho tot
   palette:
     actions: Accions
+    close: Tanca la cerca
     documentation: Documentació
     kind_casilla: Casilla
     kind_cli: Ordre

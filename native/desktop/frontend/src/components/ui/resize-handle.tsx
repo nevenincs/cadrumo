@@ -54,11 +54,10 @@ function ResizeHandle({
     };
   }, [dragging, orientation]);
 
-  const finish = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-    setDragging(false);
-    onDragEnd?.();
+  // Releasing the capture ends the drag; so does losing it any other way.
+  const release = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   return (
@@ -77,8 +76,8 @@ function ResizeHandle({
         // The hairline is the visible line; this is what takes the pointer.
         "after:absolute after:content-['']",
         vertical
-          ? "w-px cursor-col-resize after:inset-y-0 after:-inset-x-1 pointer-coarse:after:-inset-x-3"
-          : "h-px cursor-row-resize after:inset-x-0 after:-inset-y-1 pointer-coarse:after:-inset-y-3",
+          ? "w-px cursor-col-resize after:inset-y-0 after:-inset-x-1 pointer-coarse:after:-inset-x-5.5"
+          : "h-px cursor-row-resize after:inset-x-0 after:-inset-y-1 pointer-coarse:after:-inset-y-5.5",
         className,
       )}
       onPointerDown={(event) => {
@@ -93,8 +92,12 @@ function ResizeHandle({
         if (event.currentTarget.hasPointerCapture(event.pointerId))
           onDrag({ x: event.clientX, y: event.clientY });
       }}
-      onPointerUp={finish}
-      onPointerCancel={finish}
+      onPointerUp={release}
+      onPointerCancel={release}
+      onLostPointerCapture={() => {
+        setDragging(false);
+        onDragEnd?.();
+      }}
       onDoubleClick={onReset}
       onKeyDown={(event) => {
         const back = vertical ? "ArrowLeft" : "ArrowUp";

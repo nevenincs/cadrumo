@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandGroup,
@@ -7,7 +8,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
 import { Spinner } from "@/components/ui/spinner";
@@ -36,8 +42,9 @@ const kindOrder = (kind: DocsResultKind) => {
 
 const SEARCH_DEBOUNCE_MS = 120;
 const MIN_QUERY = 2;
+// While a query also searches the documentation, only the best few actions
+// share the list with its results. Untyped, every action is listed.
 const ACTIONS_WHEN_SEARCHING = 6;
-const ACTIONS_WHEN_IDLE = 14;
 
 function Highlighted({
   text,
@@ -94,6 +101,10 @@ export function CommandPalette({
   // Closing returns focus to where the palette was opened from, which may be
   // the documentation frame.
   const [returnTo] = useState(() => document.activeElement);
+  // What was chosen. It runs once the palette has closed and focus is back
+  // where it came from, exactly as its chord would have run there; where the
+  // action then moves focus, it stays.
+  const chosen = useRef<(() => void) | null>(null);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
     state: "idle" | "searching" | "done" | "unavailable";
@@ -118,19 +129,17 @@ export function CommandPalette({
     };
   }, [trimmed, searching, searchDocs]);
 
-  const matched = useMemo(
-    () =>
-      actions
-        .filter(
-          (action) => !action.hidden && (!action.enabled || action.enabled()),
-        )
-        .map((action) => [action, scoreAction(action, query)] as const)
-        .filter(([, score]) => score > 0)
-        .sort((x, y) => y[1] - x[1])
-        .slice(0, trimmed ? ACTIONS_WHEN_SEARCHING : ACTIONS_WHEN_IDLE)
-        .map(([action]) => action),
-    [actions, query, trimmed],
-  );
+  const matched = useMemo(() => {
+    const ranked = actions
+      .filter(
+        (action) => !action.hidden && (!action.enabled || action.enabled()),
+      )
+      .map((action) => [action, scoreAction(action, query)] as const)
+      .filter(([, score]) => score > 0)
+      .sort((x, y) => y[1] - x[1])
+      .map(([action]) => action);
+    return trimmed ? ranked.slice(0, ACTIONS_WHEN_SEARCHING) : ranked;
+  }, [actions, query, trimmed]);
   const found = useMemo(
     () =>
       searching
@@ -147,13 +156,28 @@ export function CommandPalette({
   );
 
   const run = (action: () => void) => {
+    chosen.current = action;
     close();
-    action();
   };
   const kindLabel = (kind: DocsResultKind) => {
     const key = KIND_LABELS[kind];
     return key ? t(key) : null;
   };
+
+  // What the list cannot show as rows is said beside it, outside the listbox:
+  // a listbox holds options and nothing else.
+  const nothingFound = searching && found.length === 0;
+  const awaited =
+    nothingFound && docs.state !== "done" && docs.state !== "unavailable";
+  const note = nothingFound
+    ? docs.state === "unavailable"
+      ? t("desktop.palette.unavailable")
+      : docs.state === "done"
+        ? t("desktop.palette.no_results", { query: trimmed })
+        : t("desktop.palette.searching")
+    : !searching && matched.length === 0
+      ? t("desktop.palette.type_to_search")
+      : null;
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
@@ -164,6 +188,9 @@ export function CommandPalette({
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           if (returnTo instanceof HTMLElement) returnTo.focus();
+          const action = chosen.current;
+          chosen.current = null;
+          action?.();
         }}
       >
         <DialogTitle className="sr-only">
@@ -181,11 +208,26 @@ export function CommandPalette({
             placeholder={t("desktop.palette.placeholder")}
             aria-label={t("desktop.palette.placeholder")}
           >
-            <Kbd>Esc</Kbd>
+            {/* The key that closes it is also the control that does. */}
+            <DialogClose asChild>
+              <Button variant="ghost" size="xs" className="px-1">
+                <span className="sr-only">{t("desktop.palette.close")}</span>
+                <Kbd>Esc</Kbd>
+              </Button>
+            </DialogClose>
           </CommandInput>
-          <CommandList>
+          {note && (
+            <p
+              className="palette-note flex shrink-0 items-center gap-2 px-4 py-2.5 text-muted-foreground"
+              role="status"
+            >
+              {awaited && <Spinner className="size-icon-xs" />}
+              {note}
+            </p>
+          )}
+          <CommandList hidden={found.length + matched.length === 0}>
             <div className="palette-results grid gap-1">
-              {searching && (
+              {found.length > 0 && (
                 <section>
                   <CommandGroup
                     heading={
@@ -235,16 +277,6 @@ export function CommandPalette({
                       </CommandItem>
                     ))}
                   </CommandGroup>
-                  {docs.state === "unavailable" && (
-                    <p className="px-2.5 py-1.5 text-faint" role="status">
-                      {t("desktop.palette.unavailable")}
-                    </p>
-                  )}
-                  {docs.state === "done" && found.length === 0 && (
-                    <p className="px-2.5 py-1.5 text-faint" role="status">
-                      {t("desktop.palette.no_results", { query: trimmed })}
-                    </p>
-                  )}
                 </section>
               )}
               {matched.length > 0 && (
@@ -254,7 +286,7 @@ export function CommandPalette({
                       <CommandItem
                         key={action.id}
                         value={`action:${action.id}`}
-                        onSelect={() => run(action.run)}
+                        onSelect={() => run(action.choose ?? action.run)}
                       >
                         <Icon
                           name={action.icon}
@@ -273,11 +305,6 @@ export function CommandPalette({
                     ))}
                   </CommandGroup>
                 </section>
-              )}
-              {matched.length === 0 && !searching && (
-                <p className="px-2.5 py-1.5 text-faint" role="status">
-                  {t("desktop.palette.type_to_search")}
-                </p>
               )}
             </div>
           </CommandList>

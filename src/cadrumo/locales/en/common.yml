@@ -487,6 +487,8 @@ desktop:
   action:
     docs_back: Back
     docs_forward: Forward
+    focus_next: Focus the next area
+    focus_previous: Focus the previous area
     logs_errors: Show only errors in the logs
     logs_reset: Clear log filters
     zoom_in: Zoom docs in
@@ -496,6 +498,7 @@ desktop:
     frame_title: Cadrumo documentation
     loading: Loading the documentation…
   host:
+    failed: This part couldn't load.
     unavailable: This part needs the desktop application.
   logs:
     clear_logger: Clear logger filter
@@ -510,13 +513,13 @@ desktop:
     level_error: Errors only
     level_info: Info and worse
     level_warning: Warnings and worse
+    loading: Loading the log…
     minimum_level: Minimum level
     no_match: No records match these filters.
     source_host: Desktop
     source_python: Python
     sources: Sources
     state_available: cadrumo.log
-    state_missing: No log file yet
     state_missing_detail: No log file yet. Records appear once a Cadrumo process writes
       one.
     state_unreadable: Can't read the log
@@ -533,6 +536,7 @@ desktop:
     select_all: Select all
   palette:
     actions: Actions
+    close: Close search
     documentation: Documentation
     kind_casilla: Casilla
     kind_cli: Command

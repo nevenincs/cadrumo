@@ -51,18 +51,25 @@ export function PaneHeader({
 }) {
   return (
     <div
-      className="pane-head flex h-control-md shrink-0 items-center gap-2 border-b bg-chrome pr-1 pl-3 text-muted-foreground select-none"
+      className="pane-head flex h-control-lg shrink-0 items-center gap-2 border-b bg-chrome pr-1.5 pl-3 text-muted-foreground select-none"
       onDoubleClick={(event) => {
         if (!(event.target as HTMLElement).closest("button"))
           onToggleMaximize();
       }}
     >
       {status && <SessionDot phase={status.phase} />}
-      <span className="pane-title truncate font-semibold text-foreground">
+      {/* The note gives way first: the title is cut only once the note has
+          gone. */}
+      <span className="pane-title min-w-0 truncate font-semibold text-foreground">
         {title}
       </span>
       {status?.note && (
-        <span className="exit-note truncate text-xs text-faint">
+        <span
+          className={cn(
+            "min-w-0 shrink-[9999] truncate text-xs",
+            status.phase === "failed" ? "text-destructive" : "text-faint",
+          )}
+        >
           {status.note}
         </span>
       )}

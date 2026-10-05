@@ -102,7 +102,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "relative flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-base outline-none select-none",
+        "relative flex min-h-control-lg cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-base outline-none select-none",
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         // The chosen row: a stronger surface and a bar on its edge, so the
         // choice is clear in either scheme and where colours are forced.

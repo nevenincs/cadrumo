@@ -38,7 +38,10 @@ function PasswordInput({
         autoCorrect="off"
         spellCheck={false}
         disabled={disabled}
-        className={cn("pr-9", className)}
+        className={cn(
+          "pr-[calc(var(--spacing-control-xs)+--spacing(2))]",
+          className,
+        )}
         {...props}
       />
       <IconButton

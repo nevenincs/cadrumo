@@ -23,10 +23,11 @@
     --popover: var(--color-card-background);
     --muted: var(--color-background-secondary);
     --secondary: var(--color-background-hover);
-    /* The surface a control takes when hovered. */
-    --accent: var(--color-background-hover);
+    /* The surface a control takes when hovered: a wash of ink over whatever
+       it sits on, so it shows on paper, chrome and card alike. */
+    --accent: color-mix(in srgb, var(--foreground) 6%, transparent);
     /* A step stronger: a control that is pressed, or the chosen item. */
-    --selected: var(--color-background-border);
+    --selected: color-mix(in srgb, var(--foreground) 12%, transparent);
     /* What lifts above a track: the chosen segment of a segmented control. */
     --raised: var(--color-card-background);
 
@@ -217,8 +218,13 @@
   #root {
     height: 100%;
   }
+  /* The window never scrolls, not even to bring a focused control into view:
+     every area that can overflow scrolls inside itself. */
+  html,
   body {
-    overflow: hidden;
+    overflow: clip;
+  }
+  body {
     background: var(--chrome);
     color: var(--foreground);
     font-family: var(--font-stack);
@@ -278,11 +284,5 @@
   /* xterm paints its viewport itself; the pane's own surface shows through. */
   .xterm .xterm-viewport {
     background-color: transparent !important;
-  }
-  /* A log row off screen is neither laid out nor painted: the list holds
-     thousands. */
-  .record {
-    content-visibility: auto;
-    contain-intrinsic-block-size: auto var(--text-base--line-height);
   }
 }

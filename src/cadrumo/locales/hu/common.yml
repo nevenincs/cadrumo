@@ -494,6 +494,8 @@ desktop:
   action:
     docs_back: Vissza
     docs_forward: Előre
+    focus_next: Ugrás a következő területre
+    focus_previous: Ugrás az előző területre
     logs_errors: Csak a hibák a naplókban
     logs_reset: Naplószűrők törlése
     zoom_in: Dokumentáció nagyítása
@@ -503,6 +505,7 @@ desktop:
     frame_title: Cadrumo-dokumentáció
     loading: A dokumentáció betöltése…
   host:
+    failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   logs:
     clear_logger: Loggerszűrő törlése
@@ -517,13 +520,13 @@ desktop:
     level_error: Csak hibák
     level_info: Info és súlyosabb
     level_warning: Figyelmeztetés és súlyosabb
+    loading: A napló betöltése…
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
     source_host: Asztali alkalmazás
     source_python: Python
     sources: Források
     state_available: cadrumo.log
-    state_missing: Még nincs naplófájl
     state_missing_detail: Még nincs naplófájl. A bejegyzések akkor jelennek meg, amikor
       egy Cadrumo-folyamat naplózni kezd.
     state_unreadable: A napló nem olvasható
@@ -540,6 +543,7 @@ desktop:
     select_all: Az összes kijelölése
   palette:
     actions: Műveletek
+    close: Keresés bezárása
     documentation: Dokumentáció
     kind_casilla: Casilla
     kind_cli: Parancs

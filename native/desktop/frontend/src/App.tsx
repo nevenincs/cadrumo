@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent as ReactMouseEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
@@ -40,6 +33,7 @@ import {
   RecordList,
   recordLine,
   type RecordFilters,
+  type RecordMenuRequest,
 } from "./components/RecordList";
 import { Settings } from "./components/Settings";
 import { Account, SignedOut, SignInDialog } from "./components/SignIn";
@@ -84,6 +78,9 @@ import { identity } from "virtual:desktop-content";
 const RECORD_CAP = 10000;
 const COUNT_LIMIT = 99;
 const TOAST_MS = 2400;
+// A dragged splitter changes the layout on every pointer move; it is written
+// to storage once the changes have paused.
+const SAVE_DELAY_MS = 250;
 const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
@@ -93,7 +90,10 @@ const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
 type Environment =
   | { state: "loading" }
   | { state: "ready"; value: DesktopEnvironment }
-  | { state: "unavailable" };
+  /** There is no desktop host to ask: the page runs in a plain browser. */
+  | { state: "unavailable" }
+  /** The host was asked and could not answer. */
+  | { state: "failed" };
 
 type MenuEntry =
   (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
@@ -111,6 +111,31 @@ const isHostFailure = (value: unknown): value is HostFailure =>
 /** The exit code of a session that has exited, null when it is unknown. */
 const exitCode = (status: TerminalStatus): number | null | undefined =>
   status.phase === "exited" ? status.code : undefined;
+
+/** Why a session could not start or carry on, when it has failed. */
+const failure = (status: TerminalStatus): string | undefined =>
+  status.phase === "failed" ? status.message : undefined;
+
+type Area = Exclude<Maximized, null>;
+
+/** The workspace area that holds focus, the documentation frame included. */
+const focusedArea = (): Area | "rail" | null => {
+  const element = document.activeElement;
+  if (!element || element === document.body) return null;
+  if (element.closest(".pane-docs")) return "docs";
+  if (element.closest(".pane-tui")) return "tui";
+  if (element.closest(".panel")) return "panel";
+  if (element.closest(".rail")) return "rail";
+  return null;
+};
+
+const activeTerminal = (): TerminalKind | null => {
+  const owner = document.activeElement?.closest<HTMLElement>("[data-terminal]");
+  const kind = owner?.dataset.terminal;
+  return kind === "console" || kind === "python" || kind === "tui"
+    ? kind
+    : null;
+};
 
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
@@ -141,8 +166,12 @@ export function App({ host }: { host: Host }) {
   // person who dismisses it, or who has just signed out here, reopens it.
   const [signInDismissed, setSignInDismissed] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
-  const [records, setRecords] = useState<LogRecord[] | null>(null);
-  const [dropped, setDropped] = useState(0);
+  // The log ring and what it has lost, held together: a batch changes both.
+  const [log, setLog] = useState<{
+    records: LogRecord[] | null;
+    dropped: number;
+  }>({ records: null, dropped: 0 });
+  const { records, dropped } = log;
   const [sourceState, setSourceState] = useState<
     LogSourceState | "unavailable" | null
   >(null);
@@ -170,9 +199,32 @@ export function App({ host }: { host: Host }) {
     [],
   );
 
-  useEffect(() => saveState(prefs, layout), [prefs, layout]);
+  const unsaved = useRef({ prefs, layout });
+  useEffect(() => {
+    unsaved.current = { prefs, layout };
+    const timer = window.setTimeout(
+      () => saveState(prefs, layout),
+      SAVE_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [prefs, layout]);
+  useEffect(() => {
+    // Leaving before the pause has passed still keeps the last change.
+    const flush = () =>
+      saveState(unsaved.current.prefs, unsaved.current.layout);
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, []);
 
   const gated = account.gated;
+  const signedIn = !gated && account.status?.state === "present";
+  const accountRef = useRef(account);
+  accountRef.current = account;
+  const signOut = useCallback(() => {
+    // Signing out here is not a reason to ask for the password again.
+    setSignInDismissed(true);
+    void accountRef.current.signOut();
+  }, []);
   useEffect(() => {
     if (gated) return;
     // Admitted: the next time the gate closes, the dialog opens again.
@@ -184,7 +236,13 @@ export function App({ host }: { host: Host }) {
     host
       .environment()
       .then((value) => current && setEnvironment({ state: "ready", value }))
-      .catch(() => current && setEnvironment({ state: "unavailable" }));
+      .catch(
+        (error: unknown) =>
+          current &&
+          setEnvironment({
+            state: error instanceof HostUnavailable ? "unavailable" : "failed",
+          }),
+      );
     return () => {
       current = false;
     };
@@ -213,12 +271,13 @@ export function App({ host }: { host: Host }) {
       .subscribeLogs((batch) => {
         if (!current) return;
         setSourceState(batch.state);
-        setDropped((d) => d + batch.dropped);
-        setRecords((existing) => {
-          const next = [...(existing ?? []), ...batch.records];
-          if (next.length <= RECORD_CAP) return next;
-          setDropped((d) => d + next.length - RECORD_CAP);
-          return next.slice(-RECORD_CAP);
+        setLog((held) => {
+          const next = [...(held.records ?? []), ...batch.records];
+          const over = Math.max(0, next.length - RECORD_CAP);
+          return {
+            records: over ? next.slice(over) : next,
+            dropped: held.dropped + batch.dropped + over,
+          };
         });
       })
       .then((stop) => {
@@ -336,23 +395,62 @@ export function App({ host }: { host: Host }) {
     [maximized, layout.tuiShown, layout.panelOpen, patch, focusTerminal],
   );
 
-  const focusedArea = (): Exclude<Maximized, null> | null => {
-    const element = document.activeElement;
-    if (!element || element === document.body) return null;
-    if (element.closest(".pane-docs")) return "docs";
-    if (element.closest(".pane-tui")) return "tui";
-    if (element.closest(".panel")) return "panel";
-    return null;
-  };
-
-  const activeTerminal = (): TerminalKind | null => {
-    const owner =
-      document.activeElement?.closest<HTMLElement>("[data-terminal]");
-    const kind = owner?.dataset.terminal;
-    return kind === "console" || kind === "python" || kind === "tui"
-      ? kind
-      : null;
-  };
+  // The keyboard's way between the areas of the window, in the order they
+  // are laid out. A focused terminal keeps Tab for itself, so this is how
+  // focus leaves one.
+  const cycleFocus = useCallback(
+    (step: 1 | -1) => {
+      const tuiOn =
+        (layout.tuiShown || maximized === "tui") &&
+        maximized !== "docs" &&
+        maximized !== "panel";
+      const panelOn =
+        layout.panelOpen && maximized !== "docs" && maximized !== "tui";
+      const stops: [Area | "rail", boolean, () => void][] = [
+        [
+          "docs",
+          maximized !== "tui" && maximized !== "panel" && !!docs.current,
+          () => docs.current?.focus(),
+        ],
+        [
+          "tui",
+          tuiOn,
+          () =>
+            signInButton.current
+              ? signInButton.current.focus()
+              : terminals.current.tui?.focus(),
+        ],
+        [
+          "panel",
+          panelOn,
+          () =>
+            layout.tab === "logs"
+              ? document
+                  .querySelector<HTMLElement>(".logview .filter-text")
+                  ?.focus()
+              : terminals.current[layout.tab]?.focus(),
+        ],
+        [
+          "rail",
+          true,
+          () =>
+            document
+              .querySelector<HTMLElement>(".rail [role=toolbar]")
+              ?.focus(),
+        ],
+      ];
+      const shown = stops.filter(([, on]) => on);
+      const at = shown.findIndex(([area]) => area === focusedArea());
+      const to =
+        at === -1
+          ? step === 1
+            ? 0
+            : shown.length - 1
+          : (at + step + shown.length) % shown.length;
+      shown[to]?.[2]();
+    },
+    [layout.tuiShown, layout.panelOpen, layout.tab, maximized],
+  );
 
   const paste = useCallback(
     (kind: TerminalKind | null) => {
@@ -471,7 +569,7 @@ export function App({ host }: { host: Host }) {
         id: "docs.zoomReset",
         label: t("desktop.action.zoom_reset"),
         group: "docs",
-        icon: "search",
+        icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
         run: () => patch({ zoom: 1 }),
       },
@@ -503,10 +601,11 @@ export function App({ host }: { host: Host }) {
         chords: [
           { mod: true, shift: true, code: "KeyM", key: "M", scope: "global" },
         ],
-        run: () =>
-          maximized
-            ? setMaximized(null)
-            : toggleMaximize(focusedArea() ?? "docs"),
+        run: () => {
+          if (maximized) return setMaximized(null);
+          const area = focusedArea();
+          toggleMaximize(area && area !== "rail" ? area : "docs");
+        },
       },
       {
         id: "view.maximizeDocs",
@@ -563,7 +662,7 @@ export function App({ host }: { host: Host }) {
           ? t("desktop.panel.hide")
           : t("desktop.panel.show"),
         group: "layout",
-        icon: "chevronDown",
+        icon: layout.panelOpen ? "chevronDown" : "chevronUp",
         chords: [{ ctrl: true, code: "Backquote", key: "`", scope: "global" }],
         run: () => {
           if (!layout.panelOpen) openTab(layout.tab, { toggle: false });
@@ -583,6 +682,7 @@ export function App({ host }: { host: Host }) {
           { mod: true, shift: true, code: "Digit1", key: "1", scope: "global" },
         ],
         run: () => openTab("console"),
+        choose: () => openTab("console", { toggle: false }),
       },
       {
         id: "panel.python",
@@ -594,6 +694,7 @@ export function App({ host }: { host: Host }) {
           { mod: true, shift: true, code: "Digit2", key: "2", scope: "global" },
         ],
         run: () => openTab("python"),
+        choose: () => openTab("python", { toggle: false }),
       },
       {
         id: "panel.logs",
@@ -605,6 +706,7 @@ export function App({ host }: { host: Host }) {
           { mod: true, shift: true, code: "KeyL", key: "L", scope: "global" },
         ],
         run: () => openTab("logs"),
+        choose: () => openTab("logs", { toggle: false }),
       },
       {
         id: "logs.errors",
@@ -632,6 +734,42 @@ export function App({ host }: { host: Host }) {
         run: () => setSettingsOpen((open) => !open),
       },
       {
+        id: "account.signIn",
+        label: t("desktop.signin.submit"),
+        group: "account",
+        icon: "lock",
+        keywords: "login password",
+        enabled: () => gated,
+        run: () => setSignInDismissed(false),
+      },
+      {
+        id: "account.signOut",
+        label: t("desktop.account.sign_out"),
+        group: "account",
+        icon: "signOut",
+        keywords: "logout",
+        enabled: () => signedIn,
+        run: signOut,
+      },
+      {
+        id: "focus.next",
+        label: t("desktop.action.focus_next"),
+        group: "general",
+        icon: "arrow",
+        keywords: "pane area switch",
+        chords: [{ code: "F6", key: "F6", scope: "global" }],
+        run: () => cycleFocus(1),
+      },
+      {
+        id: "focus.previous",
+        label: t("desktop.action.focus_previous"),
+        group: "general",
+        icon: "back",
+        keywords: "pane area switch",
+        chords: [{ shift: true, code: "F6", key: "F6", scope: "global" }],
+        run: () => cycleFocus(-1),
+      },
+      {
         id: "terminal.copy",
         label: t("desktop.menu.copy"),
         group: "terminal",
@@ -650,7 +788,7 @@ export function App({ host }: { host: Host }) {
         id: "terminal.paste",
         label: t("desktop.menu.paste"),
         group: "terminal",
-        icon: "copy",
+        icon: "paste",
         hidden: true,
         chords: [
           { mod: true, shift: true, code: "KeyV", key: "V", scope: "terminal" },
@@ -660,11 +798,18 @@ export function App({ host }: { host: Host }) {
     ],
     [
       t,
-      layout,
+      layout.tuiShown,
+      layout.panelOpen,
+      layout.tab,
+      layout.zoom,
       prefs.orientation,
       maximized,
       docsSearchReady,
       docsEntry,
+      gated,
+      signedIn,
+      signOut,
+      cycleFocus,
       goHome,
       patch,
       focusTerminal,
@@ -689,11 +834,23 @@ export function App({ host }: { host: Host }) {
   );
 
   // The bridge keymap changes only when chords do, not on every label change.
-  const chordsKey = JSON.stringify(bridgeChords(actions));
+  const chordsKey = useMemo(
+    () => JSON.stringify(bridgeChords(actions)),
+    [actions],
+  );
   const chords = useMemo(
     () => JSON.parse(chordsKey) as ReturnType<typeof bridgeChords>,
     [chordsKey],
   );
+
+  // What holds the keyboard above the shell. A modal surface owns it: no
+  // chord reaches the shell from under one, except the palette's own, which
+  // closes the palette.
+  const modal = useRef({ palette: false, other: false });
+  modal.current = {
+    palette: paletteOpen,
+    other: menu !== null || (gated && !signInDismissed),
+  };
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -704,6 +861,8 @@ export function App({ host }: { host: Host }) {
         : "chrome";
       const action = findAction(actionsRef.current, event, focus);
       if (!action) return;
+      if (modal.current.other) return;
+      if (modal.current.palette && action.id !== "palette.open") return;
       event.preventDefault();
       event.stopPropagation();
       action.run();
@@ -854,7 +1013,7 @@ export function App({ host }: { host: Host }) {
   );
 
   const recordMenu = useCallback(
-    (event: ReactMouseEvent, record: LogRecord, visible: LogRecord[]) => {
+    ({ at, pointer, record, visible }: RecordMenuRequest) => {
       openMenu(
         [
           {
@@ -894,8 +1053,8 @@ export function App({ host }: { host: Host }) {
               })),
           },
         ],
-        { x: event.clientX, y: event.clientY },
-        true,
+        at,
+        pointer,
       );
     },
     [openMenu, t, copy],
@@ -919,9 +1078,13 @@ export function App({ host }: { host: Host }) {
   const setPanelHeight = (height: number) =>
     patch({ panelOpen: true, panelRatio: clampPanel(height) / viewportHeight });
 
-  const errorCount = (records ?? []).filter(
-    (r) => r.level === "ERROR" || r.level === "CRITICAL",
-  ).length;
+  const errorCount = useMemo(
+    () =>
+      (records ?? []).filter(
+        (r) => r.level === "ERROR" || r.level === "CRITICAL",
+      ).length,
+    [records],
+  );
   const tabOpen = (tab: PanelTab) =>
     layout.panelOpen &&
     layout.tab === tab &&
@@ -932,7 +1095,11 @@ export function App({ host }: { host: Host }) {
   const panelVisible =
     layout.panelOpen && maximized !== "docs" && maximized !== "tui";
 
-  const exitNote = (kind: TerminalKind) => {
+  // What a session's header says beside its state: how it ended, or why it
+  // could not start.
+  const sessionNote = (kind: TerminalKind) => {
+    const reason = failure(status[kind]);
+    if (reason !== undefined) return t("desktop.session.failed", { reason });
     const code = exitCode(status[kind]);
     if (code === undefined) return undefined;
     return `${t("desktop.session.exited", { code: code ?? "?" })} · ${t("desktop.session.enter_restarts")}`;
@@ -988,7 +1155,7 @@ export function App({ host }: { host: Host }) {
       icon: "search",
       label: t("desktop.rail.search"),
       shortcut: primaryChord(byId("palette.open")),
-      pressed: paletteOpen,
+      expanded: paletteOpen,
       onClick: () => runAction("palette.open"),
     },
     {
@@ -1041,7 +1208,7 @@ export function App({ host }: { host: Host }) {
       icon: "settings",
       label: t("desktop.rail.settings"),
       shortcut: primaryChord(byId("settings.open")),
-      pressed: settingsOpen,
+      expanded: settingsOpen,
       onClick: () => setSettingsOpen((open) => !open),
     },
   ];
@@ -1119,6 +1286,15 @@ export function App({ host }: { host: Host }) {
             {t("desktop.host.unavailable")}
           </EmptyDescription>
         </Empty>
+      ) : environment.state === "failed" ? (
+        <Empty role="alert">
+          <EmptyMedia>
+            <Icon name="alert" />
+          </EmptyMedia>
+          <EmptyDescription className="pane-note">
+            {t("desktop.host.failed")}
+          </EmptyDescription>
+        </Empty>
       ) : (
         <Empty role="status">
           <Spinner />
@@ -1132,7 +1308,7 @@ export function App({ host }: { host: Host }) {
     <div className={cn(pane, "pane-tui")} data-scheme="dark">
       <PaneHeader
         title={t("desktop.pane.tui")}
-        status={{ phase: status.tui.phase, note: exitNote("tui") }}
+        status={{ phase: status.tui.phase, note: sessionNote("tui") }}
         onToggleMaximize={() => toggleMaximize("tui")}
         controls={[
           maximizeControl("tui", "desktop.pane.maximize_tui"),
@@ -1272,18 +1448,37 @@ export function App({ host }: { host: Host }) {
                       </span>
                       {tab !== "logs" &&
                         exitCode(status[tab]) !== undefined && (
-                          <span className="exit-note text-xs font-normal text-faint">
+                          <span className="text-xs font-normal text-faint">
                             {t("desktop.session.exited", {
                               code: exitCode(status[tab]) ?? "?",
                             })}
                           </span>
                         )}
+                      {tab !== "logs" && failure(status[tab]) !== undefined && (
+                        <>
+                          <Icon
+                            name="alert"
+                            size="xs"
+                            className="text-destructive"
+                          />
+                          <span className="sr-only">
+                            {t("desktop.session.failed", {
+                              reason: failure(status[tab]) ?? "",
+                            })}
+                          </span>
+                        </>
+                      )}
                       {tab === "logs" && errorCount > 0 && (
-                        <Badge variant="count">
-                          {errorCount > COUNT_LIMIT
-                            ? `${COUNT_LIMIT}+`
-                            : errorCount}
-                        </Badge>
+                        <>
+                          <Badge variant="count" aria-hidden="true">
+                            {errorCount > COUNT_LIMIT
+                              ? `${COUNT_LIMIT}+`
+                              : errorCount}
+                          </Badge>
+                          <span className="sr-only">
+                            {t("desktop.logs.errors", { count: errorCount })}
+                          </span>
+                        </>
                       )}
                     </TabsTrigger>
                   ))}
@@ -1323,15 +1518,7 @@ export function App({ host }: { host: Host }) {
 
           {settingsOpen && (
             <Settings
-              account={
-                <Account
-                  account={account}
-                  onSignOut={() => {
-                    setSignInDismissed(true);
-                    void account.signOut();
-                  }}
-                />
-              }
+              account={<Account account={account} onSignOut={signOut} />}
               prefs={prefs}
               setPrefs={setPrefs}
               languages={languages}
@@ -1354,6 +1541,7 @@ export function App({ host }: { host: Host }) {
           )}
           {menu && (
             <ContextMenu
+              label={t("desktop.palette.actions")}
               items={menu.items.map((item) =>
                 isSeparator(item)
                   ? item

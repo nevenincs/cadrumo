@@ -267,7 +267,9 @@ export function TerminalPane({
       style={{ background: theme.background }}
       aria-label={label}
       data-terminal={kind}
-      role={tabPanel ? "tabpanel" : undefined}
+      // Named, so it needs a role: the TUI's frame is a group, a panel
+      // terminal the tab panel of its tab.
+      role={tabPanel ? "tabpanel" : "group"}
       id={tabPanel ? `panel-${kind}` : undefined}
       aria-labelledby={tabPanel ? `tab-${kind}` : undefined}
     >

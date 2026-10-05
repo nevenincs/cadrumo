@@ -76,9 +76,12 @@ test("both splitters move by the arrow keys and report their position", async ({
   page: target,
 }) => {
   await open(target);
+  // Each reports the share of the area it sizes: the documentation pane for
+  // the split, which the left arrow narrows, and the bottom panel for its
+  // own handle, which the down arrow lowers.
   for (const [name, back] of [
     [label("desktop.split.resize"), "ArrowLeft"],
-    [label("desktop.panel.resize"), "ArrowUp"],
+    [label("desktop.panel.resize"), "ArrowDown"],
   ] as const) {
     const handle = target.getByRole("separator", { name });
     await handle.focus();
@@ -86,9 +89,45 @@ test("both splitters move by the arrow keys and report their position", async ({
     await target.keyboard.press(back);
     await expect
       .poll(async () => Number(await handle.getAttribute("aria-valuenow")))
-      .not.toBe(before);
+      .toBeLessThan(before);
     await expect(handle).toBeFocused();
+    const smaller = Number(await handle.getAttribute("aria-valuenow"));
+    await target.keyboard.press(
+      back === "ArrowLeft" ? "ArrowRight" : "ArrowUp",
+    );
+    await expect
+      .poll(async () => Number(await handle.getAttribute("aria-valuenow")))
+      .toBeGreaterThan(smaller);
   }
+});
+
+test("the rail is as wide as its token and marks its chosen item on screen", async ({
+  page: target,
+}) => {
+  await open(target);
+  const measured = await rail(target).evaluate((nav) => ({
+    width: nav.getBoundingClientRect().width,
+    token: parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--spacing-rail",
+      ),
+    ),
+    rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
+  }));
+  expect(measured.width).toBe(measured.token * measured.rem);
+  // The bar beside the chosen item is drawn inside the window.
+  const bar = await rail(target)
+    .locator('button[aria-pressed="true"]')
+    .first()
+    .evaluate((button) => {
+      const style = getComputedStyle(button, "::before");
+      return {
+        left: button.getBoundingClientRect().left + parseFloat(style.left),
+        opacity: style.opacity,
+      };
+    });
+  expect(bar.left).toBeGreaterThanOrEqual(0);
+  expect(bar.opacity).toBe("1");
 });
 
 test("the palette opens by chord, runs by Enter and returns focus", async ({
@@ -113,6 +152,95 @@ test("the palette opens by chord, runs by Enter and returns focus", async ({
   await expect(opener).toBeFocused();
 });
 
+test("an action run from the palette keeps the focus it takes", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target).getByRole("button").nth(1).focus();
+  await target.keyboard.press("Control+KeyK");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
+  await expect(palette.getByRole("option").first()).toContainText(
+    label("desktop.rail.python"),
+  );
+  await target.keyboard.press("Enter");
+  await expect(palette).toHaveCount(0);
+  await expect(
+    target.locator('[data-terminal="python"] textarea'),
+  ).toBeFocused();
+  // Chosen by name, a view is shown, not toggled: choosing it again keeps it.
+  await target.keyboard.press("Control+Shift+KeyK");
+  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
+  await target.keyboard.press("Enter");
+  await expect(target.locator('[data-terminal="python"]')).toBeVisible();
+  await expect(
+    target.locator('[data-terminal="python"] textarea'),
+  ).toBeFocused();
+});
+
+test("settings opened from the palette inside a terminal stays open", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.locator('[data-terminal="console"] .xterm-screen').click();
+  await target.keyboard.press("Control+Shift+KeyK");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.settings.title"));
+  await expect(palette.getByRole("option").first()).toContainText(
+    label("desktop.settings.title"),
+  );
+  await target.keyboard.press("Enter");
+  const settings = target.locator(".settings");
+  await expect(settings).toBeVisible();
+  await expect(focusedWithin(settings)).toHaveCount(1);
+  // It is still there once every focus hand-over has settled.
+  await target.waitForTimeout(300);
+  await expect(settings).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
+});
+
+test("no chord reaches the shell from under the sign-in dialog", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  const dialog = target.locator(".sign-in");
+  await expect(target.locator("#profile-password")).toBeFocused();
+  await target.keyboard.press("Control+Comma");
+  await target.keyboard.press("Control+KeyK");
+  await target.keyboard.press("Control+Shift+KeyT");
+  await target.keyboard.press("F6");
+  await expect(target.locator(".settings")).toHaveCount(0);
+  await expect(target.locator(".palette")).toHaveCount(0);
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  await expect(focusedWithin(dialog)).toHaveCount(1);
+});
+
+test("F6 moves focus from area to area and back", async ({ page: target }) => {
+  await open(target);
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await rail(target).getByRole("button").first().focus();
+  await target.keyboard.press("F6");
+  await expect(target.locator(".docs-frame")).toBeFocused();
+  // Inside the frame the documentation's own bridge would send the chord;
+  // from the frame element the shell hears it directly.
+  await target.keyboard.press("F6");
+  await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
+  await target.keyboard.press("F6");
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
+  await target.keyboard.press("F6");
+  await expect(focusedWithin(rail(target))).toHaveCount(1);
+  await target.keyboard.press("Shift+F6");
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
+});
+
 test("settings opens on the current choice, moves by arrows and returns focus", async ({
   page: target,
 }) => {
@@ -130,9 +258,7 @@ test("settings opens on the current choice, moves by arrows and returns focus", 
       name: label("desktop.settings.follow_docs"),
     }),
   ).toBeFocused();
-  // Held for a moment, as a person holds a key: the group checks the radio
-  // that focus arrives on while the arrow is still down.
-  await target.keyboard.press("ArrowRight", { delay: 60 });
+  await target.keyboard.press("ArrowRight");
   await expect(
     appearance.getByRole("radio", { name: label("desktop.settings.light") }),
   ).toHaveAttribute("aria-checked", "true");
@@ -235,6 +361,62 @@ test("a log record's detail opens and closes by keyboard", async ({
   await target.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(target.locator(".record pre")).toContainText("Traceback");
+});
+
+test("log records are reached, marked and given their menu by keyboard", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const rows = target.locator(".logview-list .record");
+  const count = await rows.count();
+  expect(count).toBeGreaterThan(3);
+  // One tab stop: from the filter, Tab passes the bar's controls and lands
+  // on the newest record.
+  await rows.last().focus();
+  await expect(rows.last()).toHaveAttribute("data-current", "true");
+  await target.keyboard.press("ArrowUp");
+  await expect(rows.nth(count - 2)).toBeFocused();
+  await expect(rows.nth(count - 2)).toHaveAttribute("data-current", "true");
+  await expect(rows.last()).not.toHaveAttribute("data-current", "true");
+  await target.keyboard.press("Home");
+  await expect(rows.first()).toBeFocused();
+  await target.keyboard.press("End");
+  await expect(rows.last()).toBeFocused();
+  expect(
+    await rows.evaluateAll(
+      (all) => all.filter((row) => row.tabIndex === 0).length,
+    ),
+  ).toBe(1);
+  // The menu key opens the menu a right-click opens, under its row.
+  await target.keyboard.press("ArrowUp");
+  await rows.nth(count - 2).dispatchEvent("contextmenu", { button: 0 });
+  const menu = target.getByRole("menu", {
+    name: label("desktop.palette.actions"),
+  });
+  await expect(menu).toBeVisible();
+  await expect(rows.nth(count - 2)).toHaveAttribute("data-current", "true");
+  await target.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(rows.nth(count - 2)).toBeFocused();
+});
+
+test("Enter on a record opens its detail", async ({ page: target }) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const row = target
+    .locator(".logview-list .record")
+    .filter({ has: target.locator("[aria-expanded]") })
+    .first();
+  await row.focus();
+  await target.keyboard.press("Enter");
+  await expect(row.locator("pre")).toContainText("Traceback");
+  await target.keyboard.press("Enter");
+  await expect(row.locator("pre")).toHaveCount(0);
 });
 
 test("the menu stand-in follows the arrow keys and closes on Escape", async ({

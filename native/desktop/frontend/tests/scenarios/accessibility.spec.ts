@@ -16,9 +16,12 @@ const engine = readFileSync(
 
 type Finding = { id: string; impact: string | null; nodes: string[] };
 
-async function audit(target: Page): Promise<Finding[]> {
+async function audit(
+  target: Page,
+  unchecked: readonly string[] = [],
+): Promise<Finding[]> {
   await target.evaluate(engine);
-  return target.evaluate(async () => {
+  return target.evaluate(async (off) => {
     const axe = (
       window as unknown as {
         axe: {
@@ -42,14 +45,17 @@ async function audit(target: Page): Promise<Finding[]> {
         // the library's, and the pane around it is audited here.
         exclude: [[".docs-frame"], [".xterm"]],
       },
-      { resultTypes: ["violations"] },
+      {
+        resultTypes: ["violations"],
+        rules: Object.fromEntries(off.map((id) => [id, { enabled: false }])),
+      },
     );
     return result.violations.map((violation) => ({
       id: violation.id,
       impact: violation.impact,
       nodes: violation.nodes.map((node) => node.target.join(" ")),
     }));
-  });
+  }, unchecked);
 }
 
 const open = (target: Page, scenario: string) =>
@@ -59,6 +65,8 @@ const SURFACES: {
   name: string;
   scenario: string;
   reach: (target: Page) => Promise<void>;
+  /** Rules that do not apply to this surface, each with its reason. */
+  unchecked?: readonly string[];
 }[] = [
   {
     name: "the sign-in dialog",
@@ -106,6 +114,58 @@ const SURFACES: {
       await expect(
         target.locator(".palette").getByRole("option").first(),
       ).toBeVisible();
+    },
+  },
+  {
+    name: "the palette with every action",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("button", { name: label("desktop.rail.search") })
+        .click();
+      await expect(
+        target.locator(".palette").getByRole("option").first(),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "the palette with nothing found",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("button", { name: label("desktop.rail.search") })
+        .click();
+      await target.locator(".palette [role=combobox]").fill("zzzzzz");
+      await expect(target.locator(".palette-note")).toContainText("zzzzzz");
+    },
+  },
+  {
+    name: "a record's menu",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.rail.logs") })
+        .click();
+      await target.locator(".record").first().click({ button: "right" });
+      await expect(target.getByRole("menu")).toBeVisible();
+    },
+    // A context menu is drawn at the pointer, over the page and outside its
+    // landmarks, as the operating system's menu it stands in for is. The
+    // rule exempts dialogs and tooltips for the same reason, but not menus.
+    unchecked: ["region"],
+  },
+  {
+    name: "an empty log",
+    scenario: "empty",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.rail.logs") })
+        .click();
+      await expect(target.locator(".logview-list")).toContainText(
+        label("desktop.logs.empty"),
+      );
     },
   },
   {
@@ -161,5 +221,5 @@ for (const scheme of ["light", "dark"] as const)
         "data-scheme",
         scheme,
       );
-      expect(await audit(target)).toEqual([]);
+      expect(await audit(target, surface.unchecked)).toEqual([]);
     });

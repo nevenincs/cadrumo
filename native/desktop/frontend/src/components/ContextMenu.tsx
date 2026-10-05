@@ -14,10 +14,13 @@ import type { ContextMenuItem } from "../ipc/contract";
 // with the operating system's menu. It opens at a point, not from a control,
 // so its anchor is an empty element placed there.
 export function ContextMenu({
+  label,
   items,
   at,
   choose,
 }: {
+  /** The menu's accessible name: it has no visible control to take one from. */
+  label: string;
   items: ContextMenuItem[];
   at: { x: number; y: number };
   choose: (id: string | null) => void;
@@ -27,6 +30,9 @@ export function ContextMenu({
   return (
     <DropdownMenu
       open
+      // Not modal: the rest of the window stays as it is, and a right-click
+      // elsewhere closes this menu and opens that place's own.
+      modal={false}
       onOpenChange={(open) => {
         if (!open) choose(null);
       }}
@@ -39,7 +45,7 @@ export function ContextMenu({
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="native-menu"
+        aria-label={label}
         align="start"
         sideOffset={0}
         onCloseAutoFocus={(event) => {

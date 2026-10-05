@@ -202,8 +202,9 @@ test("empty: an available log with no records says so", async ({
 
 test("error: refusals are shown, not swallowed", async ({ page: target }) => {
   await open(target, "error");
+  // A read the host failed is said to have failed, not to need the desktop.
   await expect(target.locator(".pane-docs")).toContainText(
-    label("desktop.host.unavailable"),
+    label("desktop.host.failed"),
   );
   // The failed status read is said in the sign-in dialog, with its code.
   await expect(target.locator(".sign-in")).toContainText("timed_out");
