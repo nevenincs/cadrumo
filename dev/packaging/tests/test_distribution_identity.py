@@ -1,13 +1,13 @@
 """Installation identity must survive upgrades without merging release channels."""
 
-from dataclasses import replace
+from dataclasses import fields, replace
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 
 from dev._paths import REPO_ROOT
-from dev.packaging.native.identity import cmake_projection, identity
+from dev.packaging.native.identity import DistributionIdentity, cmake_projection, identity
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -50,3 +50,27 @@ def test_unknown_target_or_channel_is_rejected(target: str, channel: str) -> Non
 def test_cmake_metadata_is_literal() -> None:
     value = replace(identity("macos-arm64"), publisher='Publisher ${HOME}; "] =] ]=]')
     assert 'set(CADRUMO_ID_PUBLISHER [==[Publisher ${HOME}; "] =] ]=]]==])' in cmake_projection(value)
+
+
+@pytest.mark.parametrize(
+    "channel,manager_id,manager_name",
+    [
+        ("stable", "md.neve.cadrumo.manager", "CADRUMO Background Services"),
+        ("preview", "md.neve.cadrumo.preview.manager", "CADRUMO Preview Background Services"),
+    ],
+)
+def test_runtime_manager_names_follow_the_channel_identity(channel: str, manager_id: str, manager_name: str) -> None:
+    value = identity("windows-x86-64", channel)
+    assert value.manager_id == manager_id
+    assert value.manager_name == manager_name
+    projection = cmake_projection(value)
+    assert f"set(CADRUMO_ID_MANAGER_ID [=[{manager_id}]=])" in projection
+    assert f"set(CADRUMO_ID_MANAGER_NAME [=[{manager_name}]=])" in projection
+
+
+def test_cmake_projection_carries_every_identity_field_once() -> None:
+    projection = cmake_projection(identity("windows-x86-64", "preview"))
+    keys = [line.split(" ", 1)[0].removeprefix("set(") for line in projection.splitlines()]
+    assert keys == [f"CADRUMO_ID_{field.name.upper()}" for field in fields(DistributionIdentity)]
+    assert "set(CADRUMO_ID_NAME [=[CADRUMO Preview]=])" in projection
+    assert "set(CADRUMO_ID_APPLICATION_ID [=[md.neve.cadrumo.preview]=])" in projection

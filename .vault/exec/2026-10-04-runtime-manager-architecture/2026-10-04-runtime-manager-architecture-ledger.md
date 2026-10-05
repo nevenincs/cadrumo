@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a80cefa244ead5684b9eab6fee1354637baf43593ef1610239a4270aef5ea2e1'
+body_hash: 'sha256:4b7549b4efbe03ef926a1f78ce446ea3f902fff3d18f64231cd2fd9e78666bd7'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -111,6 +111,20 @@ related:
 - `S03` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
 - `S03` `verify:` `just check-persistence-write-paths; just check-module-reachability` -> `pass`
 - `S03` `verify:` `just check-import-boundaries` -> `fail`
+- `S07` `A` `native/manager/Cargo.toml`
+- `S07` `A` `native/manager/Cargo.lock`
+- `S07` `A` `native/manager/build.rs`
+- `S07` `A` `native/manager/src/lib.rs`
+- `S07` `A` `native/manager/src/identity.rs`
+- `S07` `A` `native/manager/src/main.rs`
+- `S07` `A` `native/manager/tests/entrypoint.rs`
+- `S07` `A` `native/cmake/Manager.cmake`
+- `S07` `M` `dev/packaging/native/identity.py`
+- `S07` `M` `dev/packaging/tests/test_distribution_identity.py`
+- `S07` `verify:` `cargo build, test (8), clippy -D warnings, fmt --check in native/manager` -> `pass`
+- `S07` `verify:` `windows_manifest check on built exe; dumpbin DependentLoadFlags 0x800 and GUI subsystem` -> `pass`
+- `S07` `verify:` `image tests fail on a scratch build without 0x800 or windows_subsystem` -> `pass`
+- `S07` `verify:` `identity pytest 69 passed 2 skipped; ruff; ty` -> `pass`
 
 ## Notes
 
@@ -119,3 +133,4 @@ related:
 - `S06` S06 content landed in commit 345b768233 (another session's commit swept the shared index); content verified identical to the staged Step.
 - `S02` Integration residue (8 failures, 3 errors in automation approval, password rotation, refusal detail, projection pages, operation secret, modelo lifecycle) sits in modules carrying another writer's uncommitted custody and operations edits and touches no symbol this Step changed; not provable against HEAD in the shared tree. Heartbeat reports `hosted_profiles` as an upper bound for in-flight operations; exact counts added as a follow-on Step. Windows plain-interpreter dev launcher does not pass pipes through its relaunch; supervised mode targets the packaged single-process host.
 - `S03` Import gate failed on stale `import_load_targets` metadata (another writer's uncommitted file), a mid-run tree change and two other workers' test files. Boot record registered as a taxonomy member only (no .runtime directory path definition, which would pull installation.json into scope); creation time is platform-native and can exceed 2^53 on Windows (the manager parses it as u64); package directory is null outside an installed package. Taxonomy files committed with only this Step's hunks.
+- `S07` Part A only (crate, standalone Manager.cmake not yet included, identity projection of `manager_id` and `manager_name` with one owner for the Background Services suffix). Step stays open for Part B: include point after `add_subdirectory(application),` packaging declaration shared with the desktop S13 mechanism, assemble/verify/signing inventory, Windows version resource. No platform/application crate dependency until a Step needs it.

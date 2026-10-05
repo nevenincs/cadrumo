@@ -14,6 +14,13 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
+PREVIEW_NAME_SUFFIX = " Preview"
+"""User-facing suffix that separates the preview installation family from stable."""
+MANAGER_NAME_SUFFIX = " Background Services"
+"""User-facing suffix that names the per-user runtime manager after the channel's name."""
+MANAGER_COMPONENT = "manager"
+"""Reverse-DNS component under the channel's application identifier for the runtime manager."""
+
 
 @dataclass(frozen=True)
 class DistributionIdentity:
@@ -32,6 +39,8 @@ class DistributionIdentity:
     target: str
     compatibility_floor: str
     upgrade_code: str
+    manager_id: str
+    manager_name: str
 
 
 def identity(target: str, channel: str = "stable", *, project_file: Path | None = None) -> DistributionIdentity:
@@ -51,8 +60,9 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
     suffix = "" if channel == "stable" else f".{channel}"
     app_id = PRODUCT_IDENTITY.application_id + suffix
     author = project["authors"][0]
+    name = PRODUCT_IDENTITY.display_name + ("" if channel == "stable" else PREVIEW_NAME_SUFFIX)
     return DistributionIdentity(
-        name=PRODUCT_IDENTITY.display_name + ("" if channel == "stable" else " Preview"),
+        name=name,
         application_id=app_id,
         package_name=PRODUCT_IDENTITY.distribution + ("" if channel == "stable" else f"-{channel}"),
         publisher=author["name"],
@@ -65,6 +75,8 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
         target=platform.name,
         compatibility_floor=platform.floor,
         upgrade_code=str(uuid5(NAMESPACE_DNS, f"{app_id}/{platform.name}/machine")).upper(),
+        manager_id=f"{app_id}.{MANAGER_COMPONENT}",
+        manager_name=name + MANAGER_NAME_SUFFIX,
     )
 
 
