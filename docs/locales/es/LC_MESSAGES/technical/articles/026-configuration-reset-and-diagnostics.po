@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"POT-Creation-Date: 2026-10-05 11:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -19,13 +19,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:1
-msgid "Configuration reset, diagnostics, and consent-gated telemetry"
-msgstr ""
-"Restablecimiento de configuración, diagnóstico y telemetría condicionada "
-"al consentimiento"
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:1
+msgid "Configuration reset and diagnostics"
+msgstr "Restablecimiento de configuración y diagnóstico"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:3
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:3
 msgid ""
 "[Technical overview](../architecture.md) · [Article index](catalogue.md) "
 "· [Snapshot and reading guide](../reading-guide.md)"
@@ -34,7 +32,7 @@ msgstr ""
 "artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
 "guide.md)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:5
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:5
 msgid ""
 "This page describes the analyzed source snapshot. Its findings and "
 "limitations are not a certification of the current branch."
@@ -42,7 +40,7 @@ msgstr ""
 "Esta página describe la instantánea analizada del código fuente. Sus "
 "hallazgos y limitaciones no certifican la rama actual."
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:7
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:7
 msgid ""
 "**Report:** `STAGE-2-026` · **Topic:** [Application orchestration and "
 "diagnostics](../topics/application-orchestration-and-diagnostics.md)"
@@ -50,34 +48,30 @@ msgstr ""
 "**Informe:** `STAGE-2-026` · **Tema:** [Orquestación de la aplicación y "
 "diagnóstico](../topics/application-orchestration-and-diagnostics.md)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:10
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:10
 msgid "Scope"
 msgstr "Ámbito"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:12
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:12
 msgid ""
-"This chunk covers 21 application files (5,573 lines; 46,401 measured "
-"`o200k_base` proxy tokens), including durable all-profile reset "
-"orchestration, diagnostic and LLM-run projections, registered diagnostic "
-"operations, telemetry preview/dispatch, and registry-derived foreign-"
-"asset thresholds. I read all assigned ranges across nine bounded pages. "
-"Static review only; I did not execute destructive reset, telemetry, CLI, "
-"or network paths. Legal accuracy is outside this review."
+"This chunk covers 20 application files (5,273 lines), including durable "
+"all-profile reset orchestration, repair diagnostics, and registry-derived"
+" foreign-asset thresholds. I read all assigned ranges across nine bounded"
+" pages. Static review only; I did not execute destructive reset, CLI, or "
+"network paths. Legal accuracy is outside this review."
 msgstr ""
-"Este bloque abarca 21 archivos de aplicación (5,573 líneas; 46,401 tokens"
-" aproximados medidos con `o200k_base`), incluidos la orquestación "
-"duradera de reinicio de todos los perfiles, proyecciones de diagnósticos "
-"y ejecuciones LLM, operaciones registradas de diagnóstico, vista previa y"
-" despacho de telemetría y umbrales de activos extranjeros derivados del "
-"registro. Leí todos los intervalos asignados en nueve páginas acotadas. "
-"Solo revisión estática; no ejecuté rutas destructivas de reinicio, "
-"telemetría, CLI ni red. La exactitud legal queda fuera de esta revisión."
+"Este bloque abarca 20 archivos de aplicación (5,273 líneas), incluidos la"
+" orquestación duradera de reinicio de todos los perfiles, diagnósticos de"
+" reparación y umbrales de activos extranjeros derivados del registro. Leí"
+" todos los intervalos asignados en nueve páginas acotadas. Solo revisión "
+"estática; no ejecuté rutas destructivas de reinicio, CLI ni red. La "
+"exactitud legal queda fuera de esta revisión."
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:14
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:14
 msgid "Durable all-profile reset"
 msgstr "Reinicio duradero de todos los perfiles"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:16
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:16
 msgid ""
 "`start_config_reset` requires explicit confirmation, snapshots the active"
 " profile pointer, discovers bucket IDs, includes a pointer-selected "
@@ -112,7 +106,7 @@ msgstr ""
 "Modelo de decisión de retención "
 "(`src/cadrumo/application/config_reset_models.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:18
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:18
 msgid ""
 "The operation advances through recorded auth clearing, pointer "
 "reconciliation, and deletion phases. Resume re-reads the pointer and each"
@@ -148,7 +142,7 @@ msgstr ""
 "(`src/cadrumo/application/config_reset.py`) Marcador de eliminación y "
 "recuperación (`src/cadrumo/application/config_reset.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:20
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:20
 msgid ""
 "Auth cleanup distinguishes a locked profile from an unlocked one. Both "
 "clear plaintext acquisition locks outside the capsule. An unlocked target"
@@ -177,7 +171,7 @@ msgstr ""
 "limpieza registrada en diario "
 "(`src/cadrumo/application/config_reset_models.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:22
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:22
 msgid ""
 "The reset journal repository serializes creation and per-operation "
 "execution, rejects a second incomplete operation, and delegates atomic "
@@ -203,11 +197,11 @@ msgstr ""
 "(`src/cadrumo/application/config_reset_repository.py`) Coherencia del "
 "estado de operación (`src/cadrumo/application/config_reset_models.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:24
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:24
 msgid "Diagnostics and recovery guidance"
 msgstr "Diagnóstico y orientación para la recuperación"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:26
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:26
 msgid ""
 "`aeat config repair` builds typed checks for Python/package/logging, "
 "secure workflow state, active-profile health, wizard/auth readiness, and "
@@ -239,7 +233,7 @@ msgstr ""
 "del informe de reparación (`src/cadrumo/application/diagnostics.py`) "
 "Operación de cuarentena (`src/cadrumo/application/diagnostics.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:28
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:28
 msgid ""
 "Integrity probing aggregates counts from populated secure-object "
 "namespaces. Dry-run quarantine and committed quarantine use the same "
@@ -265,108 +259,11 @@ msgstr ""
 " integridad por sí sola no distingue «vacío» de «no disponible»; conserva"
 " esa incertidumbre en el resultado diagnóstico."
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:30
-msgid ""
-"Other local diagnostics consume only recorded LLM run timing/outcome rows"
-" and a redacted auth-session probe. They provide recent-run listing, "
-"nearest-rank latency percentiles, error-kind breakdown, and "
-"provider/model run counts, durations, and success rates. The run record "
-"carries no prompts, responses, token counts, or cost. The code explicitly"
-" points to a different usage/cost source for those measures. Local run-"
-"health report (`src/cadrumo/application/diagnostics_run_health.py`) "
-"Latency aggregation (`src/cadrumo/application/diagnostics_run_health.py`)"
-" Provider/model usage aggregation "
-"(`src/cadrumo/application/diagnostics_run_health.py`)"
-msgstr ""
-"Otros diagnósticos locales consumen solo filas registradas de tiempos y "
-"resultados de ejecuciones LLM y un sondeo de sesiones de autenticación "
-"con datos ocultos. Proporcionan listado de ejecuciones recientes, "
-"percentiles de latencia por rango más próximo, desglose por tipo de error"
-" y recuentos, duraciones y tasas de éxito por proveedor y modelo. El "
-"registro de ejecución no contiene instrucciones, respuestas, recuentos de"
-" tokens ni coste. El código remite explícitamente a otra fuente de uso y "
-"costes para esas medidas. Informe local de salud de ejecuciones "
-"(`src/cadrumo/application/diagnostics_run_health.py`) Agregación de "
-"latencia (`src/cadrumo/application/diagnostics_run_health.py`) Agregación"
-" de uso por proveedor y modelo "
-"(`src/cadrumo/application/diagnostics_run_health.py`)"
-
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:32
-msgid "Registered operations and telemetry"
-msgstr "Operaciones registradas y telemetría"
-
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:34
-msgid ""
-"The registered `diagnostics.read` operation captures a complete typed "
-"report for an exact profile and filter set, retains it through the "
-"operation operand store, and releases it only after a successful terminal"
-" receipt matches the profile subject and operation definition. The "
-"projection model checks that exactly one report variant matches the "
-"requested kind and preserves date/provider/limit filters. Access "
-"resolution requires exact profile and reviewed result disclosure; "
-"operation capabilities are declared as recorded idempotent secure stored "
-"reads. Diagnostics read executor "
-"(`src/cadrumo/application/diagnostics_operation.py`) Exact-profile access"
-" and result projection "
-"(`src/cadrumo/application/diagnostics_operation.py`)"
-msgstr ""
-"La operación registrada `diagnostics.read` captura un informe tipado "
-"completo para un perfil y conjunto de filtros exactos, lo retiene "
-"mediante el almacén de operandos de operaciones y solo lo libera después "
-"de que un recibo terminal satisfactorio coincida con el sujeto de perfil "
-"y la definición de operación. El modelo de proyección comprueba que "
-"exactamente una variante de informe coincida con el tipo solicitado y "
-"conserva filtros de fecha, proveedor y límite. La resolución de acceso "
-"exige perfil exacto y revelación revisada del resultado; las capacidades "
-"de la operación se declaran como lecturas registradas, idempotentes y "
-"almacenadas de forma segura. Ejecutor de lectura de diagnósticos "
-"(`src/cadrumo/application/diagnostics_operation.py`) Acceso de perfil "
-"exacto y proyección de resultados "
-"(`src/cadrumo/application/diagnostics_operation.py`)"
-
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:36
-msgid ""
-"Telemetry status and flush are separate. Dry-run preview builds the same "
-"closed allowlisted payload as dispatch, based on aggregate run counts, "
-"success/failure, workspace hash, command identifier, and capture time. A "
-"real send requires deployment opt-in, an enabled tier, gestor mode off, "
-"per-invocation acknowledgement, and a configured endpoint. The registered"
-" flush is CLI-only; actual sending requires COMMIT authority and re-"
-"checks profile plus current settings at the dispatch boundary. COMMIT is "
-"released before the HTTP sink call. The operation records `UNKNOWN` "
-"before a possible external effect and treats the `sent` flag as attempted"
-" handoff, not confirmed delivery; cancellation waits for the thread to "
-"settle. This is a careful effect model for a network sink whose delivery "
-"cannot be confirmed locally. Telemetry payload and gate "
-"(`src/cadrumo/application/diagnostics_telemetry.py`) Flush executor and "
-"dispatch settlement (`src/cadrumo/application/diagnostics_operation.py`) "
-"Flush access boundary "
-"(`src/cadrumo/application/diagnostics_operation.py`)"
-msgstr ""
-"El estado de telemetría y su envío son separados. La vista previa en "
-"simulación construye la misma carga cerrada de campos permitidos que el "
-"despacho, basada en recuentos agregados de ejecuciones, éxito y fallo, "
-"hash del espacio de trabajo, identificador de comando y hora de captura. "
-"Un envío real exige activación voluntaria del despliegue, un nivel "
-"habilitado, modo gestor desactivado, confirmación por invocación y un "
-"punto de acceso configurado. El envío registrado es exclusivo de CLI; el "
-"envío real exige autoridad COMMIT y vuelve a comprobar el perfil y los "
-"ajustes actuales en el límite de despacho. COMMIT se libera antes de "
-"llamar al receptor HTTP. La operación registra `UNKNOWN` antes de un "
-"posible efecto externo y trata la marca `sent` como intento de entrega, "
-"no entrega confirmada; la cancelación espera a que el hilo se resuelva. "
-"Es un modelo cuidadoso de efectos para un receptor de red cuya entrega no"
-" puede confirmarse localmente. Carga y control de telemetría "
-"(`src/cadrumo/application/diagnostics_telemetry.py`) Ejecutor de envío y "
-"resolución de despacho "
-"(`src/cadrumo/application/diagnostics_operation.py`) Límite de acceso al "
-"envío (`src/cadrumo/application/diagnostics_operation.py`)"
-
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:38
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:30
 msgid "Other application boundaries and assessment"
 msgstr "Otros límites de aplicación y valoración"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:40
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:32
 msgid ""
 "The exception-precondition adapter follows structural Python/Pydantic "
 "exception links and only projects one unambiguous registered terminal "
@@ -408,46 +305,43 @@ msgstr ""
 "umbrales del registro "
 "(`src/cadrumo/application/foreign_asset_thresholds.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:42
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:34
 msgid ""
 "The strongest local qualities are durable phase recording with resume "
 "checks, explicit retention override records, cleanup modes that admit "
-"unknown residue, typed actionable diagnostic results, exact-profile "
-"operation scoping, and telemetry consent/effect boundaries. Remaining "
-"verification should cover crash points across reset phases, journal "
-"tampering/locking, all-profile concurrent mutation, diagnostic "
-"unavailable-versus-empty reporting, receipt destinations, cancellation "
-"during telemetry dispatch, and every caller of unattested threshold "
-"values. No assigned tests or runtime evidence were included here."
+"unknown residue, typed actionable diagnostic results, and exact-profile "
+"operation scoping. Remaining verification should cover crash points "
+"across reset phases, journal tampering/locking, all-profile concurrent "
+"mutation, diagnostic unavailable-versus-empty reporting, receipt "
+"destinations, and every caller of unattested threshold values. No "
+"assigned tests or runtime evidence were included here."
 msgstr ""
 "Las cualidades locales más sólidas son el registro duradero de fases con "
 "comprobaciones de reanudación, registros explícitos de excepciones de "
 "retención, modos de limpieza que reconocen residuos desconocidos, "
-"resultados diagnósticos tipados sobre los que actuar, ámbito de "
-"operaciones de perfil exacto y límites de consentimiento y efectos de "
-"telemetría. La verificación restante debería cubrir puntos de fallo entre"
-" fases de reinicio, manipulación y bloqueo del diario, mutación "
-"concurrente de todos los perfiles, información diagnóstica que distinga "
-"no disponible de vacío, destinos de recibos, cancelación durante el "
-"despacho de telemetría y todos los llamantes de valores de umbrales no "
-"atestados. Aquí no se incluyeron pruebas asignadas ni evidencia de "
-"ejecución."
+"resultados diagnósticos tipados sobre los que actuar y ámbito de "
+"operaciones de perfil exacto. La verificación restante debería cubrir "
+"puntos de fallo entre fases de reinicio, manipulación y bloqueo del "
+"diario, mutación concurrente de todos los perfiles, información "
+"diagnóstica que distinga no disponible de vacío, destinos de recibos y "
+"todos los llamantes de valores de umbrales no atestados. Aquí no se "
+"incluyeron pruebas asignadas ni evidencia de ejecución."
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:44
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:36
 msgid "Complete assigned-file coverage"
 msgstr "Cobertura completa de los archivos asignados"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:46
-msgid "All 21 assigned files were read in full across pages 1–9."
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:38
+msgid "All 20 assigned files were read in full across pages 1–9."
 msgstr ""
-"Se leyeron por completo los 21 archivos asignados a lo largo de las "
+"Se leyeron por completo los 20 archivos asignados a lo largo de las "
 "páginas 1–9."
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:48
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:40
 msgid "application/__init__.py (3 lines) (`src/cadrumo/application/__init__.py`)"
 msgstr "application/__init__.py (3 líneas) (`src/cadrumo/application/__init__.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:49
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:41
 msgid ""
 "_state_projection_readiness.py (24 lines) "
 "(`src/cadrumo/application/_state_projection_readiness.py`)"
@@ -455,7 +349,7 @@ msgstr ""
 "_state_projection_readiness.py (24 líneas) "
 "(`src/cadrumo/application/_state_projection_readiness.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:50
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:42
 msgid ""
 "auth_credentials.py (34 lines) "
 "(`src/cadrumo/application/auth_credentials.py`)"
@@ -463,7 +357,7 @@ msgstr ""
 "auth_credentials.py (34 líneas) "
 "(`src/cadrumo/application/auth_credentials.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:51
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:43
 msgid ""
 "bucket_deletion_contracts.py (34 lines) "
 "(`src/cadrumo/application/bucket_deletion_contracts.py`)"
@@ -471,7 +365,7 @@ msgstr ""
 "bucket_deletion_contracts.py (34 líneas) "
 "(`src/cadrumo/application/bucket_deletion_contracts.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:52
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:44
 msgid ""
 "bucket_event_projection.py (90 lines) "
 "(`src/cadrumo/application/bucket_event_projection.py`)"
@@ -479,7 +373,7 @@ msgstr ""
 "bucket_event_projection.py (90 líneas) "
 "(`src/cadrumo/application/bucket_event_projection.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:53
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:45
 msgid ""
 "bucket_event_repository.py (52 lines) "
 "(`src/cadrumo/application/bucket_event_repository.py`)"
@@ -487,7 +381,7 @@ msgstr ""
 "bucket_event_repository.py (52 líneas) "
 "(`src/cadrumo/application/bucket_event_repository.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:54
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:46
 msgid ""
 "cli_exception_preconditions.py (207 lines) "
 "(`src/cadrumo/application/cli_exception_preconditions.py`)"
@@ -495,11 +389,11 @@ msgstr ""
 "cli_exception_preconditions.py (207 líneas) "
 "(`src/cadrumo/application/cli_exception_preconditions.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:55
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:47
 msgid "config_reset.py (1,056 lines) (`src/cadrumo/application/config_reset.py`)"
 msgstr "config_reset.py (1,056 líneas) (`src/cadrumo/application/config_reset.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:56
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:48
 msgid ""
 "config_reset_models.py (373 lines) "
 "(`src/cadrumo/application/config_reset_models.py`)"
@@ -507,7 +401,7 @@ msgstr ""
 "config_reset_models.py (373 líneas) "
 "(`src/cadrumo/application/config_reset_models.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:57
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:49
 msgid ""
 "config_reset_repository.py (153 lines) "
 "(`src/cadrumo/application/config_reset_repository.py`)"
@@ -515,7 +409,7 @@ msgstr ""
 "config_reset_repository.py (153 líneas) "
 "(`src/cadrumo/application/config_reset_repository.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:58
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:50
 msgid ""
 "diagnostic_models.py (236 lines) "
 "(`src/cadrumo/application/diagnostic_models.py`)"
@@ -523,11 +417,11 @@ msgstr ""
 "diagnostic_models.py (236 líneas) "
 "(`src/cadrumo/application/diagnostic_models.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:59
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:51
 msgid "diagnostics.py (960 lines) (`src/cadrumo/application/diagnostics.py`)"
 msgstr "diagnostics.py (960 líneas) (`src/cadrumo/application/diagnostics.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:60
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:52
 msgid ""
 "diagnostics_operation.py (809 lines) "
 "(`src/cadrumo/application/diagnostics_operation.py`)"
@@ -535,7 +429,7 @@ msgstr ""
 "diagnostics_operation.py (809 líneas) "
 "(`src/cadrumo/application/diagnostics_operation.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:61
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:53
 msgid ""
 "diagnostics_operation_ports.py (51 lines) "
 "(`src/cadrumo/application/diagnostics_operation_ports.py`)"
@@ -543,7 +437,7 @@ msgstr ""
 "diagnostics_operation_ports.py (51 líneas) "
 "(`src/cadrumo/application/diagnostics_operation_ports.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:62
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:54
 msgid ""
 "diagnostics_ports.py (66 lines) "
 "(`src/cadrumo/application/diagnostics_ports.py`)"
@@ -551,7 +445,7 @@ msgstr ""
 "diagnostics_ports.py (66 líneas) "
 "(`src/cadrumo/application/diagnostics_ports.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:63
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:55
 msgid ""
 "diagnostics_run_health.py (756 lines) "
 "(`src/cadrumo/application/diagnostics_run_health.py`)"
@@ -559,7 +453,7 @@ msgstr ""
 "diagnostics_run_health.py (756 líneas) "
 "(`src/cadrumo/application/diagnostics_run_health.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:64
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:56
 msgid ""
 "diagnostics_run_health_ports.py (82 lines) "
 "(`src/cadrumo/application/diagnostics_run_health_ports.py`)"
@@ -567,19 +461,11 @@ msgstr ""
 "diagnostics_run_health_ports.py (82 líneas) "
 "(`src/cadrumo/application/diagnostics_run_health_ports.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:65
-msgid ""
-"diagnostics_telemetry.py (300 lines) "
-"(`src/cadrumo/application/diagnostics_telemetry.py`)"
-msgstr ""
-"diagnostics_telemetry.py (300 líneas) "
-"(`src/cadrumo/application/diagnostics_telemetry.py`)"
-
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:66
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:57
 msgid "application/errors.py (32 lines) (`src/cadrumo/application/errors.py`)"
 msgstr "application/errors.py (32 líneas) (`src/cadrumo/application/errors.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:67
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:58
 msgid ""
 "exchange_rate_provider.py (63 lines) "
 "(`src/cadrumo/application/exchange_rate_provider.py`)"
@@ -587,7 +473,7 @@ msgstr ""
 "exchange_rate_provider.py (63 líneas) "
 "(`src/cadrumo/application/exchange_rate_provider.py`)"
 
-#: ../../technical/articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md:68
+#: ../../technical/articles/026-configuration-reset-and-diagnostics.md:59
 msgid ""
 "foreign_asset_thresholds.py (192 lines) "
 "(`src/cadrumo/application/foreign_asset_thresholds.py`)"

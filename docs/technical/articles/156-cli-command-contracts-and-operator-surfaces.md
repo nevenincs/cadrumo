@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers 27 CLI entrypoint modules (5,950 lines; 47,017 measured o200k_base proxy tokens), just under the implementation-chunk cap. I read all assigned ranges across nine bounded pages; where page output truncated, I inspected the unfinished file tails as smaller line slices. The modules declare diagnostics and ledger command trees, parameter/transport contracts, execution policies, typed payloads, and thin Typer handlers. Static inspection only: I did not import the application, invoke commands, or run tests. No test files are assigned here.
+This chunk covers 24 CLI entrypoint modules. I read all assigned ranges across nine bounded pages; where page output truncated, I inspected the unfinished file tails as smaller line slices. The modules declare ledger command trees, parameter/transport contracts, execution policies, typed payloads, and thin Typer handlers. Static inspection only: I did not import the application, invoke commands, or run tests. No test files are assigned here.
 
 ## Product capabilities
 
@@ -19,33 +19,29 @@ The ledger command families cover transaction creation, allocation, classificati
 
 The activity-asset handler adapts typed JSON revisions to registered runtime operations, then validates that successful operations returned the data needed for a receipt. It distinguishes creating and correcting history, inspecting revisions, forecasting a charge, recording an explicit claim, and projecting filing handoff totals. Forecasting is described as non-consuming; a claim requires a forecast JSON input and creating-operation identity, and its receipt reports whether an existing claim was reused. Filing handoff is also a projection, not a consume/write command (asset handlers (`src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`), forecast and claim (`src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`), handoff (`src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`)). Activity-asset output models wrap domain facts in explicit Pydantic schemas, and every handler emits a standard envelope with stable command identity.
 
-The diagnostics group provides local reports of recent LLM run health, individual runs, latency percentiles, error kinds, and provider/model usage, alongside persisted AEAT-session presence and staleness. The displayed fields include provider, model, caller, timestamps, duration, success state, and typed error kind; these handlers project operational metadata rather than prompt or invoice contents (run health and session state (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), run records (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`), provider/model usage (`src/cadrumo/entrypoints/cli/_app_diagnostics.py`)). The telemetry subcommand has a status view and a flush operation. The flush defaults to dry-run, requires an explicit acknowledgement argument for a send attempt, and reports the closed telemetry payload preview, whether gates permit sending, whether an endpoint exists, and whether the worker says it sent. Its module documents that the payload is restricted to an allowlisted event type and that no-dry-run only attempts network output when consent and endpoint gates permit it (telemetry surface (`src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py`), flush handler (`src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py`), flush command options (`src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`)).
-
 The shared command-spec support functions reduce repeated option-shape definitions and can project application-owned operator input contracts into CLI fields. Resolved precondition actions are serialized from the exact typed DTO in deterministic compact JSON; the CLI helper says it does not invent a recovery command or prose (shared option constructors (`src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`), action rendering (`src/cadrumo/entrypoints/cli/_action_rendering.py`)).
 
 ## Knowledge and data
 
 This layer mostly declares and transports inputs; it does not implement tax calculations or establish legal applicability. Registry-backed category, prorrata, inventory, and model types are referenced through deferred targets, while application input contracts supply selected option vocabularies. File and directory transport markers are useful descriptions of intended handling, but do not by themselves establish path confinement, file-content validation, or network behavior. Those properties depend on the referenced handler, worker, and adapter implementations.
 
-The diagnostics commands read local run telemetry according to the module contract. The separate telemetry flush route is a conditional external disclosure of a deliberately smaller aggregate than the local run list; a full review of its payload builder, consent policy, and transport is outside this chunk. Ledger options can carry taxpayer identifiers, counterparty details, notes, tax classifications, invoice facts, and local evidence paths. This chunk’s declarations show how these values enter the CLI but not how handlers redact, retain, or export them.
+Ledger options can carry taxpayer identifiers, counterparty details, notes, tax classifications, invoice facts, and local evidence paths. This chunk’s declarations show how these values enter the CLI but not how handlers redact, retain, or export them.
 
 ## Security and safety assessment
 
 The strongest CLI-boundary controls visible here are typed input contracts, explicit file/remote transport metadata, typed result schemas, and execution-policy tags that mark external and destructive operations. Removal/reset commands expose a separate yes flag and their policy marks them destructive; Google and network operations use distinct effect labels. These are declarations rather than proof that downstream authorization, consent, or write fences are correct; synthesis should compare them with the registered worker contracts and handler paths.
 
-One concrete metadata inconsistency is visible for diagnostics telemetry flush. The handler can call a worker that attempts remote sending when dry-run is disabled, consent gates permit it, and an endpoint is configured. Yet the command-spec helper applies _WRITE, whose declared capabilities are only local storage, whose side effect is local state, and whose network effect is absent (local-only policy (`src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`), flush registration policy (`src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`), conditional send handler (`src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py`)). This confirms that the command-level metadata understates the handler’s possible external effect. Whether this can weaken enforcement or only mislead operator-surface metadata depends on how command policy is consumed elsewhere; verify that the registered operation independently enforces the network and consent boundary, and align or explicitly document the command policy.
-
-The no-data notices in diagnostics resolve to the classification action from an action catalogue, and resolved-action rendering preserves the typed action object rather than deriving shell text locally. This is a safer presentation seam than string-building a recovery command, but the correctness of action resolution is outside this chunk. The handlers translate absent projections into typed runtime refusal errors rather than emitting a misleading empty success payload.
+The handlers translate absent projections into typed runtime refusal errors rather than emitting a misleading empty success payload.
 
 ## Implementation assessment and follow-up
 
-The declarative tree is split into focused fragments with shared helpers for common options, plus typed schemas at output boundaries. Repeated ledger parameter shapes are centralized while meaningful distinctions—absent versus empty defaults, repeated values, file versus remote handle, and required versus optional values—remain explicit. The activity-asset CLI keeps schedule previews separate from persisted claims, and the diagnostics CLI distinguishes local inspection from the opt-in remote telemetry route.
+The declarative tree is split into focused fragments with shared helpers for common options, plus typed schemas at output boundaries. Repeated ledger parameter shapes are centralized while meaningful distinctions—absent versus empty defaults, repeated values, file versus remote handle, and required versus optional values—remain explicit. The activity-asset CLI keeps schedule previews separate from persisted claims.
 
-The breadth of ledger fragments creates a large public surface, but the immutable tuple composition and stable command identities give synthesis a concrete basis to compare declared commands against handler registrations. Follow up on the telemetry policy mismatch, especially whether command policy participates in authorization or only publishes metadata. Cross-check that destructive flags are required by handlers, and that every transport marker matches actual local-file/network usage. The inspection found no test evidence in this chunk, and no command was run.
+The breadth of ledger fragments creates a large public surface, but the immutable tuple composition and stable command identities give synthesis a concrete basis to compare declared commands against handler registrations. Cross-check that destructive flags are required by handlers, and that every transport marker matches actual local-file/network usage. The inspection found no test evidence in this chunk, and no command was run.
 
 ## Dependencies and follow-up
 
-Handlers delegate to application operations, domain models, result payload schemas, common envelope rendering, and the command materialization/runtime graph outside the assigned files. Synthesis should connect these declarations to actual registration and handler behavior, especially telemetry consent/network enforcement, ledger file handling, and the effect route for destructive operations. Current legal accuracy and end-to-end CLI behavior are unverified.
+Handlers delegate to application operations, domain models, result payload schemas, common envelope rendering, and the command materialization/runtime graph outside the assigned files. Synthesis should connect these declarations to actual registration and handler behavior, especially ledger file handling, and the effect route for destructive operations. Current legal accuracy and end-to-end CLI behavior are unverified.
 
 ## Complete assigned-file coverage
 
@@ -53,9 +49,6 @@ Handlers delegate to application operations, domain models, result payload schem
 - `src/cadrumo/entrypoints/cli/_action_rendering.py`
 - `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
 - `src/cadrumo/entrypoints/cli/_actividad_asset_payloads.py`
-- `src/cadrumo/entrypoints/cli/_app_diagnostics.py`
-- `src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py`
 - `src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`

@@ -1,4 +1,4 @@
-# Configuration reset, diagnostics, and consent-gated telemetry
+# Configuration reset and diagnostics
 
 [Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
 
@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers 21 application files (5,573 lines; 46,401 measured `o200k_base` proxy tokens), including durable all-profile reset orchestration, diagnostic and LLM-run projections, registered diagnostic operations, telemetry preview/dispatch, and registry-derived foreign-asset thresholds. I read all assigned ranges across nine bounded pages. Static review only; I did not execute destructive reset, telemetry, CLI, or network paths. Legal accuracy is outside this review.
+This chunk covers 20 application files (5,273 lines), including durable all-profile reset orchestration, repair diagnostics, and registry-derived foreign-asset thresholds. I read all assigned ranges across nine bounded pages. Static review only; I did not execute destructive reset, CLI, or network paths. Legal accuracy is outside this review.
 
 ## Durable all-profile reset
 
@@ -27,23 +27,15 @@ The reset journal repository serializes creation and per-operation execution, re
 
 Integrity probing aggregates counts from populated secure-object namespaces. Dry-run quarantine and committed quarantine use the same decryptability probe; quarantine preserves the encrypted payload and metadata in an archive table and does not auto-delete it. One local reporting weakness is visible: when the repository or engine cannot be reached, `_probe_secure_objects_integrity` returns an empty zero-count report, which the following check renders as `secure_objects_empty`/OK. A separate storage-state warning may still explain the outage, but this integrity row alone cannot distinguish “empty” from “unavailable”; preserve that uncertainty in the diagnostic result.
 
-Other local diagnostics consume only recorded LLM run timing/outcome rows and a redacted auth-session probe. They provide recent-run listing, nearest-rank latency percentiles, error-kind breakdown, and provider/model run counts, durations, and success rates. The run record carries no prompts, responses, token counts, or cost. The code explicitly points to a different usage/cost source for those measures. Local run-health report (`src/cadrumo/application/diagnostics_run_health.py`) Latency aggregation (`src/cadrumo/application/diagnostics_run_health.py`) Provider/model usage aggregation (`src/cadrumo/application/diagnostics_run_health.py`)
-
-## Registered operations and telemetry
-
-The registered `diagnostics.read` operation captures a complete typed report for an exact profile and filter set, retains it through the operation operand store, and releases it only after a successful terminal receipt matches the profile subject and operation definition. The projection model checks that exactly one report variant matches the requested kind and preserves date/provider/limit filters. Access resolution requires exact profile and reviewed result disclosure; operation capabilities are declared as recorded idempotent secure stored reads. Diagnostics read executor (`src/cadrumo/application/diagnostics_operation.py`) Exact-profile access and result projection (`src/cadrumo/application/diagnostics_operation.py`)
-
-Telemetry status and flush are separate. Dry-run preview builds the same closed allowlisted payload as dispatch, based on aggregate run counts, success/failure, workspace hash, command identifier, and capture time. A real send requires deployment opt-in, an enabled tier, gestor mode off, per-invocation acknowledgement, and a configured endpoint. The registered flush is CLI-only; actual sending requires COMMIT authority and re-checks profile plus current settings at the dispatch boundary. COMMIT is released before the HTTP sink call. The operation records `UNKNOWN` before a possible external effect and treats the `sent` flag as attempted handoff, not confirmed delivery; cancellation waits for the thread to settle. This is a careful effect model for a network sink whose delivery cannot be confirmed locally. Telemetry payload and gate (`src/cadrumo/application/diagnostics_telemetry.py`) Flush executor and dispatch settlement (`src/cadrumo/application/diagnostics_operation.py`) Flush access boundary (`src/cadrumo/application/diagnostics_operation.py`)
-
 ## Other application boundaries and assessment
 
 The exception-precondition adapter follows structural Python/Pydantic exception links and only projects one unambiguous registered terminal verdict; otherwise it fails closed to a generic validation outcome. The application-level exchange-rate provider is a context-bound host factory, so currency conversion cannot silently construct its own network transport. Foreign-asset thresholds come from a caller-pinned bundled registry revision and date-scoped parameter declarations; the resulting threshold carries source/legal references and review status. The docstring says obligation assessment can use an unattested revision while filing has a separate review gate, and notes that a consumer currently does not surface the review notice. This code proves lookup/provenance behavior, not that legal values or references are current or correct. Nested exception verdict extraction (`src/cadrumo/application/cli_exception_preconditions.py`) Host-composed rate provider (`src/cadrumo/application/exchange_rate_provider.py`) Registry threshold resolution (`src/cadrumo/application/foreign_asset_thresholds.py`)
 
-The strongest local qualities are durable phase recording with resume checks, explicit retention override records, cleanup modes that admit unknown residue, typed actionable diagnostic results, exact-profile operation scoping, and telemetry consent/effect boundaries. Remaining verification should cover crash points across reset phases, journal tampering/locking, all-profile concurrent mutation, diagnostic unavailable-versus-empty reporting, receipt destinations, cancellation during telemetry dispatch, and every caller of unattested threshold values. No assigned tests or runtime evidence were included here.
+The strongest local qualities are durable phase recording with resume checks, explicit retention override records, cleanup modes that admit unknown residue, typed actionable diagnostic results, and exact-profile operation scoping. Remaining verification should cover crash points across reset phases, journal tampering/locking, all-profile concurrent mutation, diagnostic unavailable-versus-empty reporting, receipt destinations, and every caller of unattested threshold values. No assigned tests or runtime evidence were included here.
 
 ## Complete assigned-file coverage
 
-All 21 assigned files were read in full across pages 1–9.
+All 20 assigned files were read in full across pages 1–9.
 
 - application/__init__.py (3 lines) (`src/cadrumo/application/__init__.py`)
 - _state_projection_readiness.py (24 lines) (`src/cadrumo/application/_state_projection_readiness.py`)
@@ -62,7 +54,6 @@ All 21 assigned files were read in full across pages 1–9.
 - diagnostics_ports.py (66 lines) (`src/cadrumo/application/diagnostics_ports.py`)
 - diagnostics_run_health.py (756 lines) (`src/cadrumo/application/diagnostics_run_health.py`)
 - diagnostics_run_health_ports.py (82 lines) (`src/cadrumo/application/diagnostics_run_health_ports.py`)
-- diagnostics_telemetry.py (300 lines) (`src/cadrumo/application/diagnostics_telemetry.py`)
 - application/errors.py (32 lines) (`src/cadrumo/application/errors.py`)
 - exchange_rate_provider.py (63 lines) (`src/cadrumo/application/exchange_rate_provider.py`)
 - foreign_asset_thresholds.py (192 lines) (`src/cadrumo/application/foreign_asset_thresholds.py`)

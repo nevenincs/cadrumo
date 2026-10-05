@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"POT-Creation-Date: 2026-10-05 11:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -54,23 +54,22 @@ msgstr "Ámbito"
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:12
 msgid ""
-"This chunk covers 25 persistence files for the encrypted LLM stores, "
+"This chunk covers 24 persistence files for the encrypted LLM stores, "
 "operation journal and lease lifecycle, secure operands, and profile-owned"
 " calculation records. I read all assigned ranges across nine bounded "
-"pages: 5,391 lines and 47,244 measured `o200k_base` proxy tokens. This is"
-" static analysis only; I did not execute the application or tests."
+"pages: 4,981 lines. This is static analysis only; I did not execute the "
+"application or tests."
 msgstr ""
-"Este bloque abarca 25 archivos de persistencia para los almacenes LLM "
+"Este bloque abarca 24 archivos de persistencia para los almacenes LLM "
 "cifrados, el diario de operaciones y el ciclo de vida de concesiones "
 "temporales, operandos seguros y registros de cálculo propiedad del "
 "perfil. Leí todos los intervalos asignados en nueve páginas acotadas: "
-"5,391 líneas y 47,244 tokens aproximados medidos con `o200k_base`. Se "
-"trata únicamente de análisis estático; no ejecuté la aplicación ni "
-"pruebas."
+"4,981 líneas. Se trata únicamente de análisis estático; no ejecuté la "
+"aplicación ni pruebas."
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:14
-msgid "LLM cache, usage, telemetry, and consent history"
-msgstr "Caché, uso, telemetría e historial de consentimiento de LLM"
+msgid "LLM cache, usage, run records, and consent history"
+msgstr "Caché, uso, registros de ejecución e historial de consentimiento de LLM"
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:16
 msgid ""
@@ -114,16 +113,13 @@ msgid ""
 "saved random suffix reconstruct the actual secure-object key, then "
 "filters by date and sorts. Cost summaries preserve uncertainty: any "
 "unpriced row makes total estimated cost `None`, with a separate count of "
-"unpriced entries. The local run-telemetry store contains run ID, "
+"unpriced entries. The local run-record store contains run ID, "
 "caller/provider/model, duration, success, error class, and start time, "
 "not prompt or response text; it uses the same logical-root partition and "
 "validates the reconstructed row key. Both diagnostic stores have age and "
 "count retention. Redacted usage writes "
 "(`src/cadrumo/adapters/persistence/llm/usage.py`) Usage identity check "
-"and summary (`src/cadrumo/adapters/persistence/llm/usage.py`) Local run "
-"telemetry (`src/cadrumo/adapters/persistence/llm/run_telemetry.py`) "
-"Telemetry key validation "
-"(`src/cadrumo/adapters/persistence/llm/run_telemetry.py`)"
+"and summary (`src/cadrumo/adapters/persistence/llm/usage.py`)"
 msgstr ""
 "`UsageRecorder` persiste el texto de respuesta y los campos contables "
 "tras la ocultación DIAGNOSTIC en el almacén cifrado; no persiste "
@@ -132,18 +128,15 @@ msgstr ""
 "clave real del objeto seguro y después filtra por fecha y ordena. Los "
 "resúmenes de coste conservan la incertidumbre: cualquier fila sin precio "
 "hace que el coste total estimado sea `None`, con un recuento separado de "
-"entradas sin precio. El almacén local de telemetría de ejecución contiene"
-" identificador de ejecución, llamante, proveedor, modelo, duración, "
-"éxito, clase de error y hora de inicio, no instrucciones ni texto de "
-"respuesta; utiliza la misma partición de raíz lógica y valida la clave "
-"reconstruida de la fila. Ambos almacenes diagnósticos tienen retención "
-"por antigüedad y cantidad. Escrituras de uso con datos ocultos "
+"entradas sin precio. El almacén local de registros de ejecución contiene "
+"identificador de ejecución, llamante, proveedor, modelo, duración, éxito,"
+" clase de error y hora de inicio, no instrucciones ni texto de respuesta;"
+" utiliza la misma partición de raíz lógica y valida la clave reconstruida"
+" de la fila. Ambos almacenes diagnósticos tienen retención por antigüedad"
+" y cantidad. Escrituras de uso con datos ocultos "
 "(`src/cadrumo/adapters/persistence/llm/usage.py`) Comprobación de "
 "identidad de uso y resumen "
-"(`src/cadrumo/adapters/persistence/llm/usage.py`) Telemetría local de "
-"ejecución (`src/cadrumo/adapters/persistence/llm/run_telemetry.py`) "
-"Validación de claves de telemetría "
-"(`src/cadrumo/adapters/persistence/llm/run_telemetry.py`)"
+"(`src/cadrumo/adapters/persistence/llm/usage.py`) "
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:20
 msgid ""
@@ -422,8 +415,8 @@ msgstr "Evaluación y límites"
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:40
 msgid ""
 "This chunk has strong identity and concurrency controls: cache, usage, "
-"and telemetry reads validate row/key correspondence; secure operands are "
-"content-addressed and re-hashed; singleton mutations use compare-and-"
+"and run-record reads validate row/key correspondence; secure operands are"
+" content-addressed and re-hashed; singleton mutations use compare-and-"
 "swap; journal history and ownership are validated as one state machine; "
 "and consent-audit failure blocks the corresponding dispatch. The clearest"
 " durability question is the custody repository's in-place checkpoint "
@@ -434,20 +427,20 @@ msgid ""
 "follows the intended revision discipline. No tests were executed."
 msgstr ""
 "Este bloque tiene controles sólidos de identidad y concurrencia: las "
-"lecturas de caché, uso y telemetría validan la correspondencia entre fila"
-" y clave; los operandos seguros se direccionan por contenido y se "
-"recalcula su hash; las mutaciones de registros únicos utilizan "
-"comparación e intercambio; el historial del diario y la propiedad se "
-"validan como una única máquina de estados; y un fallo de auditoría de "
-"consentimiento bloquea el despacho correspondiente. La cuestión más clara"
-" de durabilidad son las escrituras de puntos de control en el mismo lugar"
-" del repositorio de custodia. Una segunda invariante para los llamantes "
-"es que cualquier confirmación conjunta de registro único compuesta "
-"manualmente debe suministrar la revisión que leyó. La revisión estática "
-"no establece la coherencia ante fallos en sistemas de archivos reales, el"
-" comportamiento transaccional del motor SQL, la usabilidad de "
-"recuperación para el operador ni que todos los llamantes sigan la "
-"disciplina prevista de revisiones. No se ejecutaron pruebas."
+"lecturas de caché, uso y registros de ejecución validan la "
+"correspondencia entre fila y clave; los operandos seguros se direccionan "
+"por contenido y se recalcula su hash; las mutaciones de registros únicos "
+"utilizan comparación e intercambio; el historial del diario y la "
+"propiedad se validan como una única máquina de estados; y un fallo de "
+"auditoría de consentimiento bloquea el despacho correspondiente. La "
+"cuestión más clara de durabilidad son las escrituras de puntos de control"
+" en el mismo lugar del repositorio de custodia. Una segunda invariante "
+"para los llamantes es que cualquier confirmación conjunta de registro "
+"único compuesta manualmente debe suministrar la revisión que leyó. La "
+"revisión estática no establece la coherencia ante fallos en sistemas de "
+"archivos reales, el comportamiento transaccional del motor SQL, la "
+"usabilidad de recuperación para el operador ni que todos los llamantes "
+"sigan la disciplina prevista de revisiones. No se ejecutaron pruebas."
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:42
 msgid "Complete source coverage"
@@ -492,20 +485,12 @@ msgstr ""
 "(`src/cadrumo/adapters/persistence/llm/consent_ledger.py`)"
 
 #: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:50
-msgid ""
-"llm/run_telemetry.py (410 lines) "
-"(`src/cadrumo/adapters/persistence/llm/run_telemetry.py`)"
-msgstr ""
-"llm/run_telemetry.py (410 líneas) "
-"(`src/cadrumo/adapters/persistence/llm/run_telemetry.py`)"
-
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:51
 msgid "llm/usage.py (308 lines) (`src/cadrumo/adapters/persistence/llm/usage.py`)"
 msgstr ""
 "llm/usage.py (308 líneas) "
 "(`src/cadrumo/adapters/persistence/llm/usage.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:52
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:51
 msgid ""
 "operations/__init__.py (3 lines) "
 "(`src/cadrumo/adapters/persistence/operations/__init__.py`)"
@@ -513,7 +498,7 @@ msgstr ""
 "operations/__init__.py (3 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/__init__.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:53
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:52
 msgid ""
 "operations/_journal_validation.py (245 lines) "
 "(`src/cadrumo/adapters/persistence/operations/_journal_validation.py`)"
@@ -521,7 +506,7 @@ msgstr ""
 "operations/_journal_validation.py (245 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/_journal_validation.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:54
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:53
 msgid ""
 "operations/financial_operand_custody.py (112 lines) "
 "(`src/cadrumo/adapters/persistence/operations/financial_operand_custody.py`)"
@@ -529,7 +514,7 @@ msgstr ""
 "operations/financial_operand_custody.py (112 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/financial_operand_custody.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:55
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:54
 msgid ""
 "operations/journal.py (475 lines) "
 "(`src/cadrumo/adapters/persistence/operations/journal.py`)"
@@ -537,7 +522,7 @@ msgstr ""
 "operations/journal.py (475 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/journal.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:56
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:55
 msgid ""
 "operations/lease.py (358 lines) "
 "(`src/cadrumo/adapters/persistence/operations/lease.py`)"
@@ -545,7 +530,7 @@ msgstr ""
 "operations/lease.py (358 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/lease.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:57
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:56
 msgid ""
 "operations/secure_references.py (154 lines) "
 "(`src/cadrumo/adapters/persistence/operations/secure_references.py`)"
@@ -553,7 +538,7 @@ msgstr ""
 "operations/secure_references.py (154 líneas) "
 "(`src/cadrumo/adapters/persistence/operations/secure_references.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:58
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:57
 msgid ""
 "profile/__init__.py (27 lines) "
 "(`src/cadrumo/adapters/persistence/profile/__init__.py`)"
@@ -561,7 +546,7 @@ msgstr ""
 "profile/__init__.py (27 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/__init__.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:59
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:58
 msgid ""
 "profile/_filing_runtime.py (35 lines) "
 "(`src/cadrumo/adapters/persistence/profile/_filing_runtime.py`)"
@@ -569,7 +554,7 @@ msgstr ""
 "profile/_filing_runtime.py (35 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/_filing_runtime.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:60
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:59
 msgid ""
 "profile/_review_package_keypair.py (91 lines) "
 "(`src/cadrumo/adapters/persistence/profile/_review_package_keypair.py`)"
@@ -577,7 +562,7 @@ msgstr ""
 "profile/_review_package_keypair.py (91 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/_review_package_keypair.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:61
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:60
 msgid ""
 "profile/_revision_guarded_singleton_mutation.py (53 lines) "
 "(`src/cadrumo/adapters/persistence/profile/_revision_guarded_singleton_mutation.py`)"
@@ -585,7 +570,7 @@ msgstr ""
 "profile/_revision_guarded_singleton_mutation.py (53 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/_revision_guarded_singleton_mutation.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:62
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:61
 msgid ""
 "profile/_secure_enveloped_document.py (295 lines) "
 "(`src/cadrumo/adapters/persistence/profile/_secure_enveloped_document.py`)"
@@ -593,7 +578,7 @@ msgstr ""
 "profile/_secure_enveloped_document.py (295 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/_secure_enveloped_document.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:63
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:62
 msgid ""
 "profile/_secure_model_document.py (231 lines) "
 "(`src/cadrumo/adapters/persistence/profile/_secure_model_document.py`)"
@@ -601,7 +586,7 @@ msgstr ""
 "profile/_secure_model_document.py (231 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/_secure_model_document.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:64
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:63
 msgid ""
 "profile/actividad_asset.py (112 lines) "
 "(`src/cadrumo/adapters/persistence/profile/actividad_asset.py`)"
@@ -609,7 +594,7 @@ msgstr ""
 "profile/actividad_asset.py (112 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/actividad_asset.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:65
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:64
 msgid ""
 "profile/apoderado.py (140 lines) "
 "(`src/cadrumo/adapters/persistence/profile/apoderado.py`)"
@@ -617,7 +602,7 @@ msgstr ""
 "profile/apoderado.py (140 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/apoderado.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:66
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:65
 msgid ""
 "profile/auth_diagnostics.py (81 lines) "
 "(`src/cadrumo/adapters/persistence/profile/auth_diagnostics.py`)"
@@ -625,7 +610,7 @@ msgstr ""
 "profile/auth_diagnostics.py (81 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/auth_diagnostics.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:67
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:66
 msgid ""
 "profile/bienes_inversion.py (172 lines) "
 "(`src/cadrumo/adapters/persistence/profile/bienes_inversion.py`)"
@@ -633,7 +618,7 @@ msgstr ""
 "profile/bienes_inversion.py (172 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/bienes_inversion.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:68
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:67
 msgid ""
 "profile/buckets.py (322 lines) "
 "(`src/cadrumo/adapters/persistence/profile/buckets.py`)"
@@ -641,7 +626,7 @@ msgstr ""
 "profile/buckets.py (322 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/buckets.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:69
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:68
 msgid ""
 "profile/calculation_observations.py (596 lines) "
 "(`src/cadrumo/adapters/persistence/profile/calculation_observations.py`)"
@@ -649,7 +634,7 @@ msgstr ""
 "profile/calculation_observations.py (596 líneas) "
 "(`src/cadrumo/adapters/persistence/profile/calculation_observations.py`)"
 
-#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:70
+#: ../../technical/articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md:69
 msgid ""
 "profile/calculation_revision_override_migration.py (453 lines) "
 "(`src/cadrumo/adapters/persistence/profile/calculation_revision_override_migration.py`)"

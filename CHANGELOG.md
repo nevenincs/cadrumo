@@ -449,8 +449,6 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * **cli:** reflow the execution policy specs onto the named write route ([746f060](https://github.com/nevenincs/cadrumo/commit/746f060f743bc28623e48925d215961e64f10739))
 * **cli:** retire the production asserts across the CLI and TUI entrypoints ([9d77099](https://github.com/nevenincs/cadrumo/commit/9d770990c7287ce1c72edae8d6cfc8b8f8faa342))
 * **cli:** share the review-package spec parameters ([dbc1b79](https://github.com/nevenincs/cadrumo/commit/dbc1b7945beca3ddaa44aa218e682bc9f892eafe))
-* **core:** fold the retired producer metrics into the telemetry schema ([d984109](https://github.com/nevenincs/cadrumo/commit/d984109d4f776482622d13ef5017d3a64e4f8523))
-* **core:** remove the unreached bundle signing and telemetry producers ([d984109](https://github.com/nevenincs/cadrumo/commit/d984109d4f776482622d13ef5017d3a64e4f8523))
 * **core:** retire the bundle signing error registrations and locale keys ([d984109](https://github.com/nevenincs/cadrumo/commit/d984109d4f776482622d13ef5017d3a64e4f8523))
 * **custody:** give the KDF child operations one typed vocabulary ([8b6181c](https://github.com/nevenincs/cadrumo/commit/8b6181c6c580b601ae28afefd8a8ed524457210e))
 * **dev:** bound the rehearsal subprocess with an explicit timeout ([4c6c56b](https://github.com/nevenincs/cadrumo/commit/4c6c56b2bd449ee1ae6589671a5c977f7acfd56b))

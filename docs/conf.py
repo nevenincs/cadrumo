@@ -883,8 +883,7 @@ nitpick_ignore_regex = [
     # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
     # last-segment suffix resolver cannot disambiguate by design; and (2) a
     # project object written by a path that omits the ``cadrumo.`` root
-    # (``core.telemetry.workspace_hash``,
-    # ``application.modelo.emit_collab_workspace_opened_event``,
+    # (``application.modelo.emit_collab_workspace_opened_event``,
     # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
     # docstring-links`` bars adding a dotted path to a bare project anchor, so
     # these are ignored rather than qualified; a py:func / py:attr short-reference
@@ -962,8 +961,7 @@ nitpick_ignore_regex = [
     ),
     (
         r"py:.*",
-        r"^(core\.telemetry\.workspace_hash|"
-        r"application\.modelo\.emit_collab_workspace_opened_event|"
+        r"^(application\.modelo\.emit_collab_workspace_opened_event|"
         r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
     ),
     # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,

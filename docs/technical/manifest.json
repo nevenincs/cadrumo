@@ -181,7 +181,7 @@
     {
       "source": "map/stage-2/STAGE-2-026.md",
       "source_sha256": "96ecf630b29777384688e27e2eb66cbc8dbf062fc34568a6c50b7fa1973c3942",
-      "page": "articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md",
+      "page": "articles/026-configuration-reset-and-diagnostics.md",
       "section": "article",
       "body_sha256": "91c70d93aef23a72c0f12955ee42b383eb58724d03163149cde8b4b462dc58c1"
     },
@@ -853,7 +853,7 @@
     {
       "source": "map/stage-2/STAGE-2-122.md",
       "source_sha256": "18cdbe8b014de1242f05f61b8febea33dd5bffbbdaa0ca5977437791e7a6e143",
-      "page": "articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md",
+      "page": "articles/122-redaction-bundled-resources-and-time-contracts.md",
       "section": "article",
       "body_sha256": "cb0e43e3f058231224c78a274f2a8f55635c756318b8fa3b86029ec22d2ad51a"
     },

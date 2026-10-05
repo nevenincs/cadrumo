@@ -99,7 +99,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 
 [Read the topic overview](../topics/application-orchestration-and-diagnostics.md).
 
-- [Configuration reset, diagnostics, and consent-gated telemetry](026-configuration-reset-diagnostics-and-consent-gated-telemetry.md) — `STAGE-2-026`
+- [Configuration reset and diagnostics](026-configuration-reset-and-diagnostics.md) — `STAGE-2-026`
 - [Local reader provisioning, workstation health, and application contracts](027-local-reader-provisioning-workstation-health-and-application-contracts.md) — `STAGE-2-027`
 - [Runtime admission, canonical state, and storage-route policy](028-runtime-admission-canonical-state-and-storage-route-policy.md) — `STAGE-2-028`
 - [Installed workbench generations and workstation checks](029-installed-workbench-generations-and-workstation-checks.md) — `STAGE-2-029`
@@ -235,7 +235,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 - [Error contracts, renderers, and record-fault projection](119-error-contracts-renderers-and-record-fault-projection.md) — `STAGE-2-119`
 - [Error registry catalogues and severity](120-error-registry-catalogues-and-severity.md) — `STAGE-2-120`
 - [Localization, identity validation, run traces, and date parsing](121-localization-identity-validation-run-traces-and-date-parsing.md) — `STAGE-2-121`
-- [Redaction, bundled resources, telemetry, and time contracts](122-redaction-bundled-resources-telemetry-and-time-contracts.md) — `STAGE-2-122`
+- [Redaction, bundled resources, and time contracts](122-redaction-bundled-resources-and-time-contracts.md) — `STAGE-2-122`
 
 ## Tax calculation domain
 
