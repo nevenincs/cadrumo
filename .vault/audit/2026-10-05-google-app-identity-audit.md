@@ -29,6 +29,13 @@ The same reviewer re-reviewed the fixes in `8fa0aee6c9..5ded641487` and again
 returned revision required, on the finding grant-after-completed-exchange. It
 confirmed the stored-root fix and the tests of both commits.
 
+It then passed `dc7771a25e` with the low finding
+declined-consent-discrimination, and passed `1a6eab66ee` with no new finding.
+The plan-close review therefore stands as passed at `1a6eab66ee`. One gap it
+accepted: a sign-in run without the operation's boundaries, which only the
+developer's live probe does, still reports a declined consent as an
+unreachable endpoint.
+
 ## Findings
 
 ### refusal-effect-accounting | high | A lost answer during consent or token exchange settled the sign-in as no effect
