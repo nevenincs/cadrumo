@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
-from ._fact_mapping_entries import iva_mapping_entries
+from ._fact_mapping_entries import mapping_entries
 from .errors import IvaValidationError
 from .schema import IvaCategory
 
@@ -143,7 +143,7 @@ def registry_citation_catalogue(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise IvaValidationError("IVA statutory citation catalogue must resolve as a mapping fact")
-    entries = dict(iva_mapping_entries(resolved, subject="IVA statutory citation mapping"))
+    entries = dict(mapping_entries(resolved, subject="IVA statutory citation mapping"))
     qualifier_order = tuple(
         token.strip() for token in _required_citation_entry(entries, "qualifier_order").split(",") if token.strip()
     )

@@ -37,6 +37,7 @@ ManualInputDataType = Annotated[
         CasillaDataType.TEXT,
         CasillaDataType.DECIMAL,
         CasillaDataType.MONEY,
+        CasillaDataType.DATE,
     ],
     BeforeValidator(coerce_enum_member(CasillaDataType)),
 ]

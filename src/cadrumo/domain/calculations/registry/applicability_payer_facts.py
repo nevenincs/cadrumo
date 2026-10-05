@@ -371,7 +371,10 @@ def resolve_payer_fact(
 
 
 def profile_path_value(profile: TaxpayerProfile, profile_key: str) -> object:
-    """Read a dotted profile path; an absent optional section reads as unanswered."""
+    """Read a dotted profile path; an absent optional section reads as unanswered.
+
+    Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     current: object = profile
     for segment in profile_key.split("."):
         if current is None:

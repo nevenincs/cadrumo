@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
 from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from cadrumo.domain.iva._fact_mapping_entries import IvaMappingSubject, iva_mapping_entries
+from cadrumo.domain.iva._fact_mapping_entries import IvaMappingSubject, mapping_entries
 from cadrumo.domain.iva.errors import IvaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,10 +50,10 @@ def _resolved_payload(payload: MappingFactPayload) -> ResolvedMappingFact:
 
 
 @pytest.mark.parametrize("subject", _SUBJECTS)
-def test_iva_mapping_entries_preserves_text_and_is_read_only(subject: IvaMappingSubject) -> None:
+def test_mapping_entries_preserves_text_and_is_read_only(subject: IvaMappingSubject) -> None:
     resolved = _resolved_mapping((MappingFactEntry(key=" Mixed Key ", value="  Mixed Value  "),))
 
-    entries = iva_mapping_entries(resolved, subject=subject)
+    entries = mapping_entries(resolved, subject=subject)
 
     assert entries == {" Mixed Key ": "  Mixed Value  "}
     mutable_entries = cast(MutableMapping[str, str], entries)
@@ -69,7 +69,7 @@ def test_non_string_mapping_atoms_keep_iva_error_without_chaining(subject: IvaMa
     resolved = _resolved_mapping((MappingFactEntry(key=12, value=Decimal("1.25")),))
 
     with pytest.raises(IvaValidationError) as caught:
-        iva_mapping_entries(resolved, subject=subject)
+        mapping_entries(resolved, subject=subject)
 
     assert str(caught.value) == expected
     assert caught.value.__cause__ is None
@@ -92,7 +92,7 @@ def test_duplicate_mapping_keys_keep_subject_specific_iva_error(subject: IvaMapp
     resolved = _resolved_mapping((entries[0],)).model_copy(update={"payload": payload})
 
     with pytest.raises(IvaValidationError) as caught:
-        iva_mapping_entries(resolved, subject=subject)
+        mapping_entries(resolved, subject=subject)
 
     assert str(caught.value) == expected
     assert caught.value.__cause__ is None

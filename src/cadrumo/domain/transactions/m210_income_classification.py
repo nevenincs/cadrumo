@@ -4,6 +4,8 @@ The selected Modelo 210 registry revision owns the income-code catalogue,
 labels, and payer applicability. This module retains only the transaction
 validation/type shell while that registry declaration is consumed by the
 calculation path.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

@@ -15,9 +15,8 @@ from functools import cache
 from itertools import pairwise
 from pathlib import PurePosixPath
 
-from dev.corpus.text import normalise_corpus_text
-
 from .....core.resources.bundled_data import bundled_path
+from .....core.text_fold import normalise_corpus_text
 from ..authority import bundled_authority_descriptor_path, bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
 from ..authority_store import SQLiteAuthorityReader

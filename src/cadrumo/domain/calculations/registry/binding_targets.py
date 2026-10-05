@@ -39,6 +39,8 @@ def revision_bindings_by_id(revision: ModeloRevision) -> dict[BindingId, Binding
 
     Revision identity validation already refuses a duplicate registry id, so the
     index is lossless.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     return {binding.id: binding for binding in revision.bindings}
 

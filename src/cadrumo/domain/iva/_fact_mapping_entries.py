@@ -21,7 +21,7 @@ IvaMappingSubject = Literal[
 ]
 
 
-def iva_mapping_entries(
+def mapping_entries(
     resolved: ResolvedMappingFact,
     *,
     subject: IvaMappingSubject,

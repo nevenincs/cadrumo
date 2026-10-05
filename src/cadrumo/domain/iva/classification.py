@@ -63,7 +63,7 @@ from ._classification_engine import (
     resolve_rate_category_mapping,
     resolve_rate_territories,
 )
-from ._fact_mapping_entries import iva_mapping_entries
+from ._fact_mapping_entries import mapping_entries
 from .errors import IvaValidationError
 from .place_of_supply import IvaPlaceOfSupplyRule
 from .schema import (
@@ -379,7 +379,7 @@ def resolve_iva_classification_catalogue(
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
     resolved = registry_iva_classification_catalogue(effective_date or today_madrid(), operation=operation)
-    entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
+    entries = mapping_entries(resolved, subject="IVA classification mapping")
     territorial_scopes, territorial_aliases = _classification_vocabulary_group(
         entries,
         prefix="territorial_scope",
@@ -449,7 +449,7 @@ def resolve_transaction_kind_catalogue(
 ) -> TransactionKindCatalogue:
     """Resolve all transaction-kind membership through the 0083 fact query."""
     resolved = registry_iva_classification_catalogue(effective_date, operation=operation)
-    entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
+    entries = mapping_entries(resolved, subject="IVA classification mapping")
     definitions: list[TransactionKindDefinition] = []
     for token in classification_csv(entries, "transaction_kind.order"):
         prefix = f"transaction_kind.{token}"
@@ -761,7 +761,7 @@ def resolve_iva_classification_inputs(
     from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
     resolved = registry_iva_classification_catalogue(effective_date, operation=operation)
-    entries = iva_mapping_entries(resolved, subject="IVA classification mapping")
+    entries = mapping_entries(resolved, subject="IVA classification mapping")
     vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
     kind_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
     category_catalogue: IvaCategoryCatalogue = resolve_iva_category_catalogue(

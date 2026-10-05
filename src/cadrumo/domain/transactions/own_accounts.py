@@ -34,7 +34,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.iban import BIC_SHAPE_RE, IBAN_SHAPE_RE, iban_mod_97, mask_iban, normalise_iban
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ..iva.sepa_marca import SepaMarca, derive_sepa_marca
 
 OWN_ACCOUNT_REGISTER_SCHEMA_VERSION: Final = "1"
@@ -109,7 +109,7 @@ class OwnBankAccountDetails(BaseModel):
     bank_address: str = Field(default="", max_length=35)
     bank_city: str = Field(default="", max_length=30)
     bank_country_code: str = ""
-    currency: str = DEFAULT_CURRENCY
+    currency: IsoCurrencyCode = DEFAULT_CURRENCY
     opened_on: date | None = None
     closed_on: date | None = None
 

@@ -1,4 +1,7 @@
-"""Evidence-backed split/merge boundaries, never identity or value conversions."""
+"""Evidence-backed split/merge boundaries, never identity or value conversions.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+"""
 
 from __future__ import annotations
 

@@ -37,7 +37,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
 
         The difference is the child's AGE, and it is the whole reason this
         method exists. The deducción itself runs only while the child is under
-        three, so that method clips to :meth:`maternidad_eligible_meses`. The
+        three, so that method clips to :meth:`_maternidad_eligible_months`. The
         increment does not: Capítulo 18 states that where "el descendiente
         cumpla los tres años en el mes de enero" or "la madre comience a
         trabajar en el año en el que el hijo cumple esa edad, pero después de

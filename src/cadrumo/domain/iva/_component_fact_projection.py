@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from ...core.type_guards import is_str_keyed_dict
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
-from ._fact_mapping_entries import iva_mapping_entries
+from ._fact_mapping_entries import mapping_entries
 from .errors import IvaValidationError
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ def resolve_component_catalogue_entries(
     if not isinstance(resolved, ResolvedMappingFact):
         raise IvaValidationError("IVA component catalogue must resolve as a mapping fact")
 
-    return dict(iva_mapping_entries(resolved, subject="IVA component mapping"))
+    return dict(mapping_entries(resolved, subject="IVA component mapping"))
 
 
 def cuota_settlement_catalogue_from_entries(

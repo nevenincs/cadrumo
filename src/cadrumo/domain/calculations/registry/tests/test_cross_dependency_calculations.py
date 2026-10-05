@@ -67,8 +67,8 @@ from ._cross_dependency_calculation_support import (
     _observations_from_requirements,
     source_editions_calculate,
 )
-from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 from .relation_fixture import resolve_relation_values_from_observations
 

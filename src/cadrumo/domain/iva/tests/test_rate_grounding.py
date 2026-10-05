@@ -11,11 +11,11 @@ from typing import override
 
 import pypdfium2 as pdfium
 import pytest
-from dev.corpus.text import normalise_corpus_text
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.text_fold import normalise_corpus_text
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate

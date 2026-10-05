@@ -351,7 +351,10 @@ class ModeloApplicabilityExclusion(BaseModel):
         return None
 
     def evaluate(self, modelo: ModeloId, profile: TaxpayerProfile) -> _ExclusionFinding | None:
-        """Return this exclusion's finding for ``profile``, or ``None`` when a condition fails."""
+        """Return this exclusion's finding for ``profile``, or ``None`` when a condition fails.
+
+        Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+        """
         lacks_income_categories = self._lacks_income_categories(profile)
         declaration = None if self.payer_fact is None else payer_fact_declaration(profile, self.payer_fact)
         payer_fact_holds = self._payer_fact_holds(declaration)

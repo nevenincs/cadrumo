@@ -372,13 +372,13 @@ def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict
         return {
             "declarado_tax_id": party_tax_id,
             "residence_country_code": "",
-            "community_vat_number": "",
+            "community_iva_number": "",
             "provincia_code": "",
         }
     return {
         "declarado_tax_id": "",
         "residence_country_code": country_code,
-        "community_vat_number": _community_vat_number(party_tax_id, country_code),
+        "community_iva_number": _community_iva_number(party_tax_id, country_code),
         "provincia_code": _M347_NON_RESIDENT_PROVINCIA,
     }
 
@@ -471,7 +471,7 @@ def _build_arrendamiento_inmueble_rows(
 _M347_NON_RESIDENT_PROVINCIA = "99"
 
 
-def _community_vat_number(party_tax_id: str, country_code: str) -> str:
+def _community_iva_number(party_tax_id: str, country_code: str) -> str:
     catalogue = resolve_nif_iva_catalogue()
     prefix = catalogue.prefix_for_country(country_code)
     if prefix is None:

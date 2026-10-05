@@ -1,4 +1,7 @@
-"""Canonical serialization and decoding for addressed authority components."""
+"""Canonical serialization and decoding for addressed authority components.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+"""
 
 from __future__ import annotations
 

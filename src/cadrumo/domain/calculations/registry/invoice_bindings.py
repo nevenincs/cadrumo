@@ -80,7 +80,7 @@ _InvoiceRowField = Literal[
     "rectified_base_previous",
     "declarado_tax_id",
     "residence_country_code",
-    "community_vat_number",
+    "community_iva_number",
     "provincia_code",
     "cash_accounting_mark",
     "reverse_charge_mark",

@@ -154,6 +154,9 @@ class ExportField(Protocol):
     @property
     def minimum_year(self) -> int | None: ...
 
+    @property
+    def source_refs(self) -> tuple[str, ...]: ...
+
 
 class _ExportRecord(Protocol):
     """The registry-owned declaration shape needed by the record codec."""
@@ -565,11 +568,10 @@ def render_absent_slot(field: ExportField) -> str:
     A fixed-width record gives every field its byte slot unconditionally, so an
     optional casilla the taxpayer legitimately lacks -- the birth year of a
     descendant they do not have, or a regimen activity the authority cannot
-    identify -- still has to occupy its width. AEAT's record designs fill absent
-    numeric fields with zeros ("los campos numéricos que no tengan contenido se
-    rellenarán a ceros") and text fields with their declared space padding. The
-    fill is therefore read from the registry declaration rather than chosen
-    upstream, and absence is never turned into a semantic value.
+    identify -- still has to occupy its width. The fill follows the registry's
+    padding declaration and source rules: most designs use numeric zeros,
+    whereas DR369 explicitly requires spaces for absent numeric slots too.
+    Absence is never turned into a semantic value.
 
     A field the layout declares ``required`` has no blank representation and
     refuses instead, so an omitted mandatory figure cannot reach the wire as a
@@ -590,6 +592,12 @@ def render_empty_block_slot(field: ExportField) -> str:
     obligatorio binds the occurrence, and an absent occurrence fills its block
     exactly as an absent optional slot is filled.
     """
+    if "aeat-dr-369-2021" in field.source_refs:
+        # DR369 v1.1, general notes 6-7, requires ALL unused slots to be
+        # spaces, explicitly including numeric fields and whole empty groups.
+        # Populated numeric values still use their declared padding; an actual
+        # zero is a value, whereas an absent correction is no quantity at all.
+        return " " * require_length(field)
     if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
         # This source-backed sign slot prints 0 when its amount is absent. A
         # generic optional text fill would print a space and contradict the

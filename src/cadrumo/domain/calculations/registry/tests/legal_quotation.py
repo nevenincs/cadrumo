@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .....core.corpus_text import normalise_corpus_text
+from .....core.text_fold import normalise_corpus_text
 from ..authority import PinnedAuthorityOperation
 from ..ids import LegalRefId
 
