@@ -1,0 +1,240 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-design-system'
+date: '2026-10-05'
+modified: '2026-10-05'
+body_schema: 'body-v2'
+body_hash: 'sha256:1617f2597ba424c2f0e18126ff29dc13da63723ce48ca8ae27f04335e2653727'
+related:
+  - "[[2026-10-05-desktop-design-system-plan]]"
+---
+
+# `desktop-design-system` ledger
+
+## Changes
+
+- `S01` `A` `native/desktop/frontend/scripts/bootstrap.mjs`
+- `S01` `A` `native/desktop/frontend/README.md`
+- `S01` `M` `native/desktop/frontend/package.json`
+- `S01` `M` `native/desktop/frontend/eslint.config.js`
+- `S01` `verify:` `node scripts/bootstrap.mjs on a fresh build directory, 3 s, no compilation` -> `pass`
+- `S01` `verify:` `npm run dev started from that bootstrap alone` -> `pass`
+- `S01` `verify:` `tsc --noEmit` -> `pass`
+- `S01` `verify:` `eslint .` -> `pass`
+- `S01` `verify:` `prettier --check . in the frontend` -> `pass`
+- `S02` `A` `native/desktop/frontend/scenarios.html`
+- `S02` `A` `native/desktop/frontend/src/dev/main.tsx`
+- `S02` `A` `native/desktop/frontend/src/dev/ScenarioBar.tsx`
+- `S02` `A` `native/desktop/frontend/src/dev/dev.css`
+- `S02` `A` `native/desktop/frontend/src/dev/marker.ts`
+- `S02` `A` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S02` `A` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S02` `A` `native/desktop/frontend/src/dev/fixtures/logs.ts`
+- `S02` `A` `native/desktop/frontend/src/dev/fixtures/terminal.ts`
+- `S02` `A` `native/desktop/frontend/dev/docs-fixture/plugin.ts`
+- `S02` `A` `native/desktop/frontend/dev/docs-fixture/fixture.js`
+- `S02` `A` `native/desktop/frontend/dev/docs-fixture/fixture.css`
+- `S02` `A` `native/desktop/frontend/tests/bundle.spec.ts`
+- `S02` `A` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S02` `A` `native/desktop/frontend/tests/support/strings.ts`
+- `S02` `M` `native/desktop/frontend/playwright.config.ts`
+- `S02` `M` `native/desktop/frontend/tsconfig.json`
+- `S02` `M` `native/desktop/frontend/vite.config.ts`
+- `S02` `verify:` `npm test, 39 browser tests across the product and scenarios projects` -> `pass`
+- `S02` `verify:` `hot reload: an edit to SignIn.tsx updated the open scenario page with page state kept` -> `pass`
+- `S02` `verify:` `bundle check: no scenario marker, fixture text or scenario file in the production build` -> `pass`
+- `S02` `verify:` `tsc --noEmit` -> `pass`
+- `S02` `verify:` `eslint .` -> `pass`
+- `S03` `M` `native/desktop/frontend/package.json`
+- `S03` `M` `native/desktop/frontend/package-lock.json`
+- `S03` `M` `native/desktop/frontend/vite.config.ts`
+- `S03` `M` `native/desktop/frontend/tsconfig.json`
+- `S03` `A` `native/desktop/frontend/components.json`
+- `S03` `A` `native/desktop/frontend/src/index.css`
+- `S03` `A` `native/desktop/frontend/src/theme.css`
+- `S03` `M` `native/desktop/frontend/src/tokens.css`
+- `S03` `M` `native/desktop/frontend/src/styles.css`
+- `S03` `M` `native/desktop/frontend/src/main.tsx`
+- `S03` `M` `native/desktop/frontend/eslint.config.js`
+- `S03` `M` `native/desktop/frontend/playwright.config.ts`
+- `S03` `A` `native/desktop/frontend/dev/product-boundary.ts`
+- `S03` `M` `native/desktop/frontend/dev/docs-fixture/plugin.ts`
+- `S03` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S03` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S03` `M` `native/desktop/frontend/tests/bundle.spec.ts`
+- `S03` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S03` `M` `native/desktop/frontend/README.md`
+- `S03` `verify:` `npm test, 43 browser tests` -> `pass`
+- `S03` `verify:` `a deliberate development import fails vite build and eslint` -> `pass`
+- `S03` `verify:` `tsc --noEmit` -> `pass`
+- `S03` `verify:` `eslint .` -> `pass`
+- `S03` `verify:` `prettier --check . in the frontend` -> `pass`
+- `S04` `A` `native/desktop/frontend/src/components/ui/alert.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/badge.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/button.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/cn.ts`
+- `S04` `A` `native/desktop/frontend/src/components/ui/command.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/empty.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/field.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/icon-button.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/input.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/kbd.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/label.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/popover.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/progress.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/segmented-control.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/separator.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/spinner.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/tabs.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ui/tooltip.tsx`
+- `S04` `D` `native/desktop/frontend/src/components/Icon.tsx`
+- `S04` `M` `native/desktop/frontend/src/App.tsx`
+- `S04` `M` `native/desktop/frontend/src/shell/actions.ts`
+- `S04` `verify:` `tsc --noEmit` -> `pass`
+- `S04` `verify:` `eslint . with the layer boundary rules` -> `pass`
+- `S04` `verify:` `npm test, 43 browser tests` -> `pass`
+- `S05` `A` `native/desktop/frontend/.storybook/main.ts`
+- `S05` `A` `native/desktop/frontend/.storybook/preview.tsx`
+- `S05` `A` `native/desktop/frontend/scripts/storybook.mjs`
+- `S05` `A` `native/desktop/frontend/scripts/catalogue-shots.mjs`
+- `S05` `A` `native/desktop/frontend/src/shell.css`
+- `S05` `A` `native/desktop/frontend/src/dev/index.css`
+- `S05` `A` `native/desktop/frontend/src/dev/catalogue/Frame.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/catalogue/Foundations.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/button.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/field.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/feedback.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/overlay.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/password-input.tsx`
+- `S05` `M` `native/desktop/frontend/src/dev/ScenarioBar.tsx`
+- `S05` `D` `native/desktop/frontend/src/dev/dev.css`
+- `S05` `verify:` `npm run storybook:build` -> `pass`
+- `S05` `verify:` `catalogue-shots.mjs captured sign-in and button stories in light and dark` -> `pass`
+- `S05` `verify:` `npm test, 43 browser tests` -> `pass`
+- `S06` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S06` `A` `native/desktop/frontend/src/components/SignIn.stories.tsx`
+- `S06` `A` `native/desktop/frontend/src/components/Logo.tsx`
+- `S06` `M` `native/desktop/frontend/src/App.tsx`
+- `S06` `M` `native/desktop/frontend/src/styles.css`
+- `S06` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S06` `M` `dev/locales/desktop_chrome.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `npm test, 43 browser tests including one submission, no retry, raw bytes, cleared field` -> `pass`
+- `S06` `verify:` `pytest dev/locales/tests -k desktop_chrome, 16 tests` -> `pass`
+- `S06` `verify:` `sign-in stories inspected in light and dark` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ui/command.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S07` `verify:` `npm test, 43 browser tests including palette actions and documentation search through the bridge` -> `pass`
+- `S07` `verify:` `palette inspected in the browser with documentation results` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S08` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S08` `A` `native/desktop/frontend/src/components/ui/native-select.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ui/segmented-control.tsx`
+- `S08` `M` `dev/locales/desktop_chrome.py`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `verify:` `npm test, 43 browser tests including the remembered layout and forced appearance` -> `pass`
+- `S08` `verify:` `pytest dev/locales/tests -k desktop_chrome, 16 tests` -> `pass`
+- `S08` `verify:` `settings inspected in the browser` -> `pass`
+- `S09` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Split.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ui/resize-handle.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ui/tabs.tsx`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `verify:` `npm test, 43 browser tests including rail, maximize, swap, orientation, narrow window and context menu` -> `pass`
+- `S09` `verify:` `shell inspected in the browser` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/DocsFrame.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ui/toast.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ui/alert.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ui/badge.tsx`
+- `S10` `D` `native/desktop/frontend/src/styles.css`
+- `S10` `M` `native/desktop/frontend/src/theme.css`
+- `S10` `M` `native/desktop/frontend/src/tokens.css`
+- `S10` `verify:` `npm test, 43 browser tests including every log source state and level` -> `pass`
+- `S10` `verify:` `catalogue-shots.mjs with the font and response check` -> `pass`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/keyboard.spec.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/touch.spec.ts`
+- `S11` `A` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S11` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/bundle.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S11` `M` `native/desktop/frontend/vite.config.ts`
+- `S11` `M` `native/desktop/frontend/src/App.tsx`
+- `S11` `M` `native/desktop/frontend/src/theme.css`
+- `S11` `M` `native/desktop/frontend/src/tokens.css`
+- `S11` `M` `native/desktop/frontend/src/shell/actions.ts`
+- `S11` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/command.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/kbd.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/password-input.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/resize-handle.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/segmented-control.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/tooltip.tsx`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `npm test (95 passed)` -> `pass`
+- `S11` `verify:` `npx tsc --noEmit` -> `pass`
+- `S11` `verify:` `npx eslint .` -> `pass`
+- `S11` `verify:` `npx prettier --check` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S12` `M` `native/desktop/frontend/README.md`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `A` `native/desktop/frontend/src/components/CommandPalette.stories.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/RecordList.stories.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/Settings.stories.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/Workspace.stories.tsx`
+- `S12` `M` `native/desktop/frontend/scripts/catalogue-shots.mjs`
+- `S12` `M` `native/desktop/frontend/src/App.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/Split.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S12` `verify:` `npm run check` -> `pass`
+- `S12` `verify:` `npm test (96 passed)` -> `pass`
+- `S12` `verify:` `npm run shots --filter ^shell-` -> `pass`
+- `S13` `M` `native/desktop/frontend/README.md`
+- `S13` `verify:` `node --test native/desktop/tests/shell-token.test.mjs` -> `pass`
+- `S13` `verify:` `node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S13` `verify:` `node --test native/desktop/tests/build-paths.test.mjs` -> `pass`
+- `S13` `verify:` `node --test native/desktop/tests/packaged-harness.test.mjs` -> `pass`
+- `S13` `verify:` `node --test native/desktop/tests/backend-snapshot.test.mjs` -> `pass`
+
+## Notes
+
+- `S01` npm run check fails on native/desktop/scripts/backend-snapshot.mjs, an unformatted file another session created at 20:59 on 2026-10-05; it is outside this plan's scope and was left alone.
+- `S03` The commit also carries the fixes for the P01 review findings, because they share vite.config.ts, package.json and the development entry with this Step.
+- `S03` The shadcn CLI installed its own class helper package cn 0.4.0, which the decision does not list; it was uninstalled and the primitives use the local helper.
+- `S03` The Y: drive ran out of space during the Storybook install; the install was repeated after space was freed and npm ls reports a complete tree.
+- `S04` The registry's scroll area and radio group were not kept: scrollbars are themed natively, and the radio group became the segmented control.
+- `S06` Five chrome keys were authored through dev.locales set-batch; the commit staged only those lines in the four shared catalogues, leaving another session's pending `tui.stay_signed_in` line uncommitted.
+- `S07` Steps S07 to S10 landed in one commit, 3692025e60: they recompose the same file, src/App.tsx, and could not be separated into builds that each pass.
+- `S12` The packaged run's result files were removed with their build directory before the triage was written; the README's table is from notes taken when the run was read.
+- `S13` Skipped work: no check that needs the Tauri window ran. The assembled package and the desktop host's build were removed from this machine during the session, and desktop-packaged-test needs both and an interactive desktop. The README lists each remaining window check with its reason.
