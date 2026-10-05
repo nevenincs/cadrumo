@@ -43,6 +43,7 @@ def test_every_value_except_literal_one_retains_native_policy(value: str) -> Non
         )
     assert policy.capture is capture_runtime_login
     assert policy.inventory is _native_inventory
+    assert policy.admission == "native"
 
 
 def test_core_setting_is_strict_when_unset_and_environment_enables_it(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -58,6 +59,7 @@ def test_development_policy_preserves_owner_and_credential_facility_and_retires_
         policy = compose_runtime_login_policy(
             os_owner_id="synthetic-owner", runtime_boot_id=uuid4(), stop=stop, native_inventory=_native_inventory
         )
+    assert policy.admission == "development"
     first = policy.capture(_channel("synthetic-owner"))
     assert policy.capture(_channel("synthetic-owner")).login_id == first.login_id
     assert policy.inventory is not None

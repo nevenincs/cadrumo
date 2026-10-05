@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Event
+from typing import Literal
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
@@ -13,6 +14,9 @@ from ...application.user_profile.access_contracts import Availability, LoginElig
 from ...core.config import load_settings
 from .login import capture_runtime_login
 
+type RuntimeAdmissionPolicy = Literal["native", "development"]
+"""Whether login capture requires a native desktop witness or the development override."""
+
 
 @dataclass(frozen=True)
 class RuntimeLoginPolicy:
@@ -20,6 +24,7 @@ class RuntimeLoginPolicy:
 
     capture: Callable[[RuntimeByteChannel], RuntimeLoginEvidence]
     inventory: Callable[[], RuntimeLoginInventory] | None
+    admission: RuntimeAdmissionPolicy
 
 
 @dataclass(frozen=True)
@@ -74,6 +79,6 @@ def compose_runtime_login_policy(
 ) -> RuntimeLoginPolicy:
     """Read core settings at the runtime, never an option supplied by a client."""
     if not load_settings().dev_runtime_session_override_enabled:
-        return RuntimeLoginPolicy(capture_runtime_login, native_inventory)
+        return RuntimeLoginPolicy(capture_runtime_login, native_inventory, "native")
     development = DevelopmentRuntimeLogin(os_owner_id, runtime_boot_id, stop)
-    return RuntimeLoginPolicy(development.capture, development.inventory)
+    return RuntimeLoginPolicy(development.capture, development.inventory, "development")

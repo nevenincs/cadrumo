@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:02fcd7ed34bd9814a3cf537ee12be008a62c052c983d1ca6d50e0444472db1cc'
+body_hash: 'sha256:c3749bfd4e73597c23f5361b93034f28e6283a6b49002dad4f53ce2f37a976bc'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -78,9 +78,29 @@ related:
 - `S01` `verify:` `cargo check and cargo test native/platform against generated contract.rs` -> `pass`
 - `S01` `verify:` `python -m dev.quality.import_gate` -> `fail`
 - `S06` `M` `src/cadrumo/adapters/local_runtime/containment_commands.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/supervised_protocol.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_protocol.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/supervised_streams_fixture.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/login_policy.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_login_policy.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S02` `verify:` `focused supervised, server and login-policy pytest 71 passed` -> `pass`
+- `S02` `verify:` `installed runtime and exit-reason tests 11 passed 2 platform-skipped` -> `pass`
+- `S02` `verify:` `runtime suites -m unit 876 passed 10 skipped` -> `pass`
+- `S02` `verify:` `descendant-channel negative control fails with rewiring disabled` -> `pass`
+- `S02` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S02` `verify:` `runtime suites -m integration` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
 - `S06` Repo-wide gates failed outside this Step: concurrent writers changed the governed tree mid-run and a hard finding in `test_censo_import_fact_payload.py;` check-types diagnostics name only other files while the shared .venv was being rebuilt. Mixed-owner files staged with only this Step's hunks.
 - `S01` Exit reasons apply in every launch mode, not only under --supervised; the supervisor-contract ADR scope line reads 'Without that flag ... unchanged' and needs the operator's confirmation or a supervised gate in a later Step. Import gate could not complete (import-linter exit 127, stale targets, tree changed). Mixed files committed with only this Step's lines; the HEAD `test_login_lifecycle` case was already broken by another writer's pending rename.
 - `S06` S06 content landed in commit 345b768233 (another session's commit swept the shared index); content verified identical to the staged Step.
+- `S02` Integration residue (8 failures, 3 errors in automation approval, password rotation, refusal detail, projection pages, operation secret, modelo lifecycle) sits in modules carrying another writer's uncommitted custody and operations edits and touches no symbol this Step changed; not provable against HEAD in the shared tree. Heartbeat reports `hosted_profiles` as an upper bound for in-flight operations; exact counts added as a follow-on Step. Windows plain-interpreter dev launcher does not pass pipes through its relaunch; supervised mode targets the packaged single-process host.

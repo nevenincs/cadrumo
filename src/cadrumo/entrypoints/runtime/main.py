@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import signal
 import sys
 from collections.abc import Callable, Mapping
@@ -36,6 +37,13 @@ from ...core.startup_phase_log import startup_phase
 from ...domain.calculations.registry.authority import published_authority_generation
 from .profile_connections import RuntimeProfileConnections
 from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
+from .supervised_channel import (
+    SupervisedRuntime,
+    SupervisorChannel,
+    route_diagnostics_to_redacted_logging,
+    take_supervisor_streams,
+)
+from .supervised_protocol import RuntimeReady
 
 _LOGGER = get_logger(__name__)
 
@@ -46,6 +54,11 @@ def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Name
     parser.add_argument("--storage-root", required=True, type=Path)
     parser.add_argument("--storage-identity", required=True)
     parser.add_argument("--expected-version", required=True)
+    parser.add_argument(
+        "--supervised",
+        action="store_true",
+        help="Answer the launching supervisor over standard input and output.",
+    )
     options = parser.parse_args(arguments)
     return options
 
@@ -79,16 +92,20 @@ def _serve_transport(
     stop: Event | RuntimeShutdownEvent,
     profiles: RuntimeProfileConnections,
     boot_id: UUID,
+    attach: Callable[[RuntimeTransportServer], None] | None = None,
 ) -> None:
     try:
-        RuntimeTransportServer(
+        server = RuntimeTransportServer(
             endpoint,
             product_version=installed_version,
             stop=stop,
             profiles=profiles,
             boot_id=boot_id,
             authority_generation=published_authority_generation(),
-        ).serve()
+        )
+        if attach is not None:
+            attach(server)
+        server.serve()
     except RuntimeShutdownIncompleteError:
         # Never release the owner lock while callbacks, constructors or
         # uncontained descendants still belong to this runtime.
@@ -102,6 +119,7 @@ def _serve_runtime_endpoint(
     installed_version: str,
     stop: RuntimeStop,
     previous: Mapping[signal.Signals, Any],
+    supervision: SupervisedRuntime | None,
 ) -> None:
     if endpoint.storage_identity != options.storage_identity:
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
@@ -123,10 +141,20 @@ def _serve_runtime_endpoint(
         capture_login=login_policy.capture,
         login_inventory=login_policy.inventory,
     )
+    attach = None
+    if supervision is not None:
+        ready = RuntimeReady(
+            boot_id=boot_id,
+            pid=os.getpid(),
+            version=installed_version,
+            storage_identity=endpoint.storage_identity,
+            admission=login_policy.admission,
+        )
+        attach = partial(supervision.attach, profiles=profiles, ready=ready)
     with startup_phase(_LOGGER, "registry_prepare"):
         profiles.prepare_registry()
     with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
-        _serve_transport(endpoint, installed_version, stop, profiles, boot_id)
+        _serve_transport(endpoint, installed_version, stop, profiles, boot_id, attach)
 
 
 def _release_runtime_endpoint(
@@ -154,7 +182,10 @@ def _release_runtime_endpoint(
 
 
 def _run_runtime_owner(
-    options: argparse.Namespace, stop: RuntimeStop, previous: Mapping[signal.Signals, Any]
+    options: argparse.Namespace,
+    stop: RuntimeStop,
+    previous: Mapping[signal.Signals, Any],
+    supervision: SupervisedRuntime | None,
 ) -> RuntimeExitReason:
     installed_version = version("cadrumo")
     if options.expected_version != installed_version:
@@ -170,7 +201,7 @@ def _run_runtime_owner(
     owner = RuntimeTransportCleanup(endpoint)
     primary_errors: list[BaseException] = []
     try:
-        _serve_runtime_endpoint(options, root, endpoint, installed_version, stop, previous)
+        _serve_runtime_endpoint(options, root, endpoint, installed_version, stop, previous, supervision)
     except BaseException as error:
         primary_errors.append(error)
         raise
@@ -184,9 +215,28 @@ def run(arguments: list[str] | None = None) -> int:
     """Run one user/root owner with independent profile admission; return its exit reason code."""
     options = parse_runtime_arguments(arguments)
     stop = RuntimeStop()
+    if not options.supervised:
+        return _run_runtime(options, stop, None)
+    exit_code = int(RuntimeExitReason.UNEXPECTED_FAILURE)
+    supervision: SupervisedRuntime | None = None
+    try:
+        # Take the launch streams before anything can start a child process.
+        supervision = SupervisedRuntime(stop, SupervisorChannel(take_supervisor_streams(), logger=_LOGGER))
+        route_diagnostics_to_redacted_logging(_LOGGER)
+        supervision.start()
+        exit_code = _run_runtime(options, stop, supervision)
+    except Exception as error:
+        # The supervisor receives only the reason code; the redacted log keeps the cause.
+        _LOGGER.error("supervised runtime ended by an unexpected failure", exc_info=error)
+    if supervision is not None:
+        supervision.finish(exit_code)
+    return exit_code
+
+
+def _run_runtime(options: argparse.Namespace, stop: RuntimeStop, supervision: SupervisedRuntime | None) -> int:
     previous = {number: signal.getsignal(number) for number in (signal.SIGINT, signal.SIGTERM)}
     try:
-        return int(_run_runtime_owner(options, stop, previous))
+        return int(_run_runtime_owner(options, stop, previous, supervision))
     except RuntimeRefusalError as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise

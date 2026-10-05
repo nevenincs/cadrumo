@@ -87,6 +87,21 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self._channels: dict[int, RuntimeTransportCleanup] = {}
         self._requests: set[Future[None]] = set()
         self._drain_guard = RLock()
+        self._accept_tick: float | None = None
+
+    def accept_tick_age(self) -> float | None:
+        """Return seconds since the accept loop last turned, or ``None`` before it first ran.
+
+        Each turn polls profile lifecycle and waits at most one bounded accept, so
+        a growing age means the loop itself is blocked.
+        """
+        tick = self._accept_tick
+        return None if tick is None else max(0.0, time.monotonic() - tick)
+
+    def open_connection_count(self) -> int:
+        """Return the number of accepted verified connections not yet closed."""
+        # One atomic length read; a snapshot never waits on a serving thread.
+        return len(self._channels)
 
     def serve(self) -> None:
         """Hold singleton ownership through all accepted connection cleanup."""
@@ -169,6 +184,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
 
     def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
         while not self.stop.is_set():
+            self._accept_tick = time.monotonic()
             if self.profiles is not None:
                 self.profiles.poll()
             if self.stop.is_set():

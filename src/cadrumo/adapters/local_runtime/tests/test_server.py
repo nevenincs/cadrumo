@@ -168,3 +168,36 @@ def test_duplicate_hello_keys_refuse_before_credential_frames(server) -> None:
             raw.read_exact(1, deadline=time.monotonic() + 2)
     finally:
         raw.close()
+
+
+def test_accept_loop_tick_and_open_connections_are_observable(server) -> None:
+    host, endpoint = server
+    age = host.accept_tick_age()
+    assert age is not None and age < 2
+    assert host.open_connection_count() == 0
+    client = connect(endpoint)
+    try:
+        client.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 2,
+        )
+        assert host.open_connection_count() == 1
+    finally:
+        client.close()
+    deadline = time.monotonic() + 3
+    while host.open_connection_count() and time.monotonic() < deadline:
+        time.sleep(0.02)
+    assert host.open_connection_count() == 0
+    age = host.accept_tick_age()
+    assert age is not None and age < 2
+
+
+def test_accept_tick_is_absent_before_serving(tmp_path: Path) -> None:
+    endpoint = (
+        WindowsRuntimeEndpoint(storage_root=tmp_path)
+        if sys.platform == "win32"
+        else PosixRuntimeEndpoint(storage_root=tmp_path)
+    )
+    host = RetainedRuntimeTransportServer(endpoint, product_version="test-cohort", stop=Event())
+    assert host.accept_tick_age() is None
+    assert host.open_connection_count() == 0

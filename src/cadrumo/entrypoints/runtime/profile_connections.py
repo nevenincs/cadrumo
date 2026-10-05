@@ -136,6 +136,30 @@ class RuntimeProfileConnections(
     def _admitting(self) -> bool:
         return not self._closed and not self.stop.is_set()
 
+    def hosted_profile_count(self) -> int:
+        """Return the number of profile hosts, each owning the worker its operations run in."""
+        # One atomic length read; a supervisor heartbeat never waits on admission.
+        return len(self._profiles)
+
+    def stop_if_idle(self, reason: RuntimeExitReason, *, timeout: float) -> bool:
+        """Stop for ``reason`` only when no profile worker exists; otherwise keep admitting.
+
+        Every operation runs inside a hosted profile's worker, and a host is
+        registered only under this guard after an admission check. Holding the
+        guard therefore fences admission; the stop is requested inside that
+        fence, and releasing it without a stop reopens admission unchanged.
+        A guard that stays busy past ``timeout`` counts as possible work.
+        """
+        if not self._guard.acquire(timeout=timeout):
+            return False
+        try:
+            if self._profiles:
+                return False
+            request_runtime_stop(self.stop, reason)
+            return True
+        finally:
+            self._guard.release()
+
     def prepare_registry(self) -> OperationRegistry:
         """Validate the public operation graph before transport readiness.
 
