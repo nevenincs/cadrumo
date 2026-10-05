@@ -53,6 +53,7 @@ from .source_defects import (
     note_states_only_applicability,
     validate_note_stated_applicability_declarations,
 )
+from .source_stated_composites import source_stated_composite_anchor_keys_for
 from .year_constraints import BoundedYearDeclaration, year_constraints_for
 
 __all__ = [
@@ -617,7 +618,7 @@ def resolve_render_profile_eligibility(
         fields,
         applicability_notes=applicability_notes,
         year_constraints=year_constraints,
-        signed_composite_anchor_keys=signed_composite_anchor_keys,
+        signed_composite_anchor_keys=signed_composite_anchor_keys | source_stated_composite_anchor_keys_for(source),
         excluded_absent_naturaleza_rows=(
             _source_contact_name_exclusions(fields, source)
             | _source_iban_country_exclusion(fields, source)

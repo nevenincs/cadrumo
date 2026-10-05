@@ -28,6 +28,7 @@ from .render_profile_rules import (
 )
 from .render_profile_validation import _anchor_key, _duplicates, _field_anchor
 from .source_defects import adjudicated_integer_range_for
+from .source_stated_composites import source_stated_composite_integer_digits_for
 
 
 def validate_render_profile_authority(
@@ -210,10 +211,10 @@ _COMPOSITE_DEFINITION_RE: Final[re.Pattern[str]] = re.compile(
     r"(?P<magnitude_body>.+?)\s+"
     r"(?:este campo se subdivide en dos\s*:\s*)?"
     r"(?P<integer_start>\d+)\s*-\s*(?P<integer_end>\d+)\s*parte entera del importe"
-    r"(?P<integer_qualifier> [a-z ]{1,200}?)?,\s*si no tiene contenido se consignara a ceros\.\s*"
+    r"(?P<integer_qualifier> [a-z ]{1,200}?)?[,.]\s*si no tiene contenido se consignara a ceros\.\s*"
     r"(?:(?P<interstitial>.+?)\s+)?"
     r"(?P<decimal_start>\d+)\s*-\s*(?P<decimal_end>\d+)\s*parte decimal del importe"
-    r"(?P<decimal_qualifier> [a-z ]{1,200}?)?,\s*si no tiene contenido se consignara a ceros\."
+    r"(?P<decimal_qualifier> [a-z ]{1,200}?)?[,.]\s*si no tiene contenido se consignara a ceros\."
     r"(?:\s+(?P<trailer>.+))?",
     re.IGNORECASE,
 )
@@ -255,6 +256,24 @@ _COMPOSITE_MAGNITUDE_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
     r"campo numerico en el que se consignara\b(?P<rest>.*)",
     re.IGNORECASE,
 )
+_COMPOSITE_SUM_MAGNITUDE_RE: Final[re.Pattern[str]] = re.compile(
+    r"campo numerico en el que se consignara la suma de las cantidades, sin coma decimal, "
+    r"(?P<rest>reflejadas en las percepciones integras satisfechas .+)",
+    re.IGNORECASE,
+)
+# The four source epochs of Modelo 190 state the same multi-component sum.
+# Recognize the complete clause; a changed sign or arithmetic instruction must
+# not be classified as harmless descriptive prose.
+_COMPOSITE_PERCEPTOR_SIGNED_SUM: Final[str] = (
+    'En el supuesto de que en los registros de perceptores se hubiera consignado "N" en los campos '
+    '"Signo de la percepcion integra", "Signo de la percepcion en especie", '
+    '"Signo de la percepcion integra derivada de incapacidad laboral" y '
+    '"Signo de la percepcion en especie derivada de incapacidad laboral" '
+    "(posiciones 81, 108, 255 y 282, respectivamente, del registro de tipo 2), "
+    "por corresponder al reintegro de percepciones indebida o excesivamente satisfechas en ejercicios anteriores, "
+    "dichas cantidades se computaran igualmente con signo menos al totalizar los importes que deben reflejarse "
+    "en esta suma"
+)
 _COMPOSITE_CURRENCY_RE: Final[re.Pattern[str]] = re.compile(r"los importes deben consignarse en euros", re.IGNORECASE)
 #: A total's statement that its source records' "N" amounts are summed as
 #: negative: aggregation semantics of the total, not this field's wire form.
@@ -281,6 +300,15 @@ def _validate_signed_composite_source_agreement(
     identity: RenderProfileDesignIdentity,
 ) -> None:
     """Verify a reviewed rule against source prose without deriving policy from it."""
+    exact_whole_digits = source_stated_composite_integer_digits_for(field, identity)
+    if exact_whole_digits is not None:
+        if (rule.integer_digits, rule.decimal_digits, rule.sign_policy) != (
+            exact_whole_digits,
+            2,
+            "blank-or-n-leading",
+        ):
+            raise RegistryValidationError("signed monetary composite rule conflicts with the complete source reading")
+        return
     definition = _signed_composite_source_definition(field)
     _validate_composite_sign_statement(definition)
     magnitude_digits = _validate_composite_free_prose(definition, field)
@@ -380,10 +408,16 @@ def _validate_composite_segment(
                 width=width,
             )
             continue
-        if _COMPOSITE_CURRENCY_RE.fullmatch(sentence) or _COMPOSITE_SIGNED_SUM_RE.fullmatch(sentence):
+        if (
+            _COMPOSITE_CURRENCY_RE.fullmatch(sentence)
+            or _COMPOSITE_SIGNED_SUM_RE.fullmatch(sentence)
+            or sentence == _COMPOSITE_PERCEPTOR_SIGNED_SUM
+        ):
             continue
         described = (
-            _COMPOSITE_UNSIGNED_MAGNITUDE_RE.fullmatch(sentence) or _COMPOSITE_MAGNITUDE_SUBJECT_RE.fullmatch(sentence)
+            _COMPOSITE_UNSIGNED_MAGNITUDE_RE.fullmatch(sentence)
+            or _COMPOSITE_SUM_MAGNITUDE_RE.fullmatch(sentence)
+            or _COMPOSITE_MAGNITUDE_SUBJECT_RE.fullmatch(sentence)
             if magnitude
             else None
         )

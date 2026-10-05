@@ -451,6 +451,9 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
     )
     assessed = 0
     selected_coordinates = set()
+    enrolled_coordinates = {
+        vector.evidence.coordinate for vector in proof.conformance_enrollment.materializable_vectors
+    }
     for modelo in registry.modelos:
         for revision in modelo.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
@@ -477,10 +480,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             selected_coordinates.add((str(coordinate.modelo), str(coordinate.revision)))
             assessment = proof.assess_for(coordinate)
             assert assessment.proof is None
-            assert {item.channel for item in assessment.refusals} == {
-                FilingExportProofChannel.CONFORMANCE,
-                FilingExportProofChannel.SECURE_REPLAY,
-            }
+            expected_channels = {FilingExportProofChannel.SECURE_REPLAY}
+            if coordinate not in enrolled_coordinates:
+                expected_channels.add(FilingExportProofChannel.CONFORMANCE)
+            assert {item.channel for item in assessment.refusals} == expected_channels
             assessed += 1
     assert assessed > 0
 

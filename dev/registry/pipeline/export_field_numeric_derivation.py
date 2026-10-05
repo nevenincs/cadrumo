@@ -19,6 +19,7 @@ from .export_field_derivation import (
     _INTEGER_CONTENT_RE,
     _LABELLED_ENUMERATION_VALUE_DELIMITER_RE,
     _OFFICIAL_LITERAL_RE,
+    _OFFICIAL_UNQUOTED_LITERAL_RE,
     _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE,
     _POSITIONED_INTEGER_CONTENT_RE,
     _QUOTED_DATE_PATTERN_RE,
@@ -415,6 +416,31 @@ def _numeric_enumeration_values(content: str) -> tuple[str, ...] | None:
     return None
 
 
+def _numbered_line_enumeration_values(content: str | None) -> tuple[str, ...] | None:
+    """Read a complete cell listing one numeric code and label on each line.
+
+    M309's situation and taxable-event cells use ``1. Label`` rather than
+    quoted or dash-separated codes. Keep the source line boundaries: flattening
+    first would make numbers inside a label indistinguishable from codes.
+    Introductions, continuation lines and unlabelled numbers remain refused.
+    """
+    if content is None:
+        return None
+    lines = tuple(line.strip() for line in content.splitlines() if line.strip())
+    if len(lines) < 2:
+        return None
+    values: list[str] = []
+    for line in lines:
+        match = re.fullmatch(r"([0-9]+)\.\s+\S.*", line)
+        if match is None:
+            return None
+        value = match.group(1)
+        if not isinstance(value, str):
+            return None
+        values.append(value)
+    return tuple(values)
+
+
 def _m369_closed_period_range(
     joined_field: JoinedRecordDesignField, content: str, export_record_id: str
 ) -> ExportFieldDerivation | None:
@@ -482,7 +508,9 @@ def _enumeration_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation | None:
     """Validate and derive a closed set of numeric wire values."""
-    raw_values = _numeric_enumeration_values(content)
+    raw_values = _numbered_line_enumeration_values(joined_field.parser_field.content)
+    if raw_values is None:
+        raw_values = _numeric_enumeration_values(content)
     if raw_values is None:
         return None
     parser_field = joined_field.parser_field
@@ -523,9 +551,13 @@ def _constant_numeric_derivation(
     """Derive a constant as a shape or as its exact closed value domain."""
     match = _OFFICIAL_LITERAL_RE.fullmatch(content)
     if match is None:
+        match = _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(content)
+    if match is None:
         return None
     parser_field = joined_field.parser_field
     constant_literal = match.group("literal")
+    if not constant_literal.isascii() or not constant_literal.isdecimal():
+        return None
     if len(constant_literal) != parser_field.length:
         raise RegistryValidationError(
             f"official numeric constant {joined_field.semantic_entry.export_field_id!r} has a value "

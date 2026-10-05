@@ -45,6 +45,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
@@ -54,7 +55,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from dev.corpus.text import normalise_corpus_text, resolve_anchored_extracted_unit
+from dev.corpus.text import resolve_anchored_extracted_unit
 
 from ..compiler.fact_providers import compile_registered_fact_providers
 from ..compiler.legal_grounding import (

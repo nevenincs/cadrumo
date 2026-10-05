@@ -1,2 +1,1 @@
-# A target's bootstrap authorization is retired once its generated tree is published.
-targets = []
+# A target bootstrap authorization is retired after publication and currentness.

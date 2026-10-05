@@ -1,7 +1,6 @@
 schema_version = 1
 fragment_id = "numeric-representation"
 width_17_rules = []
-signed_composite_rules = []
 literal_numeric_rules = []
 
 [[singleton_rules]]
@@ -2001,6 +2000,29 @@ source_row = 2206
 record_identity = "Tipo 2 - Registro De Perceptor"
 ordinal_absent = false
 ordinal = "34"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 161
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "Positions 145-160 contain a blank-or-N sign, thirteen integer digits and two fractional digits."
+justification = "The pinned official total-perceptions description defines sign at 145, integer magnitude at 146-158 and decimals at 159-160; negative perceptor repayments reduce the total."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 161
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
 
 [design_identity]
 modelo = "190"

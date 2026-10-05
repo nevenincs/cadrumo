@@ -64,6 +64,7 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 from ._export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
@@ -540,6 +541,7 @@ def revision_render_inputs(
     bootstrap_transport: GeneratedExportBootstrapTransport | None = None,
     filing_year: int | None = None,
     period: str | None = None,
+    source_root: Path | None = None,
 ) -> RevisionRenderInputs:
     """Derive one revision's render inputs from validated authority.
 
@@ -558,6 +560,7 @@ def revision_render_inputs(
         bootstrap_transport=bootstrap_transport,
         filing_year=filing_year,
         period=period,
+        source_root=bundled_path() if source_root is None else source_root,
     )
 
 
@@ -571,6 +574,7 @@ def _revision_render_inputs(
     bootstrap_transport: GeneratedExportBootstrapTransport | None,
     filing_year: int | None,
     period: str | None,
+    source_root: Path,
 ) -> RevisionRenderInputs:
     """Assemble canonical source facts; the caller owns authority admission."""
     if revision not in definition.revisions:
@@ -578,6 +582,11 @@ def _revision_render_inputs(
     selected = definition.revisions[revision]
     sources = catalogues.sources
     effective_year = selected.valid_from.year if filing_year is None else filing_year
+    effective_period = period
+    if filing_year is None and period is None:
+        effective_year, effective_period = _declared_render_frame(
+            selected, catalogues, modelo=modelo, revision=revision, source_ref=source_ref
+        )
     selected_source_ref, epoch = _select_record_design_source(
         selected,
         sources,
@@ -585,7 +594,7 @@ def _revision_render_inputs(
         revision=revision,
         source_ref=source_ref,
         filing_year=effective_year,
-        period=period,
+        period=effective_period,
     )
     layout_id, line_ending = _render_transport(
         selected,
@@ -609,7 +618,7 @@ def _revision_render_inputs(
     # directly, so the boundary is rebuilt rather than cast.
     design_sources: Mapping[SourceRefId, GeneratedArtifactSource] = dict(sources)
     intermediate = load_record_design_intermediate(
-        bundled_path(),
+        source_root,
         design_sources,
         source_ref=selected_source_ref,
         filing_year=effective_year,
@@ -620,13 +629,13 @@ def _revision_render_inputs(
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
         revision=selected,
-        source_root=bundled_path(),
+        source_root=source_root,
         sources=sources,
         legal_ref_ids=frozenset(catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     evidence = load_render_profile_source_evidence(
-        bundled_path() / sources[selected_source_ref].corpus_path,
+        source_root / sources[selected_source_ref].corpus_path,
         render_profile,
     )
     transport = ExportTreeTransportProfile(
@@ -652,6 +661,42 @@ def _revision_render_inputs(
     )
 
 
+def _declared_render_frame(
+    selected: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None,
+) -> tuple[int, str]:
+    """Select the first source-covered declared coordinate for static reproduction.
+
+    Historical storage can be inspected below the runtime support floor. Explicit
+    caller coordinates bypass this selection and retain their strict refusal.
+    """
+    coordinates = revision_selection_coordinates(
+        selected, assessment_horizon=coverage_assessment_horizon(catalogues), assessment_floor=2000
+    )
+    refusals: list[str] = []
+    for year, declared_period in coordinates:
+        try:
+            _select_record_design_source(
+                selected,
+                catalogues.sources,
+                modelo=modelo,
+                revision=revision,
+                source_ref=source_ref,
+                filing_year=year,
+                period=str(declared_period),
+            )
+        except ValueError as error:
+            refusals.append(str(error))
+            continue
+        return year, str(declared_period)
+    detail = refusals[-1] if refusals else "no declared coordinate"
+    raise ValueError(f"{modelo}/{revision} has no source-covered declared render frame: {detail}")
+
+
 def compare_revision_against_committed(
     authority: ValidatedRegistryAuthority,
     *,
@@ -660,6 +705,8 @@ def compare_revision_against_committed(
     source_ref: str | None = None,
     filing_year: int | None = None,
     period: str | None = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> RenderComparison:
     """Re-render one revision from its authored inputs and diff it against the shipped tree.
 
@@ -669,6 +716,7 @@ def compare_revision_against_committed(
             reported by name rather than substituted, because a silent fallback
             would compare the wrong thing and report a match.
     """
+    resolved_registry_root = bundled_path("registry", "aeat") if registry_root is None else registry_root
     inputs = revision_render_inputs(
         authority,
         modelo=modelo,
@@ -676,15 +724,17 @@ def compare_revision_against_committed(
         source_ref=source_ref,
         filing_year=filing_year,
         period=period,
+        source_root=source_root,
     )
     inheritance = select_generated_export_inheritance(
         authority,
-        bundled_path("registry", "aeat"),
+        resolved_registry_root,
         modelo=modelo,
         revision=revision,
+        source_root=source_root,
     )
 
-    committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
+    committed_root = resolved_registry_root / "modelos" / modelo / "revisions" / revision / "export"
     with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temporary_directory()) as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(

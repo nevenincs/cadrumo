@@ -134,6 +134,9 @@ def classify_comparison(
 def generated_state_inventory(
     authority: ValidatedRegistryAuthority,
     modelo_ids: tuple[str, ...],
+    *,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> tuple[tuple[GeneratedTreeState, ...], tuple[ExcludedGeneratedTree, ...]]:
     """Classify renderable revisions and retain every excluded target identity.
 
@@ -149,14 +152,21 @@ def generated_state_inventory(
     states: list[GeneratedTreeState] = []
     inapplicable: list[tuple[str, str, str]] = []
     attempted = 0
+    resolved_registry_root = bundled_path("registry", "aeat") if registry_root is None else registry_root
     for modelo_id in modelo_ids:
         for revision_id in authority.modelo(modelo_id).revisions:
             revision = str(revision_id)
             attempted += 1
-            export_root = bundled_path("registry", "aeat", "modelos", modelo_id, "revisions", revision, "export")
+            export_root = resolved_registry_root / "modelos" / modelo_id / "revisions" / revision / "export"
             committed = (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
             try:
-                comparison = compare_revision_against_committed(authority, modelo=modelo_id, revision=revision)
+                comparison = compare_revision_against_committed(
+                    authority,
+                    modelo=modelo_id,
+                    revision=revision,
+                    registry_root=resolved_registry_root,
+                    source_root=source_root,
+                )
             except (ValueError, KeyError, FileNotFoundError, OSError) as error:
                 inapplicable.append((modelo_id, revision, str(error)))
                 continue

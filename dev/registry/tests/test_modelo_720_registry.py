@@ -320,9 +320,16 @@ def test_committed_modelo_720_type_1_bindings_target_declarante_record() -> None
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "type_1")
         assert bindings, revision.id
-        # Type 1 starts at position 1 (TIPO DE REGISTRO constant) per Orden HAP/72/2013 anexo
+        # DR720 position 1 is the record literal; filing year and taxpayer
+        # identity supply the rest of the prefix without manual bindings.
+        record = next(record for record in revision.export_layouts[0].records if record.record_type == "type_1")
+        record_type = next(field for field in record.fields if field.offset == 1)
+        assert record_type.kind.value == "literal"
+        assert record_type.literal == "1"
+        assert record_type.binding is None
+        # TIPO DE SOPORTE at position 58 is the first manual field.
         first_offset = min(int(cast(int, selector_as_dict(b)["offset"])) for b in bindings)
-        assert first_offset == 1, first_offset
+        assert first_offset == 58, first_offset
 
 
 def test_committed_modelo_720_type_2_bindings_target_detalle_record() -> None:
@@ -330,8 +337,15 @@ def test_committed_modelo_720_type_2_bindings_target_detalle_record() -> None:
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "type_2")
         assert bindings, revision.id
+        # DR720 supplies the type, model, year and declarante NIF prefix from
+        # literals and identity; NIF DEL DECLARADO starts manual input at 18.
+        record = next(record for record in revision.export_layouts[0].records if record.record_type == "type_2")
+        record_type = next(field for field in record.fields if field.offset == 1)
+        assert record_type.kind.value == "literal"
+        assert record_type.literal == "2"
+        assert record_type.binding is None
         first_offset = min(int(cast(int, selector_as_dict(b)["offset"])) for b in bindings)
-        assert first_offset == 1, first_offset
+        assert first_offset == 18, first_offset
         # Type 2 closes at position 480 (PORCENTAJE DE PARTICIPACIÓN, last field of detalle record)
         ranges = sorted(
             (int(cast(int, selector_as_dict(b)["offset"])), int(cast(int, selector_as_dict(b)["length"])))

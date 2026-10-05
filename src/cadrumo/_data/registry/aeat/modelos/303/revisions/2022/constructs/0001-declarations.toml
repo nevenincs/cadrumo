@@ -136,6 +136,7 @@ bindings = [
     "modelo-303-criterio-caja-adquisiciones-cuota",
     "modelo-303-bienes-inversion-regularizacion-casilla-43",
     "modelo-303-prorrata-regularizacion-casilla-44",
+    "modelo-303-recargo-equivalencia-super-reducido-cuota",
 ]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr"]

@@ -3,16 +3,68 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Mapping
 from hashlib import sha256
 from pathlib import Path
 
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from .export_fragment_provenance_projection import loader_semantic_digest
 from .generated_export_inheritance_model import GeneratedExportInheritance, GeneratedExportInheritanceContext
+
+
+def verify_generated_export_inheritance_storage(
+    attestation: GeneratedExportInheritance,
+    registry_root: Path,
+    *,
+    modelo: str,
+    effective_layout: ExportLayoutDefinition,
+    sources: Mapping[SourceRefId, GeneratedArtifactSource],
+    _visited: frozenset[str] = frozenset(),
+) -> None:
+    """Verify static storage pins without granting baseline render or filing authority.
+
+    Degraded diagnostics retain provenance candidates through this check. A successful
+    proof still requires the full validated selector and fresh baseline source render.
+    """
+    baseline_id = str(attestation.baseline_revision_id)
+    if baseline_id in _visited:
+        raise RegistryValidationError("generated export inheritance storage has an ancestor cycle")
+    from .tree_publication_artifacts import verify_generated_export_package
+
+    baseline_root = registry_root / "modelos" / modelo / "revisions" / baseline_id
+    export_root = baseline_root / "export"
+    manifest = verify_generated_export_package(export_root)
+    manifest_digest = sha256((export_root / "_generation.provenance.json").read_bytes()).hexdigest()
+    if (
+        str(manifest.modelo) != modelo
+        or str(manifest.revision_id) != baseline_id
+        or manifest_digest != attestation.baseline_manifest_sha256
+        or bootstrap_layout_supersession_fingerprint(baseline_root) != attestation.baseline_revision_sha256
+        or loader_semantic_digest(effective_layout) != attestation.baseline_layout_sha256
+        or manifest.loader_semantic_sha256 != attestation.baseline_layout_sha256
+        or manifest.source_ref != attestation.baseline_source_ref
+        or manifest.source_sha256 != attestation.baseline_source_sha256
+    ):
+        raise RegistryValidationError("generated export inheritance storage differs from its baseline pins")
+    source = sources.get(attestation.baseline_source_ref)
+    if source is None or source.sha256 != attestation.baseline_source_sha256:
+        raise RegistryValidationError("generated export inheritance storage source pin is not current")
+    if manifest.generated_export_inheritance is not None:
+        verify_generated_export_inheritance_storage(
+            manifest.generated_export_inheritance,
+            registry_root,
+            modelo=modelo,
+            effective_layout=effective_layout,
+            sources=sources,
+            _visited=_visited | {baseline_id},
+        )
 
 
 def select_generated_export_inheritance(
@@ -21,6 +73,7 @@ def select_generated_export_inheritance(
     *,
     modelo: str,
     revision: str,
+    source_root: Path | None = None,
     _visited: frozenset[str] = frozenset(),
 ) -> GeneratedExportInheritanceContext | None:
     """Return a baseline only when the child's entire effective layout is equal.
@@ -79,6 +132,7 @@ def select_generated_export_inheritance(
             registry_root,
             modelo=modelo,
             revision=str(baseline_id),
+            source_root=source_root,
             _visited=visited,
         )
         if baseline_context is None or baseline_context.attestation != manifest.generated_export_inheritance:
@@ -89,7 +143,9 @@ def select_generated_export_inheritance(
     from .render_check import compare_export_tree_roots, revision_render_inputs
     from .source_defects import source_defects_for
 
-    baseline_inputs = revision_render_inputs(authority, modelo=modelo, revision=str(baseline_id))
+    baseline_inputs = revision_render_inputs(
+        authority, modelo=modelo, revision=str(baseline_id), source_root=source_root
+    )
     with tempfile.TemporaryDirectory(prefix="cadrumo-export-baseline-", dir=prepare_temporary_directory()) as scratch:
         fresh_root = Path(scratch) / "export"
         fresh = render_complete_export_tree(

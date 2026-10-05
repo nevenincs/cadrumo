@@ -254,6 +254,7 @@ def _classify_static_filing_revision(
             selected=selected,
             layout=layout,
             inspection=inspection,
+            authority=validated_authority,
         )
     except (OSError, RegistryValidationError, ValueError) as error:
         return _StaticConformanceEnrollmentRow(residue=_generated_provenance_residue(selected=selected, error=error))
@@ -528,6 +529,7 @@ def _verify_static_generated_provenance(
     selected: RegistryDiagnosticFilingRevision,
     layout: ExportLayoutDefinition,
     inspection: GeneratedArtifactInspection,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[bytes, ExportFragmentProvenanceManifest]:
     """Load and verify provenance using only static revision projection facts."""
     manifest_path = (
@@ -547,7 +549,9 @@ def _verify_static_generated_provenance(
         raise RegistryValidationError("generated provenance identity conflicts with the law-selected revision")
     _verify_generated_revision(
         workspace_root=workspace_root,
+        registry_root=registry_root,
         source_root=source_root,
+        authority=authority,
         inspection=inspection,
         entry=_ConformanceGenerationEntry(
             modelo=selected.modelo,

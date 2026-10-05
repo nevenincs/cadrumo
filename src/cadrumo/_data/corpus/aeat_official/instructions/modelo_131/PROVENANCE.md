@@ -5,6 +5,7 @@
 | File | Bytes | Modified | Type |
 | ---- | ----- | -------- | ---- |
 | `files/modelo-131-instrucciones.html` | 43854 | 2026-05-05 11:20 | AEAT Sede HTML — instrucciones page |
+| `files/modelo-131-instrucciones-2026-late.html` | 44126 | 2026-10-03 04:57 UTC | AEAT Sede HTML — instrucciones page, September 2026 update |
 | `files/modelo-131-presentacion-electronica-formulario.html` | 31838 | 2026-05-05 16:36 | AEAT Sede HTML — formulario page |
 | `files/modelo-131-procedure.html` | 20659 | 2026-05-05 11:20 | AEAT Sede HTML — procedure landing |
 | `files/modelo-131-recuperar-declaraciones-presentadas.html` | 13954 | 2026-05-05 16:36 | AEAT Sede HTML — recovery flow |
@@ -19,6 +20,14 @@
 - AEAT CMS ObjectId on the instrucciones page:
   `17924bffabab1710VgnVCM100000dc381e0aRCRD`.
 - Page title (verbatim): "Agencia Tributaria: Instrucciones".
+- The later instructions capture uses the same AEAT CMS ObjectId. Its
+  recorded source URL is
+  `https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html`.
+  The source declaration in
+  `registry/aeat/legal/modelo-131-2026-late-law-and-instructions.toml`
+  records retrieval on 2026-10-03, 44126 bytes and SHA-256
+  `a1f8370ac01d628910fd95ace2704c3e9e991b7265c943c0e4b4619dbf101b27`;
+  the bundled file matches that byte count and digest.
 
 ## Last-update timestamps
 
@@ -26,6 +35,10 @@
   `<time datetime="2026-04-01">01/abril/2026</time>` — AEAT
   published this page on 2026-04-01.
 - Corpus filesystem mtime: 2026-05-05.
+- The later capture's footer carries
+  `<time datetime="2026-09-11">11/septiembre/2026</time>`.
+  Its recorded retrieval date is 2026-10-03; this is a separate capture
+  from the original May instructions and does not replace their history.
 
 Implication: the corpus was fetched 2026-05-05 (or later) against
 an AEAT page last published 2026-04-01. The 34-day delay between

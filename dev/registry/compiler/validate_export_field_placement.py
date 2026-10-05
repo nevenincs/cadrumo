@@ -104,6 +104,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
     binding_export_selector,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDataType,
@@ -235,6 +236,26 @@ def _inline_field_matches_selector(field: ExportFieldDefinition, span: PlacedSpa
     )
 
 
+def _inline_fields_match_selector(fields: tuple[ExportFieldDefinition, ...], span: PlacedSpan) -> bool:
+    if len(fields) == 1:
+        return _inline_field_matches_selector(fields[0], span)
+    if len(fields) != 2 or span.data_type != "decimal" or span.signed or span.decimals is None:
+        return False
+    first, second = sorted(fields, key=lambda field: field.offset or 0)
+    if (first.value_policy, second.value_policy) != (
+        ExportValuePolicy.INTEGER_PART,
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+    ):
+        return False
+    return (
+        span.decimals > 0
+        and span.length > span.decimals
+        and (first.offset, first.length, second.offset, second.length)
+        == (span.offset, span.length - span.decimals, span.end - span.decimals, span.decimals)
+        and all((field.data_type, field.decimals, field.signed) == ("integer", None, False) for field in fields)
+    )
+
+
 def _binding_reconciliation_failures(
     *,
     prefix: str,
@@ -273,7 +294,7 @@ def _own_binding_reconciliation_failures(
         inline = _matching_inline_binding_fields(record, span)
         if not inline:
             continue
-        if len(inline) != 1 or not _inline_field_matches_selector(inline[0], span):
+        if not _inline_fields_match_selector(inline, span):
             failures.append(
                 f"{prefix}: export record {record.id!r} inline binding {span.origin!r} does not match its "
                 f"fixed selector in record {binding_record!r} at position {span.offset} "
@@ -290,7 +311,7 @@ def _foreign_binding_reconciliation_failures(
     binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
 ) -> list[str]:
     other_record_by_binding = {
-        span.origin: binding_record
+        span.origin: other_binding_record
         for other_binding_record, spans in binding_spans.items()
         if other_binding_record != binding_record
         for span in spans
@@ -371,10 +392,7 @@ def record_placed_spans(
         else tuple(
             span
             for span in binding_spans.get(record.binding_record, ())
-            if not (
-                len(inline_fields := _matching_inline_binding_fields(record, span)) == 1
-                and _inline_field_matches_selector(inline_fields[0], span)
-            )
+            if not _inline_fields_match_selector(_matching_inline_binding_fields(record, span), span)
         )
     )
     return tuple(sorted((*inline, *bound)))

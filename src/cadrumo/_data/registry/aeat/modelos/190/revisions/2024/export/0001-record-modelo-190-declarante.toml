@@ -280,11 +280,12 @@ offset = 145
 length = 16
 kind = 'casilla'
 casilla_id = 'decl.percepciones-total'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3127-2009:art-1',
     'orden-hac-1432-2024:art-unico',

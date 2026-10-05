@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
 
 from .export_field_literal_derivation import _literal_derivation
 from .export_field_numeric_derivation import _numeric_derivation
+from .export_field_numeric_source_pins import m714_numeric_values_for
 from .export_field_render_profile_derivation import (
     _profile_signed_composite_derivation,
     _render_profile_anchor,
@@ -603,6 +604,20 @@ def _numeric_field_derivation(
             joined_field,
             render_profile,
             export_record_id=export_record_id,
+        )
+    pinned_values = m714_numeric_values_for(joined_field, render_profile.design_identity)
+    if pinned_values is not None:
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=ExportValuePolicy.ENUMERATED_DIGITS if pinned_values else None,
+            allowed_values=pinned_values or None,
+            derivation_code="numeric-enumeration-v1" if pinned_values else "numeric-integer-v1",
         )
     return _numeric_derivation(
         joined_field,

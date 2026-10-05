@@ -20,16 +20,12 @@ from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_base import CorpusTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
-from dev.corpus.text import (
-    corpus_redaction_marks,
-    extracted_unit_count,
-    normalise_corpus_text,
-    resolve_anchored_extracted_unit,
-)
+from dev.corpus.text import corpus_redaction_marks, extracted_unit_count, resolve_anchored_extracted_unit
 
 from .corpus_provenance import classify_normative_corpus_provenance
 

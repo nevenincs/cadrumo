@@ -1,0 +1,217 @@
+[[revisions.2024.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2024.export_layouts.records]]
+id = 'modelo-714-page-08'
+record_type = '714-08'
+order = 7
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-6'
+offset = 1859
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-6'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-7'
+offset = 1872
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7'
+offset = 1877
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-7'
+offset = 1897
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-7'
+offset = 1898
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-7'
+offset = 1960
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-7'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-8'
+offset = 1973
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8'
+offset = 1978
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-8'
+offset = 1998
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-8'
+offset = 1999
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-8'
+offset = 2061
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-8'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-24'
+offset = 2074
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-24'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-reserved-2'
+offset = 2087
+length = 102
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-714-page-08-end'
+offset = 2189
+length = 12
+kind = 'literal'
+literal = '</T71408000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-242-2025:art-4']
+source_refs = ['aeat-dr-714-2024']
+
+[revisions.2024.export_layouts.records.row_field_casilla_ids]

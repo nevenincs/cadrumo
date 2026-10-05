@@ -37,6 +37,53 @@ from ..source_defects import PrintedPartitionDefectDeclaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+
+def _m190_total_source(epoch: str) -> tuple[SignedMonetaryCompositeRule, RecordDesignIntermediateField, RenderProfile]:
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=f"aeat-dr-190-{epoch}",
+        filing_year=2022 if epoch == "2020" else int(epoch),
+        design_epoch=epoch,
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / f"render_profiles/modelo_190/{epoch}")
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.ordinal == "12")
+    field = next(
+        field
+        for sheet in intermediate.sheets
+        for field in sheet.fields
+        if field.source_row == rule.anchor.source_row and field.sheet == rule.anchor.sheet
+    )
+    return rule, field, profile
+
+
+@pytest.mark.parametrize("epoch", ("2020", "2023", "2024", "2025"))
+def test_m190_total_is_a_source_stated_signed_amount(epoch: str) -> None:
+    rule, field, profile = _m190_total_source(epoch)
+    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    assert (field.offset, field.length, rule.integer_digits, rule.decimal_digits) == (145, 16, 13, 2)
+
+
+@pytest.mark.parametrize(
+    ("original", "altered"),
+    (
+        ("sea menor de 0", "sea mayor de 0"),
+        ("sin coma decimal", "con coma decimal"),
+        ("con signo menos al totalizar", "con signo mas al totalizar"),
+        ("146-158 Parte entera", "146-159 Parte entera"),
+        ("159-160 Parte decimal", "158-160 Parte decimal"),
+        ("será un espacio", "será un cero"),
+    ),
+)
+def test_m190_total_refuses_changed_sign_magnitude_and_partition_clauses(original: str, altered: str) -> None:
+    rule, field, profile = _m190_total_source("2020")
+    assert original in (field.content or "")
+    changed = field.model_copy(update={"content": (field.content or "").replace(original, altered, 1)})
+    with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+        _validate_signed_composite_source_agreement(rule, changed, profile.design_identity)
+
+
 _SOURCE_CONTENT = (
     "Se consignará la suma algebraica total. Este campo se subdivide en: "
     "145 SIGNO: Alfabético. Se cumplimentará cuando el resultado anteriormente mencionado sea menor de 0 "

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,6 +14,8 @@ import pytest
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
@@ -28,12 +31,42 @@ from ..cli import (
     prepare_generated_tree_invocation,
 )
 from ..export_fragment_provenance import verify_export_fragment_provenance_manifest
-from ..generated_export_inheritance import require_generated_export_inheritance, select_generated_export_inheritance
+from ..generated_export_inheritance import (
+    require_generated_export_inheritance,
+    select_generated_export_inheritance,
+    verify_generated_export_inheritance_storage,
+)
 from ..render_check import compare_export_tree_roots, revision_render_inputs
 from ..source_defects import source_defects_for
 from ..tree_publication_contracts import GeneratedExportTreeTargetStateReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_static_storage_verification_refuses_a_changed_earlier_ancestor(tmp_path: Path) -> None:
+    """Degraded provenance retains intact chains and refuses a changed physical parent."""
+    authority = compiled_bundled_authority()
+    registry_root = bundled_path("registry", "aeat")
+    context = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    assert context is not None and context.baseline_context is not None
+    selected = authority.modelo("189").revisions["2025"]
+    sources: Mapping[SourceRefId, GeneratedArtifactSource] = dict(authority.catalogues.sources)
+    candidate_root = tmp_path / "registry"
+    shutil.copytree(registry_root / "modelos/189", candidate_root / "modelos/189")
+    verify_generated_export_inheritance_storage(
+        context.attestation, candidate_root, modelo="189", effective_layout=selected.export_layouts[0], sources=sources
+    )
+    ancestor_id = context.baseline_context.attestation.baseline_revision_id
+    ancestor = candidate_root / "modelos/189/revisions" / str(ancestor_id) / "revision.toml"
+    ancestor.write_bytes(ancestor.read_bytes() + b"\n# modified storage ancestor\n")
+    with pytest.raises(RegistryValidationError, match="baseline pins"):
+        verify_generated_export_inheritance_storage(
+            context.attestation,
+            candidate_root,
+            modelo="189",
+            effective_layout=selected.export_layouts[0],
+            sources=sources,
+        )
 
 
 def _prepared(tmp_path: Path, *, revision: str = "2025"):

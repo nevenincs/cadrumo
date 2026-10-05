@@ -9,11 +9,11 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.tests.inventory import REPO_ROOT
-from dev.corpus.text import normalise_corpus_text
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.corpus_catalogue import verify_source_file

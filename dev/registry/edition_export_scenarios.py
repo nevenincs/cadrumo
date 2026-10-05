@@ -618,7 +618,6 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
     )
     return build_filing_producer_snapshot(
         modelo=Modelo("303"),
@@ -634,7 +633,7 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         ),
         amendment_evidence=None,
         refund_account=None,
-        charge_account=profile.charge_account,
+        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
         m303_filing_facts=m303_filing_facts,
     )
 
@@ -1003,7 +1002,9 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
     )
 
 
-def m200_export_scenario(period: Period) -> EditionExportScenario:
+def m200_export_scenario(
+    period: Period, *, result_disposition: ResultDisposition = ResultDisposition.NEGATIVA
+) -> EditionExportScenario:
     """A synthetic corporate draft with explicit envelope software evidence and its rate-dispatch profile bindings.
 
     The cuota-integra and tipo-gravamen formulas dispatch on the new-entity
@@ -1031,7 +1032,7 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
             # determination starts from it, so no draft can omit it.
             "DP200012:00501": Decimal("0.00"),
         },
-        producer_snapshot=_m200_producer_snapshot,
+        producer_snapshot=partial(_m200_producer_snapshot, result_disposition=result_disposition),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
     )
@@ -1099,7 +1100,7 @@ def _m200_projection_rows() -> Modelo200ProjectionRows:
     )
 
 
-def _m200_producer_snapshot() -> FilingProducerSnapshot:
+def _m200_producer_snapshot(*, result_disposition: ResultDisposition) -> FilingProducerSnapshot:
     """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
     return build_filing_producer_snapshot(
         modelo=Modelo("200"),
@@ -1108,7 +1109,7 @@ def _m200_producer_snapshot() -> FilingProducerSnapshot:
         presenter=_presenter(),
         model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
         elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.NEGATIVA,
+            result_disposition=result_disposition,
             payment=PaymentElection.INGRESO,
             refund=RefundElection.COMPENSAR,
             prior_domiciliation=PriorDomiciliationElection.KEEP,

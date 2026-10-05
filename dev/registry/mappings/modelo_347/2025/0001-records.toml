@@ -29,7 +29,7 @@ importe_q2 = "contraparte.importe-Q2"
 importe_q3 = "contraparte.importe-Q3"
 importe_q4 = "contraparte.importe-Q4"
 residence_country_code = "contraparte.pais-codigo"
-community_vat_number = "contraparte.nif-operador-comunitario"
+community_iva_number = "contraparte.nif-operador-comunitario"
 
 provincia_code = "contraparte.provincia-codigo"
 cash_accounting_mark = "contraparte.criterio-caja"

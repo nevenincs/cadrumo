@@ -170,13 +170,13 @@ def _load_catalogue_file_cached(
             f"{source_path}: retired global [parameters] catalogue section is forbidden; "
             "author a governed fact instead",
         )
-    legal = _validate_catalogue_section(
+    legal = validate_catalogue_section(
         source_path,
         raw=data.get("legal"),
         kind="legal reference",
         model=LegalReference,
     )
-    sources = _validate_catalogue_section(
+    sources = validate_catalogue_section(
         source_path,
         raw=data.get("sources") or data.get("source"),
         kind="source reference",
@@ -208,7 +208,7 @@ def _load_catalogue_file_cached(
     )
 
 
-def _validate_catalogue_section[T: BaseModel](
+def validate_catalogue_section[T: BaseModel](
     source_path: Path,
     *,
     raw: object,
@@ -311,4 +311,5 @@ __all__ = [
     "_refresh_registry_tree_fingerprints_after_load_error",
     "_toml_fingerprint",
     "_validate_legal_directory",
+    "validate_catalogue_section",
 ]

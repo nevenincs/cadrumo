@@ -798,6 +798,7 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         ("190", "2025-y-siguientes"),
         ("347", "2011-2024"),
         ("347", "2025-y-siguientes"),
+        ("720", "2013-y-siguientes"),
     } and generated_form_companion_changed(
         prepared.target_root,
         prepared.candidate_root,
@@ -1196,9 +1197,16 @@ def check_command(
     source_ref: _SOURCE,
     filing_year: _FILING_YEAR,
     period: _PERIOD,
+    expected_manifest_sha256: Annotated[
+        str | None,
+        typer.Option("--expected-manifest-sha256", help="Reviewed current manifest for an exact stale-target repair."),
+    ] = None,
 ) -> None:
     """Regenerate and validate one target without changing the published registry."""
-    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="check")
+    _run(
+        GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
+        action="check",
+    )
 
 
 @app.command("publish")

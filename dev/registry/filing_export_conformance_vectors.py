@@ -6,7 +6,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Literal, Protocol, cast
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -14,31 +14,21 @@ from cadrumo.application.calculations.observations_repository import Calculation
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.draft_review import approve_draft
 from cadrumo.application.filing.draft_review_ports import DraftReviewPorts
-from cadrumo.application.filing.producer_snapshot import (
-    FilingElectionFacts,
-    FilingProducerSnapshot,
-    GeneralFilingProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-)
 from cadrumo.application.filing.runtime import (
     ModeloOperatorProfile,
     schema_provider_from_authority,
 )
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
@@ -49,6 +39,7 @@ from cadrumo.domain.transactions.protocols import TransactionCatalogueRepository
 
 from .compiler.authority import compile_validated_authority
 from .compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from .edition_export_scenarios import m200_export_scenario
 from .filing_export_proof_contracts import (
     FilingExportConformanceRenderInputs,
     FilingExportConformanceVectorEvidence,
@@ -132,7 +123,8 @@ class PinnedConformanceVectorDocument(BaseModel):
     period_code: str = Field(min_length=1, max_length=16)
     coordinate: PinnedConformanceCoordinate
     probes: tuple[PinnedConformanceProbe, ...] = Field(min_length=1)
-    inputs: Mapping[str, Mapping[str, str]] = Field(default_factory=dict)
+    inputs: Mapping[Literal["decimal", "enum"], Mapping[str, str]] = Field(default_factory=dict)
+    boolean_inputs: Mapping[str, bool] = Field(default_factory=dict)
 
 
 def load_pinned_conformance_document(path: Path) -> PinnedConformanceVectorDocument:
@@ -244,18 +236,24 @@ def load_pinned_conformance_inputs(document: PinnedConformanceVectorDocument) ->
         The flat binding / relation input map the canonical draft builder reads.
 
     Raises:
-        RegistryValidationError: If one id is declared on both typed channels;
+        RegistryValidationError: If one id is declared on multiple typed channels;
             an ambiguous declaration is refused rather than silently resolved.
     """
     decimal_inputs = document.inputs.get("decimal", {})
     enum_inputs = document.inputs.get("enum", {})
-    collisions = sorted(set(decimal_inputs) & set(enum_inputs))
+    boolean_inputs = document.boolean_inputs
+    collisions = sorted(
+        (set(decimal_inputs) & set(enum_inputs))
+        | (set(decimal_inputs) & set(boolean_inputs))
+        | (set(enum_inputs) & set(boolean_inputs))
+    )
     if collisions:
         raise RegistryValidationError(
-            f"pinned conformance inputs declare {collisions} on both the decimal and enum channels",
+            f"pinned conformance inputs declare {collisions} on multiple typed channels",
         )
     inputs: dict[str, object] = {key: Decimal(value) for key, value in decimal_inputs.items()}
     inputs.update(enum_inputs)
+    inputs.update(boolean_inputs)
     return cast("ModeloInputs", inputs)
 
 
@@ -328,8 +326,8 @@ def _conformance_draft_review_ports() -> DraftReviewPorts:
 class ModeloSociedadesConformanceVectorBuilder:
     """Materialise value-independent Modelo 200 conformance inputs.
 
-    The draft is built from NO inputs against the law-selected snapshot, and the
-    producer snapshot carries only synthetic non-sensitive identity. Neither
+    The draft uses declared public inputs against the law-selected snapshot, and
+    the producer snapshot carries synthetic identity and source-shaped rows. Neither
     carries taxpayer truth, a source-owned calculation, a filing payload, or an
     accepted payload hash: this vector proves writer and layout MECHANICS, and
     real value arrival is the secure-replay channel's separate burden.
@@ -348,9 +346,25 @@ class ModeloSociedadesConformanceVectorBuilder:
         Returns:
             The :class:`FilingExportConformanceRenderInputs` for ``evidence``.
         """
+        authority = compile_validated_authority(self.registry_root, self.source_root)
+        with validating_governed_facts(authority):
+            return self._build_in_scope(evidence, authority=authority)
+
+    def _build_in_scope(
+        self,
+        evidence: FilingExportConformanceVectorEvidence,
+        *,
+        authority: ValidatedRegistryAuthority,
+    ) -> FilingExportConformanceRenderInputs:
+        """Construct and review public inputs under the selected candidate facts."""
         modelo_id = str(evidence.coordinate.modelo)
+        scenario = m200_export_scenario(evidence.period, result_disposition=ResultDisposition.INGRESO)
+        producer_snapshot = scenario.producer_snapshot()
+        subject_name = producer_snapshot.taxpayer_identity.full_name
+        if subject_name is None:
+            raise RegistryValidationError("Modelo 200 public conformance requires explicit subject identity")
         schema_provider = schema_provider_from_authority(
-            compile_validated_authority(self.registry_root, self.source_root),
+            authority,
             filing_year=evidence.filing_year,
             period=evidence.period,
             modelos=(modelo_id,),
@@ -358,7 +372,7 @@ class ModeloSociedadesConformanceVectorBuilder:
         draft = build_draft(
             modelo=modelo_id,
             period=evidence.period,
-            profile=ModeloOperatorProfile(tax_id=_CONFORMANCE_SUBJECT_TAX_ID, display_name=_CONFORMANCE_SUBJECT_NAME),
+            profile=ModeloOperatorProfile(tax_id=producer_snapshot.taxpayer_tax_id, display_name=subject_name),
             inputs=load_pinned_conformance_inputs(load_pinned_conformance_document(self.pinned_path)),
             schema_provider=schema_provider,
         )
@@ -378,19 +392,20 @@ class ModeloSociedadesConformanceVectorBuilder:
                 profile_activity_fingerprint=_EMPTY_STATE_FINGERPRINT,
                 category_profiles={},
             )
+        software_identity_factory = scenario.product_software_identity_factory
+        if software_identity_factory is None:
+            raise RegistryValidationError("Modelo 200 public conformance requires explicit software identity")
         return FilingExportConformanceRenderInputs(
             coordinate=evidence.coordinate,
             filing_year=evidence.filing_year,
             period=evidence.period,
             draft=approved,
-            producer_snapshot=_conformance_producer_snapshot(Modelo(modelo_id)),
+            producer_snapshot=producer_snapshot,
+            prior_domiciliation_election=scenario.prior_domiciliation_election,
+            product_software_identity=software_identity_factory(),
         )
 
 
-# The project's conventional synthetic counterparty CIF, already used across the
-# test corpus. It is checksum-valid by construction rather than shape-only, so
-# no claim is made here that it is unallocated; it is never persisted, never
-# transmitted, and never filed, and this vector introduces no new exposure.
 # The conformance vector genuinely HAS no prior filing observations and no
 # taxpayer profile activity, so both fingerprints are the digest of empty state
 # rather than a placeholder: an honest digest of nothing, not a fake digest.
@@ -401,46 +416,6 @@ _CONFORMANCE_BUCKET_ID = "filing-export-conformance"
 
 
 _CONFORMANCE_APPROVER = "filing-export-conformance-vector"
-
-
-_CONFORMANCE_SUBJECT_TAX_ID = "A58818501"
-
-
-_CONFORMANCE_SUBJECT_NAME = "Sociedad Conformance Prueba"
-
-
-def _conformance_producer_snapshot(modelo: Modelo) -> FilingProducerSnapshot:
-    """Build the synthetic non-sensitive producer snapshot for one modelo.
-
-    The modelo follows the vector's own coordinate rather than a constant, so
-    reusing this builder for another Sociedades revision cannot emit a snapshot
-    for a modelo the layout does not belong to.
-
-    Returns:
-        The :class:`FilingProducerSnapshot` for ``modelo``.
-    """
-    return build_filing_producer_snapshot(
-        modelo=modelo,
-        taxpayer_tax_id=_CONFORMANCE_SUBJECT_TAX_ID,
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=_CONFORMANCE_SUBJECT_NAME,
-            given_name=None,
-            surnames=None,
-            full_name=_CONFORMANCE_SUBJECT_NAME,
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoria Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.INGRESO,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        m303_filing_facts=None,
-        refund_account=None,
-        charge_account=None,
-    )
 
 
 def canonical_filing_export_conformance_vectors(

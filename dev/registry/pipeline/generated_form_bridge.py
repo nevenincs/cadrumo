@@ -34,6 +34,12 @@ from .tree_publication_contracts import GeneratedExportTransactionPaths
 from .tree_publication_journal import _journal_backup_path, load_generated_export_publication_journal
 
 _REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
+    ("720", "2013-y-siguientes"): (
+        "aeat-dr-720",
+        "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
+        "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d",
+        "3edef464964b5cbe0b29e9cd9b3eba90349d7fe8cfe5e85ed923b7997ce0254a",
+    ),
     ("190", "2025-y-siguientes"): (
         "aeat-dr-190-2025",
         "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d",

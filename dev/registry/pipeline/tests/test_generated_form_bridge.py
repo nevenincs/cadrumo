@@ -19,7 +19,7 @@ from ..generated_form_bridge import generated_form_companion_changed, prepare_ge
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition
 from ..tree_publication_contracts import GeneratedExportTransactionPaths
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.hex_core]
 
 _REVISION = "2025-y-siguientes"
 _SOURCE = "aeat-dr-190-2025"
@@ -28,6 +28,7 @@ _OLD_MANIFEST_SHA = "c686e3d09a298c32d8025ef9c98f26455548be20d6796df8df05c8509a4
 
 
 @pytest.mark.parametrize("defect", ["modelo", "revision", "source", "source_sha", "manifest"])
+@pytest.mark.unit
 def test_m190_bridge_refuses_an_unreviewed_repair_before_source_access(tmp_path: Path, defect: str) -> None:
     """A reviewed source pin grants no authority to repair another target or package."""
     with pytest.raises(RegistryValidationError, match="exact reviewed source and old target"):
@@ -42,6 +43,8 @@ def test_m190_bridge_refuses_an_unreviewed_repair_before_source_access(tmp_path:
         )
 
 
+@pytest.mark.integration
+@pytest.mark.timeout(900)
 def test_m190_republication_preserves_other_authority_and_closes_the_generated_form(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -86,8 +89,11 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
         source_ref=_SOURCE,
         source_sha256=_SOURCE_SHA,
         remedy="republish",
-        differing_records=2,
-        reason="The retained historical perceptor fragments precede the source-pinned repeated-row mapping.",
+        differing_records=3,
+        reason=(
+            "The retained historical package precedes the source-pinned repeated-row mapping "
+            "and the declarante's signed monetary total."
+        ),
         reconsideration_condition="Retire after both fragments and the canonical form reproduce their current inputs.",
     )
     monkeypatch.setattr(cli, "record_drift_dispositions", lambda: (disposition,))

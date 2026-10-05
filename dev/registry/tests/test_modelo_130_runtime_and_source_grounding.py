@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_temporal import BindingTemporalKind
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -19,7 +20,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from dev.corpus.text import normalise_corpus_text
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .profile_schema_support import committed_registry_validator

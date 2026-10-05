@@ -7,7 +7,7 @@ revision_id = "2023-y-siguientes"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "92f6c9e15e0b6491596672465bb5e197900ab984076a4f4823c446db17827b93"
+source_state_digest = "fb74000027aeb4da5da74002c7420c4610b58429056d6d4036f5a94aa37f931e"
 design_sources = [
     { source_ref = "aeat-dr-309-2023", sha256 = "dce9a9fca49c121cd523e4d457f3b10e07535f92481c9f2459f039608d1701b4" },
 ]
@@ -77,18 +77,6 @@ placements = [
 ]
 
 [[revisions.2023-y-siguientes.form_layouts.pages]]
-id = "m30900"
-official_ref = "M30900"
-heading_key = "modelo.schema.309.form.page.m30900.heading"
-
-[[revisions.2023-y-siguientes.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.309.form.section.general.heading"
-blocks = [
-    { kind = "field", id = "field", casilla_id = "decl.periodo" },
-]
-
-[[revisions.2023-y-siguientes.form_layouts.pages]]
 id = "m30901"
 official_ref = "M30901"
 heading_key = "modelo.schema.309.form.page.m30901.heading"
@@ -106,6 +94,14 @@ heading_key = "modelo.schema.309.form.section.identificacion-1.heading"
 official_heading = "Identificación (1)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "decl.nombre" },
+]
+
+[[revisions.2023-y-siguientes.form_layouts.pages.sections]]
+id = "devengo-2"
+heading_key = "modelo.schema.309.form.section.devengo-2.heading"
+official_heading = "Devengo (2)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "decl.periodo" },
 ]
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]

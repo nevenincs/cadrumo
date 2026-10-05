@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "9b2b24becf1f5091b7b073ea51e05ef620c3bfdb020306a9c4747c03ea1fab67"
+source_state_digest = "dfd9d22dabd9bd07480a2cb9ec69a16075cfcf24083078fbf6d92d1498b37495"
 design_sources = [
     { source_ref = "aeat-dr-714-2025", sha256 = "2245e91f8f074a73c2366b1af9eee14ae1744e7ab844709e8b84db053c7f454f" },
 ]
@@ -15,7 +15,7 @@ placements = [
     { casilla_id = "bienes.c1-total", kind = "on_form" },
     { casilla_id = "bienes.c2-total", kind = "on_form" },
     { casilla_id = "decl.ejercicio", kind = "on_form" },
-    { casilla_id = "decl.idioma", kind = "on_form" },
+    { casilla_id = "decl.idioma", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "decl.periodo", kind = "on_form" },
     { casilla_id = "declaracion-01", kind = "on_form", box_number = "01", aliases = [{ page_id = "714-09-patrimonio", section_id = "3-resumen-patrimonio-neto-base-liquidable", official_ref = "714-09 Patrimonio" }] },
     { casilla_id = "declaracion-02", kind = "on_form", box_number = "02", aliases = [{ page_id = "714-09-patrimonio", section_id = "3-resumen-patrimonio-neto-base-liquidable", official_ref = "714-09 Patrimonio" }] },
@@ -123,18 +123,6 @@ placements = [
     { casilla_id = "patrimonio.reduccion-limite-80", kind = "on_form", box_number = "39" },
     { casilla_id = "patrimonio.suma-cuotas-limite", kind = "on_form", box_number = "37" },
     { casilla_id = "patrimonio.total-cuota-integra", kind = "on_form", box_number = "40" },
-]
-
-[[revisions.2025.form_layouts.pages]]
-id = "714-00-patrimonio"
-official_ref = "714-00 Patrimonio"
-heading_key = "modelo.schema.714.form.page.714-00-patrimonio.heading"
-
-[[revisions.2025.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
-blocks = [
-    { kind = "field", id = "field", casilla_id = "decl.idioma" },
 ]
 
 [[revisions.2025.form_layouts.pages]]

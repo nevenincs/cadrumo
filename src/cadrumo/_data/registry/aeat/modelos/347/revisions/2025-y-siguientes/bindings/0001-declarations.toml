@@ -9,7 +9,7 @@
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-nif-operador-comunitario"
-provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "community_vat_number", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "community_iva_number", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [

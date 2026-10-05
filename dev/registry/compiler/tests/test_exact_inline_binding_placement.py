@@ -28,6 +28,11 @@ def _real_dpa_selector() -> tuple[ExportRecordDefinition, PlacedSpan, dict[str, 
     record = next(record for record in revision.export_layouts[0].records if record.binding_record == "DPA")
     spans = dict(binding_export_spans(revision))
     selector = next(span for span in spans["DPA"] if span.offset == 13)
+    # Published targets may already materialize this selector inline. Exercise
+    # replacing its derived slot rather than accidentally adding a duplicate.
+    record = record.model_copy(
+        update={"fields": tuple(field for field in record.fields if str(field.binding) != selector.origin)}
+    )
     return record, selector, spans
 
 

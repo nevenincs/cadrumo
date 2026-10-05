@@ -445,6 +445,7 @@ def collect_registry_status(
         resolved_registry_root,
         disposition_ledger,
         details,
+        resolved_source_root,
     )
     authority_status, recorded_digest, candidate_digest = _collect_authority_currency(
         resolved_descriptor,
@@ -504,6 +505,7 @@ def _collect_target_axis(
     registry_root: Path,
     disposition_ledger: Path | None,
     details: list[str],
+    source_root: Path,
 ) -> tuple[bool, Counter[str], tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...]]:
     """Collect target state where validation succeeded; a failed census blocks currentness."""
     if authority is None:
@@ -511,7 +513,9 @@ def _collect_target_axis(
         findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
         return True, Counter({"unreadable": 1}), findings
     try:
-        states, excluded, excluded_count, inventory_failed = _generated_target_inventory(authority, details)
+        states, excluded, excluded_count, inventory_failed = _generated_target_inventory(
+            authority, details, registry_root=registry_root, source_root=source_root
+        )
         projected = _project_generated_targets(
             authority, registry_root, disposition_ledger, states, excluded, excluded_count
         )
@@ -526,6 +530,9 @@ def _collect_target_axis(
 def _generated_target_inventory(
     authority: ValidatedRegistryAuthority,
     details: list[str],
+    *,
+    registry_root: Path,
+    source_root: Path,
 ) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], int, bool]:
     """Measure each modelo separately so one render failure cannot hide the rest."""
     from .generated_tree_state import generated_state_inventory
@@ -535,7 +542,9 @@ def _generated_target_inventory(
     unrenderable: list[str] = []
     for modelo in authority.modelos:
         try:
-            modelo_states, modelo_excluded = generated_state_inventory(authority, (str(modelo.id),))
+            modelo_states, modelo_excluded = generated_state_inventory(
+                authority, (str(modelo.id),), registry_root=registry_root, source_root=source_root
+            )
         except Exception as modelo_error:
             unrenderable.append(str(modelo.id))
             details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")

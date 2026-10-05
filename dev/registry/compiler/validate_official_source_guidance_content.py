@@ -86,10 +86,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev.corpus.text import normalise_corpus_text
 
 from .source_file_text import read_source_file_text
 from .validate_evidence import EvidenceValidator
@@ -105,7 +105,7 @@ _SUPPRESSION_VOCABULARY: Final = re.compile(r"suprim\w*|derog\w*|queda\s+sin\s+e
 #: "plazo" (deadline/window), a form of "presentar"/"presentacion", a specific
 #: "vencimiento" (expiry), or the "dias naturales" idiom AEAT deadlines are
 #: near-universally phrased in. Matched against normalised text (accent-folded,
-#: casefolded by :func:`~cadrumo.core.corpus_text.normalise_corpus_text`), so
+#: casefolded by :func:`~cadrumo.core.text_fold.normalise_corpus_text`), so
 #: no accent variants are needed here.
 _DEADLINE_VOCABULARY: Final = re.compile(r"plazo|presentaci\w*|vencimient\w*|dias?\s+natural")
 

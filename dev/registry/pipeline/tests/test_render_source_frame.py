@@ -8,10 +8,37 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
+from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from ..render_check import GeneratedExportBootstrapTransport, _render_transport, _select_record_design_source
+from ..render_check import (
+    GeneratedExportBootstrapTransport,
+    _render_transport,
+    _select_record_design_source,
+    compare_revision_against_committed,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize(
+    ("modelo", "revision", "year", "period", "ineligible_period"),
+    (("131", "2026-late", 2026, "3T", "1T"), ("303", "2024-desde-09-y-3t", 2024, "09", "01")),
+)
+def test_static_comparison_defaults_to_a_declared_source_covered_period(
+    modelo: str, revision: str, year: int, period: str, ineligible_period: str
+) -> None:
+    """Period-scoped shipped targets enter the census without widening explicit requests."""
+    authority = compiled_bundled_authority()
+    default = compare_revision_against_committed(authority, modelo=modelo, revision=revision)
+    explicit = compare_revision_against_committed(
+        authority, modelo=modelo, revision=revision, filing_year=year, period=period
+    )
+    assert default == explicit
+    assert default.semantically_reproduced
+    with pytest.raises(ValueError, match="exactly one record-design source"):
+        compare_revision_against_committed(
+            authority, modelo=modelo, revision=revision, filing_year=year, period=ineligible_period
+        )
 
 
 @pytest.mark.parametrize("modelo", ("126", "128"))

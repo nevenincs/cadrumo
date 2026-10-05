@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -128,6 +129,11 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             raise RegistryValidationError("conformance vector builder is not canonically enrolled")
         return vector.builder.build(evidence)
 
+    def prove_conformance(self, request: FilingExportConformanceRequest) -> FilingExportConformanceReceipt:
+        """Keep candidate facts explicit throughout materialization and canonical rendering."""
+        with validating_governed_facts(self._authority):
+            return prove_export_conformance(request, authority=self)
+
     def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
         """Return a complete proof or exact missing/conflicting channel refusals."""
         refusals: list[FilingExportProofRefusal] = []
@@ -194,7 +200,9 @@ class CanonicalTwoChannelFilingExportProofAuthority:
         )
         manifest, manifest_path = _verify_generated_revision(
             workspace_root=self._workspace_root,
+            registry_root=self._registry_root,
             source_root=self._source_root,
+            authority=self._authority,
             inspection=inspection,
             entry=generation_entry,
             layout=layout,
@@ -253,7 +261,7 @@ def _assess_conformance_channel(
         refusals.append(authority._refusal(coordinate, FilingExportProofChannel.CONFORMANCE))
         return None
     try:
-        return prove_export_conformance(request, authority=authority)
+        return authority.prove_conformance(request)
     except (FilingExportError, OSError, RegistryValidationError, ValueError):
         refusals.append(
             authority._refusal(
