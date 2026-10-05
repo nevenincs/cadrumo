@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../scripts/build-paths.mjs";
+import { developmentModules } from "../dev/product-boundary";
 import { SCENARIO_HOST_MARKER } from "../src/dev/marker";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+const root = local("..");
 
 /** Every file under `directory`, as paths relative to it. */
 function files(directory: string): string[] {
@@ -25,7 +27,53 @@ function carrying(directory: string, text: string): string[] {
 }
 
 // The scenario host fabricates host answers, sign-in included, so it must be
-// absent from the product, not merely unused by it.
+// absent from the product, not merely unused by it. The build refuses any
+// development module (dev/product-boundary.ts); these tests hold that refusal
+// to representative inputs and then look at what was actually built.
+
+test("the build boundary names every kind of development module", () => {
+  const at = (path: string) => resolve(root, path);
+  expect(
+    developmentModules(
+      [
+        at("src/dev/scenarioHost.ts"),
+        at("src/dev/scenarios.ts"),
+        at("src/dev/fixtures/logs.ts"),
+        at("src/dev/ScenarioBar.tsx"),
+        at("dev/docs-fixture/plugin.ts"),
+        at("src/components/ui/button.stories.tsx"),
+        `${at("src/dev/dev.css")}?direct`,
+      ],
+      root,
+    ),
+  ).toEqual([
+    "src/dev/scenarioHost.ts",
+    "src/dev/scenarios.ts",
+    "src/dev/fixtures/logs.ts",
+    "src/dev/ScenarioBar.tsx",
+    "dev/docs-fixture/plugin.ts",
+    "src/components/ui/button.stories.tsx",
+    "src/dev/dev.css",
+  ]);
+});
+
+test("the build boundary leaves product and dependency modules alone", () => {
+  const at = (path: string) => resolve(root, path);
+  expect(
+    developmentModules(
+      [
+        at("src/App.tsx"),
+        at("src/shell/host.ts"),
+        at("src/components/ui/button.tsx"),
+        at("node_modules/react/index.js"),
+        resolve(root, "../../../docs/_static/hanken-grotesk-var-latin.woff2"),
+        "\0desktop-content",
+      ],
+      root,
+    ),
+  ).toEqual([]);
+});
+
 test("the search finds the scenario marker where the scenario host lives", () => {
   expect(carrying(local("../src/dev"), SCENARIO_HOST_MARKER)).toContain(
     "marker.ts",
@@ -35,12 +83,25 @@ test("the search finds the scenario marker where the scenario host lives", () =>
 test("the production build contains no development scenario code", () => {
   const built = buildPath("desktop_frontend");
   expect(existsSync(join(built, "index.html"))).toBe(true);
-  const names = files(built);
-  expect(names.filter((name) => /scenario|docs-fixture/i.test(name))).toEqual(
-    [],
+  expect(
+    files(built).filter((name) => /scenario|docs-fixture|stories/i.test(name)),
+  ).toEqual([]);
+  // Only the files this build's entry page loads: an earlier build's files
+  // stay in the directory, and they are not the product.
+  const page = readFileSync(join(built, "index.html"), "utf8");
+  const loaded = [...page.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(
+    (match) => match[1] ?? "",
   );
-  expect(carrying(built, SCENARIO_HOST_MARKER)).toEqual([]);
-  // Text the fixtures draw, in case the marker alone were tree-shaken away.
-  for (const text of ["Simulated TUI session", "development fixture"])
-    expect(carrying(built, text)).toEqual([]);
+  expect(loaded.length).toBeGreaterThan(0);
+  for (const text of [
+    SCENARIO_HOST_MARKER,
+    "Simulated TUI session",
+    "development fixture",
+    "Simulated host",
+  ])
+    for (const file of loaded)
+      expect(
+        readFileSync(join(built, file)).includes(text),
+        `${file} carries "${text}"`,
+      ).toBe(false);
 });

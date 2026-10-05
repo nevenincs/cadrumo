@@ -2,15 +2,15 @@
 // Only scenarios.html loads this module, and the production build takes
 // index.html alone as its input, so nothing here reaches the product.
 
-import { useCallback, useMemo, useState } from "react";
+import { StrictMode, useCallback, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { identity } from "virtual:desktop-content";
+import { port as docsPort } from "virtual:docs-fixture";
 import { App } from "../App";
 import type { DocsLanguage } from "../ipc/contract";
-import "../tokens.css";
-import "../styles.css";
+import "../index.css";
 import "./dev.css";
-import { ScenarioBar } from "./ScenarioBar";
+import { ScenarioBar, type HostCallLine } from "./ScenarioBar";
 import { scenarioHost } from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
 
@@ -20,19 +20,18 @@ const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 const CALL_LIMIT = 40;
 const DEFAULT_LATENCY_MS = 600;
 
-// The documentation fixture is served by this same development server. The
-// other loopback name makes it a different origin, as the documentation is in
-// the desktop window.
+// The documentation fixture listens beside this development server on a port
+// of its own. The host name this page was opened on, with that port, is a
+// different origin, as the documentation is in the desktop window, and it is
+// reachable from wherever this page is.
 function docsOrigin(): string {
-  const name =
-    window.location.hostname === "127.0.0.1" ? "localhost" : "127.0.0.1";
-  return `${window.location.protocol}//${name}:${window.location.port}`;
+  return `${window.location.protocol}//${window.location.hostname}:${docsPort}`;
 }
 
 function docsLanguages(origin: string, search: string): DocsLanguage[] {
   return LANGUAGES.map((code) => ({
     code,
-    entry: `${origin}/docs-fixture/${code === "en" ? "" : `${code}/`}index.html?search=${search}`,
+    entry: `${origin}/${code === "en" ? "" : `${code}/`}index.html?search=${search}`,
   }));
 }
 
@@ -69,7 +68,8 @@ function Scenarios() {
     scenario: initial.scenario,
     language: initial.language,
   });
-  const [calls, setCalls] = useState<string[]>([]);
+  const [calls, setCalls] = useState<HostCallLine[]>([]);
+  const nextCall = useRef(0);
 
   const restart = useCallback((change: Partial<Omit<Run, "id">> = {}) => {
     setCalls([]);
@@ -85,8 +85,10 @@ function Scenarios() {
       },
       language: run.language,
       latencyMs: initial.latencyMs,
-      onCall: (call) =>
-        setCalls((current) => [...current, call].slice(-CALL_LIMIT)),
+      onCall: (call) => {
+        const id = nextCall.current++;
+        setCalls((current) => [...current, { id, call }].slice(-CALL_LIMIT));
+      },
     });
   }, [run, initial.latencyMs]);
 
@@ -117,4 +119,10 @@ function Scenarios() {
 document.title = `${identity.name} · scenarios`;
 const root = document.getElementById("root");
 if (!root) throw new Error("Application root is missing.");
-ReactDOM.createRoot(root).render(<Scenarios />);
+// Strict mode runs every effect twice in development, which is how a missing
+// cleanup shows itself here instead of in the desktop window.
+ReactDOM.createRoot(root).render(
+  <StrictMode>
+    <Scenarios />
+  </StrictMode>,
+);

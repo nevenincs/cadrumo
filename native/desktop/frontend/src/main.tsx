@@ -4,8 +4,7 @@ import { identity } from "virtual:desktop-content";
 import { App } from "./App";
 import { browserHost } from "./shell/host";
 import { tauriHost } from "./shell/tauriHost";
-import "./tokens.css";
-import "./styles.css";
+import "./index.css";
 
 // The generated palette is optional at build time: before its generator has
 // run the file is simply absent.

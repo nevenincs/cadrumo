@@ -100,7 +100,9 @@ test("wrong password: the refusal shows and nothing is retried", async ({
     target.getByText(label("desktop.signin.refused.invalid")),
   ).toBeVisible();
   await expect(password(target)).toHaveValue("");
-  await target.waitForTimeout(500);
+  // The status read that follows a refusal has settled and the field is
+  // usable again: nothing else was sent.
+  await expect(password(target)).toBeEnabled();
   await expect(calls(target, "signIn")).toHaveCount(1);
 });
 
@@ -111,7 +113,16 @@ test("throttled: the wait is shown and submission is held", async ({
   await password(target).fill("anything");
   await submit(target).click();
   await expect(submit(target)).toBeDisabled();
-  await expect(target.locator(".sign-in")).toContainText(/\b(30|29)\b/);
+  // The wait counts down from the host's thirty seconds.
+  const shown = async () =>
+    Number(
+      /\b(\d+)\b/.exec(
+        (await target.locator(".sign-in").textContent()) ?? "",
+      )?.[1],
+    );
+  await expect.poll(shown).toBeGreaterThan(0);
+  await expect.poll(shown).toBeLessThanOrEqual(30);
+  await expect(calls(target, "signIn")).toHaveCount(1);
 });
 
 test("profile locked: the refusal shows and the TUI handover is offered", async ({
@@ -194,13 +205,58 @@ test("a missing log file is not an empty log", async ({ page: target }) => {
   );
 });
 
-test("fixture records list every level and an unnamed source", async ({
+test("fixture records list every level, an unnamed source and a dropped count", async ({
   page: target,
 }) => {
   await open(target, "signed-in");
   await openLogs(target);
-  await expect(target.locator(".record.level-critical")).toHaveCount(1);
+  await target
+    .getByLabel(label("desktop.logs.minimum_level"))
+    .selectOption({ label: label("desktop.logs.level_all") });
+  for (const level of ["debug", "info", "warning", "error", "critical", "none"])
+    await expect(
+      target.locator(`.record.level-${level}`).first(),
+      level,
+    ).toBeVisible();
   await expect(target.locator(".record.source-manager")).toHaveCount(1);
+  await expect(target.locator(".logview-list")).toContainText(
+    label("desktop.logs.dropped", { count: 3 }),
+  );
+});
+
+test("sign-out refused: the sign-in stays and the failure shows", async ({
+  page: target,
+}) => {
+  await open(target, "sign-out-refused");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await target
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(calls(target, "signOut")).toHaveCount(1);
+  const account = target.getByRole("region", {
+    name: label("desktop.account.title"),
+  });
+  await expect(account).toContainText("timed_out");
+  await expect(
+    account.getByText(label("desktop.account.signed_in"), { exact: true }),
+  ).toBeVisible();
+});
+
+test("session failure: the failure is written into the terminal and the tab says exited", async ({
+  page: target,
+}) => {
+  await open(target, "session-failure");
+  await expect(
+    target.locator('[data-terminal="console"] .xterm-rows'),
+  ).toContainText(label("desktop.session.failed", { reason: "read_failed" }));
+  await expect(
+    target.getByRole("tab", { name: label("desktop.rail.console") }),
+  ).toContainText(label("desktop.session.exited", { code: 1 }));
 });
 
 test("the documentation fixture is another origin and answers the bridge", async ({

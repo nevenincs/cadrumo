@@ -1,5 +1,8 @@
 import { SCENARIOS, type Scenario } from "./scenarios";
 
+/** One host call, numbered so the list keeps its rows as it slides. */
+export type HostCallLine = { id: number; call: string };
+
 // The development entry's own control: it names the page as simulated and
 // switches scenario and language. It is tool chrome, not product chrome, so
 // its text is not in the locale catalogues and it never ships.
@@ -15,7 +18,7 @@ export function ScenarioBar({
   scenario: Scenario;
   language: string;
   languages: readonly string[];
-  calls: readonly string[];
+  calls: readonly HostCallLine[];
   onScenario: (id: string) => void;
   onLanguage: (language: string) => void;
   onRestart: () => void;
@@ -64,8 +67,8 @@ export function ScenarioBar({
         <div className="scenario-bar-calls">
           <span>Host calls</span>
           <ol aria-label="Host calls">
-            {calls.map((call, index) => (
-              <li key={index}>{call}</li>
+            {calls.map(({ id, call }) => (
+              <li key={id}>{call}</li>
             ))}
           </ol>
         </div>

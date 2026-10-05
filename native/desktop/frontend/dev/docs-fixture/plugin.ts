@@ -1,36 +1,49 @@
-// A stand-in documentation site for browser development, served by the Vite
-// development server only. Its pages load the real desktop bridge script, so
-// the shell talks to them exactly as it talks to the packaged documentation:
-// across origins, through postMessage. The shell reaches it on the other
-// loopback name (localhost when the shell is on 127.0.0.1, and the reverse),
-// which makes it a different origin on the same server.
+// A stand-in documentation site for browser development, served only while
+// the Vite development server runs. Its pages load the real desktop bridge
+// script, so the shell talks to them exactly as it talks to the packaged
+// documentation: across origins, through postMessage.
+//
+// It listens on a port of its own beside the development server, on the same
+// address. The same host name with another port is another origin, and it is
+// reachable from wherever the development server is, so the fixture works on
+// the machine itself and from another device alike. The port is assigned by
+// the operating system and handed to the development entry through the
+// `virtual:docs-fixture` module.
 //
 // It is a fixture: a few static pages and a search that answers from a fixed
 // list. It carries no documentation content and proves nothing about the
 // packaged documentation or the `cadrumo-docs` scheme.
 import { readFileSync } from "node:fs";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
 
-export const DOCS_FIXTURE_BASE = "/docs-fixture";
 export const DOCS_FIXTURE_LANGUAGES = ["en", "es", "ca", "hu"] as const;
 
 type Language = (typeof DOCS_FIXTURE_LANGUAGES)[number];
+type PageName = "index" | "guide" | "glossary";
+
+const MODULE = "virtual:docs-fixture";
+const RESOLVED = `\0${MODULE}`;
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
-const STATIC: Record<string, { file: string; type: string }> = {
-  "bridge.js": {
-    file: here("../../../../../docs/_static/cadrumo-desktop-bridge.js"),
-    type: "text/javascript",
-  },
-  "fixture.js": { file: here("./fixture.js"), type: "text/javascript" },
-  "fixture.css": { file: here("./fixture.css"), type: "text/css" },
-  "palette.css": {
-    file: here("../../src/generated/palette.css"),
-    type: "text/css",
-  },
-};
+const STATIC = new Map<string, { file: string; type: string }>([
+  [
+    "bridge.js",
+    {
+      file: here("../../../../../docs/_static/cadrumo-desktop-bridge.js"),
+      type: "text/javascript",
+    },
+  ],
+  ["fixture.js", { file: here("./fixture.js"), type: "text/javascript" }],
+  ["fixture.css", { file: here("./fixture.css"), type: "text/css" }],
+  [
+    "palette.css",
+    { file: here("../../src/generated/palette.css"), type: "text/css" },
+  ],
+]);
 
 const TITLES: Record<Language, { site: string; home: string; guide: string }> =
   {
@@ -56,12 +69,12 @@ const TITLES: Record<Language, { site: string; home: string; guide: string }> =
     },
   };
 
+// English sits at the root and the other languages under their code, as the
+// packaged documentation is laid out.
 const root = (language: Language) =>
-  language === "en"
-    ? `${DOCS_FIXTURE_BASE}/`
-    : `${DOCS_FIXTURE_BASE}/${language}/`;
+  language === "en" ? "/" : `/${language}/`;
 
-function page(language: Language, name: "index" | "guide" | "glossary") {
+function page(language: Language, name: PageName) {
   const titles = TITLES[language];
   const home = `${root(language)}index.html`;
   const heading =
@@ -84,10 +97,10 @@ ${Array.from({ length: 12 }, (_, index) => `<p>Filler paragraph ${index + 1}, so
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${heading}</title>
-<link rel="stylesheet" href="${DOCS_FIXTURE_BASE}/_static/palette.css">
-<link rel="stylesheet" href="${DOCS_FIXTURE_BASE}/_static/fixture.css">
-<script src="${DOCS_FIXTURE_BASE}/_static/bridge.js"></script>
-<script src="${DOCS_FIXTURE_BASE}/_static/fixture.js"></script>
+<link rel="stylesheet" href="/_static/palette.css">
+<link rel="stylesheet" href="/_static/fixture.css">
+<script src="/_static/bridge.js"></script>
+<script src="/_static/fixture.js"></script>
 </head>
 <body data-theme="auto">
 <header>
@@ -107,43 +120,76 @@ ${body}
 
 function resolvePage(path: string): string | null {
   const parts = path.split("/").filter(Boolean);
-  const first = parts[0];
   const language = (DOCS_FIXTURE_LANGUAGES as readonly string[]).includes(
-    first ?? "",
+    parts[0] ?? "",
   )
     ? (parts.shift() as Language)
     : "en";
   const file = parts.length === 0 ? "index.html" : parts.join("/");
   const name = /^(index|guide|glossary)\.html$/.exec(file)?.[1];
-  return name ? page(language, name as "index" | "guide" | "glossary") : null;
+  return name ? page(language, name as PageName) : null;
+}
+
+function answer(path: string): { type: string; body: string } | null {
+  const asset = /^\/_static\/([\w.-]+)$/.exec(path)?.[1];
+  if (asset) {
+    const entry = STATIC.get(asset);
+    return entry
+      ? { type: entry.type, body: readFileSync(entry.file, "utf8") }
+      : null;
+  }
+  const body = resolvePage(path);
+  return body === null ? null : { type: "text/html", body };
+}
+
+function listen(host: string | undefined): {
+  server: Server;
+  port: Promise<number>;
+} {
+  const server = createServer((request, response) => {
+    const found =
+      request.method === "GET" || request.method === "HEAD"
+        ? answer(new URL(request.url ?? "/", "http://fixture").pathname)
+        : null;
+    if (!found) {
+      response.writeHead(404).end();
+      return;
+    }
+    response.writeHead(200, {
+      "Content-Type": `${found.type}; charset=utf-8`,
+      "Cache-Control": "no-store",
+    });
+    response.end(request.method === "HEAD" ? undefined : found.body);
+  });
+  const port = new Promise<number>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, host, () =>
+      resolve((server.address() as AddressInfo).port),
+    );
+  });
+  return { server, port };
 }
 
 export function docsFixture(): Plugin {
+  let port: Promise<number> | null = null;
   return {
     name: "development-docs-fixture",
     apply: "serve",
-    configureServer(server) {
-      server.middlewares.use(DOCS_FIXTURE_BASE, (request, response, next) => {
-        const path = new URL(request.url ?? "/", "http://fixture").pathname;
-        const asset = /^\/_static\/([\w.-]+)$/.exec(path)?.[1];
-        const entry = asset ? STATIC[asset] : undefined;
-        let type = "text/html";
-        let body: string | null;
-        if (entry) {
-          type = entry.type;
-          body = readFileSync(entry.file, "utf8");
-        } else {
-          body = asset ? null : resolvePage(path);
-        }
-        if (body === null) {
-          next();
-          return;
-        }
-        response.statusCode = 200;
-        response.setHeader("Content-Type", `${type}; charset=utf-8`);
-        response.setHeader("Cache-Control", "no-store");
-        response.end(body);
-      });
+    configureServer(vite) {
+      const configured = vite.config.server.host;
+      const fixture = listen(
+        typeof configured === "string" ? configured : undefined,
+      );
+      port = fixture.port;
+      vite.httpServer?.once("close", () => fixture.server.close());
+    },
+    resolveId(id) {
+      if (id === MODULE) return RESOLVED;
+    },
+    async load(id) {
+      if (id !== RESOLVED) return;
+      if (!port) throw new Error("The documentation fixture is not running.");
+      return `export const port = ${await port};`;
     },
   };
 }

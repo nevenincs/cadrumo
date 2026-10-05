@@ -7,7 +7,7 @@
 // generators for the other two. Nothing is compiled: no Rust, no wheel and no
 // documentation build.
 import { spawnSync } from "node:child_process";
-import { isAbsolute, resolve } from "node:path";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -26,7 +26,10 @@ const { values } = parseArgs({
 const buildDir = resolve(
   values["build-dir"] ?? resolve(repository, "build", "desktop-frontend"),
 );
-if (!isAbsolute(buildDir)) throw new Error("The build directory must resolve.");
+// An address that binds every interface is not one a browser can open.
+const open = ["0.0.0.0", "::"].includes(values.host)
+  ? "127.0.0.1"
+  : values.host;
 
 function run(args) {
   const result = spawnSync("cmake", args, { stdio: "inherit" });
@@ -55,7 +58,7 @@ console.log(
     "",
     "  npm run dev",
     "",
-    `Application  http://${values.host}:${values["dev-port"]}/`,
-    `Scenarios    http://${values.host}:${values["dev-port"]}/scenarios.html`,
+    `Application  http://${open}:${values["dev-port"]}/`,
+    `Scenarios    http://${open}:${values["dev-port"]}/scenarios.html`,
   ].join("\n"),
 );

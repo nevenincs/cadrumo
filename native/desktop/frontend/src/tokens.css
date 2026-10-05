@@ -1,71 +1,83 @@
-/* Canonical length tokens for the shell chrome: spacing, radii, type, control
-   sizes and the handful of structural numbers the layout code reads at
-   runtime (src/shell/metrics.ts). Every length here is rem, so the whole
-   shell scales with the user's root font size; WebView2/WebKit apply the OS
-   DPI scale to CSS pixels on their own, so nothing in this file or its
-   readers does manual DPI math. The two exceptions are the hairline and the
-   focus ring: device edges rather than typographic measures, same as the
-   product site's stylesheet (docs/_static/cadrumo-docs.css). Colour values
-   live in src/generated/palette.css and src/styles.css's role mapping; this
-   file defines no colour. */
+/* The shell's length, type, radius, density, layer and motion tokens. Each has
+   one declaration, here. Colour is not declared in this file: values come
+   from src/generated/palette.css and roles from src/theme.css.
 
-:root {
-  /* ── Spacing scale (rem; the trailing number is px at the 16px default) ── */
-  --space-1: 0.0625rem;
-  --space-2: 0.125rem;
-  --space-3: 0.1875rem;
-  --space-4: 0.25rem;
-  --space-5: 0.3125rem;
-  --space-6: 0.375rem;
-  --space-7: 0.4375rem;
-  --space-8: 0.5rem;
-  --space-9: 0.5625rem;
-  --space-10: 0.625rem;
-  --space-12: 0.75rem;
-  --space-14: 0.875rem;
-  --space-16: 1rem;
-  --space-20: 1.25rem;
-  --space-24: 1.5rem;
-  --space-48: 3rem;
+   The first block is Tailwind's theme: every name in it is also a utility
+   (`h-control-md`, `text-sm`, `rounded-lg`, `size-icon-sm`), so components use
+   the utility and hand-written rules use the variable. Tailwind's own default
+   colour, type, radius and shadow scales are cleared, which leaves no second
+   scale to reach for by accident.
 
-  /* ── Radii ─────────────────────────────────────────────────────────── */
+   Every length is rem, so the shell scales with the root font size; the
+   webview applies the OS display scale to CSS pixels on its own. The hairline
+   and the focus ring are device edges, and the terminal font steps are pixel
+   numbers because xterm draws to a canvas: those are the only pixel lengths. */
+
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+
+  /* ── Spacing: one unit, a quarter rem. `p-2` and `--spacing(2)` are both
+     half a rem; the finest step in use is a quarter unit. ────────────── */
+  --spacing: 0.25rem;
+
+  /* ── Type scale, with the line height each size sets. ─────────────── */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.75rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.8125rem;
+  --text-base--line-height: 1.25rem;
+  --text-md: 1rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+
+  /* ── Radii. ──────────────────────────────────────────────────────── */
   --radius-xs: 0.125rem;
-  --radius-s: 0.25rem;
-  --radius-m: 0.375rem;
-  --radius-l: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-2xl: 0.875rem;
-  /* A radius past half of anything it's applied to; any sufficiently large
-     value rounds a pill the same way. 999px snapped to the rem grid. */
-  --radius-pill: 62.5rem;
 
-  /* ── Font sizes and line heights ──────────────────────────────────── */
-  --font-2xs: 0.625rem;
-  --font-xs: 0.6875rem;
-  --font-sm: 0.75rem;
-  --font-base: 0.8125rem;
-  --font-md: 1rem;
-  --font-lg: 1.25rem;
-  --leading-loose: 1.55;
+  /* ── Density: the height of a control, and the side of a square one.
+     xs is an icon button in a header, sm a control in a toolbar, md a
+     control in a dialog or a header row, lg a rail button or a tab row. ── */
+  --spacing-control-xs: 1.5rem;
+  --spacing-control-sm: 1.75rem;
+  --spacing-control-md: 2rem;
+  --spacing-control-lg: 2.25rem;
 
-  /* ── Control sizes: tabs, icon buttons, pane header, rail button, chips,
-     inputs. Width and height share the same step where a control is
-     square. ────────────────────────────────────────────────────────── */
-  --control-xs: 1.625rem;
-  --control-s: 1.75rem;
-  --control-m: 1.875rem;
-  --control-l: 2.125rem;
-  --control-xl: 2.25rem;
-  --rail-w: 3rem;
-  --badge-size: 1rem;
+  /* ── Icon sizes. ─────────────────────────────────────────────────── */
+  --spacing-icon-xs: 0.75rem;
+  --spacing-icon-sm: 1rem;
+  --spacing-icon-md: 1.125rem;
+  --spacing-icon-lg: 1.25rem;
 
-  /* ── Icon sizes (named steps; Icon takes a size name, not a number) ── */
-  --icon-xs: 0.75rem;
-  --icon-s: 1rem;
-  --icon-m: 1.125rem;
-  --icon-l: 1.25rem;
+  /* ── Widths of the fixed surfaces. ───────────────────────────────── */
+  --spacing-rail: 3rem;
+  --spacing-palette: 40rem;
+  --spacing-palette-max: 35rem;
+  --spacing-dialog: 24rem;
+  --spacing-settings: 21.25rem;
+  --spacing-menu: 13.75rem;
+  --spacing-field: 13.75rem;
+  --spacing-badge: 1rem;
+}
 
-  /* ── Minimum pane sizes ───────────────────────────────────────────── */
+:root {
+  /* ── Structural measures the layout code reads as pixel numbers at run
+     time (src/shell/metrics.ts). ─────────────────────────────────── */
+  --rail-w: var(--spacing-rail);
   --docs-min: 12.5rem;
   /* Also the panel's floor: enough height for a usable handful of terminal
      rows at the smallest terminal font step. */
@@ -75,46 +87,36 @@
   --split-min-b-col: 10rem;
   --panel-collapse-threshold: 3.75rem;
   --resize-step: 1.5rem;
-
-  /* ── Popover, palette and settings widths and offsets ────────────── */
-  --palette-w: 40rem;
-  --palette-max-h: 35rem;
-  --palette-edge-gap: 2rem;
-  --settings-w: 21.25rem;
-  --filter-input-w: 13.75rem;
-  --menu-min-w: 13.75rem;
+  /* How close to its end the log still counts as following the newest record. */
+  --log-follow-slack: 1.5rem;
+  /* The browser menu stand-in's own geometry, mirrored for placing it. */
   --menu-edge-gap: 1.5rem;
   --menu-sep-h: 0.5625rem;
   --menu-pad: 0.625rem;
 
-  /* ── z-index layers ───────────────────────────────────────────────── */
+  /* ── Layers, lowest first. Overlays are portalled to the document body,
+     so only these few need an order. ─────────────────────────────── */
   --layer-separator: 5;
-  --layer-tooltip: 40;
-  --layer-settings: 44;
-  --layer-backdrop: 45;
-  --layer-menu: 50;
-  --layer-toast: 60;
+  --layer-popover: 40;
+  --layer-modal: 50;
+  --layer-menu: 60;
+  --layer-tooltip: 70;
+  --layer-toast: 80;
 
-  /* ── Motion durations (not yet applied to a transition; reserved so a
-     future one has a canonical step instead of a new literal) ────────── */
+  /* ── Motion. Every transition and animation takes one of these; the base
+     layer in src/theme.css removes them under reduced motion. ─────── */
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-slow: 320ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
 
-  /* ── Shadow geometry (length only; colour stays in styles.css) ──────── */
-  --shadow-offset-y: 1rem;
-  --shadow-blur: 3rem;
-  --shadow-spread: -0.75rem;
-
-  /* ── Hairline and focus ring: device edges, not typographic measures.
-     The only lengths in this file that are not rem. ───────────────────── */
+  /* ── Device edges: the only lengths here that are not rem. ───────── */
   --hairline: 1px;
   --focus-ring: 2px;
 
-  /* ── Terminal font-size steps. xterm.js renders to a canvas and takes a
-     plain pixel number for its own font size; these back the named
-     "small"/"medium"/"large"/"x-large" preference (src/shell/layout.ts) and
-     are read at runtime through src/shell/metrics.ts, not duplicated in TS. */
+  /* ── Terminal font-size steps: pixel numbers for xterm's canvas, behind
+     the named "small"/"medium"/"large"/"x-large" preference
+     (src/shell/layout.ts), read through src/shell/metrics.ts. ─────── */
   --term-font-small: 12px;
   --term-font-medium: 13px;
   --term-font-large: 14px;

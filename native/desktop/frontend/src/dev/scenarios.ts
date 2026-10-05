@@ -11,7 +11,9 @@ export type SubmitOutcome =
   | { kind: "accept" }
   /** The host never answers, so the pending presentation stays up. */
   | { kind: "pending" }
-  | { kind: "refuse"; code: string; retryAfterSeconds: number | null };
+  | { kind: "refuse"; code: string; retryAfterSeconds: number | null }
+  /** The command itself fails: the call rejects with a host failure. */
+  | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
   id: string;
@@ -27,13 +29,18 @@ export type Scenario = {
     /** Status reads reject with this host failure. */
     statusFailure?: HostErrorCode;
     submit: SubmitOutcome;
+    /** Sign-out answers, or rejects with this host failure. */
+    signOutFailure?: HostErrorCode;
+    /** The active profile's name; null when the host knows none. */
+    profile?: string | null;
   };
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
   /** Terminal sessions: fixture output, a session that starts and prints
-   * nothing, a session that fails to start, or one that never starts. */
-  terminals: "fixture" | "silent" | "failed" | "pending";
+   * nothing, one that starts and then fails, one that fails to start, or one
+   * that never starts. */
+  terminals: "fixture" | "silent" | "failing" | "failed" | "pending";
   /** How the documentation fixture answers a search. */
   docsSearch: "results" | "empty" | "slow" | "failed";
   /** Clipboard and external-link calls: served from memory, or refused. */
@@ -138,6 +145,7 @@ export const SCENARIOS: readonly Scenario[] = [
         code: "RUNTIME_UNAVAILABLE",
         retryAfterSeconds: null,
       },
+      profile: null,
     },
     terminals: "silent",
   },
@@ -192,7 +200,7 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: {
       status: { ...signedOut, state: "unknown" },
       statusFailure: "timed_out",
-      submit: { kind: "refuse", code: "timed_out", retryAfterSeconds: null },
+      submit: { kind: "fail", code: "timed_out" },
     },
     logs: "unreadable",
     terminals: "failed",
@@ -210,6 +218,30 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     logs: "missing",
+  },
+  {
+    ...base,
+    id: "sign-out-refused",
+    title: "Sign-out refused",
+    summary:
+      "Signed in; the sign-out command fails, so the sign-in stays and the failure shows.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+      signOutFailure: "timed_out",
+    },
+  },
+  {
+    ...base,
+    id: "session-failure",
+    title: "Session failure",
+    summary:
+      "Signed in; each session starts, prints a line, then fails and exits.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    terminals: "failing",
   },
 ];
 

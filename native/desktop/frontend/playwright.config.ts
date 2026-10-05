@@ -36,7 +36,14 @@ export default defineConfig({
     },
   ],
   webServer: [
-    { command: "npm run preview", url: preview, reuseExistingServer: false },
+    {
+      // Built by the run that tests it, so the product project and the
+      // bundle check never read a stale build.
+      command: "npx vite build && npx vite preview",
+      url: preview,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
     {
       command: "npm run dev",
       url: `${development}/scenarios.html`,

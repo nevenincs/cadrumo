@@ -1,11 +1,15 @@
 import { buildPath } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin";
+import { productBoundary } from "./dev/product-boundary";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
+const source = fileURLToPath(new URL("./src", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
@@ -28,6 +32,9 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: buildPath("desktop_frontend"),
       emptyOutDir: false,
+      // The product has one entry. The development entry beside it is never
+      // an input, and the boundary plugin refuses its modules by any route.
+      rolldownOptions: { input: { index: resolve(root, "index.html") } },
     },
     server: {
       host: ports.host,
@@ -35,7 +42,7 @@ export default defineConfig(({ mode }) => {
       port: ports.devPort,
       strictPort: true,
       // The shell's typefaces are the documentation's own files, outside
-      // this project; the development server serves nothing else from there.
+      // this project, so that directory of public assets is served as well.
       fs: { allow: [root, docsStatic] },
     },
     preview: {
@@ -44,9 +51,12 @@ export default defineConfig(({ mode }) => {
       port: ports.previewPort,
       strictPort: true,
     },
+    resolve: { alias: { "@": source } },
     plugins: [
       react(),
+      tailwindcss(),
       docsFixture(),
+      productBoundary(root),
       {
         name: "canonical-desktop-content",
         transformIndexHtml() {

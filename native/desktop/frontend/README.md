@@ -82,6 +82,8 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `empty`               | Signed in with no log records, silent sessions and no search results     |
 | `error`               | Refused environment and status reads, an unreadable log, failed sessions |
 | `logs-missing`        | A log source that reports missing, which is not an empty log             |
+| `sign-out-refused`    | Signed in, with a sign-out command that fails                            |
+| `session-failure`     | Sessions that start, print a line, then fail and exit                    |
 
 Select one in the control or in the address:
 
@@ -100,13 +102,18 @@ The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
 see an exited session, then Enter to restart it.
 
-The documentation pane shows a stand-in documentation site served by the same
-development server under `/docs-fixture/`. The shell reaches it on the other
-loopback name (`localhost` when the shell is on `127.0.0.1`, and the reverse),
-so it is a different origin, as the documentation is in the desktop window. Its
-pages load the real desktop bridge script from `docs/_static/`, so navigation,
-search, appearance, zoom, shortcuts and context menus cross a real
-`postMessage` boundary.
+The documentation pane shows a stand-in documentation site. The development
+server starts it beside itself, on the same address and a port the operating
+system assigns. The same host name with another port is a different origin, as
+the documentation is in the desktop window, and it is reachable from wherever
+the page is opened, another device included. Its pages load the real desktop
+bridge script from `docs/_static/`, so navigation, search, appearance, zoom,
+shortcuts and context menus cross a real `postMessage` boundary.
+
+To open the page from another device, bootstrap with an address that device can
+reach, for example `npm run bootstrap -- --host 0.0.0.0`, and name the host in
+`CADRUMO_DESKTOP_ALLOWED_HOSTS`, a comma-separated list read from the
+environment or from `.env.local`.
 
 ### What a scenario proves
 
@@ -116,18 +123,21 @@ shell because the native popup is not simulated, and its clipboard is a
 variable. Nothing seen here verifies the Tauri host, the runtime, the packaged
 documentation or the `cadrumo-docs` scheme.
 
-The scenario host cannot reach the product. Only `scenarios.html` loads it, the
-production build takes `index.html` alone as its input, and `tests/bundle.spec.ts`
-searches the built output for it.
+The scenario host cannot reach the product. Only `scenarios.html` loads it, and
+the production build declares `index.html` as its one input. The build itself
+refuses any module under `src/dev/` or `dev/` and any story
+(`dev/product-boundary.ts`), the linter refuses the import, and
+`tests/bundle.spec.ts` checks the built output.
 
 ## Check and test
 
 ```sh
 npm run check   # type check, lint and formatting
-npm test        # build, then the browser tests
+npm test        # the browser tests, against a fresh production build
 ```
 
-`npm test` builds the production bundle and runs two Playwright projects:
+The test run builds the production bundle itself, then runs two Playwright
+projects:
 
 - `product` drives the production build through `vite preview`, with no host or
   with a faked Tauri transport (`tests/desktop.spec.ts`), and checks the built
@@ -135,7 +145,8 @@ npm test        # build, then the browser tests
 - `scenarios` drives `/scenarios.html` on the development server
   (`tests/scenarios/`). It reuses a development server that is already running.
 
-Run one project with `npx playwright test --project=scenarios`.
+Run one project with `npm test -- --project=scenarios`. Both servers start for
+either project, and the build runs each time.
 
 ## Layout
 
@@ -144,6 +155,7 @@ Run one project with `npx playwright test --project=scenarios`.
 | `index.html`, `src/main.tsx` | The production entry                                                 |
 | `scenarios.html`, `src/dev/` | The development entry, the scenario host and its fixtures            |
 | `dev/docs-fixture/`          | The stand-in documentation site and the server plugin that serves it |
+| `dev/product-boundary.ts`    | The build check that keeps development modules out of the product    |
 | `src/App.tsx`, `src/shell/`  | Composition, the action registry, layout state and the host port     |
 | `src/components/`            | The shell's components                                               |
 | `src/ipc/contract.ts`        | The published host and bridge contract, types only                   |

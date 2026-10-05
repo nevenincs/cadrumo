@@ -29,10 +29,10 @@ export function ContextMenu({
   // Geometry for clamping the menu to the viewport before it ever paints:
   // the CSS rules (.native-menu, .menu-sep) own the real layout, these
   // mirror them in pixels for the position math below.
-  const minWidth = useMetric("--menu-min-w", 220);
+  const minWidth = useMetric("--spacing-menu", 220);
   const edgeGap = useMetric("--menu-edge-gap", 24);
-  const viewportGutter = useMetric("--space-4", 4);
-  const itemHeight = useMetric("--control-m", 30);
+  const viewportGutter = useMetric("--spacing", 4);
+  const itemHeight = useMetric("--spacing-control-md", 32);
   const separatorHeight = useMetric("--menu-sep-h", 9);
   const padding = useMetric("--menu-pad", 10);
 

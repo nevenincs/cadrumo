@@ -1,0 +1,178 @@
+/* The shell's colour roles, elevation and base styles.
+
+   Colour values come only from the generated documentation palette
+   (src/generated/palette.css): light on :root, dark under
+   [data-scheme="dark"], on the root or on any area that is always dark. This
+   file maps those values to roles and hands the roles to Tailwind, so a
+   component says `bg-card` or `text-muted-foreground` and never a value.
+
+   Roles are declared on every scheme boundary, and Tailwind reads them
+   `inline`, so a utility resolves its role on the element that uses it: an
+   always-dark area inside a light window gets dark values. The only colour
+   values written here are the alphas of shadows and scrims. */
+
+@custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
+
+@layer base {
+  :root,
+  [data-scheme] {
+    /* Surfaces. */
+    --background: var(--color-background-primary);
+    --chrome: var(--color-background-secondary);
+    --card: var(--color-card-background);
+    --popover: var(--color-card-background);
+    --muted: var(--color-background-secondary);
+    --secondary: var(--color-background-hover);
+    /* The surface a control takes when hovered or chosen. */
+    --accent: var(--color-background-hover);
+
+    /* Text. */
+    --foreground: var(--color-foreground-primary);
+    --card-foreground: var(--color-foreground-primary);
+    --popover-foreground: var(--color-foreground-primary);
+    --secondary-foreground: var(--color-foreground-primary);
+    --accent-foreground: var(--color-foreground-primary);
+    --muted-foreground: var(--color-foreground-secondary);
+    --faint: var(--color-foreground-muted);
+
+    /* The strongest action is ink on paper, as the documentation's own
+       brand is; the terracotta is kept for emphasis and focus. */
+    --primary: var(--color-brand-primary);
+    --primary-foreground: var(--color-background-primary);
+    --brand: var(--color-brand-content);
+    --ring: var(--cadrumo-accent);
+
+    /* Lines. */
+    --border: var(--color-background-border);
+    --border-strong: var(--color-foreground-border);
+    --input: var(--color-foreground-border);
+
+    /* Status. */
+    --destructive: var(--cadrumo-accent-danger);
+    --warning: var(--cadrumo-accent-warning);
+    --success: var(--cadrumo-accent-success);
+
+    /* Elevation and scrim: the only colour values this file writes. */
+    --scrim: rgb(0 0 0 / 22%);
+    --elevation-raised:
+      0 0 0 var(--hairline) var(--border), 0 0.0625rem 0.125rem rgb(0 0 0 / 8%);
+    --elevation-overlay:
+      0 0 0 var(--hairline) rgb(0 0 0 / 5%),
+      0 1rem 3rem -0.75rem rgb(0 0 0 / 30%);
+
+    color: var(--foreground);
+  }
+  :root {
+    color-scheme: light;
+  }
+  [data-scheme="dark"] {
+    --scrim: rgb(0 0 0 / 48%);
+    --elevation-raised:
+      0 0 0 var(--hairline) var(--border), 0 0.0625rem 0.125rem rgb(0 0 0 / 30%);
+    --elevation-overlay:
+      0 0 0 var(--hairline) rgb(255 255 255 / 6%),
+      0 1rem 3rem -0.75rem rgb(0 0 0 / 60%);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-chrome: var(--chrome);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
+
+  --shadow-raised: var(--elevation-raised);
+  --shadow-overlay: var(--elevation-overlay);
+
+  /* The documentation's own type stacks, from the generated palette. */
+  --font-sans: var(--font-stack);
+  --font-serif: var(--font-stack--headings);
+  --font-mono: var(--font-stack--monospace);
+
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--motion-ease);
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../../../../docs/_static/hanken-grotesk-var-latin.woff2")
+    format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../../../../docs/_static/jetbrains-mono-400-latin.woff2")
+    format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("../../../../docs/_static/newsreader-400-latin.woff2")
+    format("woff2");
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    overflow: hidden;
+    background: var(--chrome);
+    color: var(--foreground);
+    font-family: var(--font-stack);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+  /* One focus treatment for every control: a ring in the accent, drawn only
+     for keyboard focus. A component may move it inward, never restyle it. */
+  :focus-visible {
+    outline: var(--focus-ring) solid var(--ring);
+    outline-offset: var(--focus-ring);
+  }
+  kbd {
+    font-family: inherit;
+  }
+
+  /* Motion is decoration here, never information: with reduced motion asked
+     for, every transition and animation ends at once. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

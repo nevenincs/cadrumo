@@ -151,4 +151,18 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
     "Operation settled as UNKNOWN after an ambiguous interruption",
   ),
   python(13, 6900, "INFO", "cadrumo.entrypoints.tui.app", "Idle"),
+  {
+    seq: 14,
+    source: "python",
+    timestamp: "",
+    timestampMs: null,
+    level: null,
+    logger: null,
+    message: "A line the format did not match: no timestamp, level or logger",
+    detail: null,
+    process: null,
+  },
 ];
+
+/** Records the fixture reports as lost to ring overflow before delivery. */
+export const FIXTURE_DROPPED = 3;

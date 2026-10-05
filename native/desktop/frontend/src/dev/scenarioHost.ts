@@ -16,6 +16,7 @@ import type {
 import type { Host } from "../shell/host";
 import {
   AVAILABLE,
+  FIXTURE_DROPPED,
   FIXTURE_RECORDS,
   MISSING,
   UNREADABLE,
@@ -60,7 +61,10 @@ export function scenarioHost(
   const status = (): SignInStatus => ({
     ...scenario.signIn.status,
     state: presence,
-    active_profile: FIXTURE_PROFILE,
+    active_profile:
+      scenario.signIn.profile === undefined
+        ? FIXTURE_PROFILE
+        : scenario.signIn.profile,
   });
 
   return {
@@ -83,9 +87,7 @@ export function scenarioHost(
       say("signInStatus");
       if (scenario.signIn.statusPending) return never();
       if (scenario.signIn.statusFailure)
-        return Promise.reject(
-          failure(scenario.signIn.statusFailure, "environment"),
-        );
+        return Promise.reject(failure(scenario.signIn.statusFailure, "cli"));
       return Promise.resolve(status());
     },
 
@@ -94,6 +96,7 @@ export function scenarioHost(
       const outcome = scenario.signIn.submit;
       if (outcome.kind === "pending") return never();
       await wait(options.latencyMs);
+      if (outcome.kind === "fail") throw failure(outcome.code, "cli");
       if (outcome.kind === "refuse")
         return {
           kind: "refused",
@@ -107,8 +110,8 @@ export function scenarioHost(
     async signOut() {
       say("signOut");
       await wait(options.latencyMs);
-      if (scenario.services === "refused")
-        throw failure("timed_out", "environment");
+      if (scenario.signIn.signOutFailure)
+        throw failure(scenario.signIn.signOutFailure, "cli");
       presence = "absent";
       return {
         remainingAccess: { automationEnabled: true, automationRevoked: false },
@@ -128,21 +131,39 @@ export function scenarioHost(
     subscribeLogs(listener) {
       say("subscribeLogs");
       if (scenario.logs === "pending") return never();
-      const batch: LogBatch =
+      // The backlog arrives over two batches, the second reporting records
+      // the ring had already dropped, as a large backlog does.
+      const split = Math.ceil(FIXTURE_RECORDS.length / 2);
+      const batches: LogBatch[] =
         scenario.logs === "records"
-          ? { records: [...FIXTURE_RECORDS], dropped: 0, state: AVAILABLE }
-          : {
-              records: [],
-              dropped: 0,
-              state:
-                scenario.logs === "empty"
-                  ? AVAILABLE
-                  : scenario.logs === "missing"
-                    ? MISSING
-                    : UNREADABLE,
-            };
+          ? [
+              {
+                records: FIXTURE_RECORDS.slice(0, split),
+                dropped: 0,
+                state: AVAILABLE,
+              },
+              {
+                records: FIXTURE_RECORDS.slice(split),
+                dropped: FIXTURE_DROPPED,
+                state: AVAILABLE,
+              },
+            ]
+          : [
+              {
+                records: [],
+                dropped: 0,
+                state:
+                  scenario.logs === "empty"
+                    ? AVAILABLE
+                    : scenario.logs === "missing"
+                      ? MISSING
+                      : UNREADABLE,
+              },
+            ];
       let subscribed = true;
-      window.setTimeout(() => subscribed && listener(batch), 0);
+      window.setTimeout(() => {
+        for (const batch of batches) if (subscribed) listener(batch);
+      }, 0);
       return Promise.resolve(() => {
         subscribed = false;
       });

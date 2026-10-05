@@ -42,6 +42,9 @@ function withoutControlSequences(text: string): string {
       continue;
     }
     at++;
+    // An SS3 sequence (application-mode function and arrow keys) takes one
+    // more character after its introducer.
+    if (text[at] === "O") at++;
     if (text[at] !== "[") continue;
     // A CSI sequence ends at its final byte, "@" through "~".
     let code: number;
@@ -79,7 +82,8 @@ function lineShell(
           prompt();
         } else if (char === "\x7f" || char === "\b") {
           if (!line) continue;
-          line = line.slice(0, -1);
+          // By code point, so a character outside the basic plane goes whole.
+          line = [...line].slice(0, -1).join("");
           io.write("\b \b");
         } else if (char === "\x03") {
           line = "";
@@ -168,7 +172,7 @@ export function openFixtureTerminal(
   kind: TerminalKind,
   size: Size,
   listener: (event: TerminalEvent) => void,
-  mode: "fixture" | "silent",
+  mode: "fixture" | "silent" | "failing",
 ): TerminalSession {
   let open = true;
   const io: Io = {
@@ -192,6 +196,12 @@ export function openFixtureTerminal(
     if (!open) return;
     listener({ type: "started" });
     running?.start();
+    if (mode !== "failing") return;
+    // A failure mid-session: output, then the failure, then the exit, in the
+    // order the host reports a read failure.
+    io.write("Simulated session: output before a failure.\r\n");
+    listener({ type: "failed", message: "read_failed" });
+    io.exit(1);
   }, 0);
   return {
     write(bytes) {
