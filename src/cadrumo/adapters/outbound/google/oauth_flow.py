@@ -46,6 +46,7 @@ from .errors import (
     GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
+    GoogleAuthValidationError,
     google_auth_no_action_verdict,
 )
 from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
@@ -60,6 +61,11 @@ if TYPE_CHECKING:
 # behind ``require_interactive_terminal``: even when a TTY is present the
 # flow must not block indefinitely if the operator abandons consent.
 _CONSENT_WAIT_TIMEOUT_SECONDS = 300
+
+# The consent redirect is received on the IPv4 loopback address itself. A
+# host name would depend on local name resolution, which another program or
+# a hosts-file entry can point elsewhere.
+_LOOPBACK_HOST = "127.0.0.1"
 
 
 class _CanonicalTokenExchange(Protocol):
@@ -166,6 +172,7 @@ def require_resolvable_profile_record(profile_id: str, *, operation: PinnedAutho
 def credentials_to_records(
     *,
     refresh_token: str,
+    client_id: str,
     token_uri: str,
     account_email: str,
     granted_scopes: tuple[str, ...],
@@ -183,6 +190,7 @@ def credentials_to_records(
 
     Args:
         refresh_token: The refresh token returned by the consent screen.
+        client_id: The client the consent was granted to, bound into the token.
         token_uri: The token endpoint URL mirrored from
             :class:`adapters.outbound.google.records.OAuthClient`.
         account_email: The Google account that completed the consent.
@@ -220,7 +228,7 @@ def credentials_to_records(
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         )
-    token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
+    token = OAuthToken(refresh_token=refresh_token, client_id=client_id, token_uri=token_uri)
     metadata = OAuthMetadata(
         account_email=account_email,
         granted_scopes=tuple(granted_scopes),
@@ -287,6 +295,7 @@ def run_login_flow(
         )
     return credentials_to_records(
         refresh_token=refresh_token,
+        client_id=client.client_id,
         token_uri=token_uri,
         account_email=account_email,
         granted_scopes=granted_scopes,
@@ -356,12 +365,17 @@ def _run_local_server(
         before_handoff("oauth.browser-consent")
     try:
         if _oauth_handoffs_absent(before_handoff, acknowledged):
-            credentials = flow.run_local_server(port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS)
+            credentials = flow.run_local_server(
+                host=_LOOPBACK_HOST, port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS
+            )
         else:
             # Browser consent stays human; its state-bearing URL must not be
             # printed into an unattended worker's diagnostic stream.
             credentials = flow.run_local_server(
-                port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS, authorization_prompt_message=None
+                host=_LOOPBACK_HOST,
+                port=0,
+                timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS,
+                authorization_prompt_message=None,
             )
     except ProfileAccessRefusedError:
         raise
@@ -570,7 +584,7 @@ def _oauth_loopback_client_config(client: OAuthClient) -> dict[str, dict[str, ob
             "auth_uri": client.auth_uri,
             "token_uri": client.token_uri,
             "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
-            "redirect_uris": list(client.redirect_uris) or ["http://localhost"],
+            "redirect_uris": list(client.redirect_uris) or [f"http://{_LOOPBACK_HOST}"],
         }
     }
 
@@ -583,9 +597,23 @@ def _oauth_loopback_records(
     acknowledged: GoogleConfigurationAcknowledgement | None,
 ) -> tuple[str, str, str, tuple[str, ...]]:
     """Verify the admitted identity and retain the refresh and scope facts in evaluation order."""
+    refresh_token = credentials.refresh_token
+    if not isinstance(refresh_token, str) or not refresh_token.strip():
+        # Without a refresh token the sign-in would work until the access token
+        # lapses and then fail on every later command, so nothing is stored.
+        raise GoogleAuthValidationError(
+            "Google completed the consent without issuing a refresh token",
+            translated_message="adapters.google.oauth_flow.errors.refresh_token_missing",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED,
+                facts={"refresh_token_issued": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
     token_uri = getattr(credentials, "token_uri", None)
     return (
-        str(credentials.refresh_token),
+        refresh_token,
         str(token_uri),
         _decode_email_from_id_token(
             credentials, audience=client.client_id, before_handoff=before_handoff, acknowledged=acknowledged

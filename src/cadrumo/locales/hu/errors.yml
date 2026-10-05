@@ -1088,6 +1088,8 @@ errors:
       és böngésző szükséges; futtasd interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy
       használd a --profile kapcsolót.
+    refused_google_sign_in_required: 'A profil Google-hozzáférése lejárt vagy visszavonták.
+      Jelentkezz be újra: `aeat config google login`.'
     refused_google_validation: A megadott Google-paraméterek nem mentek át az érvényesítésen.
     refused_inventory_actividad_conflict: Már létezik készlet az adott tevékenységhez
       és évhez.

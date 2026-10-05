@@ -22,6 +22,7 @@ from ...adapters.outbound.google.session_store import (
 )
 from ...adapters.outbound.google.tests.installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
+    SYNTHETIC_CLIENT_ID,
     synthetic_installation_client,
     use_absent_installation_client,
     use_installation_client,
@@ -85,7 +86,7 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
         # the refresh-only leaf still performs its original metadata inspection.
         save_token(
             str(_PROFILE),
-            OAuthToken(refresh_token=_REFRESH_CREDENTIAL, token_uri=_OAUTH_ENDPOINT),
+            OAuthToken(refresh_token=_REFRESH_CREDENTIAL, client_id=SYNTHETIC_CLIENT_ID, token_uri=_OAUTH_ENDPOINT),
         )
         save_metadata(
             str(_PROFILE),

@@ -21,6 +21,7 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     opaque_refresh_token = " 1//refresh-token\t"
     token = OAuthToken(
         refresh_token=opaque_refresh_token,
+        client_id="desktop-client.apps.googleusercontent.com",
         token_uri="https://oauth2.googleapis.com/token",
     )
     metadata = OAuthMetadata(

@@ -21,6 +21,7 @@ from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
 from .. import installation_client as installation_client_module
 from .. import oauth_flow as oauth_flow_module
+from .. import sign_in_state as sign_in_state_module
 from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
 from ..oauth_flow import (
@@ -53,7 +54,7 @@ def _contract(
 
 
 # This is a complete, source-level contract for the 1 active-profile, 2
-# installation-client and 15 OAuth GoogleAuthError producers. Values are AST expressions, not
+# installation-client, 16 OAuth and 3 sign-in-state GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -158,12 +159,37 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
+    "oauth_flow:_oauth_loopback_records:GoogleAuthValidationError:Google completed the consent without issuing a refresh token": _contract(
+        GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED,
+        (("refresh_token_issued", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
+    ),
+    "sign_in_state:load_token_minted_for:GoogleAuthSignInRequiredError:the stored Google sign-in does not name the client that minted it": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_CLIENT_BOUND,
+        (("stored_token_readable", "False"),),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "sign_in_state:load_token_minted_for:GoogleAuthSignInRequiredError:the stored Google sign-in was minted for a different client": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_CLIENT_BOUND,
+        (("stored_token_readable", "True"), ("token_client_matches", "False")),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "sign_in_state:ended_grant_refusal:GoogleAuthSignInRequiredError:Google no longer honours the stored sign-in": _contract(
+        GoogleAuthPreconditionCondition.GRANT_ACTIVE,
+        (("grant_active", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
 }
 
 _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     active_profile_module,
     installation_client_module,
     oauth_flow_module,
+    sign_in_state_module,
 )
 
 
@@ -353,6 +379,7 @@ def test_scope_refusal_has_an_exact_runtime_safety_verdict() -> None:
     with pytest.raises(GoogleAuthError) as raised:
         credentials_to_records(
             refresh_token="refresh-token",
+            client_id="desktop-client.apps.googleusercontent.com",
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.test",
             granted_scopes=(),

@@ -96,6 +96,9 @@ adapters:
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
           Cadrumo seleccionat.
+        refresh_token_missing: Google ha completat l'inici de sessió sense emetre
+          una credencial duradora, de manera que no s'ha desat res. Torna a executar
+          `aeat config google login`.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
     profile_binding:

@@ -550,7 +550,13 @@ def _inventory_ledger(label: str) -> InventoryLedger:
 def _google_records(label: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
     issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
     return (
-        OAuthToken.model_validate({"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}),
+        OAuthToken.model_validate(
+            {
+                "refresh_token": f"1//refresh-token-{label}",
+                "client_id": f"desktop-{label}.apps.googleusercontent.com",
+                "token_uri": _GOOGLE_OAUTH_ENDPOINT,
+            }
+        ),
         OAuthMetadata(
             account_email=f"{label}@example.com",
             granted_scopes=REQUIRED_SCOPES,

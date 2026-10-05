@@ -21,7 +21,7 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...google.errors import GoogleAuthClientMetadataUnavailableError
+from ...google.errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
 from ...google.records import DriveConfig, OAuthToken
 from ...google.session_store import save_drive_config, save_token
 from ...google.tests.installation_client_support import (
@@ -240,7 +240,12 @@ def test_build_google_credentials_refuses_before_reading_the_token_when_no_clien
         pytest.raises(GoogleAuthClientMetadataUnavailableError),
     ):
         save_token(
-            profile, OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token")
+            profile,
+            OAuthToken(
+                refresh_token="1//refresh-token",
+                client_id=SYNTHETIC_CLIENT_ID,
+                token_uri="https://oauth2.googleapis.com/token",
+            ),
         )
         build_google_credentials(profile=profile)
 
@@ -255,7 +260,12 @@ def test_build_google_credentials_pairs_the_installation_client_with_the_three_n
     use_installation_client(monkeypatch, tmp_path)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile):
         save_token(
-            profile, OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token")
+            profile,
+            OAuthToken(
+                refresh_token="1//refresh-token",
+                client_id=SYNTHETIC_CLIENT_ID,
+                token_uri="https://oauth2.googleapis.com/token",
+            ),
         )
         credentials = build_google_credentials(profile=profile)
 
@@ -267,3 +277,28 @@ def test_build_google_credentials_pairs_the_installation_client_with_the_three_n
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/drive.file",
     ]
+
+
+def test_build_google_credentials_never_pairs_a_token_with_a_client_that_did_not_mint_it(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A token minted under another client is refused before any credential object exists."""
+    profile = "5f6a1c0e-83f1-4f0e-9a70-2d8f6c4b7e19"
+    use_installation_client(monkeypatch, tmp_path)
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile),
+        pytest.raises(GoogleAuthSignInRequiredError) as raised,
+    ):
+        save_token(
+            profile,
+            OAuthToken(
+                refresh_token="1//refresh-token",
+                client_id="development-client.apps.googleusercontent.com",
+                token_uri="https://oauth2.googleapis.com/token",
+            ),
+        )
+        build_google_credentials(profile=profile)
+
+    assert raised.value.code.code == "REFUSED_GOOGLE_SIGN_IN_REQUIRED"
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None and verdict.failed_condition_id == "google.auth.sign_in_client.bound"

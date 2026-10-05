@@ -248,6 +248,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.google.errors.GoogleAuthSignInRequiredError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_sign_in_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.google.errors.GoogleAuthRevokedError",
         ErrorCode(
             code="AUTH_GOOGLE_REVOKED",

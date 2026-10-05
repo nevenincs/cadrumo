@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbfedb59ed09fc8a9afe29ba51dab8e58c766f913786a3c0c479a152be5c29fd'
+body_hash: 'sha256:8cbd046ce3b3ca30393e36ee20257e1f5ff405ecaf1d45b25f4a29c772cd4e5d'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -265,6 +265,50 @@ related:
 - `S06` `verify:` `python -m dev.locales status` -> `pass`
 - `S06` `verify:` `python -m dev.docs.sequences check --page how-to/review-with-google-sheets` -> `fail`
 - `S06` `by:` `CADRUMO-GOOGLE-OATH`
+- `S07` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S07` `M` `dev/quality/metadata/import_load_targets.json`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/api.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/google_configuration_refusal.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/oauth_flow.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_flow.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_records.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_logout_atomicity.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_namespace_binding.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/storage/factory.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/storage/tests/test_factory.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_configuration_admission.py`
+- `S07` `M` `src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`
+- `S07` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S07` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S07` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S07` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S07` `M` `src/cadrumo/locales/en/errors.yml`
+- `S07` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S07` `M` `src/cadrumo/locales/es/errors.yml`
+- `S07` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S07` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S07` `M` `stubs/google_auth_oauthlib/flow.pyi`
+- `S07` `A` `src/cadrumo/adapters/outbound/google/sign_in_state.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/google/tests/test_sign_in_state.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/google/tests/token_endpoint_server.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_sign_in_required.py`
+- `S07` `verify:` `pytest unit and integration: Google and storage adapter suites (589), user-profile application, error registry and Google composition tests` -> `pass`
+- `S07` `verify:` `pytest: a real google-api-python-client request whose credential refresh a local token endpoint answers with invalid_grant, through execute_request and the Drive mirror probe` -> `pass`
+- `S07` `verify:` `pytest integration: registered-executor conformance Google and spreadsheet cases, native Google journey, Google CLI tests (34)` -> `pass`
+- `S07` `verify:` `ruff check and ruff format --check on touched files; just check-style; just check-format` -> `pass`
+- `S07` `verify:` `just check-import-boundaries` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `python -m dev.locales status` -> `pass`
+- `S07` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -299,3 +343,10 @@ related:
 - `S06` The Google how-to and four sequence contracts were corrected and the sheets-folder and sheets-logout goldens regenerated; the regenerated goldens also record the `session_not_persisted` notice that 55 other committed goldens already carry. The page check still fails on sheets-readiness, whose golden predates that notice and is unrelated to this Step. Translated documentation catalogues and the technical articles still describe registration; they are S09.
 - `S06` Failures seen in broad runs that are not in files changed here: 24 CLI configuration tests refuse with `runtime_unavailable` because no runtime is started in this session; an unregistered SupervisorLineError in the runtime supervisor work; packaging and registry-pipeline tooling tests; locale dynamic-prefix and product-identity inventories naming ledger, TUI and desktop keys; language-flag help tests that need the installed console script; one custody acceleration-receipt test.
 - `S06` The Step's changes were committed as 3a8cb349d9 by another session's commit that swept this worktree while the final type gate was running, and the ignore rule for the client directory entered history in e3d466b67c the same way. Both were checked against the finished working tree: HEAD holds the final content and no client file is tracked. These ledger rows were therefore written after that commit.
+- `S07` The sign-in-required code is `REFUSED_GOOGLE_SIGN_IN_REQUIRED` so that it settles as a refusal in every operation, following the S06 finding about AUTH-category errors. It covers Google's `invalid_grant` answer, a token minted for another client and a token stored without a client. Any other refresh failure, such as `invalid_client,` is still a network failure.
+- `S07` Pending verification, owed to S10: the `invalid_grant` mapping was exercised with the real client library against a local token endpoint returning Google's documented error body, not against Google; and a complete consent with the 127.0.0.1 redirect has not been run. The redirect test shows only that the real flow listens on and names that address.
+- `S07` The token namespace's schema version was not raised. A token stored in the earlier shape fails validation and is reported as sign-in required; there is no reader for it.
+- `S07` Effect reporting: the Sheets and Drive request path reports no uncertainty for an ended grant, because the refresh precedes the request or follows Google's rejection of it. Under the Google configuration operation a refusal raised after a provider handoff was admitted still settles UNKNOWN, as every other definitive Drive refusal there does; that accounting has no way to record a request as definitively not applied and was not changed.
+- `S07` Left for S08: GoogleAuthRevokedError and GoogleAuthClientRevokedError still have no producer, GoogleAuthExpiredError is raised only by the refresh-only login mode, and the stored `reauth_required` and `last_refresh_at` fields are not updated when a grant ends.
+- `S07` The provider probe test lives in the storage package and shares a token-endpoint helper from the Google tests, because the import-boundary gate refuses a private module imported across packages. The local InstalledAppFlow stub gained WSGITimeoutError.
+- `S07` One unit failure in the touched suites is not in files changed here: an unregistered SupervisorLineError in the runtime supervisor work.

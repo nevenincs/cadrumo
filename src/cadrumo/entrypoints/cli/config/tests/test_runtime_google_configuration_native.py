@@ -225,7 +225,14 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
             instant = datetime.now(UTC)
             # Local synthetic fixture records make actual logout deletion observable;
             # they are not an OAuth or provider credential-acquisition simulation.
-            save_token(profile_id, OAuthToken(refresh_token=refresh_value, token_uri=_OAUTH_ENDPOINT))
+            save_token(
+                profile_id,
+                OAuthToken(
+                    refresh_token=refresh_value,
+                    client_id="synthetic-native-client.apps.googleusercontent.com",
+                    token_uri=_OAUTH_ENDPOINT,
+                ),
+            )
             save_metadata(
                 profile_id,
                 OAuthMetadata(

@@ -1069,6 +1069,8 @@ errors:
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
+    refused_google_sign_in_required: Google access for this profile has ended or was
+      withdrawn. Sign in again with `aeat config google login`.
     refused_google_validation: The Google parameters provided failed validation.
     refused_inventory_actividad_conflict: An inventory already exists for that activity
       and year.

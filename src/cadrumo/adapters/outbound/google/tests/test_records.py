@@ -145,9 +145,24 @@ def test_oauth_client_rejects_empty_client_secret() -> None:
         OAuthClient(**kwargs)
 
 
+_CLIENT_ID = "desktop-client.apps.googleusercontent.com"
+
+
 def test_oauth_token_minimum_shape() -> None:
-    token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
+    token = OAuthToken(
+        refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token"
+    )
     assert token.refresh_token == "1//deadbeef"
+    assert token.client_id == _CLIENT_ID
+
+
+@pytest.mark.parametrize("fields", ({}, {"client_id": ""}), ids=("absent", "blank"))
+def test_oauth_token_requires_the_client_that_minted_it(fields: dict[str, str]) -> None:
+    """A token that names no client cannot be stored, so none can be used with the wrong one."""
+    with pytest.raises(ValidationError):
+        OAuthToken.model_validate(
+            {"refresh_token": "1//deadbeef", "token_uri": "https://oauth2.googleapis.com/token", **fields}
+        )
 
 
 @pytest.mark.parametrize(
@@ -157,18 +172,20 @@ def test_oauth_token_refuses_untrusted_or_malformed_token_endpoint(endpoint: str
     """A refresh token may never persist an endpoint outside Google OAuth's canonical origin."""
 
     with pytest.raises(ValidationError):
-        OAuthToken(refresh_token="1//deadbeef", token_uri=endpoint)
+        OAuthToken(refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri=endpoint)
 
 
 def test_oauth_token_is_frozen() -> None:
-    token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
+    token = OAuthToken(
+        refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token"
+    )
     with pytest.raises(ValidationError, match="frozen"):
         token.refresh_token = "1//rotated"
 
 
 def test_oauth_token_rejects_empty_refresh() -> None:
     with pytest.raises(ValidationError, match="at least 1"):
-        OAuthToken(refresh_token="", token_uri="https://oauth2.googleapis.com/token")
+        OAuthToken(refresh_token="", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token")
 
 
 @pytest.mark.parametrize("refresh_token", (" ", "\t\r\n"))
@@ -176,7 +193,7 @@ def test_oauth_token_rejects_whitespace_only_refresh(refresh_token: str) -> None
     """A refresh credential must carry opaque token bytes, not only whitespace."""
 
     with pytest.raises(ValidationError, match="non-whitespace"):
-        OAuthToken(refresh_token=refresh_token, token_uri="https://oauth2.googleapis.com/token")
+        OAuthToken(refresh_token=refresh_token, client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token")
 
 
 def test_oauth_metadata_round_trip() -> None:

@@ -60,6 +60,7 @@ from ....core.logging import get_logger
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
 from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE, is_app_owned
+from ..google.sign_in_state import ended_grant_refusal
 from ._google_drive_metadata import (
     DriveStoragePreconditionCondition,
     drive_external_verdict,
@@ -421,6 +422,9 @@ class GoogleDriveProvider:
                 str(status) if status is not None else "unknown",
                 type(exc).__name__,
             )
+            ended_grant = ended_grant_refusal(exc, action=action)
+            if ended_grant is not None:
+                raise ended_grant from exc
             translated_error = _translate_http_error(exc, action=action)
         else:
             if not writes and self._acknowledged is not None:
@@ -906,6 +910,9 @@ class GoogleDriveProvider:
                 str(status) if status is not None else "unknown",
                 type(exc).__name__,
             )
+            ended_grant = ended_grant_refusal(exc, action="files.get_media")
+            if ended_grant is not None:
+                raise ended_grant from exc
             translated_error = _translate_http_error(exc, action="files.get_media")
         if translated_error is not None:
             raise translated_error
@@ -1120,8 +1127,10 @@ class GoogleDriveProvider:
            ``put`` then ``delete`` against a ``_probe`` namespace to confirm
            write access end-to-end.
 
-        The method never raises; every failure mode is encoded in the returned
-        :class:`ProviderProbeReport`.
+        Every storage failure mode is encoded in the returned
+        :class:`ProviderProbeReport`. A stored sign-in that Google no longer
+        honours is not a storage condition and is raised as
+        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`.
 
         Args:
             read_only: When ``True``, skip the sentinel write round-trip and

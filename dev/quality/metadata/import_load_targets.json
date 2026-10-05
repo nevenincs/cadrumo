@@ -241,6 +241,7 @@
         "cadrumo.adapters.outbound.google.oauth_flow",
         "cadrumo.adapters.outbound.google.records",
         "cadrumo.adapters.outbound.google.session_store",
+        "cadrumo.adapters.outbound.google.sign_in_state",
         "cadrumo.adapters.outbound.llm",
         "cadrumo.adapters.outbound.llm.client",
         "cadrumo.adapters.outbound.llm.column_role_mapping",

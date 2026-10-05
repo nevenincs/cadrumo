@@ -48,6 +48,7 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
 
     token = OAuthToken(
         refresh_token="1//refresh-token",
+        client_id="desktop-client.apps.googleusercontent.com",
         token_uri="https://oauth2.googleapis.com/token",
     )
     metadata = OAuthMetadata(

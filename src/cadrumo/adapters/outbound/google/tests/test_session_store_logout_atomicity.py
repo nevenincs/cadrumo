@@ -48,7 +48,11 @@ def _seed() -> None:
     """Persist a complete, genuine login session through the real write path."""
     session_store.save_token(
         _PROFILE,
-        OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token"),
+        OAuthToken(
+            refresh_token="1//refresh-token",
+            client_id="desktop-client.apps.googleusercontent.com",
+            token_uri="https://oauth2.googleapis.com/token",
+        ),
     )
     session_store.save_metadata(
         _PROFILE,

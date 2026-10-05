@@ -1162,6 +1162,8 @@ errors:
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
+    refused_google_sign_in_required: L'accés a Google d'aquest perfil ha caducat o
+      s'ha retirat. Torna a iniciar la sessió amb `aeat config google login`.
     refused_google_validation: Els paràmetres de Google indicats no han superat la
       validació.
     refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat

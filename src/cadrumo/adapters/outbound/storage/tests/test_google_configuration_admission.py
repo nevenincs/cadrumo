@@ -223,6 +223,7 @@ def test_scope_failure_keeps_original_typed_missing_order_and_registered_code() 
     with pytest.raises(GoogleAuthScopeInsufficientError) as caught:
         credentials_to_records(
             refresh_token=refresh_value,
+            client_id="synthetic-client.apps.googleusercontent.com",
             token_uri=issuer_url,
             account_email="synthetic@example.invalid",
             granted_scopes=granted,

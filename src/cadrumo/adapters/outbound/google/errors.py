@@ -29,6 +29,9 @@ class GoogleAuthPreconditionCondition(StrEnum):
     PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
     PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
+    REFRESH_CREDENTIAL_ISSUED = "google.auth.refresh_credential.issued"
+    SIGN_IN_CLIENT_BOUND = "google.auth.sign_in_client.bound"
+    GRANT_ACTIVE = "google.auth.grant.active"
     OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
     CLIENT_METADATA_AVAILABLE = "google.auth.client_metadata.available"
     OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"
@@ -83,6 +86,15 @@ class GoogleAuthRevokedError(GoogleAuthError):
 
     Maps to Google's ``invalid_grant`` response with
     ``error_description="Token has been expired or revoked."``.
+    """
+
+
+class GoogleAuthSignInRequiredError(GoogleAuthError):
+    """Raised when a profile's stored Google sign-in can no longer be used.
+
+    Covers a grant Google reports as revoked or expired, and a stored token
+    that does not belong to the client this installation signs in with. The
+    remedy is the same in every case: sign in again.
     """
 
 
@@ -172,6 +184,7 @@ __all__ = [
     "GoogleAuthProfileUnboundError",
     "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
+    "GoogleAuthSignInRequiredError",
     "GoogleAuthValidationError",
     "GoogleScopeFailure",
     "google_auth_no_action_verdict",

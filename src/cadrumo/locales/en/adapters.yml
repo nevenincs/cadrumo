@@ -88,6 +88,8 @@ adapters:
           flow cannot start.
         profile_state_unresolved: Google OAuth cannot resolve the selected Cadrumo
           profile state.
+        refresh_token_missing: Google completed the sign-in without issuing a lasting
+          credential, so nothing was saved. Run `aeat config google login` again.
         scope_missing: The Google consent screen returned without granting every required
           scope.
     profile_binding:

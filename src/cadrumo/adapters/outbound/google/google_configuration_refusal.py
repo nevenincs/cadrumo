@@ -22,6 +22,7 @@ GOOGLE_CONFIGURATION_ERROR_TYPES: tuple[
     google_errors.GoogleAuthValidationError,
     google_errors.GoogleAuthClientMetadataUnavailableError,
     google_errors.GoogleAuthClientRevokedError,
+    google_errors.GoogleAuthSignInRequiredError,
     google_errors.GoogleAuthRevokedError,
     google_errors.GoogleAuthExpiredError,
     google_errors.GoogleAuthScopeInsufficientError,

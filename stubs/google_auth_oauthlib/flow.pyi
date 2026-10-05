@@ -50,3 +50,6 @@ class InstalledAppFlow(Flow):
         scopes: Sequence[str] | None,
         **kwargs: Any,
     ) -> InstalledAppFlow: ...
+
+class WSGITimeoutError(AttributeError):
+    """Raised by `run_local_server` when no redirect arrives within `timeout_seconds`."""

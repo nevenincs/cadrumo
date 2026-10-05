@@ -2,27 +2,37 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import subprocess
 import sys
 import textwrap
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow, WSGITimeoutError
 from pydantic import ValidationError
 
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
+from .. import oauth_flow
 from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthNetworkError,
     GoogleAuthNonInteractiveError,
+    GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
+    GoogleAuthValidationError,
 )
 from ..oauth_flow import (
+    _LOOPBACK_HOST,
     _oauth_loopback_client_config,
+    _oauth_loopback_records,
     _raise_local_server_error,
     credentials_to_records,
     require_interactive_terminal,
@@ -30,6 +40,9 @@ from ..oauth_flow import (
     run_login_flow,
 )
 from ..records import REQUIRED_SCOPES, OAuthClient
+
+if TYPE_CHECKING:
+    from google_auth_oauthlib.flow import OAuthCredentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -66,14 +79,17 @@ def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     """The direct OAuth-flow handoff preserves canonical metadata instants."""
 
     issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
-    _token, metadata = credentials_to_records(
+    token, metadata = credentials_to_records(
         refresh_token="1//refresh-token",
+        client_id="desktop-client.apps.googleusercontent.com",
         token_uri="https://oauth2.googleapis.com/token",
         account_email="operator@example.com",
         granted_scopes=REQUIRED_SCOPES,
         issued_at=issued_at,
     )
 
+    # The token records the client the consent was granted to.
+    assert token.client_id == "desktop-client.apps.googleusercontent.com"
     assert metadata.issued_at == issued_at
     assert metadata.last_refresh_at == issued_at
     assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
@@ -86,6 +102,7 @@ def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
     with pytest.raises(ValidationError, match="non-whitespace"):
         credentials_to_records(
             refresh_token=" \t\r\n",
+            client_id="desktop-client.apps.googleusercontent.com",
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.com",
             granted_scopes=REQUIRED_SCOPES,
@@ -251,3 +268,61 @@ def test_login_flow_propagates_zero_row_profile_capsule_corruption_before_oauth_
 
     assert str(raised.value) == "profile capsule must contain exactly one current record row; it holds 0"
     assert not isinstance(raised.value, GoogleAuthProfileUnboundError)
+
+
+@pytest.mark.parametrize("refresh_token", (None, "", " \t"), ids=("absent", "empty", "blank"))
+def test_a_consent_that_issues_no_refresh_token_is_refused_before_identity_is_read(refresh_token: str | None) -> None:
+    """Nothing is stored for a sign-in that would stop working when its access token lapses."""
+    credentials = Credentials(
+        token="synthetic-access-value",
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id="1234.apps.googleusercontent.com",
+        client_secret="GOCSPX-deadbeef",
+    )
+
+    with pytest.raises(GoogleAuthValidationError) as refused:
+        # CAST-RATIONALE-thirdparty: the real credentials class leaves the attributes the
+        # flow's credential protocol names unannotated, so it does not satisfy it structurally.
+        _oauth_loopback_records(
+            cast("OAuthCredentials", credentials), _valid_oauth_client(), before_handoff=None, acknowledged=None
+        )
+
+    error = refused.value
+    assert error.code.code == "REFUSED_GOOGLE_VALIDATION"
+    assert error.translated_message == "adapters.google.oauth_flow.errors.refresh_token_missing"
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED.value
+    assert dict(verdict.evidence[0].values) == {"refresh_token_issued": False}
+    assert "synthetic-access-value" not in str(error)
+
+
+def test_consent_redirect_is_received_on_the_loopback_ip_literal() -> None:
+    """The listener binds, and Google redirects to, 127.0.0.1 rather than a resolved host name."""
+    assert _LOOPBACK_HOST == "127.0.0.1"
+    consent_calls = [
+        node
+        for node in ast.walk(ast.parse(inspect.getsource(oauth_flow)))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "run_local_server"
+    ]
+    assert len(consent_calls) == 2
+    for call in consent_calls:
+        hosts = [keyword.value for keyword in call.keywords if keyword.arg == "host"]
+        assert [ast.unparse(host) for host in hosts] == ["_LOOPBACK_HOST"]
+
+    # The real flow, given that host, listens there and names it in the redirect.
+    flow = InstalledAppFlow.from_client_config(
+        _oauth_loopback_client_config(_valid_oauth_client()), scopes=list(REQUIRED_SCOPES)
+    )
+    with pytest.raises(WSGITimeoutError):
+        flow.run_local_server(
+            host=_LOOPBACK_HOST,
+            port=0,
+            open_browser=False,
+            authorization_prompt_message=None,
+            timeout_seconds=0.2,
+        )
+    assert flow.redirect_uri is not None
+    redirect = urlsplit(flow.redirect_uri)
+    assert redirect.scheme == "http" and redirect.hostname == "127.0.0.1" and redirect.port

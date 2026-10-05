@@ -100,20 +100,23 @@ def build_google_credentials(*, profile: str) -> Credentials:
     read by
     :func:`adapters.outbound.google.installation_client.load_installation_client`,
     with the profile's :class:`~adapters.outbound.google.records.OAuthToken` from
-    :func:`adapters.outbound.google.session_store.load_token`. The desktop
+    :func:`adapters.outbound.google.sign_in_state.load_token_minted_for`, which
+    yields a token only when this client minted it. The desktop
     sign-in is the only credential source. Imports the upstream library lazily
     so unit tests for the local backend do not pay the cost.
 
     Raises:
         :exc:`adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError`:
             When the installation carries no usable client metadata.
+        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+            When the stored token belongs to another client or names none.
         OutboundStorageValidationError: When the profile has no stored token.
     """
     from ..google.installation_client import load_installation_client
-    from ..google.session_store import load_token
+    from ..google.sign_in_state import load_token_minted_for
 
     client = load_installation_client()
-    token = load_token(profile)
+    token = load_token_minted_for(profile, client)
     if token is None:
         raise OutboundStorageValidationError(
             "no Google OAuth token persisted for this profile",

@@ -92,6 +92,9 @@ adapters:
           nem indítható el.
         profile_state_unresolved: A Google OAuth nem tudja feloldani a kiválasztott
           AEAT-profil állapotát.
+        refresh_token_missing: 'A Google úgy fejezte be a bejelentkezést, hogy nem
+          adott ki tartós hitelesítő adatot, ezért semmi sem lett elmentve. Futtasd
+          újra: `aeat config google login`.'
         scope_missing: A Google hozzájárulási képernyő visszatért anélkül, hogy minden
           szükséges hatókört megadott volna.
     profile_binding:

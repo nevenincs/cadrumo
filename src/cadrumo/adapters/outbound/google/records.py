@@ -143,11 +143,16 @@ class OAuthToken(BaseModel):
     it under the SECRET classification. The refresh token is re-persisted on
     every successful refresh because Google may rotate it. Access tokens are
     held in memory only and rebuilt from the refresh token on process start.
+
+    ``client_id`` names the client that minted the token. A refresh token is
+    only valid with that client, so the token is never presented with
+    another one.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     refresh_token: str = Field(min_length=1)
+    client_id: str = Field(min_length=1)
     token_uri: OAuthTokenUri
 
     @field_validator("refresh_token")

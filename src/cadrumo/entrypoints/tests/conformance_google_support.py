@@ -72,6 +72,7 @@ _ROOT_FOLDER_ID = "conformance-root-folder"
 _ACCOUNT_EMAIL = "conformance-operator@example.invalid"
 _EXCHANGE_URI = "https://oauth2.googleapis.com/token"
 _SYNTHETIC_REFRESH_CREDENTIAL = "conformance-synthetic-refresh-credential"
+_SYNTHETIC_CLIENT_ID = "conformance-client.apps.googleusercontent.com"
 _ISSUED_AT = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
 _REFRESHED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 
@@ -87,7 +88,9 @@ def _synthetic_metadata() -> OAuthMetadata:
 
 
 def _synthetic_token() -> OAuthToken:
-    return OAuthToken(refresh_token=_SYNTHETIC_REFRESH_CREDENTIAL, token_uri=_EXCHANGE_URI)
+    return OAuthToken(
+        refresh_token=_SYNTHETIC_REFRESH_CREDENTIAL, client_id=_SYNTHETIC_CLIENT_ID, token_uri=_EXCHANGE_URI
+    )
 
 
 def _succeeded(profile_id: UUID, result: GoogleConfigurationProjection) -> GoogleConfigurationOutcome:
@@ -283,7 +286,12 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
         case "config.google.login" | "config.google.logout" | "config.google.status":
             save_metadata(profile, _RETAINED_GOOGLE_METADATA)
             save_token(
-                profile, OAuthToken(refresh_token=secrets.token_hex(16), token_uri=_RETAINED_GOOGLE_OAUTH_ENDPOINT)
+                profile,
+                OAuthToken(
+                    refresh_token=secrets.token_hex(16),
+                    client_id=_SYNTHETIC_CLIENT_ID,
+                    token_uri=_RETAINED_GOOGLE_OAUTH_ENDPOINT,
+                ),
             )
             if operation_id.endswith("login"):
                 # A stored session cannot be refreshed without the client it was minted for.

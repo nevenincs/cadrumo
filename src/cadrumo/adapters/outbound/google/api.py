@@ -27,6 +27,7 @@ from ..storage.errors import (
     OutboundStorageQuotaError,
 )
 from ._preconditions import google_terminal_refusal
+from .sign_in_state import ended_grant_refusal
 
 if TYPE_CHECKING:
     import httplib2
@@ -154,7 +155,10 @@ def execute_request[ResponseBodyT](
     :exc:`~adapters.outbound.storage.errors.OutboundStorageNetworkError`. A typed
     :exc:`~adapters.outbound.storage.errors.OutboundStorageError` raised by a
     nested call is re-raised unchanged so ownership and validation refusals are
-    never re-wrapped as network errors.
+    never re-wrapped as network errors. A credential refresh that Google
+    answers by ending the grant becomes
+    :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`; the
+    request it was for has not taken effect, so no uncertainty is reported.
 
     Args:
         request: A google-api-python-client request object exposing
@@ -166,6 +170,8 @@ def execute_request[ResponseBodyT](
         The deserialised API response payload.
 
     Raises:
+        :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+            When Google reports the stored grant as revoked or expired.
         :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: Re-raised
             unchanged when a nested call already raised a typed
             outbound-storage error.
@@ -194,6 +200,9 @@ def execute_request[ResponseBodyT](
     except OutboundStorageError:
         raise
     except Exception as exc:
+        ended_grant = ended_grant_refusal(exc, action=action)
+        if ended_grant is not None:
+            raise ended_grant from exc
         _raise_mapped_google_http_error(exc, action=action)
         effect_uncertain = retry is RequestRetryPolicy.SINGLE_ATTEMPT
         raise OutboundStorageNetworkError(

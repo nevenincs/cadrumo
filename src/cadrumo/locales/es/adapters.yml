@@ -97,6 +97,9 @@ adapters:
           OAuth no puede iniciarse.
         profile_state_unresolved: Google OAuth no puede resolver el estado del perfil
           AEAT seleccionado.
+        refresh_token_missing: Google completó el inicio de sesión sin emitir una
+          credencial duradera, así que no se ha guardado nada. Vuelve a ejecutar `aeat
+          config google login`.
         scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
           todos los ámbitos requeridos.
     profile_binding:
