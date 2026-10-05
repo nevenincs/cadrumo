@@ -65,10 +65,6 @@ class AutomationDenialCustody(Protocol):
         """Durably fence, advance protected state and retire affected unwrap keys."""
         ...
 
-    def reconcile_denial(self) -> AutomationDenialReceipt | None:
-        """Retry the exact surviving intent; never discard it to enable access."""
-        ...
-
     def profile_lock_state(self) -> ProfileGlobalLockState:
         """Read the local lock without depending on optional native credentials."""
         ...

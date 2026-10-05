@@ -80,10 +80,15 @@ class ProfileConnectionAdmissionMixin:
                         # Direct in-process hosts may omit startup preparation. The
                         # installed server calls prepare_registry before listening.
                         registry = self.prepare_registry()
+                    store = AutomationControlStore(
+                        root=self.root, binding=binding, secrets_store_factory=self._secret_store
+                    )
+                    # An eligible native peer has selected this exact verified
+                    # binding. Finish only a surviving earlier denial; failure
+                    # keeps its fence, while password admission stays independent.
+                    store.reconcile_denial()
                     host = RuntimeProfileHost(
-                        store=AutomationControlStore(
-                            root=self.root, binding=binding, secrets_store_factory=self._secret_store
-                        ),
+                        store=store,
                         runtime_boot_id=self.boot,
                         registry=registry,
                         connected=self._connected,

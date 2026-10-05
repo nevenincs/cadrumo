@@ -68,8 +68,3 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         with self.owner.admission_guard():
             self._closed = True
             self._retire(set(self._sessions) | self._pending_retirements)
-
-    def invalidate_login(self: SessionAuthorityLifecycle, login_id: str) -> None:
-        """Fence observed human/attended logout or lock without revoking API grants."""
-        with self.owner.admission_guard():
-            self._retire({s.session_id for s in self._sessions.values() if s.originating_login_id == login_id})

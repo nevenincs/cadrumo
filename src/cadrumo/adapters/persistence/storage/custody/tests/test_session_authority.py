@@ -474,7 +474,11 @@ def test_password_login_remains_independent_of_unavailable_automation(subject: S
         provider=Availability.NOT_REQUIRED,
     )
     assert not isinstance(status, AccessDenied) and status.credential_authenticated
-    subject.authority.invalidate_login("test-login")
+    subject.owner.current = SessionAuthorityFacts(
+        subject.owner.current.profile,
+        changed(subject.owner.current.context, login_contexts=()),
+    )
+    assert subject.authority.revalidate_sessions() == (result.session_id,)
     status = subject.authority.status(
         connection_id=subject.connection,
         session_id=result.session_id,
@@ -551,10 +555,6 @@ def test_attended_logout_is_irreversible_and_does_not_revoke_independent_api(sub
     assert not isinstance(status, AccessDenied) and not status.credential_authenticated
 
 
-def test_cross_connection_lookup_cannot_disclose_or_retire_victims_session(subject: Subject) -> None:
-    session = subject.admit()
-    assert isinstance(session, AccessSession)
-    other = uuid4()
 @pytest.mark.parametrize("lock_state", [OsLockState.LOCKED, OsLockState.UNKNOWN])
 def test_attended_login_without_unlocked_evidence_retires_human_but_not_api(
     subject: Subject, lock_state: OsLockState
@@ -585,6 +585,10 @@ def test_attended_login_without_unlocked_evidence_retires_human_but_not_api(
     assert not isinstance(status, AccessDenied) and not status.credential_authenticated
 
 
+def test_cross_connection_lookup_cannot_disclose_or_retire_victims_session(subject: Subject) -> None:
+    session = subject.admit()
+    assert isinstance(session, AccessSession)
+    other = uuid4()
     subject.owner.connections[other] = uuid4()
     status = subject.authority.status(
         connection_id=other,

@@ -167,15 +167,6 @@ class ProfileLabelHeadRepository:
         except Exception as exc:
             raise ProfileCustodyRecordError("profile label head cannot be atomically replaced") from exc
 
-    def _write_pending_exclusive(self, pending: ProfileLabelHeadPendingAdvance) -> None:
-        self._ensure_root()
-        try:
-            write_profile_custody_local_record(
-                self.pending_path(pending.profile_id), pending.canonical_json_bytes(), publish_once=True
-            )
-        except Exception as exc:
-            raise ProfileCustodyRecordError("profile label advance is already pending") from exc
-
     def _clear_pending(self, profile_id: UUID) -> None:
         try:
             clear_profile_custody_local_record(self.pending_path(profile_id))

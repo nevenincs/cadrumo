@@ -20,6 +20,7 @@ from pydantic import model_validator
 from ....application.user_profile.censal_observation import CensalObservation
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.json_contract import OutputSchema
+from ....domain.censo.certificado import CertificadoSituacionCensal
 from ....domain.user_profile.values import UserProfileFact
 
 
@@ -51,6 +52,7 @@ class CensoFileIngestResult(OutputSchema):
     """Result of ``config profile censo import``: previewed or enrolled facts."""
 
     applied: bool
+    certificate: CertificadoSituacionCensal
     facts: tuple[CensoFactPayload, ...] = ()
 
 

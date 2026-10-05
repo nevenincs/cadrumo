@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:395b93a8e42baa0b90d16ba4ae03d9111aba14b9cb3fd952af032649636c4d1b'
+body_hash: 'sha256:91a50cc1066a93d50b986e5dcfef8dbd7dac1d38ae2be421fa193ef9a38aa951'
 ---
 
 # `reachability-burndown` plan
@@ -52,9 +52,9 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S25` - Relocate build-only storage conformance declarations and retire remaining test-only predicates; `Native packaging vector ownership, core fixture root projections, legal quotation and descendant fixture predicates with owning tests`.
 - [x] `S26` - Reconstruct complete unsigned export components and repair grounded Modelo 180 parser expectations; `Fixed-width parser, schema-derived component controls and committed Modelo 180 record proofs`.
 - [x] `S27` - Complete remaining evidence previews and remove unsupported custody fixture doors; `Censal certificate preview, observed login invalidation, native exact denial recovery and label-head fixture ownership with covering proofs`.
-- [ ] `S28` - Resolve exact cascades left by retired corpus and observation entrypoints; `Development corpus text ownership, stable central refusal identity, finite observation batch kernels, prorrata fixture projections and obsolete storage constant`.
+- [x] `S28` - Resolve exact cascades left by retired corpus and observation entrypoints; `Development corpus text ownership, stable central refusal identity, finite observation batch kernels, prorrata fixture projections and obsolete storage constant`.
 - [x] `S29` - Purge legacy financial edit values before journal hydration; `Canonical hardened journal read and write substrate, deterministic idempotent purge, preserved invocation identity lifecycle and outcome, typed localized refusal for unreadable or unrewritable financial journals, continued refusal of superseded schemas`.
-- [ ] `S24` - Complete transient financial custody for batched manual edits under a new request version; `Versioned edit requests, exact typed submission custody, submission and executor wiring, legacy journal purge and typed migration refusals with native and operator proofs`.
+- [ ] `S24` - Complete transient financial custody for batched manual edits under a new request version; `Versioned amount-free apply and preflight requests, exact typed batch custody with runtime-only grants and baseline binding, one-shot consumption under the operation transition lock, hardened custody checkpoints, published declaration identities, authoritative effect receipt reconciliation, native and operator proofs`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

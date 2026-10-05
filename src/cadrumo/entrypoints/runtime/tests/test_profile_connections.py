@@ -663,3 +663,66 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                 assert persisted.record_revision == projected_revision
         finally:
             close_active_bucket_session()
+
+
+def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admission(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsRuntimeEndpoint(storage_root=root)
+    installation = runtime_installation(
+        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
+    ) as enrollment:
+        request_id = uuid4()
+        enrollment.service.request(request_id, enrollment.proposal)
+        enrollment.approve(request_id)
+        request = enrollment.store.enrollment_state().requests[0]
+        secret = enrollment.owner.delivery.endpoint.possession(request)
+        assert secret is not None
+        before_revision = enrollment.store.enrollment_state().revision
+        profile = enrollment.store.binding.profile_id
+        change = AutomationDenial(request_id=uuid4(), binding=enrollment.store.binding, kind=AutomationDenialKind.ALL)
+        enrollment.native.unavailable = True
+        assert enrollment.store.deny(change).cleanup_pending
+        enrollment.native.unavailable = False
+        close_active_bucket_session()
+        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: native_login,
+            secret_store=lambda: enrollment.native,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        clients: list[VerifiedRuntimeConnection] = []
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(server.serve)
+            try:
+                assert server.ready.wait(3)
+                api = connect(endpoint)
+                clients.append(api)
+                denied = login(api, profile, "api_key", secret.get_secret_value())
+                assert isinstance(denied, RuntimeAccessRefusal)
+                host = profiles._profiles[profile]
+                # The actual host recovery retained the original request and
+                # advanced protected state instead of merely clearing a marker.
+                state = host.store.enrollment_state()
+                assert state.revision > before_revision
+                completed = host.store.deny(change)
+                assert completed.request_id == change.request_id
+                assert completed.revision == state.revision
+                assert completed.access_denied and not completed.cleanup_pending
+                assert host.store.reconcile_denial() is None
+            finally:
+                for client in clients:
+                    client.close()
+                stop.set()
+                running.result(timeout=12)
+                endpoint.close()

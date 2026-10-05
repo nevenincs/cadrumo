@@ -6,6 +6,7 @@ from uuid import UUID
 
 from ..capsule_records import ProfileCustodyCapsuleLabel
 from ..errors import ProfileCustodyRecordError
+from ..filesystem import write_profile_custody_local_record
 from ..label_head_models import ProfileLabelHead, ProfileLabelHeadPendingAdvance
 from ..label_head_repository import ProfileLabelHeadRepository
 
@@ -42,5 +43,15 @@ def begin_advance(
         replacement_label=replacement_label,
         replacement_head=replacement_head,
     )
-    self._write_pending_exclusive(pending)
+    _write_pending_exclusive(self, pending)
     return pending
+
+
+def _write_pending_exclusive(self: ProfileLabelHeadRepository, pending: ProfileLabelHeadPendingAdvance) -> None:
+    self._ensure_root()
+    try:
+        write_profile_custody_local_record(
+            self.pending_path(pending.profile_id), pending.canonical_json_bytes(), publish_once=True
+        )
+    except Exception as exc:
+        raise ProfileCustodyRecordError("profile label advance is already pending") from exc

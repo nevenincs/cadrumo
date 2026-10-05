@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c225c620ecd3c868ade3e7e4618cb994d2f70af2781aacedbd2037b4380f117'
+body_hash: 'sha256:a08d089e70963b55f6d1f3dfc65fdc93257fa823d41417daacc26656de336178'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -752,6 +752,55 @@ related:
 - `S29` `verify:` `common journal Windows contention and focused purge controls: 28 passed` -> `pass`
 - `S29` `verify:` `core error registry controls with initial purge corpus: 56 passed` -> `pass`
 - `S29` `verify:` `Ruff and ty owned scope` -> `pass`
+- `S28` `M` `dev/audit/legal_excerpt_vintage_screen.py`
+- `S28` `M` `dev/audit/tests/test_legal_excerpt_vintage_screen.py`
+- `S28` `M` `dev/corpus/extract_manual_corpus_text.py`
+- `S28` `A` `dev/corpus/tests/test_corpus_text.py`
+- `S28` `M` `dev/corpus/tests/test_extraction_sidecar_freshness.py`
+- `S28` `A` `dev/corpus/text.py`
+- `S28` `M` `dev/registry/compiler/_m303_orden_source.py`
+- `S28` `M` `dev/registry/compiler/corpus_annotation.py`
+- `S28` `M` `dev/registry/compiler/corpus_catalogue.py`
+- `S28` `M` `dev/registry/compiler/fact_validation.py`
+- `S28` `M` `dev/registry/compiler/legal_grounding.py`
+- `S28` `M` `dev/registry/compiler/tests/test_corpus_annotation.py`
+- `S28` `M` `dev/registry/compiler/tests/test_legal_grounding_memoisation.py`
+- `S28` `M` `dev/registry/compiler/validate_evidence.py`
+- `S28` `M` `dev/registry/compiler/validate_official_source_guidance_content.py`
+- `S28` `M` `dev/registry/tests/test_catalogue_verification_fragments.py`
+- `S28` `M` `dev/registry/tests/test_catalogue_verification_normatives.py`
+- `S28` `M` `dev/registry/tests/test_dana_relief_authority.py`
+- `S28` `M` `dev/registry/tests/test_legal_anchor_verification_ratchet.py`
+- `S28` `M` `dev/registry/tests/test_legal_article_anchor_grounding.py`
+- `S28` `M` `dev/registry/tests/test_legal_fused_redaction_refusal.py`
+- `S28` `M` `dev/registry/tests/test_legal_required_text_reaches_the_provision.py`
+- `S28` `M` `dev/registry/tests/test_modelo_100_eo_agraria_engine_ordenes_2022_2024.py`
+- `S28` `M` `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
+- `S28` `M` `dev/registry/tests/test_modelo_131_registry.py`
+- `S28` `M` `dev/registry/tests/test_modelo_131_regulatory_floor_predicate.py`
+- `S28` `M` `dev/registry/tests/test_modelo_349_registry.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/percepciones_observations.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/retencion_observations.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/tests/observation_window_authoring.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/tests/test_percepciones_observations_repository_roundtrip.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_observations_repository_roundtrip.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/storage/envelope/secure_bound_repository.py`
+- `S28` `A` `src/cadrumo/adapters/persistence/storage/envelope/tests/record_set_authoring.py`
+- `S28` `M` `src/cadrumo/core/errors/hierarchy.py`
+- `S28` `M` `src/cadrumo/core/errors/registry/_core.py`
+- `S28` `M` `src/cadrumo/core/storage_materialization.py`
+- `S28` `D` `src/cadrumo/core/tests/test_corpus_text.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/prorrata_register_models.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/tests/authored_editions.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/tests/legal_quotation.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/tests/provisional_catalogue.py`
+- `S28` `M` `src/cadrumo/domain/iva/tests/test_rate_grounding.py`
+- `S28` `D` `src/cadrumo/domain/iva/tests/test_spanish_territory_grounding.py`
+- `S28` `D` `src/cadrumo/domain/iva/tests/test_supply_nature.py`
+- `S28` `verify:` `pytest legal_article_anchor_grounding and relocated corpus text` -> `pass`
+- `S28` `verify:` `pytest focused S28 owner controls` -> `pass`
+- `S28` `verify:` `ruff and ty S28` -> `pass`
 
 ## Notes
 
@@ -782,3 +831,4 @@ related:
 - `S27` Actual native profile admission reconciles the exact pending protected denial before creating the host. Retain production label-head recovery and move only its fixture writer. Full census preview carries every certified axis. Observed login invalidation follows native facts.
 - `S28` S28 remains open. Exact kernel relocation and finite observation writers pass their controls. Repeated complete registry compilation refuses active Modelo 720 drift owned by another publishing workstream, before article grounding executes. No final gate or closure claimed.
 - `S29` Purge precedes journal hydration on all readers and locked writes. Superseded snapshot 6 remains refused after its amounts are purged. Legacy secure-reference invocation metadata is retired without adopting or replaying its stored request. Identity, lifecycle, effect and settled receipt remain intact. Mutable shared staging prevents the pending per-Step Git checkpoint.
+- `S28` Resolved external Modelo 720 drift: 33 relocated corpus and full article-anchor tests now pass. Reused unchanged 89 passing owner controls and style/type evidence; no suppression or disposition baseline.

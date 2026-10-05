@@ -113,9 +113,8 @@ def censo_import(
         apply = receipt.applied
 
     rows = tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
-    result = CensoFileIngestResult(applied=apply, facts=rows)
-    lines = [f"applied\t{str(apply).lower()}"]
-    lines.extend(f"fact\t{row.path}\t{row.value}" for row in rows)
+    result = CensoFileIngestResult(applied=apply, certificate=certificado, facts=rows)
+    lines = _file_import_preview_lines(result)
     notices = [
         Notice(
             code="config.profile.censo.non_official_tier",
@@ -124,6 +123,15 @@ def censo_import(
         ),
     ]
     emit_envelope(ctx, command="config.profile.censo.import", result=result, lines=lines, notices=notices)
+
+
+def _file_import_preview_lines(result: CensoFileIngestResult) -> list[str]:
+    """Keep all six certified axes visible alongside the separately adoptable facts."""
+    return [
+        f"applied\t{str(result.applied).lower()}",
+        result.certificate.model_dump_json(indent=2),
+        *(f"fact\t{row.path}\t{row.value}" for row in result.facts),
+    ]
 
 
 def censo_pull(
