@@ -24,8 +24,8 @@ from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.errors.severity import BaseSeverity
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
-from ...core.i18n.render import tr
-from ...core.i18n.translatable import Translatable
+from ...core.i18n.render import tr as render_translation
+from ...core.i18n.translatable import Translatable as tr
 from ...core.iban import normalise_iban
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -426,7 +426,7 @@ def _source_import_diagnostics(
             build_ledger_import_diagnostic(
                 kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
                 severity=BaseSeverity.INFO,
-                message=Translatable("transactions.import.verified"),
+                message=tr("transactions.import.verified"),
                 source_path=Path(source_verification.path),
             ),
         )
@@ -737,7 +737,7 @@ def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> 
     _require_readable_source(path)
     validation = provider.validate_source(path)
     if not validation.is_valid:
-        reason = "; ".join(validation.warnings) or tr("errors.transaction.import_source_invalid")
+        reason = "; ".join(validation.warnings) or render_translation("errors.transaction.import_source_invalid")
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_failed",
             context={"reason": reason},
@@ -764,7 +764,7 @@ def _unsupported_import_source(path: Path) -> TransactionValidationError:
     return TransactionValidationError(
         translated_message="errors.transaction.ledger_import_failed",
         context={
-            "reason": f"{tr('errors.transaction.import_source_invalid')}: {path}",
+            "reason": f"{render_translation('errors.transaction.import_source_invalid')}: {path}",
             "path": str(path),
         },
     )

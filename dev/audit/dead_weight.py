@@ -43,6 +43,9 @@ def main() -> int:
                         "outcome": duplication.outcome.value,
                         "reason": duplication.reason,
                         "clones": [group.render() for group in duplication.groups],
+                        "declaration_clones": [group.render() for group in duplication.declaration_groups],
+                        "raw_clones": [group.render() for group in duplication.raw_groups],
+                        "unparsed_reports": max(0, duplication.clone_count - len(duplication.raw_groups)),
                     },
                     "dead_code": {
                         "outcome": dead_code.outcome.value,
@@ -80,6 +83,11 @@ def _duplication_summary(duplication: DuplicationResult) -> dict[str, object]:
         ),
         "available": duplication_available,
         "findings_total": duplication.clone_count,
+        "executable_or_unclassified": len(duplication.groups),
+        "declaration_only": len(duplication.declaration_groups),
+        "import_only_or_overlapping": len(duplication.raw_groups)
+        - len(duplication.groups)
+        - len(duplication.declaration_groups),
         "scanned_total": duplication.files_analyzed,
         "rate": duplication_rate,
     }

@@ -30,6 +30,7 @@ from ...application.runtime.enrollment_access import (
 from ...application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationControl,
+    RuntimeOperationFinancialInput,
     RuntimeOperationManage,
     RuntimeOperationObserve,
     RuntimeOperationRequest,
@@ -204,6 +205,7 @@ class RuntimeConnectionHandling:
             | RuntimeOperationResultPage
             | RuntimeOperationReview
             | RuntimeOperationManage
+            | RuntimeOperationFinancialInput
             | RuntimeOperationSecret,
         ):
             self.profiles.operation(context, channel, request)

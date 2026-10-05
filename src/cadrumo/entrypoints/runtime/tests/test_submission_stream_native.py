@@ -90,7 +90,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tests.test_registered_executor_conformance import _seeded_modelo_edit_submission
+from cadrumo.entrypoints.tests.test_registered_executor_conformance import seeded_modelo_edit_submission
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
@@ -134,7 +134,7 @@ def native_bulk_runtime(
             profile_id = subject.store.binding.profile_id
             edit_input = None
             if getattr(request, "param", None) == "financial":
-                unit_id, wire = _seeded_modelo_edit_submission(profile_id, operation=operation)
+                unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
                 work_unit = WorkUnitCatalogueRepository().load().get(unit_id)
                 assert work_unit is not None
                 original = wire.to_submission()

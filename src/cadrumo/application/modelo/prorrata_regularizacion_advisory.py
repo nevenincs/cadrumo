@@ -367,17 +367,20 @@ def collect_prorrata_regularizacion_diagnostics(
         return ()
 
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
-        rollup = _annual_volume_rollup(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            transaction_repository=transaction_repository,
-            prorrata_register_repository=prorrata_register_repository,
-            bienes_inversion_repository=bienes_inversion_repository,
-            operation=authority,
-        )
+        try:
+            rollup = _annual_volume_rollup(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                filing_year=filing_year,
+                bucket_id=bucket_id,
+                transaction_repository=transaction_repository,
+                prorrata_register_repository=prorrata_register_repository,
+                bienes_inversion_repository=bienes_inversion_repository,
+                operation=authority,
+            )
+        except ProrrataRegisterError as exc:
+            return (_prorrata_storage_degraded_diagnostic(bucket_id, exc),)
         missing_carry_diagnostics = _missing_carry_diagnostics(
             revision,
             casilla_values,
@@ -565,13 +568,7 @@ def _missing_carry_diagnostics(
             operation=operation,
         )
     except ProrrataRegisterError as exc:
-        return (
-            CalculationSourceDiagnostic(
-                reason="storage_degraded",
-                source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
-                message=(f"prorrata register could not be read (bucket {bucket_id!r}): {exc}"),
-            ),
-        )
+        return (_prorrata_storage_degraded_diagnostic(bucket_id, exc),)
 
     declarations_present = declared_volume_total is not None and declared_volume_con_derecho is not None
     applicability = derive_prorrata_applicability(
@@ -627,4 +624,15 @@ def _annual_volume_rollup(
         declared_volume_total=casilla_values.get(total_id) if total_id is not None else None,
         declared_volume_con_derecho=casilla_values.get(right_id) if right_id is not None else None,
         operation=operation,
+    )
+
+
+def _prorrata_storage_degraded_diagnostic(
+    bucket_id: str | None, error: ProrrataRegisterError
+) -> CalculationSourceDiagnostic:
+    """Retain the existing observable refusal when the register cannot be read."""
+    return CalculationSourceDiagnostic(
+        reason="storage_degraded",
+        source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+        message=f"prorrata register could not be read (bucket {bucket_id!r}): {error}",
     )

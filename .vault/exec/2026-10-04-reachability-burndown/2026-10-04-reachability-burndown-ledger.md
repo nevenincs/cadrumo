@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef738d9440a212ad1217aaee46cc90300c537090407f46a6e38080d82fb8afaa'
+body_hash: 'sha256:afc2fd785ee1a85ff442e64f3ea2b878fa600ac824b65b8002f147d39b47900a'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -951,6 +951,47 @@ related:
 - `S10` `verify:` `S10 existing regularisation and mandatory especial controls` -> `pass`
 - `S10` `verify:` `S10 corrected authority publication` -> `pass`
 - `S10` `verify:` `S10 exact manifest Ruff and ty` -> `pass`
+- `S07` `M` `.vault/audit/2026-09-09-reachability-burndown-zero-closure-review-audit.md`
+- `S07` `M` `dev/audit/dead_weight.py`
+- `S07` `M` `dev/audit/duplication.py`
+- `S07` `M` `dev/audit/legal_catalogue.py`
+- `S07` `M` `dev/audit/legal_excerpt_vintage_screen.py`
+- `S07` `M` `dev/audit/tests/test_duplication.py`
+- `S07` `M` `dev/audit/tests/test_legal_excerpt_vintage_screen.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_declared_volume_reconciliation.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S07` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/receipt_binding_probe.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_sign_in_binding.py`
+- `S07` `M` `src/cadrumo/application/aggregation/prorrata_volume.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S07` `M` `src/cadrumo/application/modelo/prorrata_regularizacion_advisory.py`
+- `S07` `M` `src/cadrumo/application/operations/tests/financial_operand_models.py`
+- `S07` `M` `src/cadrumo/application/operations/tests/test_typed_financial_operand_contract.py`
+- `S07` `M` `src/cadrumo/application/operations/typed_financial_operand_context.py`
+- `S07` `M` `src/cadrumo/application/operations/typed_financial_operand_submission.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_apply_refusal_settlement.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S07` `M` `src/cadrumo/tests/deselection_hook.py`
+- `S07` `M` `src/cadrumo/tests/test_deselection_hook.py`
+- `S07` `verify:` `S07 full reachability population exact zero` -> `pass`
+- `S07` `verify:` `S07 just module symbol and export gates` -> `pass`
+- `S07` `verify:` `S07 just audit-dead-weight raw measurement` -> `pass`
+- `S07` `verify:` `S07 final duplication executable neighbor negative controls` -> `pass`
+- `S07` `verify:` `S07 reporting and legal catalogue controls` -> `pass`
+- `S07` `verify:` `S07 connected encrypted prorrata and typed declaration controls` -> `pass`
+- `S07` `verify:` `S07 current binding controls` -> `pass`
+- `S07` `verify:` `S07 native financial intake and ordinary bulk submission` -> `pass`
+- `S07` `verify:` `S07 Windows worker receipt lifecycle integration` -> `pass`
+- `S07` `verify:` `S07 exact owned Ruff and ty` -> `pass`
+- `S07` `verify:` `S07 final just check-style and check-format` -> `pass`
+- `S07` `verify:` `S07 live configured three checker three platform type gate` -> `pass`
+- `S07` `verify:` `S07 captured canonical import boundary gate` -> `pass`
+- `S07` `verify:` `S07 integrated working tree review` -> `pass`
 
 ## Notes
 
@@ -985,3 +1026,4 @@ related:
 - `S24` Completed the accepted whole ModeloEditSubmissionV1 transient design. Apply and preflight use amount-free V2 requests; typed private grants, exact baseline binding, one-shot executor delivery and bounded shutdown use the supervisor transition lock. Hardened durable custody records contain no financial batch values. Exact co-committed edit receipts alone prove UPDATED after owner loss; all seven custody recovery positions are covered. Retired the scalar prototype and preserved its failure-settlement controls. Human native financial intake and ordinary bulk native regressions both pass. Refusal settlement 8 integration controls pass; four registered edit executor cases pass after migrating preflight to the volatile human input. Broker/recovery/shutdown 15 controls and lifetime/projection-forgery 10 controls pass. Previous connected-unit failures were stale V1/schema expectations and passed in 197 public connected controls plus 8 version controls after correction. Ruff and ty passed for the exact Step manifest; broad imports and final integrated review remain S07.
 - `S24` Corrected checkpoint ownership capture: retain the already tested S29 purge marker, the already tested awaiting-custody notice transition, and the shared synthetic typed-batch fixture. Working behavior is unchanged; the cached staged capture had omitted these pieces.
 - `S10` Completed the accepted annual declared-versus-ledger prorrata advisory. The annual Period window and canonical IVA ledger classifier supply classifiable output bases; input cuotas, prior-year rows, cash payment fragments and declared art.104.Tres exclusions do not inflate turnover. Dated registry memberships retain uncertain exempt and foreign-service rights as unclassified. Declaration absence and incomplete classification produce distinct localized nonblocking diagnostics; only complete evidence produces a divergence, and declared values remain untouched. Ledger sin-derecho now participates in missing-provisional applicability even when declared values show no exempt turnover, including settlement. Real encrypted repository controls 2 pass, annual cash and quarter-refusal 2 pass, applicability/verification 16 pass, existing special-regime and regularisation 16 pass, existing calculation-note form/gate controls passed in the previous connected selection. Exact manifest Ruff and ty pass. Published corrected source authority identity 64578b399a91c3743178129dac23ee58dea8b9a393d98f16ad448b9fde7e2dc7. An invalid category token and mutation during the first immutable publication were corrected and reverified. One freshly introduced exact helper in the concurrent active application-sign-in workstream remains for the current S07 population review; no threshold or identity suppression was added.
+- `S07` All current reachability populations are empty (3219/3219 shipped modules reachable); exact symbols and exports pass. Actual Just dead-weight run 20261005T021430.939987Z-audit-dead-weight-63592-e901c1e0 reports zero Vulture findings and 41 raw jscpd matches: 13 declarations, 23 imports or contained reports, five conservative leads reviewed at both source spans with no duplicated business algorithm. Raw evidence and no-unparsed-report status remain visible, without thresholds or identity dispositions. Final 47 duplication controls pass; earlier reporting/legal 98 pass; connected typed models and real encrypted prorrata 12 pass; binding 32 pass; native financial and isolated ordinary bulk both pass; actual Windows worker receipt lifecycle seven pass. Financial server dispatch, narrowing and cancellation completion, degraded-register reporting, public fixture imports and locale constructor visibility are repaired. Commit capture `TYPE_CHECKING` omission is repaired without changing tested working behavior. Configured full ty, pyrefly and BasedPyright across Linux/Windows/macOS, style, format and owned checks pass. Corrected stable source capture loads 4412/4412 governed modules and keeps 15/15 contracts with zero hard/debt/pending findings; captured files are unchanged. Initial omitted stubs/version input and captured type ignore/environment failures are retained as failed attempts, superseded by corrected imports and the applicable live type run. Broader locale inventory/spelling remains red outside this dead-code task; no missing key or invalid placeholder from these changes. No uninterrupted complete pytest run or unavailable interactive OS-keychain claim is made. Four tested shared receipt paths remain working edits with active application-sign-in P01.S05: receipt owner, finite probe, binding tests and human receipt integration; their uncommitted production kernel prevents a safe independent receipt checkpoint. The independent S07 commit preserves those files and all foreign staging. Integrated review PASS is recorded in the existing feature audit for the complete implemented working tree.

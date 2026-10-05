@@ -178,6 +178,7 @@ from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
+from cadrumo.core.text_fold import normalise_corpus_text
 from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
@@ -185,7 +186,7 @@ from dev.corpus.fetch_boe_normative import (
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
-from dev.corpus.text import normalise_corpus_text, resolve_anchored_extracted_unit
+from dev.corpus.text import resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import render_normative_prose
 
 from .legal_catalogue import load_legal_entries
@@ -734,6 +735,12 @@ def clause_chunks(text: str) -> tuple[str, ...]:
             normalised = normalise_corpus_text(sentence)
             if len(normalised) >= _MIN_CLAUSE_CHARS:
                 chunks.append(normalised)
+    # A short operative sentence still states law. Preserve it when splitting
+    # produces no longer clause, so comparison cannot silently declare a match.
+    if not chunks:
+        normalised = normalise_corpus_text(text).strip()
+        if normalised:
+            chunks.append(normalised)
     return tuple(chunks)
 
 
@@ -1136,6 +1143,8 @@ def _classify(
     boe_block: str = "",
 ) -> Finding:
     current_clauses = clause_chunks(current_text)
+    if not current_clauses:
+        return Finding(entry_id, Verdict.ORACLE_INDETERMINATE, "resolved provision contains no comparable body")
     excerpt_normalised = normalise_corpus_text(excerpt_unit["text"])
     # Title-inclusive, because the extractor lifts an article's heading into
     # the unit title on the oracle side and leaves it inline on an excerpt it

@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:45a9d91d33e6692bebf4bb1290bb4166646e9770aa6b99acee4dad7c36691e32'
+body_hash: 'sha256:0eda391637c87110217d5cafac9796f98cf3a0a8338399688f9285026a807bbe'
 ---
 
 # `reachability-burndown` plan
@@ -58,7 +58,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
-- [ ] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.
+- [x] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.
 
 ## Parallelization
 

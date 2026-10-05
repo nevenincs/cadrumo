@@ -128,3 +128,46 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             note_attention(diagnostic.reason, box=None)
         if not unclassified:
             assert any("ledger_sin_derecho_volume" in diagnostic.message for diagnostic in diagnostics)
+
+
+@pytest.mark.parametrize("period", ["1T", "4T"])
+def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path, period: str) -> None:
+    from sqlalchemy import select
+
+    from .....domain.prorrata_register.register import ProrrataRegister
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.sql.engine import get_engine
+    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.session import session_scope
+
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile,
+        bundled_indexed_authority().operation() as operation,
+    ):
+        prorrata = ProrrataRegisterRepository(bucket_id=_BUCKET, objects=profile.repository)
+        prorrata.save(ProrrataRegister())
+        with session_scope(get_engine(profile.settings)) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+                )
+            ).scalar_one()
+            row.payload = b"unreadable-register-ciphertext"
+        diagnostics = collect_prorrata_regularizacion_diagnostics(
+            operation.snapshot("303", filing_year=2026, period=period).revision,
+            {},
+            modelo="303",
+            period_token=period,
+            filing_year=2026,
+            bucket_id=_BUCKET,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            prorrata_register_repository=prorrata,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(
+                bucket_id=_BUCKET, objects=profile.repository
+            ),
+            operation=operation,
+        )
+        assert [item.reason for item in diagnostics] == ["storage_degraded"]
+        assert all(item.reason != "prorrata_volume_divergence" for item in diagnostics)

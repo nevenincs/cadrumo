@@ -44,7 +44,7 @@ from .modelo_operation_test_support import (
 from .test_registered_executor_conformance import (
     _CloseWitness,
     _runtime,
-    _seeded_modelo_edit_submission,
+    seeded_modelo_edit_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -126,7 +126,7 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
 ) -> None:
     """The operator sees a localized refusal naming the family, and no catalogue changed."""
     with _runtime(tmp_path / "runtime", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
-        work_unit_id, wire = _seeded_modelo_edit_submission(profile_id, operation=operation)
+        work_unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
         assert isinstance(wire, ModeloEditApplySubmissionV1)
         refused = ModeloEditApplySubmissionV1.from_submission(variant(wire.to_submission()))
         payload = ModeloEditOperatorInputV2(submission=refused)

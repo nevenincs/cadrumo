@@ -1861,7 +1861,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
     return transaction_id
 
 
-def _seeded_modelo_edit_submission(
+def seeded_modelo_edit_submission(
     profile_id: UUID, *, operation: PinnedAuthorityOperation
 ) -> tuple[str, ModeloEditApplySubmissionV1]:
     """Build one canonical edit DTO over the revision this fixture just persisted."""
@@ -2645,15 +2645,15 @@ def _payload(
                 "output_language": OutputLanguage.ES,
             }
         case "modelo.edit.renew":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
             values = {"profile_id": profile_id, "baseline": wire_submission.baseline}
         case "modelo.edit.preflight":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
             return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
         case "modelo.edit.apply_prerequisite":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
             values = {
                 "profile_id": profile_id,
@@ -3539,7 +3539,7 @@ def _payload(
                 "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
             }
         case "modelo.edit.apply":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
             return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
         case "modelo.work.file":

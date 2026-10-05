@@ -154,12 +154,18 @@ def test_import_preamble_that_reaches_a_function_remains_actionable(tmp_path: Pa
     ("source", "declaration"),
     [
         ("class Record:\n    value: int\n    label: str = 'value'\n", True),
-        ("class Record:\n    value: int = Field(ge=0)\n", True),
+        ("from pydantic import Field\nclass Record:\n    value: int = Field(ge=0)\n", True),
         ("class Record:\n    value: int = Field(default_factory=read_value)\n", False),
         ("class Record:\n    value: int = read_value()\n", False),
         ("def execute(\n    value: int,\n) -> int:\n    return value\n", False),
-        ("class Port(Protocol):\n    def execute(self, value: int) -> int: ...\n", True),
-        ("class Port(Protocol):\n    def execute(self, value: int) -> int:\n        return value\n", False),
+        ("from typing import Protocol\nclass Port(Protocol):\n    def execute(self, value: int) -> int: ...\n", True),
+        (
+            "from typing import Protocol\n"
+            "class Port(Protocol):\n"
+            "    def execute(self, value: int) -> int:\n"
+            "        return value\n",
+            False,
+        ),
         ("from one import value\nRESULT = execute(value)\n", False),
         ("def execute(:\n", False),
     ],
@@ -397,3 +403,90 @@ def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
     (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
 
     assert [module.relative for module in _load_modules(package)] == ["sound.py"]
+
+
+@pytest.mark.parametrize(
+    ("source", "span", "declaration"),
+    [
+        ("class Record:\n    values: tuple[str, ...] = ()\n", (1, 1, 2, 40), True),
+        (
+            "from pydantic import Field\nLIMIT = 12\nclass Record:\n    value: str = Field(max_length=LIMIT)\n",
+            (3, 1, 4, 50),
+            True,
+        ),
+        (
+            "from pydantic import Field\n"
+            "def Field(**kwargs): return execute()\n"
+            "class Record:\n"
+            "    value: str = Field(max_length=12)\n",
+            (3, 1, 4, 50),
+            False,
+        ),
+        (
+            "from typing import Protocol\n"
+            "class Port(Protocol):\n"
+            "    def progress(self, unit_code=None):\n"
+            '        "Describe the capability."\n'
+            "        del unit_code\n",
+            (2, 1, 5, 30),
+            True,
+        ),
+        (
+            "from typing import Protocol\n"
+            "class Port(Protocol):\n"
+            "    def progress(self, unit_code=None):\n"
+            "        del self.value\n",
+            (2, 1, 4, 30),
+            False,
+        ),
+        ('def execute():\n    "Document the operation."\n    perform()\n', (1, 1, 2, 50), True),
+        ('def execute():\n    "Document the operation."\n    perform()\n', (2, 1, 3, 30), False),
+        ("from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    def execute(): perform()\n", (2, 1, 3, 40), True),
+        (
+            "from typing import TYPE_CHECKING\nTYPE_CHECKING = True\nif TYPE_CHECKING:\n    perform()\n",
+            (3, 1, 4, 40),
+            False,
+        ),
+        ("from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    pass\nelse:\n    perform()\n", (2, 1, 5, 40), False),
+        ("def execute(*values: choose_type()):\n    return None\n", (1, 1, 1, 70), False),
+        ("def execute(**values: choose_type()):\n    return None\n", (1, 1, 1, 70), False),
+        ("def execute(*values: int):\n    return None\n", (1, 1, 1, 50), True),
+        ("LABEL = 'value'; perform()\n", (1, 1, 1, 15), True),
+        ("LABEL = 'value'; perform()\n", (1, 1, 1, 25), False),
+        ("LABEL = 'é'; perform()\n", (1, 1, 1, 11), True),
+        ("LABEL = 'é'; perform()\n", (1, 1, 1, 25), False),
+    ],
+)
+def test_column_and_owner_proofs_preserve_executable_neighbors(
+    tmp_path: Path, source: str, span: tuple[int, int, int, int], declaration: bool
+) -> None:
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(source, encoding="utf-8")
+    start, column, end, end_column = span
+    group = CloneGroup(
+        (
+            "Clone found (python):",
+            f" - a.py [{start}:{column} - {end}:{end_column}]",
+            f"   b.py [{start}:{column} - {end}:{end_column}]",
+        )
+    )
+    assert group.sites() == (("a.py", *span), ("b.py", *span))
+    raw = DuplicationResult.from_clones(files_analyzed=2, clone_count=1, duplicated_pct="1", groups=(group,))
+    result = classify_clone_spans(raw, tmp_path)
+    assert result.raw_groups == (group,)
+    assert result.declaration_groups == ((group,) if declaration else ())
+    assert result.groups == (() if declaration else (group,))
+
+
+def test_partial_overlap_cannot_hide_a_later_executable_tail(tmp_path: Path) -> None:
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(
+            'def execute():\n    "The capability."\n    perform()\n    return None\n', encoding="utf-8"
+        )
+    header = CloneGroup(("Clone found (python):", " - a.py [1:1 - 2:30]", "   b.py [1:1 - 2:30]"))
+    body = CloneGroup(("Clone found (python):", " - a.py [2:1 - 4:22]", "   b.py [2:1 - 4:22]"))
+    raw = DuplicationResult.from_clones(files_analyzed=2, clone_count=2, duplicated_pct="1", groups=(header, body))
+    result = classify_clone_spans(raw, tmp_path)
+    assert result.declaration_groups == (header,)
+    assert result.groups == (body,)
+    assert result.raw_groups == (header, body)

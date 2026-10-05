@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import cast
 
@@ -33,7 +33,7 @@ class BoundTypedFinancialOperandAccess:
         self._requirement = requirement
 
     @asynccontextmanager
-    async def consume[OperandT: BaseModel](self, operand_type: type[OperandT]) -> AsyncIterator[OperandT]:
+    async def consume[OperandT: BaseModel](self, operand_type: type[OperandT]) -> AsyncGenerator[OperandT]:
         """Take the complete exact model once and release the access scope's reference."""
         broker, declaration, requirement = self._broker, self._declaration, self._requirement
         if broker is None or declaration is None or requirement is None:

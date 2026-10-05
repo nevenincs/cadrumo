@@ -56,8 +56,8 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.application.operations.tests.financial_operand_models import (
     FinancialOperandBaseline,
     FinancialOperandBatch,
+    financial_operand_declaration,
 )
-from cadrumo.application.operations.tests.test_typed_financial_operand_contract import _declaration
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -75,7 +75,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _NOW = datetime(2026, 8, 26, 9, tzinfo=UTC)
 _DEFINITION_ID = "operation.financial.operand.failure-custody"
 _OPERATION_ID = "4" * 64
-_DECLARATION = _declaration()
+_DECLARATION = financial_operand_declaration()
 
 
 class _Request(CredentialFreeFinancialOperationRequest):

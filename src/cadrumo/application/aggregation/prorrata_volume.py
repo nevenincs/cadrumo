@@ -53,11 +53,12 @@ def project_prorrata_declared_volume_rollup(
             unknown.add(observation.ledger_id)
             continue
         included.append(observation.ledger_id)
-    present = declared_volume_total is not None and declared_volume_con_derecho is not None
     return ProrrataDeclaredVolumeLedgerRollup(
         declared_volume_total=declared_volume_total,
         declared_volume_con_derecho=declared_volume_con_derecho,
-        declared_volume_sin_derecho=(declared_volume_total - declared_volume_con_derecho) if present else None,
+        declared_volume_sin_derecho=(declared_volume_total - declared_volume_con_derecho)
+        if declared_volume_total is not None and declared_volume_con_derecho is not None
+        else None,
         ledger_volume_total=con_derecho + sin_derecho,
         ledger_volume_con_derecho=con_derecho,
         ledger_volume_sin_derecho=sin_derecho,

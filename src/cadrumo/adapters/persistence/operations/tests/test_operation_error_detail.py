@@ -59,7 +59,7 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
 )
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.core.i18n.translatable import Translatable
+from cadrumo.core.i18n.translatable import Translatable as tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
@@ -108,7 +108,7 @@ class _ContextualRefusalExecutor:
     ) -> str | None:
         del request, context
         raise AggregationUnsupportedModeloError(
-            Translatable(_REFUSAL_MESSAGE_KEY),
+            tr(_REFUSAL_MESSAGE_KEY),
             context={"modelo": "111", "transaction_id": _ROW_IDENTITY, "api_token": "never-shown"},
             precondition_verdict=cli_exception_no_recovery_verdict(
                 CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}

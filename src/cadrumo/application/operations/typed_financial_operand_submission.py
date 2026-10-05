@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import secrets
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -177,10 +177,11 @@ class OperationTypedFinancialOperandBroker:
         self,
         requirement: OperationTransientFinancialOperandRequirementV1,
         declaration: OperationTransientFinancialOperandDeclarationV1,
-    ) -> AsyncIterator[BaseModel]:
+    ) -> AsyncGenerator[BaseModel]:
         """Persist delivery before removing the only broker reference, then release it."""
         operand: BaseModel | None = None
         owns_delivery = False
+        delivery_complete: asyncio.Event | None = None
         wait: _TypedWait | None = None
         try:
             async with self._lock_for(requirement.identity.operation_id):
@@ -193,12 +194,11 @@ class OperationTypedFinancialOperandBroker:
                 self._require_unexpired(requirement)
 
                 async def take() -> None:
-                    nonlocal operand, owns_delivery
-                    if wait is None:
-                        raise InternalInvariantError("financial custody wait disappeared")
+                    nonlocal operand, owns_delivery, delivery_complete
                     await self._advance(wait, OperationFinancialOperandCustodyState.DELIVERY_STARTED)
                     operand, wait.operand = wait.operand, None
                     owns_delivery = True
+                    delivery_complete = wait.delivery_complete
                     await self._advance(wait, OperationFinancialOperandCustodyState.DELIVERY_ACKNOWLEDGED)
 
                 await await_cancellation_complete(take(), task_name="financial-custody-consume")
@@ -216,16 +216,14 @@ class OperationTypedFinancialOperandBroker:
 
                     async def release() -> None:
                         async with self._lock_for(requirement.identity.operation_id):
-                            if wait is None:
-                                raise InternalInvariantError("financial custody wait disappeared")
                             if wait.checkpoint.state is OperationFinancialOperandCustodyState.DELIVERY_ACKNOWLEDGED:
                                 await self._advance(wait, OperationFinancialOperandCustodyState.RELEASED)
 
                     await await_cancellation_complete(release(), task_name="financial-custody-release")
 
             finally:
-                if owns_delivery:
-                    wait.delivery_complete.set()
+                if delivery_complete is not None:
+                    delivery_complete.set()
 
     async def require_ready(self, requirement: OperationTransientFinancialOperandRequirementV1) -> None:
         """Refuse executor entry until the exact unexpired batch is bound."""

@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from dev._paths import REPO_ROOT
 from dev.corpus.fetch_boe_normative import (
     ArticleRedaction,
@@ -503,28 +504,31 @@ def test_a_written_ordinal_is_reported_unbound_and_never_misresolved() -> None:
     assert finding.clauses_total > 0
 
 
-def test_zero_clause_findings_stay_confined_to_absent_oracles() -> None:
-    """A finding with no clauses parsed has nothing to compare against.
-
-    Measured live: 328 findings, of which 50 parse zero clauses and 49 of
-    those carry NO_ORACLE - there is genuinely no bundled text to read. That
-    population is otherwise unguarded, and a clause parser that started
-    returning nothing would inflate it while every verdict assertion in this
-    module stayed green, because a comparison over zero clauses reports no
-    defect. Floors and a ceiling, not pinned counts.
-    """
+def test_comparable_oracles_always_contribute_clauses() -> None:
     result = screen(_REPO_ROOT)
-    zero = [finding for finding in result.findings if finding.clauses_total == 0]
+    assert result.findings
+    measured = [finding for finding in result.findings if finding.oracle_kind is not OracleKind.NONE]
+    assert measured
+    assert all(finding.clauses_total > 0 for finding in measured)
 
-    assert len(result.findings) > 250, len(result.findings)
-    assert len(zero) < 90, (
-        f"{len(zero)} of {len(result.findings)} findings parsed zero clauses; the clause "
-        "reader is returning nothing for a growing share of the catalogue"
+
+def test_short_operative_provisions_remain_comparable() -> None:
+    assert clause_chunks("Suprimido.") == ("suprimido.",)
+    finding = _classify(
+        "test:art-1",
+        {},
+        "test-art-1",
+        {"text": "Vigente.", "title": "Artículo 1", "anchor": "#a1"},
+        "Artículo 1",
+        "Suprimido.",
+        identity_confirmed=True,
+        citation_confirmed=True,
+        resolved_anchor="#a1",
+        oracle_kind=OracleKind.CONSOLIDATED_NORM,
     )
-    unexplained = sorted(finding.entry_id for finding in zero if finding.verdict is not Verdict.NO_ORACLE)
-    # One entry reaches a verdict with no clauses to compare, which is a
-    # standing oddity rather than a parser fault; a second would be new.
-    assert len(unexplained) <= 1, unexplained
+    assert finding.clauses_total == 1
+    assert finding.clauses_absent == 1
+    assert finding.verdict is not Verdict.MATCHES
 
 
 def test_only_the_shared_loader_walks_the_legal_catalogue() -> None:
@@ -566,54 +570,25 @@ def test_the_loader_refuses_a_missing_catalogue_rather_than_reading_nothing() ->
         load_legal_entries(_REPO_ROOT / "does-not-exist")
 
 
-#: Live, the catalogue's 64 authored TOMLs carry 704 entries under ``[legal]``.
-#: A floor, not a pin: entries are authored and retired and the screens over them
-#: must keep working. What it refuses is a COLLAPSE. The loader's contract is that
-#: a silent all-clear is the one output an audit instrument must never emit, and its
-#: own refusal covers only the whole directory vanishing -- a present directory that
-#: yields almost nothing reaches every screen in this package unchallenged.
-_MINIMUM_LEGAL_ENTRIES = 500
-
-#: The authored TOMLs that declare something other than a ``[legal]`` table.
-#: Pinned by EQUALITY, not counted: a floor over the entry population cannot see a
-#: ``[legal]`` table renamed across a SUBSET of the catalogue, because the files that
-#: still carry one hold the total above any floor worth setting. This set growing is
-#: that migration, and it is the only shape that reports it.
-_FILES_WITHOUT_A_LEGAL_TABLE = frozenset(
-    {
-        "enrolled-forms-sources-b.toml",
-        "enrolled-forms-sources.toml",
-        "category-profile-sources.toml",
-        "convenio-sources.toml",
-        "ley-58-2003-recargo-bands.toml",
-        "sociedades-annual-manual-coverage.toml",
-        "statutory-constant-sources.toml",
-        "supported-filing-years.toml",
-    }
-)
-
-
-def test_the_catalogue_read_cannot_collapse_below_a_working_population() -> None:
-    """A present directory is not a present catalogue."""
-    entries = load_legal_entries(_REPO_ROOT)
-    assert len(entries) >= _MINIMUM_LEGAL_ENTRIES, (
-        f"the legal catalogue read returned {len(entries)} entries; every screen in this "
-        "package would print a near-clean worklist that says nothing about the catalogue"
-    )
-
-
-def test_only_the_known_non_entry_files_contribute_no_legal_entry() -> None:
-    """A ``[legal]`` rename across a subset survives any floor on the total."""
-    silent = {
-        path.name
+def test_catalogue_population_matches_every_authored_legal_table() -> None:
+    expected = {
+        entry_id
         for path in scan_directory(_REPO_ROOT / LEGAL_DIR, pattern="*.toml")
-        if not parse_toml(path.read_text(encoding="utf-8")).get("legal", {})
+        for entry_id in parse_toml(path.read_text(encoding="utf-8")).get("legal", {})
     }
-    assert silent == _FILES_WITHOUT_A_LEGAL_TABLE, (
-        "the set of catalogue TOMLs contributing no legal entry has changed; unexpectedly "
-        f"silent: {sorted(silent - _FILES_WITHOUT_A_LEGAL_TABLE)}; now contributing: "
-        f"{sorted(_FILES_WITHOUT_A_LEGAL_TABLE - silent)}"
-    )
+    assert expected
+    assert set(load_legal_entries(_REPO_ROOT)) == expected
+
+
+@pytest.mark.parametrize(
+    "content", ["[renamed.article]\nrequired_text=['law']", "[legal]", "legal='lost'", "[sources.bad]\nurl='invalid'"]
+)
+def test_loader_refuses_unrecognized_empty_or_malformed_declarations(tmp_path, content: str) -> None:
+    directory = tmp_path / LEGAL_DIR
+    directory.mkdir(parents=True)
+    (directory / "entry.toml").write_text(content, encoding="utf-8")
+    with pytest.raises((SystemExit, RegistryLoadError)):
+        load_legal_entries(tmp_path)
 
 
 def test_every_bundled_article_payload_states_one_redaction_in_force() -> None:
