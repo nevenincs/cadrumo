@@ -2721,6 +2721,8 @@ cli:
         config profile complete-setup` indica los datos que aún le faltan. Suficiente
         por sí solo; combínalo con --accept-defaults para rellenar el resto con los
         valores por defecto.
+    sign_in_status:
+      help: Comprueba si has iniciado sesión sin reanudarla ni prolongarla.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.

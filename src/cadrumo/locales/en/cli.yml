@@ -2520,6 +2520,8 @@ cli:
         stays setup-incomplete; `aeat config profile complete-setup` names the facts
         it still needs. Sufficient on its own; combine with --accept-defaults to fill
         the rest from descriptor defaults.
+    sign_in_status:
+      help: Check your sign-in status without resuming or extending it.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.

@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a19c4ab9b7405b5e921067e0bb48a4dda853af96dfae6ab1a2c279dfa7068a9'
+body_hash: 'sha256:61555433d428ffc778d900771f107ea620e40d4914cb1fa8263eb32f8125895c'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `application-sign-in` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py`
 - `S01` `M` `dev/agent_eval/tests/test_runtime_automation_grant_lock_parity.py`
@@ -216,6 +190,11 @@ related:
 - `S05` `verify:` `ruff; ty win32 linux darwin; just check-types` -> `pass`
 - `S05` `verify:` `check-module-reachability, persistence and secure-store write paths` -> `pass`
 - `S05` `verify:` `application/runtime + CLI/TUI login suites 189 passed 3 failed` -> `fail`
+- `S14` `M` `src/cadrumo/locales/en/cli.yml`
+- `S14` `M` `src/cadrumo/locales/es/cli.yml`
+- `S14` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S14` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S14` `verify:` `dev.locales set-batch and canonical authored readback for cli.config.sign_in_status.help in en es ca hu` -> `pass`
 
 ## Notes
 
@@ -224,3 +203,4 @@ related:
 - `S03` The 17 runtime/CLI failures precede login `(runtime_unavailable` without a started runtime, a desktop webview directory, a placeholder logout text) and do not reach this change. `os_keychain` tests cannot run here (Credential Manager error 1312 in this logon session) and need an interactive desktop run. Legacy in-process login no longer mints receipts; P03.S12 retires it and the now-vacuous handover keyring-failure test. Mint order unchanged; S04 moves it after publication.
 - `S04` Mint now runs after publication under the admission guard with the generation captured at publication; `require_current` refuses a moved record before any write. The worker holds the password proof as a pending receipt from bind to mint (a DEK copy for that window). Remaining failures predate this Step in earlier run logs `(runtime_unavailable` resume tests, modelo revision lifecycle, automation approval renew, operation secret tui export, worker drain) or pass alone under less load. `os_keychain` tests not run (Credential Manager error 1312 in this logon session). New internal runtime-worker request `mint_human_receipt;` scope corrected in the plan.
 - `S05` Carries the reachability-burndown S07 receipt API move (verify/classify API to `tests/receipt_binding_probe.py` and its two rewritten tests), already logged in that ledger, because it is intertwined with this Step and was verified together. Remaining failures: one `runtime_unavailable` test failing before this Step, one intermittent OpenProcess 87, one leaked-patch failure seen in earlier runs. Login and generation refusals reach clients coarsely until S09. Remaining non-runtime unwrap callers `(bind_resumed_profile_session,` `_resume_for_idempotent_login` via `_profile_session_gate` and `session_admission)` are for P03.S12. S07 must recheck the generation at publication against a sign-out between the worker check and publication.
+- `S14` D2 locale-only handover: added the confirmed missing `cli.config.sign_in_status.help` through dev.locales, preserving concurrent unrelated catalogue changes. B4 retains CLI implementation, generated references and full Step verification; S14 stays open.

@@ -2690,6 +2690,8 @@ cli:
         profil beállítása befejezetlen marad; az `aeat config profile complete-setup`
         megmutatja, mely adatok hiányoznak még. Önmagában is elég; kombináld az --accept-defaults
         kapcsolóval, hogy a többi értéket a leíró alapértékeivel töltsd ki.
+    sign_in_status:
+      help: Ellenőrizd a bejelentkezésed állapotát anélkül, hogy folytatnád vagy meghosszabbítanád.
     status:
       empty_profile: 'Nincs beállított profil. Futtasd: `aeat config profile create
         NÉV` a kezdéshez.'
