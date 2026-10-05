@@ -63,7 +63,6 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "app_diagnostics_latency",
         "app_diagnostics_errors",
         "app_diagnostics_llm_usage",
-        "app_diagnostics_telemetry_flush",
         "app_ledger_llm_diagnostics",
         "app_live_borrador_100_import",
         "app_live_borrador_100_latest",

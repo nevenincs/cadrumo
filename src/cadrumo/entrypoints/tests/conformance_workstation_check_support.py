@@ -2,13 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
-from ...adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ...application.diagnostics_telemetry_contracts import (
-    DiagnosticsTelemetryFlushProjection,
-    DiagnosticsTelemetryFlushRequest,
-)
 from ...application.local_reader import EXTRACTION_READER_ROLES, local_reader_service
 from ...application.operations.public_scalar import PublicNamedScalar, PublicScalar
 from ...application.provisioning import LOCAL_MODEL_PROVISIONING_SERVICE
@@ -122,48 +115,6 @@ WORKSTATION_CHECK_CONFORMANCE_FAMILY = ConformanceFamily(
 
 
 def _retained_workstation_prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
-    if context.definition.definition_id == "diagnostics.telemetry.flush":
-        LLMRunTelemetryRecorder().record(
-            LLMRunRecord(
-                run_id="conformance-flush-success",
-                caller="conformance",
-                provider="llm:codex:conformance",
-                model="conformance",
-                duration_ms=10,
-                succeeded=True,
-                started_at=datetime(2026, 4, 1, tzinfo=UTC),
-            )
-        )
-        LLMRunTelemetryRecorder().record(
-            LLMRunRecord(
-                run_id="conformance-flush-failure",
-                caller="conformance",
-                provider="llm:codex:conformance",
-                model="conformance",
-                duration_ms=20,
-                succeeded=False,
-                error_kind="LLMClassifierError",
-                started_at=datetime(2026, 4, 2, tzinfo=UTC),
-            )
-        )
-        request = DiagnosticsTelemetryFlushRequest(
-            profile_id=context.profile_id,
-            dry_run=False,
-            acknowledged=False,
-            opt_in=False,
-            endpoint="http://127.0.0.1:1/telemetry",
-        )
-
-        def verify(outcome: ConformanceOutcome) -> None:
-            result = outcome.resolve_result(DiagnosticsTelemetryFlushProjection)
-            assert result.profile_id == context.profile_id and result.dry_run is False
-            assert result.sent is False and result.preview.would_send is False
-            assert result.preview.gate_permits is False and result.preview.endpoint_configured is True
-            assert result.preview.payload.counters.runs == 2
-            assert result.preview.payload.counters.succeeded == 1
-            assert result.preview.payload.counters.failed == 1
-
-        return ConformancePreparation(profile_operation_subject(str(context.profile_id)), request, verify=verify)
     if context.definition.definition_id == "diagnostics.workstation.check":
 
         def verify(outcome: ConformanceOutcome) -> None:
@@ -191,12 +142,6 @@ def _retained_workstation_prepare(context: ConformanceFamilyContext) -> Conforma
 
 WORKSTATION_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        RegisteredExecutorConformanceCase(
-            "diagnostics.telemetry.flush",
-            OperationTerminalCondition.SUCCEEDED,
-            OperationEffect.NONE,
-            ("diagnostics.telemetry.flush.prepare", "diagnostics.telemetry.flush.settlement"),
-        ),
         RegisteredExecutorConformanceCase(
             "diagnostics.workstation.check",
             OperationTerminalCondition.SUCCEEDED,

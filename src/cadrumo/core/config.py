@@ -67,7 +67,6 @@ from .storage_environment import (
     storage_root_override,
 )
 from .storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
-from .telemetry.tier import TelemetryTier
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -775,47 +774,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
             "Gestor/professional deployment flag for evidence reading. When True, an off-host evidence "
             "read is categorically refused regardless of cadrumo_evidence_cloud_upload_permitted or any "
             "per-invocation acknowledgement."
-        ),
-    )
-
-    # ── Remote telemetry: opt-in consent posture ────────────────────────────
-    # Default and only-acceptable-for-serious-use posture is fully local: every
-    # existing local telemetry primitive is
-    # written to encrypted secure storage or a local JSONL file and never
-    # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
-    # opt-in exception. It shares the evidence gate's shape above -- gestor bar
-    # first and absolutely, then the deployment opt-in, then the per-invocation
-    # acknowledgement -- so the codebase's off-host consent postures stay
-    # uniform and comparable, with the tier as this posture's only extra axis.
-    cadrumo_telemetry_opt_in: bool = Field(
-        default=False,
-        description=(
-            "Whether this deployment permits transmitting remote telemetry at all. Default off: all "
-            "telemetry stays local. When True, a per-invocation operator consent acknowledgement is "
-            "still required for each emit, and cadrumo_telemetry_tier must not be 'off'."
-        ),
-    )
-    cadrumo_telemetry_tier: TelemetryTier = Field(
-        default=TelemetryTier.OFF,
-        description=(
-            "Remote telemetry tier: 'off' (no remote emission regardless of opt-in), 'crash_only' "
-            "(error/outcome counters only), or 'full' (counters plus timing percentiles). Only "
-            "remote_allowed=True metric keys are ever eligible for transmission at any tier."
-        ),
-    )
-    cadrumo_telemetry_gestor_mode: bool = Field(
-        default=False,
-        description=(
-            "Gestor/professional deployment flag. When True, remote telemetry emission is "
-            "categorically refused regardless of cadrumo_telemetry_opt_in, cadrumo_telemetry_tier, or "
-            "per-invocation consent."
-        ),
-    )
-    cadrumo_telemetry_endpoint: str | None = Field(
-        default=None,
-        description=(
-            "Remote telemetry collector URL, consumed by HttpTelemetrySink when "
-            "a call site opts into real transmission. Unset means no dial target."
         ),
     )
 

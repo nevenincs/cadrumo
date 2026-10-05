@@ -350,8 +350,6 @@ errors:
     error_storage_management: No se ha podido leer ni liberar el árbol de almacenamiento
       local.
     error_submission_validation: Un modelo de envío no superó la validación.
-    error_telemetry_schema: Una clave de métrica de telemetría no está registrada
-      en el esquema cerrado de métricas de su comando.
     error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
     error_transaction_classification_rule: Una regla de clasificación del libro mayor
       no es válida.

@@ -2934,42 +2934,6 @@ cli:
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
       state_backend_unreadable: El almacén de estado del flujo de trabajo no es accesible.
-    telemetry:
-      app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
-        por defecto y opcional.
-      endpoint_help: Previsualiza/envía como si CADRUMO_TELEMETRY_ENDPOINT fuera esta
-        URL solo para esta ejecución; omítelo para usar el endpoint configurado realmente
-        en el despliegue.
-      flush:
-        acknowledge_help: Confirma este envío concreto de telemetría remota. Requerido
-          (además del opt-in y de un nivel distinto de off) para que --no-dry-run
-          transmita de verdad; nunca queda guardado, hay que reafirmarlo en cada ejecución.
-        consent_refused_notice: 'No se envió nada: la telemetría remota está desactivada
-          por defecto (el opt-in, el nivel, el modo gestor o la confirmación de esta
-          ejecución la rechazaron).'
-        dry_run_help: Previsualiza la carga útil que se enviaría sin transmitir nada
-          (por defecto). Pasa --no-dry-run para enviarla realmente cuando el filtro
-          de consentimiento lo permita.
-        dry_run_notice: 'Simulacro: esta carga útil se construyó pero no se transmitió
-          nada.'
-        header: 'Carga útil de telemetría (simulacro, no se envió nada):'
-        help: Construye la carga útil agregada de telemetría local y, salvo --dry-run,
-          la envía.
-        no_endpoint_notice: 'No se envió nada: no hay ningún CADRUMO_TELEMETRY_ENDPOINT
-          configurado.'
-      opt_in_help: Previsualiza/envía como si CADRUMO_TELEMETRY_OPT_IN tuviera este
-        valor solo para esta ejecución; omítelo para usar el ajuste configurado realmente
-        en el despliegue.
-      status:
-        header: 'Postura de telemetría remota:'
-        help: Informa de la postura de consentimiento de telemetría remota. Nunca
-          emite nada.
-        off_hint: La telemetría permanece totalmente local por defecto. Para activarla,
-          define las variables de entorno CADRUMO_TELEMETRY_OPT_IN y CADRUMO_TELEMETRY_TIER
-          (CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only o full).
-      tier_help: Previsualiza/envía como si CADRUMO_TELEMETRY_TIER tuviera este valor
-        (off / crash_only / full) solo para esta ejecución; omítelo para usar el nivel
-        configurado realmente.
     version:
       no_revisions: No hay versiones disponibles de las definiciones de los modelos.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,

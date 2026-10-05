@@ -29,8 +29,6 @@ See Also:
         reports exposed by this CLI group.
     :mod:`~entrypoints.cli._diagnostics_payloads`
         Typed JSON payload schemas emitted by these diagnostics commands.
-    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
-        Nested telemetry subcommand group for the default-off remote tier.
     :func:`~entrypoints.diagnostics_run_health_composition.compose_diagnostics_run_health_port`
         Outer composition binding for the application diagnostics read port.
 """

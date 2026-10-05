@@ -331,8 +331,6 @@ errors:
       `aeat config check`).
     error_storage_management: A helyi tárolófát nem sikerült beolvasni vagy felszabadítani.
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
-    error_telemetry_schema: Egy telemetriai metrikakulcs nincs regisztrálva a parancs
-      zárt metrikasémájában.
     error_transaction_catalogue: A tranzakció-katalógus érvénytelen vagy ellentmondásos.
     error_transaction_classification_rule: Egy főkönyvi osztályozási szabály érvénytelen.
     error_transaction_llm_classifier: A tranzakció osztályozása a nyelvi modell által

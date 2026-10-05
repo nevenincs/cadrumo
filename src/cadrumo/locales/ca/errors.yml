@@ -354,8 +354,6 @@ errors:
     error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
       local.
     error_submission_validation: Un model d'enviament no ha superat la validació.
-    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
-      l'esquema tancat de mètriques de la seva ordre.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
     error_transaction_classification_rule: Una regla de classificació del llibre major
       no és vàlida.

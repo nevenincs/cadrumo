@@ -224,14 +224,14 @@ def test_the_gate_would_catch_an_exemption_for_an_absent_verb() -> None:
 def test_matching_stays_prefix_based_so_a_leaf_entry_does_not_carry_its_siblings() -> None:
     """A leaf exemption must not exempt the group, which is why leaves are used.
 
-    ``app diagnostics telemetry status`` is deliberately a leaf so its sibling
+    ``config profile archive inspect`` is deliberately a leaf so its sibling
     stays gated. If matching ever widened to the group, that sibling would be
     exempted silently and this pins the boundary.
     """
-    assert is_bootstrap_exempt("app diagnostics telemetry status")
-    assert is_bootstrap_exempt("app diagnostics telemetry status --json")
-    assert not is_bootstrap_exempt("app diagnostics telemetry flush")
-    assert not is_bootstrap_exempt("app diagnostics telemetry")
+    assert is_bootstrap_exempt("config profile archive inspect")
+    assert is_bootstrap_exempt("config profile archive inspect --json")
+    assert not is_bootstrap_exempt("config profile archive export")
+    assert not is_bootstrap_exempt("config profile archive")
 
 
 def test_the_matched_paths_are_derived_from_the_records() -> None:

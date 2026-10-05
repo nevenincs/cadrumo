@@ -2708,35 +2708,6 @@ cli:
         row(s)'
       state_backend_readable: Workflow state store is readable.
       state_backend_unreadable: Workflow state store is not readable.
-    telemetry:
-      app_help: Inspect and control the default-off, opt-in remote telemetry tier.
-      endpoint_help: Preview/send as if CADRUMO_TELEMETRY_ENDPOINT were this URL for
-        this invocation only; omit to use the deployment's actual configured endpoint.
-      flush:
-        acknowledge_help: Acknowledge this specific remote-telemetry send. Required
-          (in addition to opt-in and a non-off tier) for --no-dry-run to actually
-          transmit; never sticky, re-affirm on every invocation.
-        consent_refused_notice: 'Nothing was sent: remote telemetry is off by default
-          (opt-in, tier, gestor mode, or per-invocation acknowledgement refused it).'
-        dry_run_help: Preview the payload that would be sent without transmitting
-          anything (default). Pass --no-dry-run to actually send when the consent
-          gate permits.
-        dry_run_notice: 'Dry run: this payload was built but nothing was transmitted.'
-        header: 'Telemetry payload (dry run, nothing sent):'
-        help: Build the aggregate local telemetry payload and, unless --dry-run, send
-          it.
-        no_endpoint_notice: 'Nothing was sent: no CADRUMO_TELEMETRY_ENDPOINT is configured.'
-      opt_in_help: Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for
-        this invocation only; omit to use the deployment's actual configured setting.
-      status:
-        header: 'Remote telemetry posture:'
-        help: Report the current remote-telemetry consent posture. Never emits anything.
-        off_hint: Telemetry stays fully local by default. To opt in, set the CADRUMO_TELEMETRY_OPT_IN
-          and CADRUMO_TELEMETRY_TIER environment variables (CADRUMO_TELEMETRY_OPT_IN=true,
-          CADRUMO_TELEMETRY_TIER=crash_only or full).
-      tier_help: Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off /
-        crash_only / full) for this invocation only; omit to use the deployment's
-        actual configured tier.
     version:
       no_revisions: No versions of the modelo definitions are available.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,

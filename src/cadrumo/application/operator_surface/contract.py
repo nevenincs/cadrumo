@@ -237,10 +237,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.APP,
         child="diagnostics",
-        operator_question=(
-            "report recent local LLM run health, latency, errors, and usage over the active "
-            "bucket; inspect and control the opt-in remote telemetry consent level"
-        ),
+        operator_question=("report recent local LLM run health, latency, errors, and usage over the active bucket"),
         service_owner="cadrumo.application.diagnostics_run_health",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),

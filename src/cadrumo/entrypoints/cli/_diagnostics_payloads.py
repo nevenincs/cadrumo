@@ -12,13 +12,8 @@ JSON contract.
 See Also:
     :mod:`~entrypoints.cli._app_diagnostics`
         CLI transport that populates the local-only diagnostics payloads.
-    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
-        CLI transport that populates the telemetry status/flush payloads.
     :mod:`~application.diagnostics_run_health`
         Application report models mirrored by the run-health payload family.
-    :mod:`~application.diagnostics_telemetry`
-        Application posture/flush models mirrored by the telemetry payload
-        family.
 """
 
 from __future__ import annotations
@@ -30,8 +25,6 @@ from pydantic import NonNegativeInt, field_validator, model_validator
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
-from ...core.telemetry.schema import TelemetryEventPayload
-from ...core.telemetry.tier import TelemetryTier
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.date_range import validate_inclusive_iso_date_range
 from ...core.unit_proportion import is_unit_proportion
@@ -341,37 +334,3 @@ class LlmUsageResult(OutputSchema):
     total_failed: int
     overall_success_rate: str
     has_run_data: bool
-
-
-class TelemetryStatusResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics telemetry status``.
-
-    Mirrors :class:`~application.diagnostics_telemetry.TelemetryStatusReport`.
-    Default-off, consent-gated remote telemetry posture; this verb never
-    emits anything, it only reports the currently-effective :class:`~core.config.Settings`
-    fields plus the derived verdict a fully-acknowledged invocation would
-    currently receive.
-    """
-
-    opt_in: bool
-    tier: TelemetryTier
-    gestor_mode: bool
-    endpoint: str | None = None
-    would_emit_if_acknowledged: bool
-
-
-class TelemetryFlushResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics telemetry flush``.
-
-    Mirrors :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`.
-    ``dry_run=True`` never performs a network call regardless of ``sent``;
-    ``sent`` reports whether a real (non-dry-run) invocation actually handed
-    the payload to the HTTP sink (``gate_permits and endpoint_configured``).
-    """
-
-    dry_run: bool
-    payload: TelemetryEventPayload
-    gate_permits: bool
-    endpoint_configured: bool
-    would_send: bool
-    sent: bool

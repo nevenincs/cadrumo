@@ -35,9 +35,6 @@ See Also:
         Timing/outcome-only payload stored for each completed LLM run.
     :func:`~application.diagnostics_run_health.build_run_health_report`
         Application diagnostic that aggregates these records for operators.
-    :mod:`~application.diagnostics_telemetry`
-        Remote-telemetry preview/flush layer that aggregates only the same
-        non-sensitive accounting signal through a separate consent gate.
     :data:`~adapters.persistence.storage.secure_object_namespaces.LLM_RUN_TELEMETRY_NAMESPACE`
         Secure-object namespace used for the encrypted local store.
 """

@@ -10,7 +10,6 @@ from __future__ import annotations
 from .conformance_auth_apoderado_support import AUTH_APODERADO_CONFORMANCE_FAMILY
 from .conformance_auth_diagnostic_report_support import AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY
 from .conformance_diagnostics_support import DIAGNOSTICS_CONFORMANCE_FAMILY
-from .conformance_diagnostics_telemetry_support import DIAGNOSTICS_TELEMETRY_CONFORMANCE_FAMILY
 from .conformance_family_contract import ConformanceFamily
 from .conformance_google_support import GOOGLE_CONFORMANCE_FAMILY
 from .conformance_invoice_intake_support import INVOICE_INTAKE_CONFORMANCE_FAMILY
@@ -33,7 +32,6 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     AUTH_APODERADO_CONFORMANCE_FAMILY,
     AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY,
     DIAGNOSTICS_CONFORMANCE_FAMILY,
-    DIAGNOSTICS_TELEMETRY_CONFORMANCE_FAMILY,
     GOOGLE_CONFORMANCE_FAMILY,
     INVOICE_INTAKE_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,

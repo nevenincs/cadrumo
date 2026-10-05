@@ -9,21 +9,13 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
-from ...application.diagnostics_operation import (
-    DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
-    DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-)
+from ...application.diagnostics_operation import DIAGNOSTICS_READ_OPERATION_DEFINITION_ID
 from ...application.diagnostics_read_contracts import (
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,
 )
-from ...application.diagnostics_telemetry_contracts import (
-    DiagnosticsTelemetryFlushProjection,
-    DiagnosticsTelemetryFlushRequest,
-)
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...core.telemetry.tier import TelemetryTier
 from .registered_operation_contracts import RegisteredOperationCompletion
 from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
@@ -73,54 +65,7 @@ def read_diagnostics(
     return projection
 
 
-def flush_diagnostics_telemetry(
-    ctx: typer.Context,
-    *,
-    dry_run: bool,
-    acknowledged: bool,
-    opt_in: bool | None,
-    tier: TelemetryTier | None,
-    endpoint: str | None,
-) -> DiagnosticsTelemetryFlushProjection:
-    """Preview or send telemetry through the exact profile's registered worker."""
-    client = bound_profile_client(ctx)
-    try:
-        request = DiagnosticsTelemetryFlushRequest(
-            profile_id=client.profile_id,
-            dry_run=dry_run,
-            acknowledged=acknowledged,
-            opt_in=opt_in,
-            tier=tier,
-            endpoint=endpoint,
-        )
-    except ValidationError:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-
-    completed = run_registered_operation(
-        client,
-        request,
-        definition_id=DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(client.profile_id)),
-        result_type=DiagnosticsTelemetryFlushProjection,
-        request_version=1,
-        result_version=1,
-        timeout=120,
-    )
-    projection = completed.projection
-    expected_effect = OperationEffect.UNKNOWN if projection.sent else OperationEffect.NONE
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not expected_effect
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
-        or projection.dry_run != request.dry_run
-        or (request.dry_run and projection.sent)
-    ):
-        raise invalid_completion_error(completed)
-    return projection
-
-
-__all__ = ["DiagnosticsReadKind", "flush_diagnostics_telemetry", "read_diagnostics"]
+__all__ = ["DiagnosticsReadKind", "read_diagnostics"]
 
 
 def _diagnostics_read_receipt_invalid(

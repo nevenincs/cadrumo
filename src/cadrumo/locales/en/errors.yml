@@ -323,8 +323,6 @@ errors:
       LongPathsEnabled (see `aeat config check`).
     error_storage_management: The local storage tree could not be read or reclaimed.
     error_submission_validation: A submission model failed validation.
-    error_telemetry_schema: A telemetry metric key was not registered in the closed
-      metric schema for its command.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
     error_transaction_llm_classifier: The transaction classification by the language

@@ -109,8 +109,6 @@ from ..application.bucket_event_repository import BucketEventHistoryRepositoryFa
 from ..application.diagnostics_operation import (
     build_diagnostics_read_definition,
     build_diagnostics_read_registration,
-    build_diagnostics_telemetry_flush_definition,
-    build_diagnostics_telemetry_flush_registration,
 )
 from ..application.exchange_rate_provider import exchange_rate_provider
 from ..application.export.google_operation import (
@@ -784,10 +782,7 @@ from .adapter_composition import (
 from .auth_apoderado_composition import build_apoderado_operation_ports, build_auth_diagnostic_report_ports
 from .auth_read_composition import compose_auth_read_ports
 from .calculation_report_verification_operation_composition import build_modelo_calculation_report_verification_ports
-from .diagnostics_operation_composition import (
-    build_diagnostics_read_ports,
-    build_diagnostics_telemetry_flush_ports,
-)
+from .diagnostics_operation_composition import build_diagnostics_read_ports
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .google_configuration_operation_composition import build_google_configuration_operation_ports
 from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
@@ -1148,9 +1143,6 @@ def build_production_operation_registry(
     quickfile_definition = build_quickfile_definition(build_quickfile_operation_ports)
     evidence_ingestion_definitions = build_ledger_evidence_ingestion_definitions(
         build_ledger_evidence_ingestion_operation_ports
-    )
-    diagnostics_telemetry_flush_definition = build_diagnostics_telemetry_flush_definition(
-        build_diagnostics_telemetry_flush_ports
     )
     ledger_llm_diagnostics_definition = build_ledger_llm_diagnostics_definition(
         build_ledger_llm_diagnostics_operation_ports
@@ -1587,7 +1579,6 @@ def build_production_operation_registry(
                 *apoderado_definitions,
                 auth_diagnostic_report_definition,
                 diagnostics_read_definition,
-                diagnostics_telemetry_flush_definition,
                 ledger_llm_diagnostics_definition,
                 *borrador_100_definitions,
                 *m036_definitions,
@@ -1789,7 +1780,6 @@ def build_production_operation_registry(
                 *build_apoderado_operation_registrations(apoderado_definitions),
                 build_auth_diagnostic_report_registration(auth_diagnostic_report_definition),
                 build_diagnostics_read_registration(diagnostics_read_definition),
-                build_diagnostics_telemetry_flush_registration(diagnostics_telemetry_flush_definition),
                 build_ledger_llm_diagnostics_registration(ledger_llm_diagnostics_definition),
                 *build_borrador_100_operation_registrations(borrador_100_definitions),
                 *build_m036_operation_registrations(m036_definitions),

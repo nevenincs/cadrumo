@@ -390,16 +390,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.telemetry.errors.TelemetrySchemaError",
-        ErrorCode(
-            code="ERROR_TELEMETRY_SCHEMA",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_telemetry_schema",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.i18n.locale_catalogue.LocaleCatalogueCaptureError",
         ErrorCode(
             code="REFUSED_LOCALE_CATALOGUE_CAPTURE_NOT_CURRENT",

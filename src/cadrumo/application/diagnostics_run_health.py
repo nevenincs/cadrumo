@@ -56,9 +56,6 @@ See Also:
     :mod:`~entrypoints.cli._app_diagnostics`
         CLI transport for the run-health, runs, latency, errors, and
         llm-usage verbs.
-    :mod:`~application.diagnostics_telemetry`
-        Remote-telemetry posture/flush service that reuses the aggregate
-        LLM-run signal without widening the payload.
 """
 
 from __future__ import annotations

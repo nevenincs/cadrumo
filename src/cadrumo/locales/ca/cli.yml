@@ -2912,42 +2912,6 @@ cli:
       state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
       state_backend_unreadable: L'emmagatzematge d'estat del flux de treball no és
         llegible.
-    telemetry:
-      app_help: Inspecciona i controla el nivell de telemetria remota, desactivat
-        per defecte i opcional.
-      endpoint_help: Previsualitza/envia com si CADRUMO_TELEMETRY_ENDPOINT fos aquesta
-        URL només per aquesta execució; omet-ho per usar l'endpoint configurat realment
-        al desplegament.
-      flush:
-        acknowledge_help: Confirma aquest enviament concret de telemetria remota.
-          Requerit (a més de l'opt-in i d'un nivell diferent d'off) perquè --no-dry-run
-          transmeti de veritat; mai queda desat, cal reafirmar-ho a cada execució.
-        consent_refused_notice: 'No s''ha enviat res: la telemetria remota està desactivada
-          per defecte (l''opt-in, el nivell, el mode gestor o la confirmació d''aquesta
-          execució ho han rebutjat).'
-        dry_run_help: Previsualitza la càrrega útil que s'enviaria sense transmetre
-          res (per defecte). Passa --no-dry-run per enviar-la realment quan el filtre
-          de consentiment ho permeti.
-        dry_run_notice: 'Simulacre: aquesta càrrega útil s''ha construït però no s''ha
-          transmès res.'
-        header: 'Càrrega útil de telemetria (simulacre, no s''ha enviat res):'
-        help: Construeix la càrrega útil agregada de telemetria local i, llevat de
-          --dry-run, l'envia.
-        no_endpoint_notice: 'No s''ha enviat res: no hi ha cap CADRUMO_TELEMETRY_ENDPOINT
-          configurat.'
-      opt_in_help: Previsualitza/envia com si CADRUMO_TELEMETRY_OPT_IN tingués aquest
-        valor només per aquesta execució; omet-ho per usar l'ajust configurat realment
-        al desplegament.
-      status:
-        header: 'Postura de telemetria remota:'
-        help: Informa de la postura de consentiment de telemetria remota. Mai emet
-          res.
-        off_hint: La telemetria roman totalment local per defecte. Per activar-la,
-          defineix les variables d'entorn CADRUMO_TELEMETRY_OPT_IN i CADRUMO_TELEMETRY_TIER
-          (CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only o full).
-      tier_help: Previsualitza/envia com si CADRUMO_TELEMETRY_TIER tingués aquest
-        valor (off / crash_only / full) només per aquesta execució; omet-ho per usar
-        el nivell configurat realment.
     version:
       no_revisions: No hi ha versions disponibles de les definicions dels models.
       registry_summary: '%{package} %{version}: %{modelos} models, %{casillas} caselles,
