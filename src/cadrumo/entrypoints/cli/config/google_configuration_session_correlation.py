@@ -38,14 +38,6 @@ def correlate_probe(
         google_invalid_frame(operation_id=completed.operation_id, completed=completed)
 
 
-def correlate_logout(
-    result: GoogleLogoutProjection, completed: RegisteredOperationCompletion[GoogleConfigurationOutcome]
-) -> None:
-    """Correlate the logout result to its submitted contract."""
-    if result.client_preserved is not True:
-        google_invalid_frame(operation_id=completed.operation_id, completed=completed)
-
-
 def correlate_session_request(
     request: BaseModel, result: BaseModel, completed: RegisteredOperationCompletion[GoogleConfigurationOutcome]
 ) -> bool:
@@ -57,6 +49,6 @@ def correlate_session_request(
         correlate_probe(request, result, completed)
         return True
     elif isinstance(request, GoogleLogoutRequest) and isinstance(result, GoogleLogoutProjection):
-        correlate_logout(result, completed)
+        # Logout carries two independent removal flags that the receipt's effect already binds.
         return True
     return False

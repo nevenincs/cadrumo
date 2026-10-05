@@ -34,10 +34,7 @@ def correlate_status(
 ) -> None:
     """Correlate the status result to its submitted contract."""
     session_details_present, session_details_absent = status_session_details(result)
-    client_details_match = (result.client_registered and bool(result.client_id)) or (
-        not result.client_registered and result.client_id is None
-    )
-    if not client_details_match or not (
+    if not (
         (result.session_present and session_details_present) or (not result.session_present and session_details_absent)
     ):
         google_invalid_frame(operation_id=completed.operation_id, completed=completed)

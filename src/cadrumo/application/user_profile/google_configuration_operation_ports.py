@@ -42,7 +42,6 @@ class GoogleConfigurationRun(Protocol):
         self,
         request: GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,

@@ -223,7 +223,6 @@ def _retained_modelo_reports_prepare_audit(context: ConformanceFamilyContext) ->
 def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
     definition_id = context.definition.definition_id
-    assert session_store.load_client(profile) is None
     assert session_store.load_token(profile) is None
     assert session_store.load_drive_config(profile) is None
     assert not load_settings().cadrumo_google_drive_root_folder_id
@@ -263,7 +262,6 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
     snapshot = context.operation.snapshot("130", filing_year=2025, period="1T")
 
     def verify(outcome: ConformanceOutcome) -> None:
-        assert session_store.load_client(profile) is None
         assert session_store.load_token(profile) is None
         assert session_store.load_drive_config(profile) == before_drive
         assert workflow_state_repository().load() == before_workflow
@@ -332,9 +330,16 @@ MODELO_REPORTS_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             (definition_id,),
-            "REFUSED_PROFILE_ACCESS" if definition_id.endswith("verify") else "REFUSED_OUTBOUND_STORAGE_VALIDATION",
+            refusal_ref,
         )
-        for definition_id in ("modelo.spreadsheet.pull", "modelo.spreadsheet.calculate", "modelo.spreadsheet.verify")
+        # Pull has no Drive root, verify has the export capability off, and
+        # calculate reaches credential hydration in an installation that
+        # carries no Google client.
+        for definition_id, refusal_ref in (
+            ("modelo.spreadsheet.pull", "REFUSED_OUTBOUND_STORAGE_VALIDATION"),
+            ("modelo.spreadsheet.calculate", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
+            ("modelo.spreadsheet.verify", "REFUSED_PROFILE_ACCESS"),
+        )
     ),
     prepare=_retained_modelo_reports_prepare,
 )

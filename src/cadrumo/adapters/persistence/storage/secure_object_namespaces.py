@@ -854,16 +854,6 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="google_oauth_client",
-    namespace="cadrumo.google.oauth.client",
-    owner="cadrumo.adapters.outbound.google",
-    sensitivity=SensitivityClass.SECRET,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{profile}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_token",
     namespace="cadrumo.google.oauth.token",

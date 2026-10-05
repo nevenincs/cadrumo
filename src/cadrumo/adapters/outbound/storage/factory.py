@@ -96,27 +96,23 @@ def _parse_kind(raw: str) -> ProviderKind:
 def build_google_credentials(*, profile: str) -> Credentials:
     """Hydrate Google ``Credentials`` from the profile's desktop sign-in records.
 
-    Loads :class:`~adapters.outbound.google.records.OAuthClient` and
-    :class:`~adapters.outbound.google.records.OAuthToken` through
-    :func:`adapters.outbound.google.session_store.load_client` and
+    Pairs this installation's :class:`~adapters.outbound.google.records.OAuthClient`,
+    read by
+    :func:`adapters.outbound.google.installation_client.load_installation_client`,
+    with the profile's :class:`~adapters.outbound.google.records.OAuthToken` from
     :func:`adapters.outbound.google.session_store.load_token`. The desktop
     sign-in is the only credential source. Imports the upstream library lazily
     so unit tests for the local backend do not pay the cost.
-    """
-    from ..google.session_store import load_client, load_token
 
-    client = load_client(profile)
-    if client is None:
-        raise OutboundStorageValidationError(
-            "no Google OAuth client registered for this profile",
-            context={"profile": profile},
-            translated_message="adapters.outbound.storage._factory.errors.google_client_missing",
-            precondition_verdict=_configuration_validation_verdict(
-                "storage.factory.google_oauth_client.present",
-                field="google_oauth_client",
-                backend="google_drive",
-            ),
-        )
+    Raises:
+        :exc:`adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError`:
+            When the installation carries no usable client metadata.
+        OutboundStorageValidationError: When the profile has no stored token.
+    """
+    from ..google.installation_client import load_installation_client
+    from ..google.session_store import load_token
+
+    client = load_installation_client()
     token = load_token(profile)
     if token is None:
         raise OutboundStorageValidationError(

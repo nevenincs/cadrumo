@@ -2133,17 +2133,7 @@ cli:
       profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
         login` parancsot az újbóli bejelentkezéshez.
     google:
-      client_json_help: Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési
-        útja.
       detail:
-        client_json_invalid: A(z) {path} helyen lévő ügyfél-JSON érvénytelen.
-        client_json_not_desktop: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
-          Cloud Console asztali ügyfél; hiányzik az "installed" wrapper kulcs.
-        client_json_schema_invalid: A(z) {path} helyen lévő ügyfél-JSON nem felel
-          meg a szükséges sémának.
-        client_json_unreadable: 'A(z) {path} elérési útján lévő ügyfél JSON-ja nem
-          olvasható: {reason}'
-        client_unregistered: Nincs regisztrált OAuth-ügyfél a(z) {profile} profilhoz.
         no_metadata_for_refresh: Nincs OAuth-munkamenet a(z) {profile} profilhoz;
           korábbi bejelentkezés nélkül nem lehet megújítani.
         sync_push_limit_requires_dry_run: A Google sync push csak --dry-run mellett
@@ -2153,10 +2143,8 @@ cli:
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
           {detail}'
-        client_not_registered: 'Nincs regisztrált Google OAuth-ügyfél ehhez a profilhoz.
-          Futtasd: `aeat config google register --client-json <elérési_út>`.'
-        client_revoked: 'A regisztrált Google OAuth-ügyfél visszavonásra került. Regisztráld
-          újra: `aeat config google register`.'
+        client_revoked: A Google már nem fogadja el azt a klienst, amellyel ez a telepítés
+          bejelentkezik. Frissítsd az alkalmazást egy aktuális kiadásra.
         keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolt
           vagy nem elérhető.
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
@@ -2187,15 +2175,12 @@ cli:
       help: A Google OAuth asztali integráció kezelése a Drive és a Sheets számára.
       login_help: Az OAuth-hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
         adat megújítása).
-      logout_help: A megújítási token és metaadatok törlése; a regisztrált ügyfél
-        megőrzése.
+      logout_help: A megújítási token és a metaadatok törlése.
       probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének vizsgálata.
       probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
         kísérlet).
       refresh_only_help: A hozzájárulási képernyő kihagyása és csak a meglévő hitelesítő
         adat megújítása.
-      register_help: Cloud Console asztali OAuth ügyfél JSON regisztrálása az aktív
-        profilhoz.
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.

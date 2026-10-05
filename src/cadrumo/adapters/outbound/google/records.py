@@ -1,8 +1,10 @@
 """Pydantic records for the Google OAuth and Drive configuration boundary.
 
+:class:`adapters.outbound.google.records.OAuthClient` is the publisher's Desktop
+client, read from installation data by
+:func:`adapters.outbound.google.installation_client.load_installation_client`.
 The per-profile Google session persists
-:class:`adapters.outbound.google.records.OAuthClient`,
-:class:`adapters.outbound.google.records.OAuthToken`, and
+:class:`adapters.outbound.google.records.OAuthToken` and
 :class:`adapters.outbound.google.records.OAuthMetadata` through
 :mod:`adapters.outbound.google.session_store`.
 :class:`adapters.outbound.google.records.DriveConfig` stores the Drive root
@@ -96,14 +98,13 @@ OAuthTokenUri = Annotated[str, Field(min_length=1), AfterValidator(_validate_tok
 
 
 class OAuthClient(BaseModel):
-    """Operator-imported Cloud Console Desktop OAuth client metadata.
+    """The publisher's Google OAuth Desktop client metadata.
 
-    Carries the JSON the operator downloaded from the Cloud Console after
-    creating a Desktop application OAuth client.
-    :func:`adapters.outbound.google.session_store.save_client` stores
-    this record under the SECRET classification because ``client_secret`` is a
-    long-lived credential. ``client_id`` and ``project_id`` can surface in
-    status output for operator orientation.
+    Carries the fields of a Desktop client download from the Google Cloud
+    Console. It is installation data, the same for every profile, and is
+    never persisted as a profile record. Google does not treat an installed
+    application's ``client_secret`` as confidential, so the record is not a
+    stored secret either; it still never enters command output or logs.
     """
 
     model_config = STRICT_FROZEN_CONFIG

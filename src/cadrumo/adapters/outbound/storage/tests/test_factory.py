@@ -21,8 +21,15 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...google.records import DriveConfig, OAuthClient, OAuthToken
-from ...google.session_store import save_client, save_drive_config, save_token
+from ...google.errors import GoogleAuthClientMetadataUnavailableError
+from ...google.records import DriveConfig, OAuthToken
+from ...google.session_store import save_drive_config, save_token
+from ...google.tests.installation_client_support import (
+    SYNTHETIC_CLIENT_CREDENTIAL,
+    SYNTHETIC_CLIENT_ID,
+    use_absent_installation_client,
+    use_installation_client,
+)
 from ..errors import OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ..protocol import StorageProvider
@@ -181,28 +188,27 @@ def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp
     assert root_folder_id == "persisted-drive-root"
 
 
-def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) -> None:
+def test_factory_refuses_google_drive_when_the_installation_carries_no_client(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    use_absent_installation_client(monkeypatch, tmp_path)
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"),
         override_settings(
             cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
             cadrumo_google_drive_root_folder_id="drive-root",
         ) as settings,
-        pytest.raises(OutboundStorageValidationError) as raised,
+        pytest.raises(GoogleAuthClientMetadataUnavailableError) as raised,
     ):
         get_storage_provider(settings=settings)
 
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
-    assert exc.context == {"profile": "2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"}
-    _assert_factory_verdict(
-        exc,
-        "storage.factory.google_oauth_client.present",
-        {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
-    )
+    assert raised.value.code.code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None and verdict.failed_condition_id == "google.auth.client_metadata.available"
 
 
-def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) -> None:
+def test_factory_rejects_google_drive_without_persisted_token(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    use_installation_client(monkeypatch, tmp_path)
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="893af7b9-9656-466c-9d8a-5d638b189a20"),
         override_settings(
@@ -211,18 +217,6 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
         ) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
-        save_client(
-            "893af7b9-9656-466c-9d8a-5d638b189a20",
-            OAuthClient(
-                client_id="desktop-client.apps.googleusercontent.com",
-                client_secret="client-secret",
-                project_id="desktop-project",
-                auth_uri="https://accounts.google.com/o/oauth2/auth",
-                token_uri="https://oauth2.googleapis.com/token",
-                auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
-                redirect_uris=("http://localhost",),
-            ),
-        )
         get_storage_provider(settings=settings)
 
     exc = raised.value
@@ -235,44 +229,39 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     )
 
 
-def test_build_google_credentials_refuses_a_profile_without_a_registered_client(tmp_path: Path) -> None:
-    """The desktop sign-in is the only credential source, so a missing client is a refusal."""
+def test_build_google_credentials_refuses_before_reading_the_token_when_no_client_is_installed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A stored sign-in cannot be used without the installation client it was minted for."""
     profile = "21a18385-cc88-40ff-a877-43072fa35ca9"
+    use_absent_installation_client(monkeypatch, tmp_path)
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="21a18385-cc88-40ff-a877-43072fa35ca9"),
-        pytest.raises(OutboundStorageValidationError) as raised,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile),
+        pytest.raises(GoogleAuthClientMetadataUnavailableError),
     ):
+        save_token(
+            profile, OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token")
+        )
         build_google_credentials(profile=profile)
 
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
-    assert exc.context == {"profile": profile}
 
-
-def test_build_google_credentials_hydrates_exactly_the_three_non_sensitive_scopes(tmp_path: Path) -> None:
-    """A stored sign-in is hydrated with the consented scope set and nothing wider."""
+def test_build_google_credentials_pairs_the_installation_client_with_the_three_non_sensitive_scopes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A stored sign-in is hydrated with the installation client and the consented scope set, nothing wider."""
     from google.oauth2.credentials import Credentials as OAuthCredentials
 
     profile = "0d3ee1f5-2f0b-4a62-8a56-7d7f7e0a9b11"
+    use_installation_client(monkeypatch, tmp_path)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile):
-        save_client(
-            profile,
-            OAuthClient(
-                client_id="desktop-client.apps.googleusercontent.com",
-                client_secret="client-secret",
-                project_id="desktop-project",
-                auth_uri="https://accounts.google.com/o/oauth2/auth",
-                token_uri="https://oauth2.googleapis.com/token",
-                auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
-                redirect_uris=("http://localhost",),
-            ),
-        )
         save_token(
             profile, OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token")
         )
         credentials = build_google_credentials(profile=profile)
 
     assert isinstance(credentials, OAuthCredentials)
+    assert credentials.client_id == SYNTHETIC_CLIENT_ID
+    assert credentials.client_secret == SYNTHETIC_CLIENT_CREDENTIAL
     assert credentials.scopes == [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",

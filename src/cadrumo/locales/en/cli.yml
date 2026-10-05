@@ -2010,15 +2010,7 @@ cli:
       profile_session_expired: Your profile session has expired. Run `aeat config
         login` to sign in again.
     google:
-      client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
       detail:
-        client_json_invalid: The client JSON at {path} is not valid JSON.
-        client_json_not_desktop: client JSON at {path} is not a Cloud Console Desktop
-          client; expected an "installed" wrapper key
-        client_json_schema_invalid: The client JSON at {path} does not satisfy the
-          required schema.
-        client_json_unreadable: 'could not read client JSON from {path}: {reason}'
-        client_unregistered: no OAuth client is registered for profile {profile}
         no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
           without a prior login
         sync_push_limit_requires_dry_run: Google sync push cannot use --limit unless
@@ -2027,10 +2019,8 @@ cli:
       errors:
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
-        client_not_registered: No Google OAuth client is registered for this profile.
-          Run `aeat config google register --client-json <path>` first.
-        client_revoked: The registered Google OAuth client has been revoked. Re-register
-          it with `aeat config google register`.
+        client_revoked: Google no longer accepts the client this installation signs
+          in with. Update the application to a current release.
         keychain_locked: The system keychain that stores the Google credentials is
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
@@ -2057,13 +2047,11 @@ cli:
         view_help: Show the Google Drive root folder configured for the active profile.
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
-      logout_help: Clear the refresh token and metadata; preserve the registered client
+      logout_help: Clear the refresh token and metadata
       probe_help: Probe the configured Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
       refresh_only_help: Skip the consent screen and refresh an existing credential
         only
-      register_help: Register a Cloud Console Desktop OAuth client JSON for the active
-        profile
       status_help: Show the current Google OAuth session state for the active profile
     list:
       help: List every registered profile and mark the active one

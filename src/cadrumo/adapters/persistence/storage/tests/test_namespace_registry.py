@@ -38,7 +38,6 @@ from ..secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
-    GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     INVOICE_CATALOGUE_NAMESPACE,
@@ -122,7 +121,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "attachment_manifests",
     "aeat_browser_sessions",
     "clave_movil_diagnostics",
-    "google_oauth_client",
     "google_oauth_token",
     "google_oauth_metadata",
     "google_drive_config",
@@ -471,12 +469,6 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
             SensitivityClass.SESSION,
             "{diagnostic_id_or_timestamp_iso}",
         ),
-        "google_oauth_client": (
-            GOOGLE_OAUTH_CLIENT_NAMESPACE,
-            "cadrumo.google.oauth.client",
-            SensitivityClass.SECRET,
-            "{profile}",
-        ),
         "google_oauth_token": (
             GOOGLE_OAUTH_TOKEN_NAMESPACE,
             "cadrumo.google.oauth.token",
@@ -579,7 +571,6 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
     assert {
         "aeat_browser_sessions",
         "clave_movil_diagnostics",
-        "google_oauth_client",
         "google_oauth_token",
         "google_oauth_metadata",
         "google_drive_config",

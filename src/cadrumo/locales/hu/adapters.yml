@@ -68,6 +68,10 @@ adapters:
         spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
         workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
           pillanatképpel.
+    installation_client:
+      errors:
+        client_metadata_invalid: A telepítéshez mellékelt Google-kliens érvénytelen.
+          Telepítsd újra az alkalmazást a helyreállításához.
     oauth_flow:
       errors:
         browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta
@@ -145,9 +149,6 @@ adapters:
             az aktív profilhoz. Futtasd először: `aeat config google folder set <id>`.'
           google_auth_import_failed: 'A google-auth függőség nem importálható; futtasd:
             `uv sync`, majd próbáld újra.'
-          google_client_missing: 'Nincs Google OAuth-kliens regisztrálva az aktív
-            profilhoz. Futtasd először: `aeat config google register --client-json
-            <path>`.'
           google_token_missing: 'Nincs Google OAuth-token mentve az aktív profilhoz.
             Futtasd először: `aeat config google login`.'
           kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND üres.

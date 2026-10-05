@@ -30,6 +30,7 @@ class GoogleAuthPreconditionCondition(StrEnum):
     PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
     OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
+    CLIENT_METADATA_AVAILABLE = "google.auth.client_metadata.available"
     OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"
     LOOPBACK_RECEIVER_BOUND = "google.auth.loopback_receiver.bound"
     BROWSER_LAUNCHER_AVAILABLE = "google.auth.browser_launcher.available"
@@ -69,12 +70,12 @@ class GoogleAuthValidationError(GoogleAuthError):
     """Raised when input parameters fail validation."""
 
 
-class GoogleAuthClientNotRegisteredError(GoogleAuthError):
-    """Raised when no Cloud Console Desktop OAuth client is registered for the active profile."""
+class GoogleAuthClientMetadataUnavailableError(GoogleAuthError):
+    """Raised when this installation carries no usable Google OAuth Desktop client metadata."""
 
 
 class GoogleAuthClientRevokedError(GoogleAuthError):
-    """Raised when the operator (or Google) revoked the registered Desktop OAuth client."""
+    """Raised when Google no longer accepts this installation's Desktop OAuth client."""
 
 
 class GoogleAuthRevokedError(GoogleAuthError):
@@ -159,7 +160,7 @@ class GoogleAuthProfileUnboundError(GoogleAuthError):
 
 __all__ = [
     "GoogleAuthBrowserOpenError",
-    "GoogleAuthClientNotRegisteredError",
+    "GoogleAuthClientMetadataUnavailableError",
     "GoogleAuthClientRevokedError",
     "GoogleAuthError",
     "GoogleAuthExpiredError",

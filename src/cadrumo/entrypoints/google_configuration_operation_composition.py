@@ -4,25 +4,18 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from uuid import UUID
 
 from ..adapters.outbound.google import errors as google_errors
-from ..adapters.outbound.google.errors import (
-    GoogleAuthClientNotRegisteredError,
-    GoogleAuthError,
-    GoogleAuthExpiredError,
-)
-from ..adapters.outbound.google.google_configuration_inputs import decode_google_client_json
+from ..adapters.outbound.google.errors import GoogleAuthError, GoogleAuthExpiredError
 from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFIGURATION_ERROR_TYPES
+from ..adapters.outbound.google.installation_client import load_installation_client
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
 from ..adapters.outbound.google.records import DriveConfig
 from ..adapters.outbound.google.session_store import (
     delete_session,
-    load_client,
     load_drive_config,
     load_metadata,
-    save_client,
     save_drive_config,
     save_metadata,
     save_token,
@@ -49,8 +42,6 @@ from ..application.user_profile.google_configuration_operation_contracts import 
     GoogleLogoutRequest,
     GoogleProbeProjection,
     GoogleProbeRequest,
-    GoogleRegisterProjection,
-    GoogleRegisterRequest,
     GoogleStatusProjection,
     GoogleStatusRequest,
 )
@@ -69,7 +60,6 @@ from ..application.user_profile.profile_record_repository import require_profile
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
 from ..core.config import load_settings
-from ..core.hashing import sha256_hex
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -83,15 +73,12 @@ def _closed_refusal(
     error: GoogleAuthError | OutboundStorageError | GoogleConfigurationExportDisabledError,
     request: GoogleConfigurationRequest,
     local: _LocalFacts,
-    secret: memoryview | None,
 ) -> GoogleConfigurationRefusalProjection | None:
     if type(error) not in GOOGLE_CONFIGURATION_ERROR_TYPES:
         return None
     key = error.translated_message or error.code.message_key
     facts = GoogleConfigurationPresentationFacts(profile=request.profile_id)
     updates: dict[str, object] = {}
-    if isinstance(request, GoogleRegisterRequest) and key.startswith("cli.config.google.detail.client_json_"):
-        _append_google_client_json_refusal(request, key, secret, updates)
     _append_google_local_refusal(local, key, updates)
     verdict = (
         error.terminal_precondition_verdict if isinstance(error, (GoogleAuthError, OutboundStorageError)) else None
@@ -134,13 +121,10 @@ def build_google_configuration_operation_ports(
         require_profile()
         request = GoogleLoginRequest(profile_id=profile_id)
         try:
-            if load_client(profile) is None:
-                raise GoogleAuthClientNotRegisteredError(
-                    translated_message="cli.config.google.detail.client_unregistered", context={"profile": profile}
-                )
+            load_installation_client()
             require_resolvable_profile_record(profile, operation=operation)
         except GoogleAuthError as error:
-            refusal = _closed_refusal(error, request, _LocalFacts(), None)
+            refusal = _closed_refusal(error, request, _LocalFacts())
             if refusal is None:
                 raise
             raise GoogleConfigurationRefusedError(refusal) from None
@@ -148,7 +132,6 @@ def build_google_configuration_operation_ports(
     def run(
         request: GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -162,7 +145,6 @@ def build_google_configuration_operation_ports(
                 profile_id=profile_id,
                 operation=operation,
                 require_profile=require_profile,
-                secret=secret,
                 commit=commit,
                 before_handoff=before_handoff,
                 acknowledged=acknowledged,
@@ -170,7 +152,7 @@ def build_google_configuration_operation_ports(
                 local=local,
             )
         except (GoogleAuthError, OutboundStorageError, GoogleConfigurationExportDisabledError) as error:
-            refusal = _closed_refusal(error, request, local, secret)
+            refusal = _closed_refusal(error, request, local)
             if refusal is None:
                 raise
             raise GoogleConfigurationRefusedError(refusal) from None
@@ -181,23 +163,6 @@ def build_google_configuration_operation_ports(
 
 
 __all__ = ["build_google_configuration_operation_ports"]
-
-
-def _append_google_client_json_refusal(
-    request: GoogleRegisterRequest, key: str, secret: memoryview | None, updates: dict[str, object]
-) -> None:
-    """Describe the supplied client file without disclosing its credential contents."""
-    updates["path"] = request.client_json_path
-    if key.endswith("unreadable"):
-        updates["error_type"] = "UnicodeDecodeError"
-    elif key.endswith("schema_invalid"):
-        updates["error_type"] = "ValidationError"
-    elif key.endswith("invalid"):
-        updates["error_type"] = (
-            "SourceDigestMismatch"
-            if secret is not None and sha256_hex(bytes(secret)) != request.client_json_sha256
-            else "JSONDecodeError"
-        )
 
 
 def _append_google_local_refusal(local: _LocalFacts, key: str, updates: dict[str, object]) -> None:
@@ -261,25 +226,6 @@ def _dispatch_google_folder_view(
     )
 
 
-def _dispatch_google_register(
-    request: GoogleRegisterRequest,
-    profile: str,
-    profile_id: UUID,
-    secret: memoryview | None,
-    commit: GoogleConfigurationCommit,
-) -> GoogleRegisterProjection:
-    """Run the existing GoogleRegister branch in its original effect order."""
-    if secret is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-    registered_client = decode_google_client_json(
-        secret, source=Path(request.client_json_path), expected_sha256=request.client_json_sha256
-    )
-    commit(lambda: save_client(profile, registered_client), changed=lambda _result: True)
-    return GoogleRegisterProjection(
-        profile_id=profile_id, client_id=registered_client.client_id, project_id=registered_client.project_id
-    )
-
-
 def _dispatch_google_login(
     request: GoogleLoginRequest,
     profile: str,
@@ -296,13 +242,7 @@ def _dispatch_google_login(
         if terminal_admission is None:
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         terminal_admission()
-    before_handoff("google.oauth-client-acquisition")
-    client = load_client(profile)
-    acknowledged("google.oauth-client-acquisition")
-    if client is None:
-        raise GoogleAuthClientNotRegisteredError(
-            translated_message="cli.config.google.detail.client_unregistered", context={"profile": profile}
-        )
+    client = load_installation_client()
     local.audience = client.client_id
     if request.refresh_only:
         metadata = load_metadata(profile)
@@ -340,12 +280,9 @@ def _dispatch_google_logout(
 
 def _dispatch_google_status(request: GoogleStatusRequest, profile: str, profile_id: UUID) -> GoogleStatusProjection:
     """Run the existing GoogleStatus branch in its original effect order."""
-    client = load_client(profile)
     metadata = load_metadata(profile)
     return GoogleStatusProjection(
         profile_id=profile_id,
-        client_registered=client is not None,
-        client_id=client.client_id if client is not None else None,
         session_present=metadata is not None,
         account_email=metadata.account_email if metadata is not None else None,
         granted_scopes=metadata.granted_scopes if metadata is not None else (),
@@ -405,7 +342,6 @@ def _dispatch_google_configuration(
     profile_id: UUID,
     operation: PinnedAuthorityOperation,
     require_profile: Callable[[], None],
-    secret: memoryview | None,
     commit: GoogleConfigurationCommit,
     before_handoff: GoogleConfigurationHandoff,
     acknowledged: GoogleConfigurationAcknowledgement,
@@ -418,8 +354,6 @@ def _dispatch_google_configuration(
         return _dispatch_google_folder_set(request, profile, profile_id, commit)
     if isinstance(request, GoogleFolderViewRequest):
         return _dispatch_google_folder_view(request, profile, profile_id)
-    if isinstance(request, GoogleRegisterRequest):
-        return _dispatch_google_register(request, profile, profile_id, secret, commit)
     if isinstance(request, GoogleLoginRequest):
         # The terminal callback validates the consumed exact proposal before
         # any browser launch. Credential acquisition receives fresh admission.

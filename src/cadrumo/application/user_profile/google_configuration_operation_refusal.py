@@ -17,7 +17,7 @@ GOOGLE_CONFIGURATION_REFUSAL_CODE = "REFUSED_GOOGLE_CONFIGURATION"
 type GoogleConfigurationProviderCode = Literal[
     "AUTH_GOOGLE",
     "REFUSED_GOOGLE_VALIDATION",
-    "AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
+    "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
     "AUTH_GOOGLE_CLIENT_REVOKED",
     "AUTH_GOOGLE_REVOKED",
     "AUTH_GOOGLE_EXPIRED",
@@ -44,7 +44,7 @@ type GoogleConfigurationProviderCode = Literal[
 type GoogleConfigurationMessageKey = Literal[
     "errors.auth.auth_google",
     "errors.refused.refused_google_validation",
-    "errors.auth.auth_google_client_not_registered",
+    "errors.refused.refused_google_client_metadata_unavailable",
     "errors.auth.auth_google_client_revoked",
     "errors.auth.auth_google_revoked",
     "errors.auth.auth_google_expired",
@@ -66,12 +66,8 @@ type GoogleConfigurationMessageKey = Literal[
     "errors.refused.refused_outbound_storage_quota",
     "errors.fail.fail_outbound_storage_network",
     "errors.integrity.integrity_outbound_storage",
-    "cli.config.google.detail.client_json_unreadable",
-    "cli.config.google.detail.client_json_invalid",
-    "cli.config.google.detail.client_json_not_desktop",
-    "cli.config.google.detail.client_json_schema_invalid",
-    "cli.config.google.detail.client_unregistered",
     "cli.config.google.detail.no_metadata_for_refresh",
+    "adapters.google.installation_client.errors.client_metadata_invalid",
     "adapters.google.oauth_flow.errors.non_interactive",
     "adapters.google.oauth_flow.errors.profile_state_unresolved",
     "adapters.google.oauth_flow.errors.scope_missing",
@@ -84,7 +80,6 @@ type GoogleConfigurationMessageKey = Literal[
     "adapters.google.oauth_flow.errors.id_token_module_not_importable",
     "adapters.google.oauth_flow.errors.id_token_verification_failed",
     "adapters.google.oauth_flow.errors.email_claim_missing",
-    "adapters.outbound.storage._factory.errors.google_client_missing",
     "adapters.outbound.storage._factory.errors.google_token_missing",
     "adapters.outbound.storage._factory.errors.google_auth_import_failed",
     "adapters.outbound.storage._factory.errors.drive_root_missing",
@@ -96,16 +91,9 @@ type GoogleConfigurationMessageKey = Literal[
 _Text = Annotated[str, Field(max_length=65_536)]
 
 _DYNAMIC_CODES: dict[str, frozenset[str]] = {
-    **{
-        f"cli.config.google.detail.{key}": frozenset({"REFUSED_GOOGLE_VALIDATION"})
-        for key in (
-            "client_json_unreadable",
-            "client_json_invalid",
-            "client_json_not_desktop",
-            "client_json_schema_invalid",
-        )
-    },
-    "cli.config.google.detail.client_unregistered": frozenset({"AUTH_GOOGLE_CLIENT_NOT_REGISTERED"}),
+    "adapters.google.installation_client.errors.client_metadata_invalid": frozenset(
+        {"REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"}
+    ),
     "cli.config.google.detail.no_metadata_for_refresh": frozenset({"AUTH_GOOGLE_EXPIRED"}),
     "adapters.google.oauth_flow.errors.non_interactive": frozenset({"REFUSED_GOOGLE_NON_INTERACTIVE"}),
     "adapters.google.oauth_flow.errors.profile_state_unresolved": frozenset({"REFUSED_GOOGLE_PROFILE_UNBOUND"}),
@@ -132,7 +120,6 @@ _DYNAMIC_CODES: dict[str, frozenset[str]] = {
     **{
         f"adapters.outbound.storage._factory.errors.{key}": frozenset({"REFUSED_OUTBOUND_STORAGE_VALIDATION"})
         for key in (
-            "google_client_missing",
             "google_token_missing",
             "drive_root_missing",
         )
@@ -154,10 +141,6 @@ class GoogleConfigurationPresentationFacts(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile: UUID
-    path: _Text | None = None
-    error_type: Literal["SourceDigestMismatch", "UnicodeDecodeError", "JSONDecodeError", "ValidationError"] | None = (
-        None
-    )
     vault_folder_name: _Text | None = None
     audience: _Text | None = None
     dependency: Literal["google-auth"] | None = None
@@ -172,8 +155,6 @@ class GoogleConfigurationPresentationFacts(BaseModel):
         """Restore only the closed original interpolation names from validated fields."""
         values: dict[str, object] = {"profile": str(self.profile)}
         for field in (
-            "path",
-            "error_type",
             "vault_folder_name",
             "audience",
             "dependency",

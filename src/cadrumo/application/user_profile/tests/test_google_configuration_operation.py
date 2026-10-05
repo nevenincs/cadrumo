@@ -6,8 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from datetime import UTC, datetime
 from threading import Event
 from types import SimpleNamespace
 from typing import cast
@@ -16,7 +15,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
     OperationInteractionKind,
@@ -31,11 +29,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...operations.secret_submission import (
-    BoundEphemeralSecretAccess,
-    EphemeralSecretBroker,
-    OperationSecretRequirement,
-)
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
 from ..access_contracts import AccessAction, Availability, DisclosureCategory
@@ -191,9 +184,8 @@ def _refusal() -> GoogleConfigurationRefusalProjection:
     )
 
 
-def test_all_seven_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_six_public_contracts_compile_and_require_human_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
-    tmp_path: Path,
 ) -> None:
     def unused(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleConfigurationOperationPorts:
         pytest.fail("compiling Google contracts constructed credential capabilities")
@@ -204,13 +196,10 @@ def test_all_seven_public_contracts_compile_and_require_human_dual_whole_profile
         contracts.GoogleLoginRequest(profile_id=_PROFILE),
         contracts.GoogleLogoutRequest(profile_id=_PROFILE),
         contracts.GoogleProbeRequest(profile_id=_PROFILE),
-        contracts.GoogleRegisterRequest(
-            profile_id=_PROFILE, client_json_path=str(tmp_path / "client.json"), client_json_sha256="f" * 64
-        ),
         contracts.GoogleStatusRequest(profile_id=_PROFILE),
     )
     definitions = worker.build_google_configuration_definitions(unused)
-    assert len(definitions) == 7
+    assert len(definitions) == 6
     for definition, payload in zip(definitions, payloads, strict=True):
         registration = worker.build_google_configuration_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -232,7 +221,8 @@ def test_all_seven_public_contracts_compile_and_require_human_dual_whole_profile
         }
         assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert definition.refusal_detail_codes == frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE})
-        assert (definition.ephemeral_secret is not None) is isinstance(payload, contracts.GoogleRegisterRequest)
+        # No Google configuration leaf accepts operator-supplied secret input.
+        assert definition.ephemeral_secret is None
         assert (registration.contract.review_projection_schema is not None) is isinstance(
             payload, contracts.GoogleLoginRequest
         )
@@ -257,13 +247,12 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
         terminal_admission: Callable[[], None] | None,
     ) -> contracts.GoogleConfigurationProjection:
-        assert request.profile_id == _PROFILE and secret is None
+        assert request.profile_id == _PROFILE
 
         def save():
             assert fence.inside
@@ -317,7 +306,6 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -375,7 +363,6 @@ def test_owner_loss_after_first_save_refuses_second_physical_write_and_private_r
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -396,57 +383,6 @@ def test_owner_loss_after_first_save_refuses_second_physical_write_and_private_r
     assert writes == [1] and operands.value is None and events.effects[-1] is OperationEffect.PARTIAL
 
 
-def test_registration_consumes_exact_secret_once_and_excludes_secret_from_private_projection(
-    authority_operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
-    secret = bytearray(b"synthetic-secret-client-json")
-    request = _request(
-        contracts.GoogleRegisterRequest(
-            profile_id=_PROFILE,
-            client_json_path=str(tmp_path / "client.json"),
-            client_json_sha256=sha256_hex(bytes(secret)),
-        ),
-        contracts.GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
-    )
-    raw, context, _, operands, _, _ = _context(request, authority_operation)
-    requirement = OperationSecretRequirement(
-        identity=context.identity,
-        interaction_id="f" * 64,
-        revision=1,
-        secret_kind=contracts.GOOGLE_REGISTER_INPUT_KIND,
-        expires_at=_NOW + timedelta(minutes=5),
-    )
-    broker = EphemeralSecretBroker()
-    broker.submit(requirement, secret, observed_at=_NOW)
-    assert secret == bytearray(len(secret))
-    raw.ephemeral_secret = BoundEphemeralSecretAccess(requirement=requirement, broker=broker, clock=lambda: _NOW)
-
-    def run(
-        request: contracts.GoogleConfigurationRequest,
-        *,
-        secret: memoryview | None,
-        commit: GoogleConfigurationCommit,
-        before_handoff: GoogleConfigurationHandoff,
-        acknowledged: GoogleConfigurationAcknowledgement,
-        terminal_admission: Callable[[], None] | None,
-    ) -> contracts.GoogleConfigurationProjection:
-        assert secret is not None and bytes(secret) == b"synthetic-secret-client-json"
-        commit(lambda: None, changed=lambda _value: True)
-        return contracts.GoogleRegisterProjection(
-            profile_id=_PROFILE, client_id="synthetic-client", project_id="synthetic-project"
-        )
-
-    executor = GoogleConfigurationExecutor(_factory(run))
-    assert asyncio.run(executor.execute(request, context)) == "d" * 64
-    assert operands.value is not None and "synthetic-secret-client-json" not in operands.value.model_dump_json()
-    with pytest.raises(ValueError, match="already consumed"):
-        asyncio.run(executor.execute(request, context))
-    broker.close()
-
-
 def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonical_flow(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
@@ -461,7 +397,6 @@ def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonic
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -524,7 +459,6 @@ def test_caller_cancellation_waits_for_owned_provider_work_and_acknowledgement(
         def run(
             request: contracts.GoogleConfigurationRequest,
             *,
-            secret: memoryview | None,
             commit: GoogleConfigurationCommit,
             before_handoff: GoogleConfigurationHandoff,
             acknowledged: GoogleConfigurationAcknowledgement,

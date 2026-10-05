@@ -56,8 +56,8 @@ def test_closed_google_refusal_rejects_unknown_codes_keys_context_and_cross_code
 ) -> None:
     fields: dict[str, object] = {
         "profile_id": _PROFILE,
-        "provider_code": "AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
-        "message_key": "cli.config.google.detail.client_unregistered",
+        "provider_code": "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
+        "message_key": "adapters.google.installation_client.errors.client_metadata_invalid",
         "facts": GoogleConfigurationPresentationFacts(profile=_PROFILE),
     }
     with pytest.raises(ValidationError):

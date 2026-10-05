@@ -1,17 +1,17 @@
 """Registry-definition binding proof for the Google session secure-object writes.
 
-Each Google OAuth/session record family (client, token, metadata, drive
+Each Google OAuth/session record family (token, metadata, drive
 config) persists an encrypted secure object whose
 ``classification`` and envelope ``schema_version`` MUST be single-sourced from
 the owning
 :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
-(``GOOGLE_OAUTH_CLIENT_NAMESPACE`` and siblings) rather than restated as
+(``GOOGLE_OAUTH_TOKEN_NAMESPACE`` and siblings) rather than restated as
 ``SensitivityClass`` literals in the session store.
 
 This is a write-path proof: it drives each production save function and reads
 the raw :class:`SecureObjectRow` back from the encrypted SQL backend, asserting
 the persisted classification and schema_version equal what the registry def
-declares. The two SECRET namespaces (client, token) and the two FINANCIAL
+declares. The SECRET namespace (token) and the two FINANCIAL
 namespaces (metadata, drive config) are each checked against
 their own def, so a cross-namespace metadata swap would fail here.
 """
@@ -26,7 +26,6 @@ from sqlalchemy import select
 
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
-    GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     SecureObjectNamespaceDefinition,
@@ -35,7 +34,7 @@ from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -47,15 +46,6 @@ _ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
 def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> None:
     """Every Google session save persists the metadata its registry def declares."""
 
-    client = OAuthClient(
-        client_id="desktop-client.apps.googleusercontent.com",
-        client_secret="gcp-client-secret",
-        project_id="cadrumo-vault",
-        auth_uri="https://accounts.google.com/o/oauth2/auth",
-        token_uri="https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
-        redirect_uris=("http://127.0.0.1:8765/callback",),
-    )
     token = OAuthToken(
         refresh_token="1//refresh-token",
         token_uri="https://oauth2.googleapis.com/token",
@@ -69,7 +59,6 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        session_store.save_client(_PROFILE, client)
         session_store.save_token(_PROFILE, token)
         session_store.save_metadata(_PROFILE, metadata)
         session_store.save_drive_config(_PROFILE, drive_config)
@@ -78,7 +67,6 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
             rows = {row.namespace: row for row in session.execute(select(SecureObjectRow)).scalars().all()}
 
     expected: dict[str, SecureObjectNamespaceDefinition] = {
-        GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace: GOOGLE_OAUTH_CLIENT_NAMESPACE,
         GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace: GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE.namespace: GOOGLE_OAUTH_METADATA_NAMESPACE,
         GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace: GOOGLE_DRIVE_CONFIG_NAMESPACE,

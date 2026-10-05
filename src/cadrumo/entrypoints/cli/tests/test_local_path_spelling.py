@@ -50,13 +50,7 @@ _FORBIDDEN_LOCAL_SPELLINGS = ("--source", "--path", "--from-file")
 
 #: Exemptions, keyed by the leaf path and the parameter they excuse, each with
 #: the reason it is not a defect. A stale entry fails below rather than lingering.
-_SPELLING_EXEMPTIONS: dict[tuple[str, str], str] = {
-    ("aeat config google register", "client_json"): (
-        "Credential enrolment is carved out of the transport grammar: the verb enrols a "
-        "credential rather than moving data, and `--client-json` names the specific artefact "
-        "Google issues. `--file` would be strictly less informative here."
-    ),
-}
+_SPELLING_EXEMPTIONS: dict[tuple[str, str], str] = {}
 
 
 def _local_parameters() -> list[tuple[str, ParameterSpec]]:

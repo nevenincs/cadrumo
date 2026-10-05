@@ -71,6 +71,10 @@ adapters:
           vacío.
         workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
           con la instantánea de cálculo.
+    installation_client:
+      errors:
+        client_metadata_invalid: El cliente de Google incluido en esta instalación
+          no es válido. Reinstala la aplicación para restaurarlo.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -153,9 +157,6 @@ adapters:
             para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
           google_auth_import_failed: La dependencia google-auth no se puede importar;
             ejecuta `uv sync` y reinténtalo.
-          google_client_missing: No hay ningún cliente OAuth de Google registrado
-            para el perfil activo. Ejecuta `aeat config google register --client-json
-            <path>` primero.
           google_token_missing: No hay ningún token OAuth de Google persistido para
             el perfil activo. Ejecuta `aeat config google login` primero.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacío.

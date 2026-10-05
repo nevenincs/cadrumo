@@ -19,6 +19,7 @@ from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
+from .. import installation_client as installation_client_module
 from .. import oauth_flow as oauth_flow_module
 from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
@@ -51,8 +52,8 @@ def _contract(
     return _CarrierContract(condition, facts, provenance, outcome)
 
 
-# This is a complete, source-level contract for the 1 active-profile and 15
-# OAuth GoogleAuthError producers. Values are AST expressions, not
+# This is a complete, source-level contract for the 1 active-profile, 2
+# installation-client and 15 OAuth GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -60,6 +61,18 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("active_profile_resolved", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "installation_client:load_installation_client:GoogleAuthClientMetadataUnavailableError:this installation carries no Google client metadata": _contract(
+        GoogleAuthPreconditionCondition.CLIENT_METADATA_AVAILABLE,
+        (("client_metadata_present", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
+    ),
+    "installation_client:load_installation_client:GoogleAuthClientMetadataUnavailableError:this installation's Google client metadata is not a valid Desktop client": _contract(
+        GoogleAuthPreconditionCondition.CLIENT_METADATA_AVAILABLE,
+        (("client_metadata_present", "True"), ("client_metadata_valid", "False")),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
     ),
     "oauth_flow:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
         GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
@@ -149,6 +162,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 
 _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     active_profile_module,
+    installation_client_module,
     oauth_flow_module,
 )
 

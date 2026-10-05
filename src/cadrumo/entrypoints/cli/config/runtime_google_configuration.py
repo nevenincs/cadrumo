@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 from ....adapters.outbound.google.errors import GoogleAuthError
 from ....application.user_profile.google_configuration_operation_contracts import (
-    GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleLoginRequest,
 )
@@ -28,7 +27,6 @@ def run_google_configuration[ProjectionT: BaseModel](
     request: BaseModel,
     *,
     result_type: type[ProjectionT],
-    secret: bytearray | None = None,
 ) -> ProjectionT:
     """Run one typed request and correlate its complete projection to the actual receipt."""
     client = bound_profile_client(ctx)
@@ -40,10 +38,6 @@ def run_google_configuration[ProjectionT: BaseModel](
     ):
         google_invalid_frame(operation_id="config.google.invalid")
     definition_id, expected_projection_type = request_contract
-    if (definition_id == GOOGLE_REGISTER_OPERATION_DEFINITION_ID) is not (secret is not None):
-        google_invalid_frame(operation_id=definition_id)
-    if secret is not None and type(secret) is not bytearray:
-        google_invalid_frame(operation_id=definition_id)
 
     if isinstance(request, GoogleLoginRequest) and not request.refresh_only:
         from .runtime_google_consent import login_google_with_runtime
@@ -63,7 +57,6 @@ def run_google_configuration[ProjectionT: BaseModel](
             result_version=1,
             timeout=120,
             allow_refusal_detail=True,
-            secret=secret,
         )
     correlate_google_completion(
         client,

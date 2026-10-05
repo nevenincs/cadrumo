@@ -3,15 +3,11 @@
 This module writes Google records through
 :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 
-Four per-profile record families back Google configuration and session state,
+Three per-profile record families back Google configuration and session state,
 each under the namespace and
 :class:`~core.classification.policies.SensitivityClass` declared by the
 storage registry:
 
-- :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_CLIENT_NAMESPACE`
-  stores the operator-imported
-  :class:`adapters.outbound.google.records.OAuthClient` at ``SECRET``
-  sensitivity because ``client_secret`` is a long-lived credential.
 - :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE`
   stores the refresh :class:`adapters.outbound.google.records.OAuthToken`
   returned by :func:`adapters.outbound.google.oauth_flow.run_login_flow` at
@@ -28,7 +24,7 @@ storage registry:
 
 The public helpers use the profile identifier resolved by
 :func:`adapters.outbound.google.active_profile.resolve_active_profile` as the storage
-object key, matching the ``{profile}`` grammar on all four namespace
+object key, matching the ``{profile}`` grammar on all three namespace
 definitions.
 """
 
@@ -40,63 +36,22 @@ from ...persistence.storage.crypto.encrypted_columns import secure_object_key_di
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.secure_object_namespaces import (
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
-    GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
 )
 from ...persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
-from .records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from .records import DriveConfig, OAuthMetadata, OAuthToken
 
-_NAMESPACE_CLIENT = GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace
 _NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
 _NAMESPACE_METADATA = GOOGLE_OAUTH_METADATA_NAMESPACE.namespace
 _NAMESPACE_DRIVE_CONFIG = GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace
-_CLIENT_SENSITIVITY = GOOGLE_OAUTH_CLIENT_NAMESPACE.sensitivity
-_CLIENT_VERSION = GOOGLE_OAUTH_CLIENT_NAMESPACE.schema_version
 _TOKEN_SENSITIVITY = GOOGLE_OAUTH_TOKEN_NAMESPACE.sensitivity
 _TOKEN_VERSION = GOOGLE_OAUTH_TOKEN_NAMESPACE.schema_version
 _METADATA_SENSITIVITY = GOOGLE_OAUTH_METADATA_NAMESPACE.sensitivity
 _METADATA_VERSION = GOOGLE_OAUTH_METADATA_NAMESPACE.schema_version
 _DRIVE_CONFIG_SENSITIVITY = GOOGLE_DRIVE_CONFIG_NAMESPACE.sensitivity
 _DRIVE_CONFIG_VERSION = GOOGLE_DRIVE_CONFIG_NAMESPACE.schema_version
-
-
-def save_client(profile: str, client: OAuthClient) -> None:
-    """Persist an :class:`adapters.outbound.google.records.OAuthClient` for ``profile``.
-
-    The record is written under
-    :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_CLIENT_NAMESPACE`
-    with :class:`~core.classification.policies.SensitivityClass`
-    ``SECRET`` so ``aeat config google login`` and Drive credential hydration
-    can reload the operator-imported Desktop OAuth client.
-    """
-    _repository().save(
-        namespace=_NAMESPACE_CLIENT,
-        object_key=profile,
-        classification=_CLIENT_SENSITIVITY,
-        schema_version=_CLIENT_VERSION,
-        written_at=now(),
-        payload=client.model_dump_json().encode(UTF_8_ENCODING),
-    )
-
-
-def load_client(profile: str) -> OAuthClient | None:
-    """Load the :class:`adapters.outbound.google.records.OAuthClient` for ``profile``.
-
-    Returns:
-        The stored :class:`adapters.outbound.google.records.OAuthClient`, or
-        ``None`` when the profile has not registered a Desktop OAuth client.
-    """
-    record = _repository().load(
-        _NAMESPACE_CLIENT,
-        profile,
-        expected_class=_CLIENT_SENSITIVITY,
-        max_supported_version=_CLIENT_VERSION,
-    )
-    if record is None:
-        return None
-    return OAuthClient.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def save_token(profile: str, token: OAuthToken) -> None:
@@ -214,16 +169,14 @@ def load_drive_config(profile: str) -> DriveConfig | None:
 
 
 def delete_session(profile: str) -> tuple[bool, bool]:
-    """Delete the login session while preserving registration and Drive config.
+    """Delete the login session while preserving the Drive config.
 
     Removes only the
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE` and
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
-    records, matching ``aeat config google logout``. The registered
-    :class:`adapters.outbound.google.records.OAuthClient` and
-    :class:`adapters.outbound.google.records.DriveConfig` remain available so a
-    later login can reuse the Cloud Console JSON and the same Drive root
-    folder.
+    records, matching ``aeat config google logout``. The
+    :class:`adapters.outbound.google.records.DriveConfig` remains available so a
+    later login reuses the same Drive root folder.
 
     The token and its companion metadata are one logout, so they are removed
     in ONE unit of work. They used to be two independent commits: a failure on
@@ -266,11 +219,9 @@ def delete_session(profile: str) -> tuple[bool, bool]:
 
 __all__ = [
     "delete_session",
-    "load_client",
     "load_drive_config",
     "load_metadata",
     "load_token",
-    "save_client",
     "save_drive_config",
     "save_metadata",
     "save_token",

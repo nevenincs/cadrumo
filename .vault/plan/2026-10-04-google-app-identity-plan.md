@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:c0bfaddb56c989fff15dc5a0462b7cbe74bd2877a7214d6d2167d32dda6e1b08'
+body_hash: 'sha256:181be27e5befca129f6dcc82d3d12a167eea32fb7889244754c48c5702f1820d'
 ---
 
 # `google-app-identity` plan
@@ -68,9 +68,14 @@ Scope notes that keep Steps honest:
   the native contract projection change with it; the native projection is
   owned by the packaging work, so this Step regenerates only what this
   repository's own generators produce and reports the rest.
-- `S06` builds the resolution seam only. No client ID, real or placeholder,
-  is committed. With no bundled metadata present the behaviour is a typed
-  refusal naming registration as the remedy.
+- `S06` follows commitment 3 as amended on 2026-10-05: the publisher client
+  is the only client, so the Step removes client registration rather than
+  keeping it as a fallback. No client ID, real or placeholder, is committed.
+  A development checkout reads its client file from the git-ignored
+  `src/cadrumo/_data/google/oauth_client.json`, which both build targets
+  exclude. With no usable file present the behaviour is one typed refusal.
+  Placing the publisher client in a packaged installation belongs to the
+  packaging work.
 - `S07` changes the persisted token schema. Per commitment 9 there is no
   reader for the old shape.
 
@@ -88,7 +93,7 @@ proposed to the product owner at plan close.
 - [x] `S03` - Drop the spreadsheets scope from the bundled scope constants and the required scope set so sign-in requests exactly openid, userinfo.email and drive.file; `src/cadrumo/core/external_constants.toml`.
 - [x] `S04` - Refuse unmarked Drive entries in the Sheets adapter and the mirror provider, and create workbooks through Drive with the ownership marker in one call; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
 - [ ] `S05` - Create and store a marker-stamped root folder per profile, trust a stored ID only when marker-owned, type the non-Cadrumo workbook refusal, and remove the folder-set command, the root folder setting and its environment example and reference; `src/cadrumo/adapters/outbound/storage/factory.py`.
-- [ ] `S06` - Resolve the OAuth client through one owner with precedence profile-registered, then installation-bundled public metadata, then a typed refusal, committing no client ID; `src/cadrumo/adapters/outbound/google/session_store.py`.
+- [ ] `S06` - Resolve the publisher OAuth client through one owner that reads installation data and refuses with one typed error when none is usable, and remove the register operation with its command, input kind, contracts and correlation, the per-profile client record and namespace, and the client fields of the status and logout results, committing no client ID; `src/cadrumo/adapters/outbound/google/installation_client.py`.
 - [ ] `S07` - Bind the stored token to its minting client, refuse a sign-in without a refresh token, report a revoked or expired grant as a typed sign-in-required state, and use the loopback IP literal; `src/cadrumo/adapters/outbound/google/oauth_flow.py`.
 - [ ] `S08` - Implement or delete the stale refresh lifecycle declarations: rotated-token persistence, last refresh and reauth fields, the refresh-only login mode and the unread refresh buffer setting; `src/cadrumo/adapters/outbound/google/records.py`.
 - [ ] `S09` - Document the removals, the local import replacement and the re-export after a client change in the user documentation and release notes, and regenerate the references they feed; `docs`.

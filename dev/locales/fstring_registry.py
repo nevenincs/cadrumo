@@ -109,7 +109,6 @@ _LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
 # build site is not otherwise visible to the static AST scanner.
 _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "validation",
-    "client_not_registered",
     "client_revoked",
     "token_revoked",
     "token_expired",
@@ -337,18 +336,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
             key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
             values=_enum_values(WorkflowResumeRefusalReason),
-        ),
-        FStringKeyRegistration(
-            # Pinned to the literal tuple _DYNAMIC_CODES expands in
-            # application/user_profile/google_configuration_operation_refusal.py.
-            description="cli.config.google.detail.* (Google client validation refusals)",
-            key_factory=lambda v: f"cli.config.google.detail.{v}",
-            values=(
-                "client_json_unreadable",
-                "client_json_invalid",
-                "client_json_not_desktop",
-                "client_json_schema_invalid",
-            ),
         ),
         FStringKeyRegistration(
             description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",

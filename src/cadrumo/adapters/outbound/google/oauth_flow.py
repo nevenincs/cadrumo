@@ -1,6 +1,6 @@
 """Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs an operator-supplied :class:`adapters.outbound.google.records.OAuthClient`
+Runs this installation's :class:`adapters.outbound.google.records.OAuthClient`
 through Google's loopback IP + PKCE Desktop flow using
 ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``.
 The operating system picks an ephemeral loopback port and opens the
@@ -251,7 +251,7 @@ def run_login_flow(
     :func:`adapters.outbound.google.oauth_flow.credentials_to_records`.
 
     Args:
-        client: Operator-imported
+        client: This installation's
             :class:`adapters.outbound.google.records.OAuthClient` metadata.
         profile: Active profile UUID resolved by
             :func:`adapters.outbound.google.active_profile.resolve_active_profile`.

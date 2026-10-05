@@ -1180,7 +1180,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
             category=ErrorCategory.REFUSED,
-            message_key="adapters.outbound.storage._factory.errors.google_client_missing",
+            message_key="errors.refused.refused_google_client_metadata_unavailable",
             retryable=False,
             runbook_id=None,
         ),

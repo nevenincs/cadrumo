@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -21,9 +20,7 @@ GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID = "config.google.folder.view"
 GOOGLE_LOGIN_OPERATION_DEFINITION_ID = "config.google.login"
 GOOGLE_LOGOUT_OPERATION_DEFINITION_ID = "config.google.logout"
 GOOGLE_PROBE_OPERATION_DEFINITION_ID = "config.google.probe"
-GOOGLE_REGISTER_OPERATION_DEFINITION_ID = "config.google.register"
 GOOGLE_STATUS_OPERATION_DEFINITION_ID = "config.google.status"
-GOOGLE_REGISTER_INPUT_KIND = "google.oauth-client-json"
 GOOGLE_CONSENT_PRESENTATION_CODE = "google.consent.terminal-required"
 _Text = Annotated[str, Field(max_length=65_536)]
 _Input = Annotated[str, Field(max_length=16_384)]
@@ -57,7 +54,7 @@ class GoogleLoginRequest(GoogleProfileRequest):
 
 
 class GoogleLogoutRequest(GoogleProfileRequest):
-    """Delete the session while preserving client and folder configuration."""
+    """Delete the session while preserving the folder configuration."""
 
 
 class GoogleProbeRequest(GoogleProfileRequest):
@@ -66,21 +63,8 @@ class GoogleProbeRequest(GoogleProfileRequest):
     read_only: bool = False
 
 
-class GoogleRegisterRequest(GoogleProfileRequest):
-    """Source provenance and digest; JSON bytes use the protected secret channel."""
-
-    client_json_path: Annotated[str, Field(min_length=1, max_length=4096)]
-    client_json_sha256: ContentDigest
-
-    @model_validator(mode="after")
-    def _absolute_source(self) -> Self:
-        if not Path(self.client_json_path).is_absolute():
-            raise ValueError("Google client JSON source must be absolute")
-        return self
-
-
 class GoogleStatusRequest(GoogleProfileRequest):
-    """Inspect registered client and non-secret session metadata."""
+    """Inspect non-secret session metadata."""
 
 
 type GoogleConfigurationRequest = (
@@ -89,7 +73,6 @@ type GoogleConfigurationRequest = (
     | GoogleLoginRequest
     | GoogleLogoutRequest
     | GoogleProbeRequest
-    | GoogleRegisterRequest
     | GoogleStatusRequest
 )
 
@@ -128,7 +111,6 @@ class GoogleLogoutProjection(BaseModel):
     profile_id: UUID
     token_removed: bool
     metadata_removed: bool
-    client_preserved: Literal[True] = True
 
 
 class GoogleProbeProjection(BaseModel):
@@ -145,22 +127,11 @@ class GoogleProbeProjection(BaseModel):
     detail: _Text = ""
 
 
-class GoogleRegisterProjection(BaseModel):
-    """Only the client/project orientation fields from the registered secret."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    client_id: _Text
-    project_id: _Text
-
-
 class GoogleStatusProjection(BaseModel):
-    """Whole current client/session inspection without credential material."""
+    """Whole current session inspection without credential material."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    client_registered: bool
-    client_id: _Text | None = None
     session_present: bool
     account_email: _Text | None = None
     granted_scopes: tuple[_Text, ...] = ()
@@ -175,7 +146,6 @@ type GoogleConfigurationProjection = (
     | GoogleLoginProjection
     | GoogleLogoutProjection
     | GoogleProbeProjection
-    | GoogleRegisterProjection
     | GoogleStatusProjection
 )
 
@@ -205,7 +175,6 @@ GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: (GoogleLogoutRequest, GoogleLogoutProjection),
     GOOGLE_PROBE_OPERATION_DEFINITION_ID: (GoogleProbeRequest, GoogleProbeProjection),
-    GOOGLE_REGISTER_OPERATION_DEFINITION_ID: (GoogleRegisterRequest, GoogleRegisterProjection),
     GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
 }
 GOOGLE_CONFIGURATION_REQUEST_TYPES = (
@@ -214,7 +183,6 @@ GOOGLE_CONFIGURATION_REQUEST_TYPES = (
     GoogleLoginRequest,
     GoogleLogoutRequest,
     GoogleProbeRequest,
-    GoogleRegisterRequest,
     GoogleStatusRequest,
 )
 
@@ -285,8 +253,6 @@ __all__ = [
     "GOOGLE_LOGIN_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGOUT_OPERATION_DEFINITION_ID",
     "GOOGLE_PROBE_OPERATION_DEFINITION_ID",
-    "GOOGLE_REGISTER_INPUT_KIND",
-    "GOOGLE_REGISTER_OPERATION_DEFINITION_ID",
     "GOOGLE_STATUS_OPERATION_DEFINITION_ID",
     "GoogleConfigurationExecutionResult",
     "GoogleConfigurationExportDisabledError",
@@ -307,8 +273,6 @@ __all__ = [
     "GoogleProbeProjection",
     "GoogleProbeRequest",
     "GoogleProfileRequest",
-    "GoogleRegisterProjection",
-    "GoogleRegisterRequest",
     "GoogleStatusProjection",
     "GoogleStatusRequest",
 ]

@@ -304,6 +304,10 @@ exclude = [
   "**/*.lock",
   "src/cadrumo/_data/registry/authority/authority-candidate-*",
   "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
+  # A development checkout may hold the developer's own Google OAuth client
+  # file here. A build made from that checkout must not distribute it.
+  "src/cadrumo/_data/google",
+  "src/cadrumo/_data/google/**",
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
   "src/cadrumo_harness/tests",
@@ -390,6 +394,10 @@ exclude = [
   "**/*.lock",
   "src/cadrumo/_data/registry/authority/authority-candidate-*",
   "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
+  # A development checkout may hold the developer's own Google OAuth client
+  # file here. A build made from that checkout must not distribute it.
+  "src/cadrumo/_data/google",
+  "src/cadrumo/_data/google/**",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.

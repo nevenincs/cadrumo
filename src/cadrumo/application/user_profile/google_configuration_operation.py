@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import timedelta
 
 from pydantic import BaseModel
 
@@ -33,7 +32,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from .access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -49,8 +47,6 @@ from .google_configuration_operation_contracts import (
     GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING,
     GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
-    GOOGLE_REGISTER_INPUT_KIND,
-    GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
     GoogleConfigurationExecutionResult,
     GoogleConfigurationOutcome,
     GoogleConsentProposal,
@@ -112,7 +108,7 @@ def resolve_google_configuration_access(
 def build_google_configuration_definitions(
     factory: GoogleConfigurationOperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Enroll exactly the nine existing human CLI configuration leaves."""
+    """Enroll every human CLI configuration leaf the contract map declares."""
     definitions: list[OperationDefinition] = []
     for definition_id, (request_type, _projection_type) in GOOGLE_CONFIGURATION_CONTRACTS.items():
         consent = definition_id == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
@@ -146,11 +142,6 @@ def build_google_configuration_definitions(
                 else OperationReconciliationPolicy.INTERRUPT,
                 permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
                 refusal_detail_codes=frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE}),
-                ephemeral_secret=OperationEphemeralSecretDeclaration(
-                    secret_kind=GOOGLE_REGISTER_INPUT_KIND, lifetime=timedelta(minutes=5)
-                )
-                if definition_id == GOOGLE_REGISTER_OPERATION_DEFINITION_ID
-                else None,
             )
         )
     return tuple(definitions)

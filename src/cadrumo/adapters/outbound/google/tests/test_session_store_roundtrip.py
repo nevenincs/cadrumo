@@ -9,7 +9,7 @@ import pytest
 
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "1a92e8a0-9da5-4712-8b71-a8aadd4eed42"  # was 'google-session'
@@ -19,15 +19,6 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     profile = "operator-google"
     issued_at = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
     opaque_refresh_token = " 1//refresh-token\t"
-    client = OAuthClient(
-        client_id="desktop-client.apps.googleusercontent.com",
-        client_secret="gcp-client-secret",
-        project_id="cadrumo-vault",
-        auth_uri="https://accounts.google.com/o/oauth2/auth",
-        token_uri="https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
-        redirect_uris=("http://127.0.0.1:8765/callback",),
-    )
     token = OAuthToken(
         refresh_token=opaque_refresh_token,
         token_uri="https://oauth2.googleapis.com/token",
@@ -41,12 +32,10 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        session_store.save_client(profile, client)
         session_store.save_token(profile, token)
         session_store.save_metadata(profile, metadata)
         session_store.save_drive_config(profile, drive_config)
 
-        assert session_store.load_client(profile) == client
         loaded_token = session_store.load_token(profile)
         assert loaded_token == token
         assert loaded_token is not None
@@ -61,5 +50,4 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         assert session_store.delete_session(profile) == (True, True)
         assert session_store.load_token(profile) is None
         assert session_store.load_metadata(profile) is None
-        assert session_store.load_client(profile) == client
         assert session_store.load_drive_config(profile) == drive_config

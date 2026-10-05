@@ -28,14 +28,12 @@ from .google_configuration_operation_contracts import (
     GOOGLE_CONFIGURATION_REQUEST_TYPES,
     GOOGLE_CONSENT_PRESENTATION_CODE,
     GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING,
-    GOOGLE_REGISTER_INPUT_KIND,
     GoogleConfigurationExecutionResult,
     GoogleConfigurationOutcome,
     GoogleConfigurationProjection,
     GoogleConfigurationRequest,
     GoogleConsentProposal,
     GoogleLoginRequest,
-    GoogleRegisterRequest,
 )
 from .google_configuration_operation_ports import GoogleConfigurationOperationPortsFactory
 from .google_configuration_operation_refusal import (
@@ -256,24 +254,8 @@ class GoogleConfigurationExecutor:
     ) -> OperationExecutorResult:
         payload = _require_profile(request, context)
         tracker = _GoogleConfigurationEffectTracker(request, context)
-        work = self._run_with_secret(request, context, payload, tracker, terminal_admission)
+        work = self._run_provider(request, context, payload, tracker, terminal_admission)
         return await await_cancellation_complete(work, task_name=request.definition_id)
-
-    async def _run_with_secret(
-        self,
-        request: OperationRequest[BaseModel],
-        context: OperationExecutorContext,
-        payload: GoogleConfigurationRequest,
-        tracker: _GoogleConfigurationEffectTracker,
-        terminal_admission: Callable[[], None] | None,
-    ) -> OperationExecutorResult:
-        if not isinstance(payload, GoogleRegisterRequest):
-            return await self._run_provider(request, context, payload, tracker, terminal_admission, secret=None)
-        requirement = context.ephemeral_secret.requirement
-        if requirement.identity != context.identity or requirement.secret_kind != GOOGLE_REGISTER_INPUT_KIND:
-            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-        async with context.ephemeral_secret.consume() as secret:
-            return await self._run_provider(request, context, payload, tracker, terminal_admission, secret=secret)
 
     async def _run_provider(
         self,
@@ -282,8 +264,6 @@ class GoogleConfigurationExecutor:
         payload: GoogleConfigurationRequest,
         tracker: _GoogleConfigurationEffectTracker,
         terminal_admission: Callable[[], None] | None,
-        *,
-        secret: memoryview | None,
     ) -> OperationExecutorResult:
         try:
             ports = self._factory(profile_id=payload.profile_id, operation=context.authority_operation)
@@ -293,7 +273,6 @@ class GoogleConfigurationExecutor:
                 projection = await asyncio.to_thread(
                     ports.run,
                     payload,
-                    secret=secret,
                     commit=tracker.commit,
                     before_handoff=tracker.before_handoff,
                     acknowledged=tracker.acknowledged,

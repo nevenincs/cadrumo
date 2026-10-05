@@ -20,7 +20,7 @@ GOOGLE_CONFIGURATION_ERROR_TYPES: tuple[
 ] = (
     google_errors.GoogleAuthError,
     google_errors.GoogleAuthValidationError,
-    google_errors.GoogleAuthClientNotRegisteredError,
+    google_errors.GoogleAuthClientMetadataUnavailableError,
     google_errors.GoogleAuthClientRevokedError,
     google_errors.GoogleAuthRevokedError,
     google_errors.GoogleAuthExpiredError,

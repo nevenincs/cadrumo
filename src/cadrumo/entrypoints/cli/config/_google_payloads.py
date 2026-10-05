@@ -32,22 +32,6 @@ from ....adapters.outbound.storage.records import ProviderKind
 from ....core.json_contract import OutputSchema
 
 
-class GoogleRegisterResult(OutputSchema):
-    """JSON envelope for ``aeat config google register``.
-
-    Projects the operator-imported
-    :class:`OAuthClient` after
-    :func:`save_client` persists
-    it for the active profile. Only non-secret orientation fields are exposed;
-    ``client_secret`` never enters the CLI payload.
-    """
-
-    operation: str = "config.google.register"
-    profile: str
-    client_id: str
-    project_id: str
-
-
 class GoogleLoginResult(OutputSchema):
     """JSON envelope for ``aeat config google login``.
 
@@ -69,17 +53,14 @@ class GoogleLoginResult(OutputSchema):
 class GoogleStatusResult(OutputSchema):
     """JSON envelope for ``aeat config google status``.
 
-    Combines stored :class:`OAuthClient`
-    presence with the non-secret
-    :class:`OAuthMetadata` audit record. Missing
-    client or session records are represented with ``False`` booleans and
-    ``None`` detail fields so status remains a read-only inspection surface.
+    Projects the non-secret
+    :class:`OAuthMetadata` audit record. A missing
+    session is represented with a ``False`` boolean and ``None`` detail
+    fields so status remains a read-only inspection surface.
     """
 
     operation: str = "config.google.status"
     profile: str
-    client_registered: bool
-    client_id: str | None = None
     session_present: bool
     account_email: str | None = None
     granted_scopes: list[str] = []
@@ -93,16 +74,13 @@ class GoogleLogoutResult(OutputSchema):
 
     Reports the result of
     :func:`delete_session`: token
-    and metadata removal are surfaced separately, while the registered
-    :class:`OAuthClient` is intentionally
-    preserved for the next login.
+    and metadata removal are surfaced separately.
     """
 
     operation: str = "config.google.logout"
     profile: str
     token_removed: bool
     metadata_removed: bool
-    client_preserved: bool
 
 
 # ---------------------------------------------------------------------------

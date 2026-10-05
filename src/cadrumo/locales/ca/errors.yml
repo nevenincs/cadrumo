@@ -32,11 +32,8 @@ errors:
     auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte
       retirat i es nega a llegir-lo, moure'l, re-xifrar-lo, eliminar-lo o adoptar-lo.
     auth_google: S'ha produït un error en l'autenticació amb Google.
-    auth_google_client_not_registered: No hi ha cap client OAuth d'escriptori de Google
-      registrat per al perfil actiu. Registra un client per fer servir les funcions
-      de Google.
-    auth_google_client_revoked: El client OAuth d'escriptori de Google registrat ha
-      estat revocat. Registra un client nou.
+    auth_google_client_revoked: Google ja no accepta el client OAuth d'escriptori
+      d'aquesta instal·lació. Actualitza l'aplicació a una versió actual.
     auth_google_expired: El testimoni d'actualització de Google ha caducat pel límit
       de 7 dies dels projectes en proves. Torna a autoritzar l'accés a Google.
     auth_google_revoked: El testimoni d'actualització de Google ha estat revocat.
@@ -1158,6 +1155,9 @@ errors:
     refused_foreign_asset_valuation: No s'ha pogut convertir a euros una valoració
       del model 720 en la seva data de canvi legal. Revisa la divisa i la data de
       valoració del bé.
+    refused_google_client_metadata_unavailable: Aquesta instal·lació no inclou el
+      client de Google que necessita per iniciar la sessió. Les funcions de Google
+      no estaran disponibles fins que instal·lis una versió que l'inclogui.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona

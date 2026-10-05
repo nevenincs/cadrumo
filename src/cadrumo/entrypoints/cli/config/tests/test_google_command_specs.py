@@ -19,7 +19,6 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
 
     assert set(by_key) == {
         "config_google",
-        "config_google_register",
         "config_google_login",
         "config_google_status",
         "config_google_logout",

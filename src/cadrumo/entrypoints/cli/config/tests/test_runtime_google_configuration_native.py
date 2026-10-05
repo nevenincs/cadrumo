@@ -3,6 +3,11 @@
 The owning native CLI fixture uses MemoryNativePort and synthetic OS-login
 evidence. This journey does not establish platform secret-store acceptance or
 exercise Google OAuth, browser consent, or remote provider traffic.
+
+The worker is a separate process and reads the Google client from the one
+installation location, which nothing can redirect. Sign-in is therefore judged
+against whether this checkout holds a client file: the typed refusal when it
+does not, the metadata-only refresh when it does. Consent is never started.
 """
 
 from __future__ import annotations
@@ -19,9 +24,9 @@ from pydantic import JsonValue
 
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from .....adapters.outbound.google.installation_client import INSTALLATION_CLIENT_DATA_PARTS
 from .....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 from .....adapters.outbound.google.session_store import (
-    load_client,
     load_drive_config,
     load_metadata,
     load_token,
@@ -34,9 +39,7 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .....application.operations.secret_submission import OperationSecretRequirement
 from .....application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
     RuntimeOperationObserved,
     RuntimeOperationReply,
     RuntimeOperationRequest,
@@ -45,9 +48,8 @@ from .....application.runtime.operation_access import (
 )
 from .....application.user_profile.access_contracts import AccessDenialCode
 from .....application.user_profile.google_configuration_operation_contracts import (
+    GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
-    GOOGLE_REGISTER_INPUT_KIND,
-    GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleStatusProjection,
@@ -58,6 +60,7 @@ from .....application.user_profile.login_session import login_profile, resolve_l
 from .....core.hashing import canonical_json_bytes
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .....core.redaction.rules import redact_structured_for_cli_output
+from .....core.resources.bundled_data import packaged_data
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.cli_envelope import require_error_document, unwrap_cli_result
 from ...runtime_registered_operation import run_registered_operation
@@ -101,40 +104,19 @@ def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
     return result
 
 
-def test_native_google_configuration_protected_registration_and_exact_profile_records(
+def test_native_google_configuration_installation_client_and_exact_profile_records(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Consume one protected source and retain complete local state through real CLI leaves."""
-    client_value = "native-client-" + uuid4().hex
+    """Retain complete local state through real CLI leaves; no leaf accepts a client from the operator."""
     refresh_value = "native-refresh-" + uuid4().hex
-    client_json = tmp_path / "desktop-client.json"
-    client_json.write_text(
-        json.dumps(
-            {
-                "installed": {
-                    "client_id": "synthetic-native-client.apps.googleusercontent.com",
-                    "client_secret": client_value,
-                    "project_id": "synthetic-native-project",
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                    "redirect_uris": ["http://localhost"],
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
+    client_installed = packaged_data(*INSTALLATION_CLIENT_DATA_PARTS).is_file()
     original_operation = RuntimeFrontendClient.operation
-    original_secret = RuntimeFrontendClient.submit_secret
     original_result = RuntimeFrontendClient.read_result_document
     definitions: dict[str, str] = {}
-    requirements: dict[str, OperationSecretRequirement] = {}
     effects: dict[str, OperationEffect] = {}
     completions: list[tuple[str, OperationEffect, GoogleConfigurationOutcome]] = []
-    submitted_lengths: list[int] = []
-    replay_refused = False
     foreign_refused = False
     owner_profile: UUID | None = None
 
@@ -142,31 +124,16 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         client: RuntimeFrontendClient, request: RuntimeOperationRequest, *, deadline: float
     ) -> RuntimeOperationReply:
         encoded = request.model_dump_json()
-        assert client_value not in encoded and refresh_value not in encoded
+        assert refresh_value not in encoded
         reply = original_operation(client, request, deadline=deadline)
         if isinstance(request, RuntimeOperationSubmit) and isinstance(reply, RuntimeOperationSubmitted):
             definitions[reply.receipt.operation_id] = request.definition_id
-            if reply.receipt.secret_requirement is not None:
-                requirements[reply.receipt.operation_id] = reply.receipt.secret_requirement
+            # No Google configuration leaf opens a protected input channel.
+            assert reply.receipt.secret_requirement is None
         if isinstance(reply, RuntimeOperationObserved) and isinstance(reply.observation, OperationObservationSuccessV1):
             state = reply.observation.projection
             effects[state.operation_id] = state.effect
         return reply
-
-    def observe_secret(
-        client: RuntimeFrontendClient,
-        requirement: OperationSecretRequirement,
-        secret: bytearray,
-        *,
-        timeout: float = 20,
-    ) -> RuntimeOperationAcknowledged:
-        assert requirement.secret_kind == GOOGLE_REGISTER_INPUT_KIND
-        assert requirement.identity.definition_id == GOOGLE_REGISTER_OPERATION_DEFINITION_ID
-        submitted_lengths.append(len(secret))
-        try:
-            return original_secret(client, requirement, secret, timeout=timeout)
-        finally:
-            assert secret == bytearray(len(secret))
 
     def observe_result(
         client: RuntimeFrontendClient,
@@ -175,23 +142,16 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         timeout: float = 60,
         deadline: float | None = None,
     ) -> dict[str, JsonValue]:
-        nonlocal replay_refused, foreign_refused
+        nonlocal foreign_refused
         document = original_result(client, result, timeout=timeout, deadline=deadline)
         definition_id = definitions[result.operation_id]
         if not definition_id.startswith("config.google."):
             return document
         encoded = canonical_json_bytes(document)
-        assert client_value.encode() not in encoded and refresh_value.encode() not in encoded
+        assert refresh_value.encode() not in encoded
         envelope = OperationResultProjectionSuccessV1[GoogleConfigurationOutcome].model_validate_json(encoded)
         assert envelope.projection.profile_id == owner_profile == client.profile_id
         completions.append((definition_id, effects[result.operation_id], envelope.projection))
-        if definition_id == GOOGLE_REGISTER_OPERATION_DEFINITION_ID:
-            replacement = bytearray(b"one-use replay must be denied before delivery")
-            with pytest.raises(RuntimeFrontendRefusedError):
-                original_secret(client, requirements[result.operation_id], replacement)
-            assert replacement == bytearray(len(replacement))
-            assert client.status().status.connected
-            replay_refused = True
         if definition_id == GOOGLE_STATUS_OPERATION_DEFINITION_ID and not foreign_refused:
             with pytest.raises(RuntimeFrontendRefusedError) as denied:
                 run_registered_operation(
@@ -211,7 +171,6 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         return document
 
     monkeypatch.setattr(RuntimeFrontendClient, "operation", observe_operation)
-    monkeypatch.setattr(RuntimeFrontendClient, "submit_secret", observe_secret)
     monkeypatch.setattr(RuntimeFrontendClient, "read_result_document", observe_result)
     with native_cli_profile_scope(tmp_path) as profile:
         observations: list[RuntimeFailureObservation] = []
@@ -229,7 +188,7 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
 
         def invoke(*command: str) -> Result:
             reply = _invoke(profile, *command)
-            assert client_value not in reply.output and refresh_value not in reply.output
+            assert refresh_value not in reply.output
             compact = tuple(
                 dict.fromkeys(
                     (item.exception_type, item.definition_id, item.phase, item.reason)
@@ -240,35 +199,14 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
             assert reply.exit_code == 0, reply.output + "\nobservations=" + json.dumps(compact)
             return reply
 
-        registered = unwrap_cli_result(invoke("register", "--client-json", str(client_json)))
-        assert registered["client_id"] == "synthetic-native-client.apps.googleusercontent.com"
-        assert registered["project_id"] == "synthetic-native-project"
-        assert submitted_lengths == [client_json.stat().st_size]
-        assert replay_refused
         status = unwrap_cli_result(invoke("status"))
-        assert status["client_registered"] is True and status["session_present"] is False
+        assert status["session_present"] is False
+        assert "client_registered" not in status and "client_id" not in status
         assert foreign_refused
-        # A source that is not a Desktop client is refused by the worker after the
-        # protected channel delivered it, and leaves the registered client untouched.
-        not_desktop = tmp_path / "web-client.json"
-        not_desktop.write_text(json.dumps({"web": {"client_id": "synthetic-web-client"}}), encoding="utf-8")
-        refused = _invoke(profile, "register", "--client-json", str(not_desktop))
-        assert client_value not in refused.output and refresh_value not in refused.output
-        assert refused.exit_code == 2, (refused.output, observations)
-        error = require_error_document(refused.output)["error"]
-        assert error["code"] == "REFUSED_GOOGLE_VALIDATION" and error["category"] == "REFUSED"
-        context = error["context"]
-        assert isinstance(context, dict)
-        assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
-        assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
-        assert context["effect"] == OperationEffect.NONE.value
-        definition, effect, outcome = completions[-1]
-        assert definition == GOOGLE_REGISTER_OPERATION_DEFINITION_ID
-        assert effect is OperationEffect.NONE and outcome.outcome == "refused"
-        assert outcome.result is None and outcome.refusal is not None
-        assert outcome.refusal.provider_code == "REFUSED_GOOGLE_VALIDATION"
-        assert outcome.refusal.message_key == "cli.config.google.detail.client_json_not_desktop"
-        assert unwrap_cli_result(invoke("status")) == status
+        # The command that accepted a client from the operator no longer exists.
+        removed = _invoke(profile, "register", "--client-json", str(tmp_path / "client.json"))
+        assert removed.exit_code == 2, removed.output
+        assert not any(definition.endswith(".register") for definition in definitions.values())
         assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
         folder_id = "synthetic-native-root-folder"
         assert unwrap_cli_result(invoke("folder", "set", folder_id))["root_folder_id"] == folder_id
@@ -282,8 +220,6 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         )
         try:
             profile_id = str(owner_profile)
-            reopened_client = load_client(profile_id)
-            assert reopened_client is not None and reopened_client.client_secret == client_value
             reopened_folder = load_drive_config(profile_id)
             assert reopened_folder is not None and reopened_folder.root_folder_id == folder_id
             instant = datetime.now(UTC)
@@ -339,8 +275,29 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
             assert reopened_metadata.reauth_required is canonical_status.reauth_required
         finally:
             close_active_bucket_session()
-        refreshed = unwrap_cli_result(invoke("login", "--refresh-only"))
-        assert refreshed["mode"] == "refresh-only" and refreshed["account_email"] == linked["account_email"]
+        if client_installed:
+            refreshed = unwrap_cli_result(invoke("login", "--refresh-only"))
+            assert refreshed["mode"] == "refresh-only" and refreshed["account_email"] == linked["account_email"]
+        else:
+            # Both sign-in leaves refuse alike before any consent or provider exchange.
+            for arguments in (("login",), ("login", "--refresh-only")):
+                refused = _invoke(profile, *arguments)
+                assert refresh_value not in refused.output
+                assert refused.exit_code != 0, (refused.output, observations)
+                error = require_error_document(refused.output)["error"]
+                assert error["code"] == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE" and error["category"] == "REFUSED"
+                context = error["context"]
+                assert isinstance(context, dict)
+                assert context["refusal_code"] == GOOGLE_CONFIGURATION_REFUSAL_CODE
+                assert context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
+                assert context["effect"] == OperationEffect.NONE.value
+                definition, effect, outcome = completions[-1]
+                assert definition == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
+                assert effect is OperationEffect.NONE and outcome.outcome == "refused"
+                assert outcome.result is None and outcome.refusal is not None
+                assert outcome.refusal.provider_code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
+                assert outcome.refusal.message_key == "errors.refused.refused_google_client_metadata_unavailable"
+            assert unwrap_cli_result(invoke("status")) == linked
         first_logout = unwrap_cli_result(invoke("logout"))
         assert first_logout["token_removed"] is True and first_logout["metadata_removed"] is True
         second_logout = unwrap_cli_result(invoke("logout"))
@@ -352,7 +309,7 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         ]
         assert logout_effects == [OperationEffect.UPDATED, OperationEffect.NONE]
         final_status = unwrap_cli_result(invoke("status"))
-        assert final_status["client_registered"] is True and final_status["session_present"] is False
+        assert final_status["session_present"] is False
         login_profile(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
@@ -360,7 +317,6 @@ def test_native_google_configuration_protected_registration_and_exact_profile_re
         )
         try:
             assert load_token(profile_id) is None and load_metadata(profile_id) is None
-            assert load_client(profile_id) == reopened_client
             assert load_drive_config(profile_id) == reopened_folder
         finally:
             close_active_bucket_session()

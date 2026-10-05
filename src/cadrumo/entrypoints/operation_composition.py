@@ -18,6 +18,7 @@ from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
 from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
@@ -917,9 +918,9 @@ def _google_sheets_export_prepare_port(
             raise GoogleSheetsExportRootFolderRequiredError("Google Drive root folder is required")
         try:
             credentials = build_google_credentials(profile=profile_id)
+        except GoogleAuthClientMetadataUnavailableError as exc:
+            raise GoogleSheetsExportClientMissingError(str(exc)) from exc
         except OutboundStorageValidationError as exc:
-            if exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing":
-                raise GoogleSheetsExportClientMissingError(str(exc)) from exc
             if exc.translated_message == "adapters.outbound.storage._factory.errors.google_token_missing":
                 raise GoogleSheetsExportTokenMissingError(str(exc)) from exc
             raise

@@ -65,6 +65,10 @@ adapters:
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
         workbook_snapshot_mismatch: The Google Sheet metadata does not match the calculation
           snapshot.
+    installation_client:
+      errors:
+        client_metadata_invalid: The Google client included with this installation
+          is not valid. Reinstall the application to restore it.
     oauth_flow:
       errors:
         browser_launcher_refused: The operating system browser launcher refused to
@@ -139,8 +143,6 @@ adapters:
             active profile. Run `aeat config google folder set <id>` first.
           google_auth_import_failed: The google-auth dependency is not importable;
             run `uv sync` and retry.
-          google_client_missing: No Google OAuth client is registered for the active
-            profile. Run `aeat config google register --client-json <path>` first.
           google_token_missing: No Google OAuth token is persisted for the active
             profile. Run `aeat config google login` first.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND is empty.

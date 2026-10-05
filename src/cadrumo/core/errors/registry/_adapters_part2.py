@@ -228,11 +228,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientNotRegisteredError",
+        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError",
         ErrorCode(
-            code="AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_client_not_registered",
+            code="REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_client_metadata_unavailable",
             retryable=False,
             runbook_id=None,
         ),

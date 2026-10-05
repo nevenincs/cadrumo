@@ -1,15 +1,14 @@
 """Live-gated OAuth Desktop integration tests.
 
-Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND the operator has
-already pre-registered an `OAuthClient` in the secure store for the
-named test profile (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`).
+Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND this checkout holds a
+Google OAuth Desktop client file at the installation location. The named
+test profile is `AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`.
 The tests exercise three real-world paths against the operator's own
 Google account:
 
 1. `aeat config google login` — runs the actual loopback IP + PKCE
    consent flow. The first run requires manual operator interaction in
-   the OS-default browser to grant the `drive.file` + `spreadsheets`
-   scopes.
+   the OS-default browser to grant the `drive.file` scope.
 2. `aeat config google status` — reads back the persisted records and
    confirms the account email + scopes round-tripped.
 3. `aeat config google logout` — clears the token + metadata records
@@ -28,12 +27,14 @@ import os
 
 import pytest
 
+from .....core.resources.bundled_data import packaged_data
 from .....tests.live_gate import requires_live_enabled
+from ..errors import GoogleAuthClientMetadataUnavailableError
+from ..installation_client import INSTALLATION_CLIENT_DATA_PARTS, load_installation_client
 from ..oauth_flow import run_login_flow
-from ..records import REQUIRED_SCOPES
+from ..records import REQUIRED_SCOPES, OAuthClient
 from ..session_store import (
     delete_session,
-    load_client,
     load_metadata,
     load_token,
     save_metadata,
@@ -47,17 +48,20 @@ def _live_profile() -> str:
     return os.environ.get("AEAT_GOOGLE_LIVE_PROFILE", "live-test")
 
 
-def _require_live_and_client_registered() -> None:
+def _require_live_and_installation_client(monkeypatch: pytest.MonkeyPatch) -> OAuthClient:
+    """Read the checkout's real client file, which every other test is kept away from."""
     requires_live_enabled()
-    profile = _live_profile()
-    if load_client(profile) is None:
-        pytest.fail(
-            f"no OAuth client registered for profile {profile!r}; "
-            f"run `aeat config google register --client-json <path> --profile {profile}` after live opt-in",
-        )
+    monkeypatch.setattr(
+        "cadrumo.adapters.outbound.google.installation_client.installation_client_source",
+        lambda: packaged_data(*INSTALLATION_CLIENT_DATA_PARTS),
+    )
+    try:
+        return load_installation_client()
+    except GoogleAuthClientMetadataUnavailableError:
+        pytest.fail("this checkout holds no usable Google OAuth client file at its installation location")
 
 
-def test_login_persists_token_and_metadata_against_real_google_endpoints() -> None:
+def test_login_persists_token_and_metadata_against_real_google_endpoints(monkeypatch: pytest.MonkeyPatch) -> None:
     """End-to-end: real consent flow → persisted refresh token + metadata.
 
     The first run of this test prints a Google consent URL to stdout
@@ -66,10 +70,8 @@ def test_login_persists_token_and_metadata_against_real_google_endpoints() -> No
     cookie and complete without manual interaction.
     """
 
-    _require_live_and_client_registered()
+    client = _require_live_and_installation_client(monkeypatch)
     profile = _live_profile()
-    client = load_client(profile)
-    assert client is not None  # guard guarantees this; assert for the type checker
 
     token, metadata = run_login_flow(client, profile)
     save_token(profile, token)
@@ -81,10 +83,10 @@ def test_login_persists_token_and_metadata_against_real_google_endpoints() -> No
         assert scope in metadata.granted_scopes, f"consent screen returned without granting {scope}"
 
 
-def test_status_round_trips_persisted_metadata() -> None:
+def test_status_round_trips_persisted_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reading back the persisted metadata after a live login matches what was saved."""
 
-    _require_live_and_client_registered()
+    _require_live_and_installation_client(monkeypatch)
     profile = _live_profile()
     metadata = load_metadata(profile)
     if metadata is None:
@@ -98,22 +100,13 @@ def test_status_round_trips_persisted_metadata() -> None:
         assert scope in metadata.granted_scopes
 
 
-def test_logout_clears_session_records_but_preserves_client() -> None:
-    """`logout` must drop the refresh token + metadata while keeping the client.
+def test_logout_clears_session_records(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`logout` must drop the refresh token and its metadata."""
 
-    The operator can re-acquire a session via `login` without
-    re-importing the Cloud Console JSON.
-    """
-
-    _require_live_and_client_registered()
+    _require_live_and_installation_client(monkeypatch)
     profile = _live_profile()
-    client_before = load_client(profile)
-    assert client_before is not None
 
     delete_session(profile)
 
     assert load_token(profile) is None, "refresh token must be cleared by logout"
     assert load_metadata(profile) is None, "OAuth metadata must be cleared by logout"
-    client_after = load_client(profile)
-    assert client_after is not None, "registered OAuth client must survive logout"
-    assert client_after.client_id == client_before.client_id

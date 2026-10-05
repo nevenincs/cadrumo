@@ -2161,16 +2161,7 @@ cli:
       profile_session_expired: Tu sesión de perfil ha caducado. Ejecuta `aeat config
         login` para volver a iniciar sesión.
     google:
-      client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
       detail:
-        client_json_invalid: El JSON de cliente de {path} no es un JSON válido.
-        client_json_not_desktop: el JSON de cliente en {path} no es un cliente de
-          escritorio de Cloud Console; se esperaba una clave envoltorio "installed"
-        client_json_schema_invalid: El JSON de cliente de {path} no cumple el esquema
-          requerido.
-        client_json_unreadable: 'no se pudo leer el JSON de cliente en {path}: {reason}'
-        client_unregistered: no hay ningún cliente OAuth registrado para el perfil
-          {profile}
         no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
           se puede renovar sin un inicio de sesión previo
         sync_push_limit_requires_dry_run: La sincronización push de Google no puede
@@ -2180,11 +2171,8 @@ cli:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
           {detail}'
-        client_not_registered: No hay ningún cliente OAuth de Google registrado para
-          este perfil. Ejecuta primero `aeat config google register --client-json
-          <ruta>`.
-        client_revoked: El cliente OAuth de Google registrado ha sido revocado. Vuelve
-          a registrarlo con `aeat config google register`.
+        client_revoked: Google ya no acepta el cliente con el que esta instalación
+          inicia sesión. Actualiza la aplicación a una versión actual.
         keychain_locked: El llavero del sistema que guarda las credenciales de Google
           está bloqueado o no disponible.
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
@@ -2217,14 +2205,11 @@ cli:
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
         existente)
-      logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente
-        registrado
+      logout_help: Limpiar el token de refresco y los metadatos
       probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
       probe_read_only_help: Comprueba Google Drive en modo solo lectura
       refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
         existente
-      register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para
-        el perfil activo
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
     list:

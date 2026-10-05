@@ -10,7 +10,6 @@ from ....application.user_profile.google_configuration_operation_contracts impor
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
     GOOGLE_PROBE_OPERATION_DEFINITION_ID,
-    GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleFolderSetProjection,
     GoogleFolderSetRequest,
@@ -22,8 +21,6 @@ from ....application.user_profile.google_configuration_operation_contracts impor
     GoogleLogoutRequest,
     GoogleProbeProjection,
     GoogleProbeRequest,
-    GoogleRegisterProjection,
-    GoogleRegisterRequest,
     GoogleStatusProjection,
     GoogleStatusRequest,
 )
@@ -34,6 +31,5 @@ GOOGLE_REQUEST_OPERATIONS: dict[type[BaseModel], tuple[str, type[BaseModel]]] = 
     GoogleLoginRequest: (GOOGLE_LOGIN_OPERATION_DEFINITION_ID, GoogleLoginProjection),
     GoogleLogoutRequest: (GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, GoogleLogoutProjection),
     GoogleProbeRequest: (GOOGLE_PROBE_OPERATION_DEFINITION_ID, GoogleProbeProjection),
-    GoogleRegisterRequest: (GOOGLE_REGISTER_OPERATION_DEFINITION_ID, GoogleRegisterProjection),
     GoogleStatusRequest: (GOOGLE_STATUS_OPERATION_DEFINITION_ID, GoogleStatusProjection),
 }

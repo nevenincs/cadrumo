@@ -45,7 +45,6 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _RUNTIME_PROFILE_KEYS = frozenset(
     {
         "config_check",
-        "config_google_register",
         "config_google_login",
         "config_google_status",
         "config_google_logout",

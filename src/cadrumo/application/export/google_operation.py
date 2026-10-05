@@ -74,7 +74,7 @@ class GoogleSheetsExportRootFolderRequiredError(CadrumoError):
 
 
 class GoogleSheetsExportClientMissingError(CadrumoError):
-    """The active profile has no registered Google OAuth client."""
+    """This installation carries no usable Google OAuth client metadata."""
 
 
 class GoogleSheetsExportTokenMissingError(CadrumoError):

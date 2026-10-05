@@ -10,7 +10,6 @@ from ....core.transport_locus import TransportLocus, TransportRole, TransportSha
 from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..command_shared_contracts import (
     FLAG_VALUE,
-    PATH_VALUE,
     TEXT_VALUE,
     DeferredTarget,
     LazyBinding,
@@ -118,29 +117,6 @@ def _leaf(
 
 GOOGLE_COMMAND_SPECS = (
     state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
-    _leaf(
-        "config_google_register",
-        "config_google",
-        "register",
-        "cli.config.google.register_help",
-        "_google",
-        "google_register",
-        "_google_payloads",
-        "GoogleRegisterResult",
-        GOOGLE_WRITE,
-        (
-            _option(
-                "client_json",
-                ("--client-json",),
-                PATH_VALUE,
-                "cli.config.google.client_json_help",
-                required=True,
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
-        ),
-    ),
     _leaf(
         "config_google_login",
         "config_google",

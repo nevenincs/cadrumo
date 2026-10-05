@@ -186,7 +186,6 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
         lambda: build_apoderado_config_repository(bucket_id=_BUCKET_A_ID, settings=load_settings()),
     ),
     ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
-    ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
     ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
     ("google_oauth_metadata", lambda: google_session_store.load_metadata("operator-google")),
     ("google_drive_config", lambda: google_session_store.load_drive_config("operator-google")),
@@ -692,10 +691,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
     artefact_b, body_b = _sede_artefact(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        google_session_store.save_client(profile, google_a[0])
-        google_session_store.save_token(profile, google_a[1])
-        google_session_store.save_metadata(profile, google_a[2])
-        google_session_store.save_drive_config(profile, google_a[3])
+        google_session_store.save_token(profile, google_a[0])
+        google_session_store.save_metadata(profile, google_a[1])
+        google_session_store.save_drive_config(profile, google_a[2])
         cache.write(request, _llm_response(_BUCKET_A_ID))
         usage.record(_usage_record(_BUCKET_A_ID))
         InventoryLedgerRepository().save(
@@ -707,16 +705,15 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert google_session_store.load_client(profile) is None
+        assert google_session_store.load_token(profile) is None
         assert cache.read(request, LLMProvider.OPENAI, "gpt-test") is None
         assert usage.load_records() == ()
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
-        google_session_store.save_client(profile, google_b[0])
-        google_session_store.save_token(profile, google_b[1])
-        google_session_store.save_metadata(profile, google_b[2])
-        google_session_store.save_drive_config(profile, google_b[3])
+        google_session_store.save_token(profile, google_b[0])
+        google_session_store.save_metadata(profile, google_b[1])
+        google_session_store.save_drive_config(profile, google_b[2])
         cache.write(request, _llm_response(_BUCKET_B_ID))
         usage.record(_usage_record(_BUCKET_B_ID))
         InventoryLedgerRepository().save(
@@ -734,10 +731,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
             stored_a.storage_ref or "",
         )
-        assert google_session_store.load_client(profile) == google_a[0]
-        assert google_session_store.load_token(profile) == google_a[1]
-        assert google_session_store.load_metadata(profile) == google_a[2]
-        assert google_session_store.load_drive_config(profile) == google_a[3]
+        assert google_session_store.load_token(profile) == google_a[0]
+        assert google_session_store.load_metadata(profile) == google_a[1]
+        assert google_session_store.load_drive_config(profile) == google_a[2]
 
     assert cached is not None
     assert cached.text == f"runtime attached response {_BUCKET_A_ID}"

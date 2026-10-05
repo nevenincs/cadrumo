@@ -70,6 +70,10 @@ adapters:
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
         workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
           amb la instantània de càlcul.
+    installation_client:
+      errors:
+        client_metadata_invalid: El client de Google inclòs en aquesta instal·lació
+          no és vàlid. Reinstal·la l'aplicació per restaurar-lo.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
@@ -152,9 +156,6 @@ adapters:
             per al perfil actiu. Executa `aeat config google folder set <id>` primer.
           google_auth_import_failed: La dependència google-auth no es pot importar;
             executa `uv sync` i torna-ho a provar.
-          google_client_missing: No hi ha cap client OAuth de Google registrat per
-            al perfil actiu. Executa `aeat config google register --client-json <path>`
-            primer.
           google_token_missing: No hi ha cap token OAuth de Google persistit per al
             perfil actiu. Executa `aeat config google login` primer.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND està buit.

@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from ..errors import (
     GoogleAuthBrowserOpenError,
-    GoogleAuthClientNotRegisteredError,
+    GoogleAuthClientMetadataUnavailableError,
     GoogleAuthClientRevokedError,
     GoogleAuthError,
     GoogleAuthExpiredError,
@@ -257,7 +257,7 @@ def test_google_auth_error_hierarchy_is_unified() -> None:
 
     for leaf in (
         GoogleAuthBrowserOpenError,
-        GoogleAuthClientNotRegisteredError,
+        GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
         GoogleAuthExpiredError,
         GoogleAuthKeychainLockedError,
@@ -283,7 +283,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
     leaves = (
         GoogleAuthError,
         GoogleAuthValidationError,
-        GoogleAuthClientNotRegisteredError,
+        GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
         GoogleAuthRevokedError,
         GoogleAuthExpiredError,

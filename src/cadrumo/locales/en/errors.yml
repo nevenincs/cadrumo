@@ -31,10 +31,8 @@ errors:
     auth_former_product_session_state: Cadrumo detected retired-product AEAT session
       state and refuses to read, move, re-key, delete, or adopt it.
     auth_google: A Google authentication error occurred.
-    auth_google_client_not_registered: No Google Desktop OAuth client is registered
-      for the active profile. Register a client to use Google features.
-    auth_google_client_revoked: The registered Google Desktop OAuth client has been
-      revoked. Register a new client.
+    auth_google_client_revoked: Google no longer accepts this installation's Desktop
+      OAuth client. Update the application to a current release.
     auth_google_expired: The Google refresh token has expired under the 7-day Testing-project
       cap. Re-authorize Google access.
     auth_google_revoked: The Google refresh token has been revoked. Re-authorize Google
@@ -1064,6 +1062,9 @@ errors:
       Register and declare the asset before calculating.
     refused_foreign_asset_valuation: A Modelo 720 valuation could not be converted
       to euros at its legal rate date. Check the asset's currency and valuation date.
+    refused_google_client_metadata_unavailable: This installation does not include
+      the Google client it needs to sign in. Google features are unavailable until
+      you install a release that includes it.
     refused_google_non_interactive: Google login needs an interactive terminal with
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or

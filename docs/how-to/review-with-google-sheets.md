@@ -25,8 +25,6 @@ You need:
 - classified transaction data; see [Import and manage transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
 - the `google` extra, installed with `pip install "cadrumo[google]"`
-- a Google API credentials file (a Desktop OAuth client JSON from the
-  [Google Cloud Console](https://console.cloud.google.com/))
 - the ID of a Google Drive folder where Cadrumo should create spreadsheets
   (copy the ID from the folder's URL in Google Drive)
 
@@ -36,22 +34,25 @@ edits into Cadrumo.
 
 ## Configure Google access
 
-Register the Desktop OAuth client for the active profile and run the consent
-flow. Both reach Google, so they are shown here without being run:
+Sign in to Google for the active profile. Cadrumo opens Google's consent page
+in your browser and asks for your email address and for access to the files
+it creates, nothing else in your Drive. You do not need a Google Cloud project
+or a credentials file. Sign-in reaches Google, so it is shown here without
+being run:
 
 ```{cli-sequence} sheets-oauth
 ```
 
 Check the Google status and set the Drive folder where Cadrumo will create
 spreadsheets. These are local configuration commands, so they run here. On an
-unconfigured profile the status shows `client_registered` and `session_present`
-as false, and the folder you set reads back verbatim:
+unconfigured profile the status shows `session_present` as false, and the
+folder you set reads back verbatim:
 
 ```{cli-sequence} sheets-folder
 :verify: Confirm the Drive folder input reads back the value you set.
 ```
 
-Probe the connection once the OAuth client is registered. The probe reaches
+Probe the connection once you have signed in. The probe reaches
 Google, so it is shown here without being run:
 
 ```{cli-sequence} sheets-probe
@@ -158,12 +159,11 @@ copy and never reads Drive back as the original of your data.
 
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
-metadata. The registered OAuth client is kept on purpose, so a later `aeat
-config google login` can sign in again without re-importing the Cloud Console
-JSON:
+metadata. The Drive folder setting is kept, so a later `aeat config google
+login` signs in again without further setup:
 
 ```{cli-sequence} sheets-logout
-:verify: Confirm logout keeps the registered client; with no saved session it removes nothing.
+:verify: Confirm that with no saved session logout removes nothing.
 ```
 
 ## Where this fits

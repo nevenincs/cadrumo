@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         ("REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED", "cli.app.modelo.spreadsheet.push.root_folder_required"),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
-            "adapters.outbound.storage._factory.errors.google_client_missing",
+            "errors.refused.refused_google_client_metadata_unavailable",
         ),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING",

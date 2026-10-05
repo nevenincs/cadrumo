@@ -15,7 +15,6 @@ from ....application.user_profile.google_configuration_operation_contracts impor
     GoogleLogoutRequest,
     GoogleProbeProjection,
     GoogleProbeRequest,
-    GoogleRegisterRequest,
     GoogleStatusRequest,
 )
 from ....application.user_profile.google_configuration_operation_refusal import (
@@ -93,7 +92,7 @@ def correlate_google_completion(
 
 def google_success_effects(request: BaseModel, result: BaseModel) -> frozenset[OperationEffect]:
     """Admit only the effects permitted by this exact successful Google action."""
-    if isinstance(request, (GoogleFolderSetRequest, GoogleRegisterRequest)):
+    if isinstance(request, GoogleFolderSetRequest):
         return frozenset({OperationEffect.UPDATED})
     if isinstance(request, (GoogleFolderViewRequest, GoogleStatusRequest)):
         return frozenset({OperationEffect.NONE})

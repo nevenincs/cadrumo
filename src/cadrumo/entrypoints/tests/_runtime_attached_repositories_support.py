@@ -14,7 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
-from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from ...adapters.outbound.llm.models import LLMRequest, LLMResponse, UsageRecord
 from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -547,20 +547,9 @@ def _inventory_ledger(label: str) -> InventoryLedger:
     )
 
 
-def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata, DriveConfig]:
+def _google_records(label: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
     issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
     return (
-        OAuthClient.model_validate(
-            {
-                "client_id": f"desktop-{label}.apps.googleusercontent.com",
-                "client_secret": f"secret-{label}",
-                "project_id": f"aeat-vault-{label}",
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": _GOOGLE_OAUTH_ENDPOINT,
-                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "redirect_uris": ("http://127.0.0.1:8765/callback",),
-            },
-        ),
         OAuthToken.model_validate({"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}),
         OAuthMetadata(
             account_email=f"{label}@example.com",

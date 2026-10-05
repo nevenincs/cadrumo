@@ -32,10 +32,8 @@ errors:
       észlelte, és megtagadja annak olvasását, áthelyezését, újrakulcsolását, törlését
       vagy átvételét.
     auth_google: Google-hitelesítési hiba történt.
-    auth_google_client_not_registered: Az aktív profilhoz nem regisztráltak Google
-      Desktop OAuth-klienst. Regisztrálj egy klienst a Google-funkciók használatához.
-    auth_google_client_revoked: A regisztrált Google Desktop OAuth-klienst visszavonták.
-      Regisztrálj új klienst.
+    auth_google_client_revoked: A Google már nem fogadja el ennek a telepítésnek a
+      Desktop OAuth-kliensét. Frissítsd az alkalmazást egy aktuális kiadásra.
     auth_google_expired: A Google frissítési token lejárt a 7 napos tesztelési projekt
       korlátján belül. Engedélyezd újra a Google-hozzáférést.
     auth_google_revoked: A Google frissítési tokent visszavonták. Engedélyezd újra
@@ -1083,6 +1081,9 @@ errors:
     refused_foreign_asset_valuation: Egy 720-as modell szerinti értékelést nem sikerült
       euróra átváltani a jogszabályi árfolyamnapon. Ellenőrizd a vagyonelem pénznemét
       és értékelési dátumát.
+    refused_google_client_metadata_unavailable: Ez a telepítés nem tartalmazza a bejelentkezéshez
+      szükséges Google-klienst. A Google-funkciók addig nem érhetők el, amíg nem telepítesz
+      olyan kiadást, amely tartalmazza.
     refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
       és böngésző szükséges; futtasd interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy

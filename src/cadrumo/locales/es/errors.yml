@@ -31,11 +31,8 @@ errors:
     auth_former_product_session_state: Cadrumo detectó estado de sesión de un producto
       retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.
     auth_google: Se produjo un error en la autenticación con Google.
-    auth_google_client_not_registered: No hay ningún cliente OAuth de escritorio de
-      Google registrado para el perfil activo. Registra un cliente para usar funciones
-      de Google.
-    auth_google_client_revoked: El cliente OAuth de escritorio de Google registrado
-      ha sido revocado. Registra un cliente nuevo.
+    auth_google_client_revoked: Google ya no acepta el cliente OAuth de escritorio
+      de esta instalación. Actualiza la aplicación a una versión actual.
     auth_google_expired: El token de actualización de Google ha caducado por el límite
       de 7 días de los proyectos en pruebas. Vuelve a autorizar el acceso a Google.
     auth_google_revoked: El token de actualización de Google ha sido revocado. Vuelve
@@ -1149,6 +1146,9 @@ errors:
     refused_foreign_asset_valuation: No se pudo convertir a euros una valoración del
       modelo 720 en su fecha de cambio legal. Revisa la divisa y la fecha de valoración
       del bien.
+    refused_google_client_metadata_unavailable: Esta instalación no incluye el cliente
+      de Google que necesita para iniciar sesión. Las funciones de Google no estarán
+      disponibles hasta que instales una versión que lo incluya.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
       interactivo con navegador; ejecútalo desde una shell interactiva.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
