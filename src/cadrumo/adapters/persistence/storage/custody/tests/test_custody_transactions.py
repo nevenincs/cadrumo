@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     bind_active_bucket_session,
     current_active_bucket_session,
@@ -205,6 +206,8 @@ def _persist_real_current_session_acceleration(root: Path) -> Path:
         now=_INSTANT,
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=committed_sign_in(root, _PROFILE_ID),
     )
     return profile_session_path(storage_root=root, profile_id=_PROFILE_ID)
 

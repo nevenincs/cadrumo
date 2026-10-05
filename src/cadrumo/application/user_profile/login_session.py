@@ -102,6 +102,7 @@ from .profile_record_repository import (
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ..workflow.profile_bucket_models import ProfileBucketPointer
+    from .access_contracts import ProfileAccessBinding
 
 _log = get_logger(__name__)
 
@@ -162,7 +163,8 @@ class ProfileLoginOutcome(BaseModel):
         idle_deadline: Current sliding idle deadline.
         absolute_deadline: Immutable absolute session cap.
         session_persisted: ``False`` when the host has no usable OS
-            keychain, so the session is process-scoped only.
+            keychain, or the login ran in-process with no runtime-observed
+            OS login to bind, so the session is process-scoped only.
         already_authenticated: ``True`` when a still-valid persisted
             session was resumed as a no-op (no re-prompt, no new record).
         closed_previous_bucket_id: Bucket whose session this login closed
@@ -215,18 +217,22 @@ class ProfileLoginCandidate:
 
     outcome: ProfileLoginOutcome
     session: ProfileBucketSessionPort = field(repr=False)
-    _publish_receipt: Callable[[], bool] | None = field(default=None, repr=False, compare=False)
+    _publish_receipt: Callable[[str, ProfileAccessBinding], bool] | None = field(
+        default=None, repr=False, compare=False
+    )
 
-    def persist_acceleration_receipt(self) -> bool:
+    def persist_acceleration_receipt(self, *, login_id: str, binding: ProfileAccessBinding) -> bool:
         """Publish bounded human acceleration from this still-live password proof.
 
-        Receipt candidates retain their original record without minting another.
+        The receipt binds ``login_id``, the admitted session's originating OS
+        login, and the sign-in generation of ``binding``'s custody.  Receipt
+        candidates retain their original record without minting another.
         Publication never selects a profile or installs ambient custody.
         """
         _require_live_receipt_candidate(self.session)
         if self._publish_receipt is None:
             return self.outcome.session_persisted
-        return self._publish_receipt()
+        return self._publish_receipt(login_id, binding)
 
 
 class ProfileHumanLoginReceipt(BaseModel):
@@ -995,7 +1001,9 @@ def authenticate_profile_candidate(
                 closed_previous_bucket_id=None,
             ),
             session=candidate.session,
-            _publish_receipt=lambda: _persist_candidate_receipt(candidate, storage_root=storage_root),
+            _publish_receipt=lambda login_id, binding: _persist_candidate_receipt(
+                candidate, storage_root=storage_root, login_id=login_id, binding=binding
+            ),
         )
     finally:
         candidate.close()
@@ -1012,7 +1020,9 @@ def _require_live_receipt_candidate(session: ProfileBucketSessionPort) -> None:
         raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.EXPIRED_IDLE)
 
 
-def _persist_candidate_receipt(candidate: _CandidateProfileLogin, *, storage_root: Path) -> bool:
+def _persist_candidate_receipt(
+    candidate: _CandidateProfileLogin, *, storage_root: Path, login_id: str, binding: ProfileAccessBinding
+) -> bool:
     """Recheck the proven capsule while holding its canonical publication lock."""
     with active_profile_pointer_transaction(storage_root):
         if candidate.closed or candidate.session.sealed:
@@ -1028,7 +1038,12 @@ def _persist_candidate_receipt(candidate: _CandidateProfileLogin, *, storage_roo
             raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
         if candidate.receipt_persisted is None:
             candidate.receipt_persisted = _mint_or_warn(
-                storage_root=storage_root, material=pinned, session=candidate.session, windows=candidate.windows
+                storage_root=storage_root,
+                material=pinned,
+                session=candidate.session,
+                windows=candidate.windows,
+                login_id=login_id,
+                binding=binding,
             )
         return candidate.receipt_persisted
 
@@ -1547,11 +1562,9 @@ def _bind_candidate_promotion(
         if bound != handover:
             _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=bound)
         handover = bound
-        persisted = _mint_or_warn(
-            storage_root=storage_root,
-            material=candidate.material,
-            session=candidate.session,
-        )
+        # An in-process login has no runtime-observed OS login to bind, so it
+        # mints no receipt; only the runtime's admitted sessions persist one.
+        persisted = False
         accelerated = handover.at_least_phase(HandoverPhase.ACCELERATED)
         if accelerated != handover:
             _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=accelerated)
@@ -1738,7 +1751,9 @@ def _mint_or_warn(
     storage_root: Path,
     material: ProfileCustodyPasswordMaterialPort,
     session: ProfileBucketSessionPort,
-    windows: tuple[int, int] | None = None,
+    windows: tuple[int, int],
+    login_id: str,
+    binding: ProfileAccessBinding,
 ) -> bool:
     """Mint the persisted session, or report a process-scoped login.
 
@@ -1748,7 +1763,7 @@ def _mint_or_warn(
     for this process; the caller surfaces the warning.
     """
     try:
-        idle_minutes, absolute_minutes = _bucket_session_windows() if windows is None else windows
+        idle_minutes, absolute_minutes = windows
         _profile_login_sessions().mint_acceleration_receipt(
             storage_root=storage_root,
             profile_id=material.envelope.profile_id,
@@ -1758,6 +1773,8 @@ def _mint_or_warn(
             now=session.opened_at,
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
+            login_id=login_id,
+            sign_in_binding=binding,
         )
     except BaseException as exc:
         if not profile_is_keyring_unavailable(exc):

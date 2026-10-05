@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
 )
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
     evaluate_login_throttle,
     record_login_failure,
@@ -312,6 +313,8 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
             now=issued,
             idle_minutes=15,
             absolute_minutes=240,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(storage_root, profile_id),
         )
         try:
             # The control: before the reset the same receipt resumes, so the

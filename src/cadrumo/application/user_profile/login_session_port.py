@@ -21,6 +21,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
     from ...core.profile_session import ProfileSessionRefusalReason
+    from .access_contracts import ProfileAccessBinding
     from .login_handover import ProfileLoginHandoverJournal
 
 
@@ -235,8 +236,14 @@ class ProfileLoginSessionPort(Protocol):
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> ProfilePersistedSessionPort:
-        """Mint and return the canonical persisted acceleration receipt."""
+        """Mint and return the canonical persisted acceleration receipt.
+
+        The receipt binds ``login_id``, the originating OS login, and the
+        sign-in generation durably held for ``sign_in_binding``'s custody.
+        """
         ...
 
     def resume_acceleration_receipt(

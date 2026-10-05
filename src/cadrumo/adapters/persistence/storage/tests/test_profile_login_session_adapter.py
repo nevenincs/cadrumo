@@ -10,6 +10,7 @@ import pytest
 
 from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
 from ..custody.acceleration_receipt_crypto import PersistedProfileSession
+from ..custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 from ..errors import KeyringUnavailableError
 from ..master_key.bucket_session import BucketSession
 from ..master_key.login_throttle import ThrottleEvaluation
@@ -60,6 +61,7 @@ def test_live_session_throttle_and_buffer_wipe_delegate_to_the_real_authorities(
 def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_path: Path) -> None:
     port = build_profile_login_session_port()
     receipt_path = port.acceleration_receipt_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
+    sign_in = sign_in_custody(tmp_path, _PROFILE_ID, custody_generation=3)
     try:
         minted = port.mint_acceleration_receipt(
             storage_root=tmp_path,
@@ -70,6 +72,8 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
             now=_NOW,
             idle_minutes=15,
             absolute_minutes=240,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in_binding=sign_in.binding,
         )
     except KeyringUnavailableError:
         assert not receipt_path.exists()
@@ -77,6 +81,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
 
     try:
         assert isinstance(minted, PersistedProfileSession)
+        assert minted.sign_in == sign_in.observe().current
         assert minted.profile_id == _PROFILE_ID
         assert minted.custody_generation == 3
         assert minted.dek_epoch == "epoch-3"

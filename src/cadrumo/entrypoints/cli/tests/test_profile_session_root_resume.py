@@ -43,6 +43,11 @@ from ....adapters.persistence.storage.custody.acceleration_receipt import (
     profile_session_path,
 )
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.tests.receipt_sign_in import (
+    RECEIPT_LOGIN_ID,
+    committed_sign_in,
+    persist_signed_in_receipt,
+)
 from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -126,8 +131,18 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
     without this precondition a cross-process resume test would fail later with
     a misleading "you are not logged in" refusal that reads like a resume
     defect. Asserting it here pins the failure on the missing custody instead.
+
+    The in-process login mints no receipt, so the receipt is published after it
+    through the runtime worker's own step, as a persisted sign-in does.
     """
     _login()
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    persist_signed_in_receipt(
+        storage_root,
+        UUID(bucket_id),
+        _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
     assert profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id)).is_file(), (
         "login did not persist a session record, so cross-process resume cannot be exercised; "
         "this host has no usable OS keychain to custody the session key"
@@ -571,6 +586,8 @@ class TestFailClosedRefusals:
             now=_now() - timedelta(minutes=minutes),
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(storage_root, profile_id),
         )
 
 

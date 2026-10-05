@@ -9,7 +9,13 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import wrap_profile_session_dek
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import (
+    RECEIPT_LOGIN_ID,
+    committed_sign_in,
+    sign_in_custody,
+)
 from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
@@ -80,6 +86,8 @@ def test_supplied_proof_is_non_destructive_and_uses_no_keyring_lookup(
         now=opened,
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, profile_id, custody_generation=3),
     )
     other_record = receipt.mint_profile_session(
         storage_root=tmp_path,
@@ -90,6 +98,8 @@ def test_supplied_proof_is_non_destructive_and_uses_no_keyring_lookup(
         now=opened,
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, other_id, custody_generation=3),
     )
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     other_path = receipt.profile_session_path(storage_root=tmp_path, profile_id=other_id)
@@ -158,6 +168,8 @@ def test_application_borrow_and_candidate_preserve_ambient_session_and_deadlines
             now=opened,
             idle_minutes=15,
             absolute_minutes=240,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(tmp_path, profile_id),
         )
         _, decode = profile_authority_contexts()
         with (
@@ -204,15 +216,27 @@ def test_application_borrow_and_candidate_preserve_ambient_session_and_deadlines
                     interrupted_keys.append(interrupted_key)
                     raise RuntimeError("protected IPC failed")
                 assert interrupted_keys == [bytearray(32)]
-                receipt.mint_profile_session(
+                # A receipt from custody newer than the committed capsule; only
+                # its plaintext custody generation is evaluated, so no keychain
+                # half is needed.
+                receipt_path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
+                receipt._write_acceleration_receipt(
                     storage_root=tmp_path,
                     profile_id=profile_id,
-                    custody_generation=material.envelope.password_generation + 1,
-                    dek_epoch=material.envelope.dek_epoch,
-                    dek=dek,
-                    now=opened,
-                    idle_minutes=15,
-                    absolute_minutes=240,
+                    record=wrap_profile_session_dek(
+                        session_key=bytes(32),
+                        dek=dek,
+                        profile_id=profile_id,
+                        session_id=uuid4(),
+                        custody_generation=material.envelope.password_generation + 1,
+                        dek_epoch=material.envelope.dek_epoch,
+                        login_id=RECEIPT_LOGIN_ID,
+                        sign_in=persisted.sign_in,
+                        issued_at=opened,
+                        idle_deadline=persisted.idle_deadline,
+                        absolute_deadline=persisted.absolute_deadline,
+                    ),
+                    predecessor=receipt_path.read_bytes(),
                 )
                 with (
                     pytest.raises(ProfileReceiptRefusedError) as changed,

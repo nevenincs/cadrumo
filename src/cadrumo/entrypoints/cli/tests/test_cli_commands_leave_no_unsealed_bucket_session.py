@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.profile_login_session import build_pro
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
+from ....application.user_profile.access_contracts import ProfileAccessBinding
 from ....application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
@@ -207,6 +208,8 @@ class _ReceiptResumingPort:
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> ProfilePersistedSessionPort:
         return self._real.mint_acceleration_receipt(
             storage_root=storage_root,
@@ -217,6 +220,8 @@ class _ReceiptResumingPort:
             now=now,
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
+            login_id=login_id,
+            sign_in_binding=sign_in_binding,
         )
 
     def resume_acceleration_receipt(

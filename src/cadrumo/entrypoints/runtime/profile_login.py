@@ -101,8 +101,10 @@ class ProfileWorkerHumanLogin:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             _, candidate, _, _ = current
             outcome = candidate.outcome
+            login_id = lease.originating_login_id
             if (
                 lease.kind is not SessionKind.HUMAN
+                or login_id is None
                 or lease.binding != self.custody.identity.binding
                 or lease.issued_at < outcome.authenticated_at
                 or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
@@ -111,7 +113,11 @@ class ProfileWorkerHumanLogin:
             material = bytearray(candidate.session.dek)
             try:
                 self.custody.install(lease, material)
-                persisted = candidate.persist_acceleration_receipt() if persist_receipt else outcome.session_persisted
+                persisted = (
+                    candidate.persist_acceleration_receipt(login_id=login_id, binding=lease.binding)
+                    if persist_receipt
+                    else outcome.session_persisted
+                )
                 return ProfileHumanLoginReceipt(
                     authenticated_at=outcome.authenticated_at,
                     idle_deadline=outcome.idle_deadline,

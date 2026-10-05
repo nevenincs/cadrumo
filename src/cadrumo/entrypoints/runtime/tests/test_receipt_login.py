@@ -13,12 +13,15 @@ from uuid import UUID, uuid4
 
 import keyring
 import pytest
+from keyring.errors import KeyringError, PasswordDeleteError
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_binding
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
@@ -31,7 +34,7 @@ from cadrumo.application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
-from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key, login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate, borrow_profile_receipt_key
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
@@ -96,7 +99,12 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
     )
     prior_keyring = keyring.get_keyring()
     monkeypatch.setenv("PYTHON_KEYRING_BACKEND", IN_MEMORY_KEYRING)
-    keyring.set_keyring(InMemoryKeyring())
+    store = InMemoryKeyring()
+    keyring.set_keyring(store)
+    # The backend's priority was fixed when collection imported it, before the
+    # selection above, so the receipt writer's usability probe would refuse it.
+    # Hand the writer the same selected store directly.
+    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
     try:
         with administration_subject(
             tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
@@ -109,21 +117,31 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
             assert api_credential is not None
             profile_id = enrollment.store.binding.profile_id
             close_active_bucket_session()
+            native_login = LoginObservation(owner_id())
+            # The worker's own publication step, run in this process so the
+            # receipt key lands in this process's keyring: it binds the
+            # receipt to the native login the runtime observes below.
             _, decode = profile_authority_contexts()
-            minted = login_profile(
-                name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
-            )
-            assert minted.session_persisted
-            close_active_bucket_session()
+            with authenticate_profile_candidate(
+                bucket_id=profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+            ) as candidate:
+                assert candidate.persist_acceleration_receipt(
+                    login_id=native_login.login_id, binding=enrollment.store.binding
+                )
             receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
             original_receipt = receipt_path.read_bytes()
             receipt_metadata = json.loads(original_receipt)
+            assert receipt_metadata["login_binding"] == profile_session_login_binding(
+                profile_id=profile_id,
+                session_id=UUID(receipt_metadata["session_id"]),
+                login_id=native_login.login_id,
+            )
             receipt_expiry = min(
                 datetime.fromisoformat(receipt_metadata["idle_deadline"]),
                 datetime.fromisoformat(receipt_metadata["absolute_deadline"]),
             )
 
-            stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
+            stop, boot = Event(), uuid4()
             profiles = RuntimeProfileConnections(
                 storage_root=root,
                 storage_identity=endpoint.storage_identity,

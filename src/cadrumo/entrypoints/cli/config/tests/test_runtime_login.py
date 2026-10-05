@@ -27,6 +27,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
@@ -313,6 +314,8 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         now=datetime.now(UTC),
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=committed_sign_in(_isolated_cli_backend, first_id),
     )
     receipt_path = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     original_receipt = receipt_path.read_bytes()
@@ -391,7 +394,10 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=authority.profile_decode_context(),
             ) as candidate:
-                assert candidate.persist_acceleration_receipt()
+                assert candidate.persist_acceleration_receipt(
+                    login_id=RECEIPT_LOGIN_ID,
+                    binding=committed_sign_in(_isolated_cli_backend, profile_id).binding,
+                )
     _select(first_id)
     first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     second_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=second_id)
