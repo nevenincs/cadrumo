@@ -1123,17 +1123,17 @@ def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> N
 
 
 def test_a_kind_enrolled_with_nothing_to_run_is_never_unhandled() -> None:
-    """Modelo 720's record-design constants need no resolver; its foreign-asset rows still do.
+    """Modelo 720's operator-typed fields need no resolver; its foreign-asset rows still do.
 
-    The fixed ``modelo`` and ``tipo de registro`` fields of each record are
-    ``design_constant`` bindings, enrolled on the route with nothing to run, as
-    an operator's typed value is. Neither is a missing route. The foreign-asset
-    rows are a filing-grade source, so leaving them outside the handled set is
-    still reported: that is the gap the screen exists for.
+    An operator's typed value is a ``manual_input`` binding, enrolled on the
+    route with nothing to run, as a constant the record design fixes is.
+    Neither is a missing route. The foreign-asset rows are a filing-grade
+    source, so leaving them outside the handled set is still reported: that is
+    the gap the screen exists for.
     """
     revision = published_revision("720", "2013-y-siguientes")
     declared = {binding.source for binding in revision.bindings}
-    assert {BindingSourceKind.DESIGN_CONSTANT, BindingSourceKind.FOREIGN_ASSET} <= declared
+    assert {BindingSourceKind.MANUAL_INPUT, BindingSourceKind.FOREIGN_ASSET} <= declared
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
     reported = {(diagnostic.reason, diagnostic.source_kind) for diagnostic in diagnostics}

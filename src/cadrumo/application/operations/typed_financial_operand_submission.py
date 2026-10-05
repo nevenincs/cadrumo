@@ -8,7 +8,6 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from hashlib import sha256
 from hmac import compare_digest
 from typing import Never
 
@@ -16,6 +15,7 @@ from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.operations import OperationEffect
 from .financial_operand_contract import (
@@ -97,7 +97,7 @@ class OperationTypedFinancialOperandBroker:
             identity=identity,
             invocation_revision=revision,
             handoff_id=secrets.token_hex(32),
-            grant_fingerprint=sha256(grant).hexdigest(),
+            grant_fingerprint=sha256_hex(grant),
             operand_schema=declaration.operand_schema,
             baseline_schema=declaration.baseline_schema,
             domain_baseline_ref=domain_baseline_ref,
@@ -151,7 +151,7 @@ class OperationTypedFinancialOperandBroker:
                 if wait.checkpoint.state is not OperationFinancialOperandCustodyState.AWAITING_SUBMISSION:
                     self._refuse(OperationFinancialOperandRefusalCode.DUPLICATE_SUBMISSION)
                 if len(submission.grant) != 32 or not compare_digest(
-                    sha256(submission.grant).hexdigest(), requirement.grant_fingerprint
+                    sha256_hex(submission.grant), requirement.grant_fingerprint
                 ):
                     self._refuse(OperationFinancialOperandRefusalCode.WRONG_GRANT)
                 operand = submission.operand

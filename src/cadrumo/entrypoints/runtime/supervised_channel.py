@@ -259,7 +259,7 @@ class SupervisorChannel:
         try:
             command = decode_supervisor_command(line)
         except SupervisorLineError as error:
-            self.announce(RuntimeRefused(code=error.code))
+            self.announce(RuntimeRefused(code=error.reason))
             return
         try:
             handle(command)

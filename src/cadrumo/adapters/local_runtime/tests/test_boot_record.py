@@ -11,7 +11,10 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import StorageMode
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 
 from ..boot_record import (
     MAXIMUM_BOOT_RECORD_BYTES,
@@ -51,7 +54,10 @@ def _write_raw(root: Path, payload: bytes) -> Path:
 
 
 def test_the_record_lives_beside_the_installation_identity(tmp_path: Path) -> None:
-    assert runtime_boot_record_path(tmp_path) == tmp_path / ".runtime" / "boot.json"
+    assert runtime_boot_record_path(tmp_path) == storage_path(
+        StorageCategory.RUNTIME_BOOT_RECORD,
+        settings=Settings(cadrumo_local_storage_root=tmp_path),
+    )
     with pytest.raises(RuntimeRefusalError) as refused:
         runtime_boot_record_path(Path("relative-root"))
     assert refused.value.reason is RuntimeRefusalCode.ROOT_MISMATCH
@@ -63,7 +69,7 @@ def test_a_published_record_reads_back_exactly(tmp_path: Path) -> None:
     publication = RuntimeBootRecordPublication(storage_root=tmp_path, record=record)
     assert publication.publish()
     assert read_runtime_boot_record(storage_root=tmp_path) == record
-    stored = (tmp_path / ".runtime" / "boot.json").read_bytes()
+    stored = runtime_boot_record_path(tmp_path).read_bytes()
     # Canonical JSON: sorted members, compact separators, exactly the declared fields.
     assert stored.startswith(b'{"admission":"native","boot_id":')
     assert set(RuntimeBootRecord.model_fields) == {
@@ -131,7 +137,7 @@ def test_anything_but_one_strict_record_is_unreadable(tmp_path: Path, payload: b
 
 
 def test_a_directory_in_place_of_the_record_is_unreadable(tmp_path: Path) -> None:
-    (tmp_path / ".runtime" / "boot.json").mkdir(parents=True)
+    runtime_boot_record_path(tmp_path).mkdir(parents=True)
     assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.UNREADABLE
 
 

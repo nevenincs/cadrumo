@@ -73,7 +73,7 @@ def test_each_supervisor_command_decodes_to_its_type(line: bytes, expected: obje
 def test_lines_outside_the_grammar_are_malformed(line: bytes) -> None:
     with pytest.raises(SupervisorLineError) as refused:
         decode_supervisor_command(line)
-    assert refused.value.code is SupervisorLineRefusal.MALFORMED
+    assert refused.value.reason is SupervisorLineRefusal.MALFORMED
     # The refusal carries only its bounded code, never the refused line.
     assert str(refused.value) == "malformed"
 
@@ -81,7 +81,7 @@ def test_lines_outside_the_grammar_are_malformed(line: bytes) -> None:
 def test_a_line_at_the_bound_is_oversized_before_parsing() -> None:
     with pytest.raises(SupervisorLineError) as refused:
         decode_supervisor_command(b'{"type":"stop"}' + b" " * MAX_LINE_BYTES)
-    assert refused.value.code is SupervisorLineRefusal.OVERSIZED
+    assert refused.value.reason is SupervisorLineRefusal.OVERSIZED
 
 
 def test_framing_joins_split_lines_and_keeps_order() -> None:

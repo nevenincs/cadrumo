@@ -518,12 +518,12 @@ def _especial_mandatory_diagnostics(
             reason="prorrata_especial_check_unavailable",
             source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
             message=(
-                f"La prorrata especial puede ser obligatoria para {filing_year} (LIVA art. 103.Dos.2.º: "
-                f"se aplica cuando las cuotas deducibles por prorrata general exceden {exceso} "
-                "de las que resultarían por la regla especial). La comprobación requiere clasificar "
-                "el uso de cada cuota soportada (art. 106): declare '--input-classification' en las "
-                "operaciones del ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial "
-                f"--ejercicio {filing_year}'. Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
+                f"La prorrata especial puede ser obligatoria en {filing_year} (LIVA art. 103.Dos.2.º: "
+                f"cuando la deducción por prorrata general excede {exceso} la de la regla especial). "
+                "Para comprobarlo, clasifica el uso de cada cuota soportada (art. 106): declara "
+                "'--input-classification' en las operaciones del ejercicio y, en su caso, ejecuta "
+                f"'app ledger prorrata elect-especial --ejercicio {filing_year}'. "
+                f"Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
             ),
             # Advisory-asserted, no casilla here either: the message states both
             # the art. 103.Dos.2.º mandatory-especial threshold AND the art. 106

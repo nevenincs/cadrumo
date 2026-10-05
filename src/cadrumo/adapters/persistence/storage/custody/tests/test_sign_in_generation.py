@@ -17,7 +17,7 @@ from ......core.config import Settings
 from ......core.identity.profile import canonical_profile_bucket_id
 from ......core.profile_publication import ProfilePublicationKind
 from ......core.storage_taxonomy import StorageCategory, StorageNodeKind, StorageScope
-from ......core.storage_taxonomy_locations import bucket_scoped_storage_path, storage_location
+from ......core.storage_taxonomy_locations import bucket_scoped_storage_path, storage_location, storage_path
 from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..automation_crypto import canonical_record
 from ..capsule import publish_profile_custody_capsule
@@ -129,8 +129,13 @@ def test_the_record_lives_in_the_keystore_and_carries_no_secret(root: Path) -> N
     custody = _custody(root)
     created = custody.establish().current
 
-    assert custody.path == root / "keystore" / canonical_profile_bucket_id(_PROFILE_ID) / "sign-in-generation.json"
-    assert not custody.path.is_relative_to(root / "buckets")
+    settings = Settings(cadrumo_local_storage_root=root)
+    assert custody.path == bucket_scoped_storage_path(
+        StorageCategory.KEYSTORE_SIGN_IN_GENERATION,
+        canonical_profile_bucket_id(_PROFILE_ID),
+        settings=settings,
+    )
+    assert not custody.path.is_relative_to(storage_path(StorageCategory.BUCKETS, settings=settings))
     stored = json.loads(custody.path.read_bytes())
     assert set(stored) == {"schema_version", "binding", "current"}
     assert stored["current"] == {"lineage": str(created.lineage), "generation": 1}

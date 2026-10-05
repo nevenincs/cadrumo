@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...adapters.local_runtime.login_policy import RuntimeAdmissionPolicy
 from ...application.runtime.contracts import RuntimeExitReason
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -134,13 +135,13 @@ type RuntimeAnnouncement = Annotated[
 _COMMANDS: TypeAdapter[SupervisorCommand] = TypeAdapter(SupervisorCommand)
 
 
-class SupervisorLineError(ValueError):
+class SupervisorLineError(CadrumoError):
     """A supervisor line outside the closed grammar."""
 
     def __init__(self, code: SupervisorLineRefusal) -> None:
         """Keep only the bounded refusal code."""
         super().__init__(code.value)
-        self.code = code
+        self.reason = code
 
 
 def decode_supervisor_command(line: bytes) -> SupervisorCommand:

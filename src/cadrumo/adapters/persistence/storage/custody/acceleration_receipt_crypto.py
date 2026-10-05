@@ -20,7 +20,6 @@ so substituting either one breaks the tag.
 
 from __future__ import annotations
 
-import hashlib
 import secrets
 from datetime import datetime
 from typing import Annotated, Final
@@ -29,7 +28,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, StringConstraints
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.hashing import canonical_json_bytes
+from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.utc import UtcInstant, validate_utc_aware
@@ -85,7 +84,7 @@ def profile_session_login_binding(*, profile_id: UUID, session_id: UUID, login_i
             "session_id": str(session_id),
         },
     )
-    return hashlib.sha256(_LOGIN_BINDING_DOMAIN + payload).hexdigest()
+    return sha256_hex(_LOGIN_BINDING_DOMAIN + payload)
 
 
 def validate_profile_session_metadata(

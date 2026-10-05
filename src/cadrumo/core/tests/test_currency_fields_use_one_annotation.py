@@ -44,11 +44,6 @@ _CURRENCY_FIELD_NAMES = {"currency", "currency_code", "invoice_currency", "sourc
 #: reason. A reason naming a REVIEWED difference in behaviour is the only kind
 #: that belongs here.
 DECLARED_EXCEPTIONS: dict[str, str] = {
-    "application/operations/financial_operand.py::currency": (
-        "a registry-AUTHORED declaration rather than operator or bank input, so "
-        "a sloppy code should fail the author at load; IsoCurrencyCode would "
-        "normalise an authored 'eur' and repair it behind them"
-    ),
     "adapters/inbound/financial/providers/csv.py::currency": (
         "a raw parsed cell, held exactly as the bank exported it so the adapter "
         "can name the offending value; normalisation happens once at the "

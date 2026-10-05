@@ -118,5 +118,15 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.entrypoints.runtime.supervised_protocol.SupervisorLineError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_SUPERVISOR_LINE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
     *_ENTRYPOINTS_PART2_CODES,
 )
