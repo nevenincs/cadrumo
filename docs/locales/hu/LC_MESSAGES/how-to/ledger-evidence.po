@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 02:05+0200\n"
+"POT-Creation-Date: 2026-10-05 11:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -27,17 +27,13 @@ msgid ""
 "Store a supporting document for each invoice or receipt and link it to "
 "the transaction it supports. Checks, exports, and year-end reviews can "
 "then point at the document behind every number. Stored supporting "
-"documents stay encrypted on your computer. Google Drive pull commands "
-"reach your authorized account before storing the downloaded file on your "
-"computer."
+"documents stay encrypted on your computer."
 msgstr ""
 "Rögzíts minden számlához vagy nyugtához egy bizonylatot, és kapcsold "
 "ahhoz a tranzakcióhoz, amelyet alátámaszt. Így az ellenőrzések, az "
 "exportok és az év végi áttekintések minden szám mögött megmutathatják a "
 "kapcsolódó bizonylatot. A tárolt bizonylatok titkosítva maradnak a "
-"számítógépeden. A Google Drive-ból lehívó parancsok először az általad "
-"engedélyezett fiókhoz férnek hozzá, majd a letöltött fájlt a "
-"számítógépeden tárolják."
+"számítógépeden."
 
 #: ../../how-to/ledger-evidence.md:6
 msgid "Before you start"
@@ -78,13 +74,18 @@ msgid ""
 "The invoice or receipt as a PDF or image file. Cadrumo copies the file's "
 "bytes into encrypted storage together with the facts you type, plus a "
 "content fingerprint and the original location as a record of where it "
-"came from. Your original file is never needed again after `add`."
+"came from. Your original file is never needed again after `add`. Cadrumo "
+"does not fetch documents from online accounts: download a document kept "
+"in Google Drive or in your email first, then register the downloaded "
+"file."
 msgstr ""
 "A számlára vagy nyugtára PDF- vagy képfájlként. A Cadrumo a fájl bájtjait"
 " a beírt adatokkal együtt bemásolja a titkosított tárolóba, egy tartalmi "
 "ujjlenyomattal és az eredeti hellyel együtt, amely rögzíti, honnan "
 "származik a fájl. Az eredeti fájlra az `add` után soha többé nincs "
-"szükség."
+"szükség. A Cadrumo nem tölt le dokumentumokat online fiókokból: előbb "
+"töltsd le a Google Drive-ban vagy a levelezésedben tárolt dokumentumot, "
+"majd rögzítsd a letöltött fájlt."
 
 #: ../../how-to/ledger-evidence.md:16
 msgid "Add a supporting document"
@@ -177,12 +178,11 @@ msgid ""
 "role. It expects the 64-character content id of a document already in "
 "encrypted attachment storage, and it refuses any id that has no stored "
 "document (`attachment_ids must reference existing secure attachment "
-"manifests and blobs`). The commands that store a document print that id: "
-"`evidence add` and `evidence pull-all`, as `attachment_id` in JSON output"
-" and as `source_sha256` in text output. The supporting document's ID from"
-" `evidence add` is a shorter id and is not accepted here. Inspect a "
-"stored attachment with `aeat app ledger evidence attachment-view "
-"<attachment-id>`."
+"manifests and blobs`). The command that stores a document prints that id:"
+" `evidence add`, as `attachment_id` in JSON output and as `source_sha256`"
+" in text output. The supporting document's ID from `evidence add` is a "
+"shorter id and is not accepted here. Inspect a stored attachment with "
+"`aeat app ledger evidence attachment-view <attachment-id>`."
 msgstr ""
 "Az `attach` parancsnak van egy `--attachment-id` kapcsolója is "
 "(ismételhető) olyan általános biztonságos csatolmányhoz, amely nem "
@@ -190,12 +190,11 @@ msgstr ""
 "dokumentum 64 karakteres tartalmi azonosítóját várja, és elutasít minden "
 "olyan azonosítót, amelyhez nincs tárolt dokumentum (`attachment_ids must "
 "reference existing secure attachment manifests and blobs`). A "
-"dokumentumot tároló parancsok kiírják ezt az azonosítót: az `evidence "
-"add` és az `evidence pull-all`, JSON-kimenetben `attachment_id`, szöveges"
-" kimenetben `source_sha256` néven. Az `evidence add` által adott "
-"bizonylatazonosító rövidebb, és itt nem fogadja el a rendszer. A tárolt "
-"csatolmányt az `aeat app ledger evidence attachment-view <attachment-id>`"
-" paranccsal nézd meg."
+"dokumentumot tároló parancs kiírja ezt az azonosítót: az `evidence add`, "
+"JSON-kimenetben `attachment_id`, szöveges kimenetben `source_sha256` "
+"néven. Az `evidence add` által adott bizonylatazonosító rövidebb, és itt "
+"nem fogadja el a rendszer. A tárolt csatolmányt az `aeat app ledger "
+"evidence attachment-view <attachment-id>` paranccsal nézd meg."
 
 #: ../../how-to/ledger-evidence.md:46
 msgid ""
@@ -210,85 +209,10 @@ msgstr ""
 "leválasztás nem törölhet beszerzési számlás bizonylatot."
 
 #: ../../how-to/ledger-evidence.md:48
-msgid "Pull a document from Google Drive instead"
-msgstr "Dokumentum lekérése inkább a Google Drive-ról"
-
-#: ../../how-to/ledger-evidence.md:50
-msgid ""
-"When the document lives in Google Drive, pull it straight into encrypted "
-"storage. This command reaches Google Drive, so it runs against your own "
-"authorized account rather than in the documentation sandbox:"
-msgstr ""
-"Ha a dokumentum a Google Drive-on van, töltsd le közvetlenül a "
-"titkosított tárolóba. Ez a parancs hozzáfér a Google Drive-hoz, ezért az "
-"általad engedélyezett fiókkal fut, nem a dokumentációs tesztkörnyezetben:"
-
-#: ../../how-to/ledger-evidence.md:55
-msgid ""
-"The command downloads the Drive file, stores its bytes encrypted with the"
-" transaction, and keeps the original link as a record of where it came "
-"from. A supporting document always carries the document itself, never a "
-"bare link: Gmail links, arbitrary URLs, and Drive files outside the "
-"granted scope are refused. For a refused source, download the document "
-"yourself and register it with `aeat app ledger evidence add`."
-msgstr ""
-"A parancs letölti a Drive-fájlt, a bájtjait titkosítva tárolja a "
-"tranzakcióval együtt, és megőrzi az eredeti hivatkozást a forrás "
-"nyilvántartásához. A bizonylat mindig magát a dokumentumot tartalmazza, "
-"nem puszta hivatkozást: a Gmail-hivatkozásokat, a tetszőleges URL-eket és"
-" az engedélyezett hatókörön kívüli Drive-fájlokat a rendszer elutasítja. "
-"Ha egy forrást elutasít, töltsd le te magad a dokumentumot, és "
-"regisztráld az `aeat app ledger evidence add` paranccsal."
-
-#: ../../how-to/ledger-evidence.md:57
-msgid "Bulk-fetch every invoice in a Drive folder"
-msgstr "Egy Drive-mappa összes számlájának tömeges lekérése"
-
-#: ../../how-to/ledger-evidence.md:59
-msgid ""
-"Fetch every PDF and image invoice in one Drive folder at once, instead of"
-" one document at a time. Like `evidence pull`, this command reaches "
-"Google Drive and runs against your own authorized account:"
-msgstr ""
-"Kérd le egyszerre egy Drive-mappából az összes PDF- vagy képfájlban "
-"tárolt számlát, ne egyesével. Az `evidence pull` parancshoz hasonlóan ez "
-"is eléri a Google Drive-ot, és a saját, általad engedélyezett fiókoddal "
-"fut:"
-
-#: ../../how-to/ledger-evidence.md:64
-msgid ""
-"The command lists the folder's contents, downloads each PDF or image, and"
-" stores every file encrypted. Fetched files are not linked to a "
-"transaction yet; bind each one afterward with `aeat app ledger attach "
-"--attachment-id <attachment-id>`."
-msgstr ""
-"A parancs kilistázza a mappa tartalmát, letölti az egyes PDF- vagy "
-"képfájlokat, és minden fájlt titkosítva tárol. A lekért fájlok még "
-"nincsenek tranzakcióhoz kötve; kösse mindegyiket utólag az `aeat app "
-"ledger attach --attachment-id <attachment-id>` paranccsal."
-
-#: ../../how-to/ledger-evidence.md:66
-msgid ""
-"Re-run the same command any time. A file already fetched is recognized by"
-" its content and is not stored twice. A file outside the granted Drive "
-"scope is refused individually and does not stop the rest of the sweep; "
-"download it yourself and register it with `aeat app ledger evidence add`."
-msgstr ""
-"Bármikor futtasd újra ugyanezt a parancsot. A rendszer a már lekért fájlt"
-" a tartalma alapján felismeri, és nem tárolja kétszer. Az engedélyezett "
-"Drive-hatókörön kívüli fájlt egyenként elutasítja, de ez nem állítja le a"
-" többi fájl feldolgozását; töltsd le te magad, és regisztráld az `aeat "
-"app ledger evidence add` paranccsal."
-
-#: ../../how-to/ledger-evidence.md:68
-msgid "Gmail bulk-fetch is not available yet."
-msgstr "A Gmail tömeges lekérése még nem érhető el."
-
-#: ../../how-to/ledger-evidence.md:70
 msgid "Invoice records are a separate feature"
 msgstr "A számlarekordok külön funkció"
 
-#: ../../how-to/ledger-evidence.md:72
+#: ../../how-to/ledger-evidence.md:50
 msgid ""
 "An invoice *record* - who owes whom, for what amount - is not a stored "
 "document. [Manage business invoices](manage-invoices.md) owns invoice "
@@ -305,11 +229,11 @@ msgstr ""
 " Ez az oldal azokról a dokumentumokról szól (PDF-ekről és képekről), "
 "amelyeket bizonylatként tárol, és tranzakciókhoz köt."
 
-#: ../../how-to/ledger-evidence.md:79
+#: ../../how-to/ledger-evidence.md:57
 msgid "List, view, update, and remove supporting documents"
 msgstr "Bizonylatok listázása, megtekintése, frissítése és eltávolítása"
 
-#: ../../how-to/ledger-evidence.md:81
+#: ../../how-to/ledger-evidence.md:59
 msgid ""
 "List every stored record, view one in full, update its details, and "
 "remove one you no longer need. The sequence records a supporting "
@@ -321,13 +245,13 @@ msgstr ""
 "A sorozat rögzít egy bizonylatot, kilistázza és megvizsgálja, módosítja a"
 " beszállítót, majd megerősíti a változtatást:"
 
-#: ../../how-to/ledger-evidence.md:88
+#: ../../how-to/ledger-evidence.md:66
 msgid "Remove a supporting document you no longer need, addressing it by id:"
 msgstr ""
 "Távolíts el egy bizonylatot, amelyre már nincs szükséged, azonosító "
 "szerint hivatkozva rá:"
 
-#: ../../how-to/ledger-evidence.md:94
+#: ../../how-to/ledger-evidence.md:72
 msgid ""
 "Removing applies to supporting documents, not transactions. To fix a "
 "transaction row itself, see [Correct mistakes in your records](correct-"
@@ -337,11 +261,11 @@ msgstr ""
 " tranzakciósornak a javításához lásd: [Javítsd ki a hibákat a "
 "nyilvántartásaidban](correct-ledger-entries.md)."
 
-#: ../../how-to/ledger-evidence.md:97
+#: ../../how-to/ledger-evidence.md:75
 msgid "Supporting documents and input VAT deduction"
 msgstr "Bizonylatok és a beszerzési IVA levonása"
 
-#: ../../how-to/ledger-evidence.md:99
+#: ../../how-to/ledger-evidence.md:77
 msgid ""
 "Supporting documents also decide whether input VAT deducts. For a "
 "transaction row, declare the deduction kind with `--deduction-kind` on "
@@ -357,7 +281,7 @@ msgstr ""
 "`import_current`, `import_investment`, `intra_eu_current`, "
 "`intra_eu_investment`, `reagp_compensation` és `rectification`."
 
-#: ../../how-to/ledger-evidence.md:101
+#: ../../how-to/ledger-evidence.md:79
 msgid ""
 "Only `domestic_current` and `domestic_investment` can currently be "
 "substantiated from a transaction row. They take their supporting document"
@@ -369,7 +293,7 @@ msgstr ""
 "számlából veszik, ezért előbb csatold azt; a `domestic_investment` "
 "ezenfelül a `--investment-asset-id` kapcsolót is igényli."
 
-#: ../../how-to/ledger-evidence.md:103
+#: ../../how-to/ledger-evidence.md:81
 msgid ""
 "The import, intra-EU, REAGP, and rectification kinds need a customs "
 "declaration, an intra-EU self-assessment, a REAGP receipt, or proof of "
@@ -387,7 +311,7 @@ msgstr ""
 "és az ahhoz tartozó levonást is. Az ilyen sort tartalmazó bevallás nem "
 "megy át az ellenőrzésen, ezért az adott időszakot más módon nyújtsd be."
 
-#: ../../how-to/ledger-evidence.md:105
+#: ../../how-to/ledger-evidence.md:83
 msgid ""
 "`investment_goods_regularisation` comes from the bienes de inversión "
 "register. Declare and inspect capital goods with `aeat app ledger bienes-"
@@ -405,11 +329,11 @@ msgstr ""
 "rovatába. Ennek a típusnak a megadása egy tranzakciósoron nem hozza létre"
 " ezt a korrekciót."
 
-#: ../../how-to/ledger-evidence.md:107
+#: ../../how-to/ledger-evidence.md:85
 msgid "After you correct a row"
 msgstr "Miután kijavított egy sort"
 
-#: ../../how-to/ledger-evidence.md:109
+#: ../../how-to/ledger-evidence.md:87
 msgid ""
 "If you merge or split transactions, check the new rows and re-attach "
 "supporting documents where needed. [Correct mistakes in your records"
@@ -420,11 +344,11 @@ msgstr ""
 "[Javítsd ki a hibákat a nyilvántartásaidban](correct-ledger-entries.md) "
 "oldal szól."
 
-#: ../../how-to/ledger-evidence.md:112
+#: ../../how-to/ledger-evidence.md:90
 msgid "Where supporting documents show up"
 msgstr "Hol jelennek meg a bizonylatok"
 
-#: ../../how-to/ledger-evidence.md:114
+#: ../../how-to/ledger-evidence.md:92
 msgid ""
 "Exports of your records include the link to the supporting document with "
 "each transaction. Calculations based on your records carry the trail of "
@@ -434,7 +358,7 @@ msgstr ""
 "bizonylatra mutató hivatkozást. A nyilvántartásaidon alapuló számítások a"
 " benyújtási fájlokig továbbviszik a bizonylatok nyomvonalát."
 
-#: ../../how-to/ledger-evidence.md:116
+#: ../../how-to/ledger-evidence.md:94
 msgid ""
 "Read [Import, export, and supporting documents](../reference/import-"
 "export-and-evidence.md) for the difference between linked supporting "
@@ -446,24 +370,24 @@ msgstr ""
 "tranzakcióhoz kapcsolt bizonylatok, egy AEAT-feltöltési fájl, a hivatalos"
 " benyújtási igazolás és egy auditcsomag között."
 
-#: ../../how-to/ledger-evidence.md:120
+#: ../../how-to/ledger-evidence.md:98
 msgid "Where to get help"
 msgstr "Hol kérhetsz segítséget"
 
-#: ../../how-to/ledger-evidence.md:122
+#: ../../how-to/ledger-evidence.md:100
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
 "Ha egy parancs meghiúsul vagy elutasít egy műveletet, lásd: "
 "[Hibaelhárítás](troubleshooting.md)."
 
-#: ../../how-to/ledger-evidence.md:123
+#: ../../how-to/ledger-evidence.md:101
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
 "Ha egy kifejezés ismeretlen, lásd a {doc}`Szójegyzék "
 "</_generated/glossary>` oldalt."
 
-#: ../../how-to/ledger-evidence.md:124
+#: ../../how-to/ledger-evidence.md:102
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, DNI, or NIE."
@@ -471,11 +395,11 @@ msgstr ""
 "Mielőtt bárkivel megosztod a parancs kimenetét, távolítsd el az "
 "adóazonosítóidat, például a NIF-, DNI- vagy NIE-azonosítóidat."
 
-#: ../../how-to/ledger-evidence.md:126
+#: ../../how-to/ledger-evidence.md:104
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/ledger-evidence.md:128
+#: ../../how-to/ledger-evidence.md:106
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand how supporting documents take part in "
@@ -485,7 +409,7 @@ msgstr ""
 "evidence.md): értse meg, hogyan vesznek részt a bizonylatok a "
 "számításban, a benyújtásban és az auditban."
 
-#: ../../how-to/ledger-evidence.md:129
+#: ../../how-to/ledger-evidence.md:107
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into your records."
@@ -493,7 +417,7 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](import-bank-statements.md): hozzon "
 "több tranzakciót a nyilvántartásába."
 
-#: ../../how-to/ledger-evidence.md:130
+#: ../../how-to/ledger-evidence.md:108
 msgid ""
 "[Correct mistakes in your records](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
@@ -501,7 +425,7 @@ msgstr ""
 "[Javítsd ki a hibákat a nyilvántartásaidban](correct-ledger-entries.md) -"
 " javítsd ki a tranzakciósorok hibáit."
 
-#: ../../how-to/ledger-evidence.md:131
+#: ../../how-to/ledger-evidence.md:109
 msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
@@ -509,6 +433,6 @@ msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md): rendelj "
 "adókategóriákat a tranzakcióidhoz."
 
-#: ../../how-to/ledger-evidence.md:132
+#: ../../how-to/ledger-evidence.md:110
 msgid "[CLI reference](../cli/index.rst) - the full command surface."
 msgstr "[CLI-referencia](../cli/index.rst): a teljes parancsfelület."

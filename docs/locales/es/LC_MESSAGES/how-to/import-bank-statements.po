@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 08:22+0200\n"
+"POT-Creation-Date: 2026-10-05 11:08+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -458,40 +458,10 @@ msgstr ""
 "`--attachment-id` y su limitación actual."
 
 #: ../../how-to/import-bank-statements.md:213
-msgid ""
-"Pull a document straight from Google Drive into encrypted storage with "
-"`evidence pull`. This command reaches Google Drive, so it runs against "
-"your own authorized account rather than in the documentation sandbox:"
-msgstr ""
-"Descarga un documento directamente desde Google Drive al almacenamiento "
-"cifrado con `evidence pull`. Este comando accede a Google Drive, así que "
-"se ejecuta contra tu propia cuenta autorizada y no en el sandbox de la "
-"documentación:"
-
-#: ../../how-to/import-bank-statements.md:219
-msgid ""
-"The command downloads the Drive file, stores its bytes encrypted with the"
-" transaction, and keeps the original link as a record of where the file "
-"came from. Gmail links, arbitrary URLs, and Drive files outside the "
-"granted scope are refused - a supporting document always carries the "
-"document itself, never a bare link. For a refused source, download the "
-"document yourself, register it with `aeat app ledger evidence add`, and "
-"attach it with `aeat app ledger attach --purchase-invoice-evidence-id`."
-msgstr ""
-"El comando descarga el fichero de Drive, guarda sus bytes cifrados junto "
-"con el movimiento y conserva el enlace original como constancia de dónde "
-"procede el fichero. Los enlaces de Gmail, las URL arbitrarias y los "
-"ficheros de Drive fuera del ámbito concedido se rechazan: un justificante"
-" siempre lleva el documento en sí, nunca un enlace a secas. Para un "
-"origen rechazado, descarga tú mismo el documento, regístralo con `aeat "
-"app ledger evidence add` y adjúntalo con `aeat app ledger attach "
-"--purchase-invoice-evidence-id`."
-
-#: ../../how-to/import-bank-statements.md:227
 msgid "Fix a wrong row"
 msgstr "Corrige una fila incorrecta"
 
-#: ../../how-to/import-bank-statements.md:229
+#: ../../how-to/import-bank-statements.md:215
 msgid ""
 "Splitting a mixed movement into parts, merging a wrong split back, and "
 "archiving, stashing, removing, or resetting rows are all corrections. "
@@ -505,11 +475,11 @@ msgstr ""
 "entries.md) reúne ese flujo, con un ejemplo para cada orden y orientación"
 " sobre cómo elegir la corrección menos destructiva."
 
-#: ../../how-to/import-bank-statements.md:235
+#: ../../how-to/import-bank-statements.md:221
 msgid "Classify rows"
 msgstr "Clasifica las filas"
 
-#: ../../how-to/import-bank-statements.md:237
+#: ../../how-to/import-bank-statements.md:223
 msgid ""
 "Classify rows before calculation. At a minimum, imported business rows "
 "need a business/personal/mixed decision, and expense rows need a "
@@ -519,7 +489,7 @@ msgstr ""
 "actividad importadas necesitan una decisión de actividad/personal/mixta, "
 "y las filas de gasto necesitan una categoría:"
 
-#: ../../how-to/import-bank-statements.md:244
+#: ../../how-to/import-bank-statements.md:230
 msgid ""
 "[Classify transactions](classify-transactions.md) owns the full workflow "
 "- bulk CSV classification, mixed-use allocation, tax fields, stored "
@@ -530,11 +500,11 @@ msgstr ""
 "campos fiscales, reglas guardadas y [sugerencias asistidas por LLM"
 "](classify-with-llm.md)."
 
-#: ../../how-to/import-bank-statements.md:248
+#: ../../how-to/import-bank-statements.md:234
 msgid "Check readiness for a filing period"
 msgstr "Comprueba la preparación para un periodo de presentación"
 
-#: ../../how-to/import-bank-statements.md:250
+#: ../../how-to/import-bank-statements.md:236
 msgid ""
 "Run preflight before calculating a modelo, then check the overall state "
 "of your records. Preflight looks at each record inside the period and "
@@ -549,7 +519,7 @@ msgstr ""
 "cuota de IVA, tipo de IVA o referencia de división que falte, o una "
 "moneda no convertible:"
 
-#: ../../how-to/import-bank-statements.md:259
+#: ../../how-to/import-bank-statements.md:245
 msgid ""
 "The check changes nothing; it names the rows that are not ready so you "
 "fix the raw material before trusting any total. Continue to calculation "
@@ -561,7 +531,7 @@ msgstr ""
 "Continúa al cálculo solo cuando el perfil activo y el periodo objetivo "
 "estén suficientemente listos para el modelo que estás preparando."
 
-#: ../../how-to/import-bank-statements.md:264
+#: ../../how-to/import-bank-statements.md:250
 msgid ""
 "For calculation review in Google Sheets, see [Review calculations with "
 "Google Sheets](review-with-google-sheets.md). That workflow exports a "
@@ -573,11 +543,11 @@ msgstr ""
 "cálculo de un modelo a Sheets; es independiente de la exportación de tus "
 "registros a CSV/XLSX."
 
-#: ../../how-to/import-bank-statements.md:268
+#: ../../how-to/import-bank-statements.md:254
 msgid "If a command stops with an error"
 msgstr "Si un comando se detiene con un error"
 
-#: ../../how-to/import-bank-statements.md:270
+#: ../../how-to/import-bank-statements.md:256
 msgid ""
 "If a command reports that no profile is active, the period is invalid, or"
 " your records are not ready, use [Diagnose and repair your local "
@@ -587,11 +557,11 @@ msgstr ""
 "periodo no es válido o de que tus registros no están listos, usa "
 "[Diagnosticar y reparar tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/import-bank-statements.md:273
+#: ../../how-to/import-bank-statements.md:259
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/import-bank-statements.md:275
+#: ../../how-to/import-bank-statements.md:261
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand what imported rows mean and how they differ"
@@ -601,15 +571,15 @@ msgstr ""
 "and-evidence.md): entiende qué significan las filas importadas y en qué "
 "se diferencian de los datos fiscales y del justificante de la AEAT."
 
-#: ../../how-to/import-bank-statements.md:278
+#: ../../how-to/import-bank-statements.md:264
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Clasificar movimientos](classify-transactions.md)"
 
-#: ../../how-to/import-bank-statements.md:279
+#: ../../how-to/import-bank-statements.md:265
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Clasificar movimientos con un LLM](classify-with-llm.md)"
 
-#: ../../how-to/import-bank-statements.md:280
+#: ../../how-to/import-bank-statements.md:266
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -617,18 +587,18 @@ msgstr ""
 "[Cómo tus registros se convierten en cifras fiscales](../explanation"
 "/from-records-to-figures.md)"
 
-#: ../../how-to/import-bank-statements.md:281
+#: ../../how-to/import-bank-statements.md:267
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisar los cálculos con Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/import-bank-statements.md:282
+#: ../../how-to/import-bank-statements.md:268
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Guía rápida: prepara la presentación de un modelo](quickstart.md)"
 
-#: ../../how-to/import-bank-statements.md:283
+#: ../../how-to/import-bank-statements.md:269
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/import-bank-statements.md:284
+#: ../../how-to/import-bank-statements.md:270
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"

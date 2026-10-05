@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 02:05+0200\n"
+"POT-Creation-Date: 2026-10-05 11:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -27,16 +27,13 @@ msgid ""
 "Store a supporting document for each invoice or receipt and link it to "
 "the transaction it supports. Checks, exports, and year-end reviews can "
 "then point at the document behind every number. Stored supporting "
-"documents stay encrypted on your computer. Google Drive pull commands "
-"reach your authorized account before storing the downloaded file on your "
-"computer."
+"documents stay encrypted on your computer."
 msgstr ""
 "Guarda un justificante por cada factura o recibo y vincúlalo al "
 "movimiento que respalda. Así, las comprobaciones, las exportaciones y las"
 " revisiones de fin de año pueden apuntar al documento que hay detrás de "
 "cada cifra. Los justificantes guardados permanecen cifrados en tu "
-"ordenador. Los comandos de descarga desde Google Drive acceden a tu "
-"cuenta autorizada antes de guardar el fichero descargado en tu ordenador."
+"ordenador."
 
 #: ../../how-to/ledger-evidence.md:6
 msgid "Before you start"
@@ -78,13 +75,18 @@ msgid ""
 "The invoice or receipt as a PDF or image file. Cadrumo copies the file's "
 "bytes into encrypted storage together with the facts you type, plus a "
 "content fingerprint and the original location as a record of where it "
-"came from. Your original file is never needed again after `add`."
+"came from. Your original file is never needed again after `add`. Cadrumo "
+"does not fetch documents from online accounts: download a document kept "
+"in Google Drive or in your email first, then register the downloaded "
+"file."
 msgstr ""
 "La factura o el recibo como fichero PDF o de imagen. Cadrumo copia los "
 "bytes del fichero al almacenamiento cifrado junto con los datos que "
 "escribes, más una huella de contenido y la ubicación original como "
 "constancia de su origen. Tu fichero original ya no vuelve a hacer falta "
-"después de `add`."
+"después de `add`. Cadrumo no descarga documentos de cuentas en línea: "
+"descarga primero el documento que tengas en Google Drive o en tu correo y"
+" registra después el fichero descargado."
 
 #: ../../how-to/ledger-evidence.md:16
 msgid "Add a supporting document"
@@ -175,12 +177,11 @@ msgid ""
 "role. It expects the 64-character content id of a document already in "
 "encrypted attachment storage, and it refuses any id that has no stored "
 "document (`attachment_ids must reference existing secure attachment "
-"manifests and blobs`). The commands that store a document print that id: "
-"`evidence add` and `evidence pull-all`, as `attachment_id` in JSON output"
-" and as `source_sha256` in text output. The supporting document's ID from"
-" `evidence add` is a shorter id and is not accepted here. Inspect a "
-"stored attachment with `aeat app ledger evidence attachment-view "
-"<attachment-id>`."
+"manifests and blobs`). The command that stores a document prints that id:"
+" `evidence add`, as `attachment_id` in JSON output and as `source_sha256`"
+" in text output. The supporting document's ID from `evidence add` is a "
+"shorter id and is not accepted here. Inspect a stored attachment with "
+"`aeat app ledger evidence attachment-view <attachment-id>`."
 msgstr ""
 "El comando `attach` también tiene una opción `--attachment-id` "
 "(repetible) para un adjunto seguro genérico que no cumple el papel de "
@@ -188,12 +189,12 @@ msgstr ""
 "de un documento que ya esté en el almacenamiento cifrado de adjuntos, y "
 "rechaza cualquier identificador que no tenga un documento guardado "
 "(`attachment_ids must reference existing secure attachment manifests and "
-"blobs`). Los comandos que guardan un documento imprimen ese "
-"identificador: `evidence add` y `evidence pull-all`, como `attachment_id`"
-" en la salida JSON y como `source_sha256` en la salida de texto. El ID "
-"del justificante que da `evidence add` es un identificador más corto y "
-"aquí no se acepta. Examina un adjunto guardado con `aeat app ledger "
-"evidence attachment-view <attachment-id>`."
+"blobs`). El comando que guarda un documento imprime ese identificador: "
+"`evidence add`, como `attachment_id` en la salida JSON y como "
+"`source_sha256` en la salida de texto. El ID del justificante que da "
+"`evidence add` es un identificador más corto y aquí no se acepta. Examina"
+" un adjunto guardado con `aeat app ledger evidence attachment-view "
+"<attachment-id>`."
 
 #: ../../how-to/ledger-evidence.md:46
 msgid ""
@@ -207,85 +208,10 @@ msgstr ""
 "del adjunto. Detach no puede quitar el justificante de factura de compra."
 
 #: ../../how-to/ledger-evidence.md:48
-msgid "Pull a document from Google Drive instead"
-msgstr "Descarga un documento desde Google Drive en su lugar"
-
-#: ../../how-to/ledger-evidence.md:50
-msgid ""
-"When the document lives in Google Drive, pull it straight into encrypted "
-"storage. This command reaches Google Drive, so it runs against your own "
-"authorized account rather than in the documentation sandbox:"
-msgstr ""
-"Cuando el documento reside en Google Drive, descárgalo directamente al "
-"almacenamiento cifrado. Este comando accede a Google Drive, por lo que se"
-" ejecuta contra tu propia cuenta autorizada en lugar de en el entorno de "
-"pruebas de la documentación:"
-
-#: ../../how-to/ledger-evidence.md:55
-msgid ""
-"The command downloads the Drive file, stores its bytes encrypted with the"
-" transaction, and keeps the original link as a record of where it came "
-"from. A supporting document always carries the document itself, never a "
-"bare link: Gmail links, arbitrary URLs, and Drive files outside the "
-"granted scope are refused. For a refused source, download the document "
-"yourself and register it with `aeat app ledger evidence add`."
-msgstr ""
-"El comando descarga el fichero de Drive, guarda sus bytes cifrados con el"
-" movimiento y conserva el enlace original como constancia de su origen. "
-"Un justificante siempre lleva el documento en sí, nunca un simple enlace:"
-" los enlaces de Gmail, las URL arbitrarias y los ficheros de Drive fuera "
-"del ámbito concedido se rechazan. Si se rechaza un origen, descarga tú "
-"mismo el documento y regístralo con `aeat app ledger evidence add`."
-
-#: ../../how-to/ledger-evidence.md:57
-msgid "Bulk-fetch every invoice in a Drive folder"
-msgstr "Descarga en bloque todas las facturas de una carpeta de Drive"
-
-#: ../../how-to/ledger-evidence.md:59
-msgid ""
-"Fetch every PDF and image invoice in one Drive folder at once, instead of"
-" one document at a time. Like `evidence pull`, this command reaches "
-"Google Drive and runs against your own authorized account:"
-msgstr ""
-"Descarga de una vez todas las facturas en PDF y en imagen de una carpeta "
-"de Drive, en lugar de documento a documento. Al igual que `evidence "
-"pull`, este comando accede a Google Drive y se ejecuta con tu propia "
-"cuenta autorizada:"
-
-#: ../../how-to/ledger-evidence.md:64
-msgid ""
-"The command lists the folder's contents, downloads each PDF or image, and"
-" stores every file encrypted. Fetched files are not linked to a "
-"transaction yet; bind each one afterward with `aeat app ledger attach "
-"--attachment-id <attachment-id>`."
-msgstr ""
-"El comando lista el contenido de la carpeta, descarga cada PDF o imagen y"
-" guarda cada fichero cifrado. Los ficheros descargados aún no quedan "
-"vinculados a un movimiento; vincula cada uno después con `aeat app ledger"
-" attach --attachment-id <attachment-id>`."
-
-#: ../../how-to/ledger-evidence.md:66
-msgid ""
-"Re-run the same command any time. A file already fetched is recognized by"
-" its content and is not stored twice. A file outside the granted Drive "
-"scope is refused individually and does not stop the rest of the sweep; "
-"download it yourself and register it with `aeat app ledger evidence add`."
-msgstr ""
-"Vuelve a ejecutar el mismo comando cuando quieras. Un fichero que ya se "
-"descargó se reconoce por su contenido y no se guarda dos veces. Un "
-"fichero fuera del ámbito de Drive concedido se rechaza individualmente y "
-"no detiene el resto de la descarga; descárgalo tú mismo y regístralo con "
-"`aeat app ledger evidence add`."
-
-#: ../../how-to/ledger-evidence.md:68
-msgid "Gmail bulk-fetch is not available yet."
-msgstr "La descarga en bloque desde Gmail aún no está disponible."
-
-#: ../../how-to/ledger-evidence.md:70
 msgid "Invoice records are a separate feature"
 msgstr "Los registros de factura son una funcionalidad aparte"
 
-#: ../../how-to/ledger-evidence.md:72
+#: ../../how-to/ledger-evidence.md:50
 msgid ""
 "An invoice *record* - who owes whom, for what amount - is not a stored "
 "document. [Manage business invoices](manage-invoices.md) owns invoice "
@@ -302,11 +228,11 @@ msgstr ""
 "trata de los documentos (PDF e imágenes) que guardas como justificantes y"
 " vinculas a los movimientos."
 
-#: ../../how-to/ledger-evidence.md:79
+#: ../../how-to/ledger-evidence.md:57
 msgid "List, view, update, and remove supporting documents"
 msgstr "Lista, consulta, actualiza y elimina justificantes"
 
-#: ../../how-to/ledger-evidence.md:81
+#: ../../how-to/ledger-evidence.md:59
 msgid ""
 "List every stored record, view one in full, update its details, and "
 "remove one you no longer need. The sequence records a supporting "
@@ -318,11 +244,11 @@ msgstr ""
 "justificante, lo lista e inspecciona, cambia el proveedor y confirma el "
 "cambio:"
 
-#: ../../how-to/ledger-evidence.md:88
+#: ../../how-to/ledger-evidence.md:66
 msgid "Remove a supporting document you no longer need, addressing it by id:"
 msgstr "Elimina un justificante que ya no necesites, indicándolo por su id:"
 
-#: ../../how-to/ledger-evidence.md:94
+#: ../../how-to/ledger-evidence.md:72
 msgid ""
 "Removing applies to supporting documents, not transactions. To fix a "
 "transaction row itself, see [Correct mistakes in your records](correct-"
@@ -332,11 +258,11 @@ msgstr ""
 "corregir una fila de movimiento en sí, consulta [Corregir errores en tus "
 "registros](correct-ledger-entries.md)."
 
-#: ../../how-to/ledger-evidence.md:97
+#: ../../how-to/ledger-evidence.md:75
 msgid "Supporting documents and input VAT deduction"
 msgstr "Justificantes y deducción del IVA soportado"
 
-#: ../../how-to/ledger-evidence.md:99
+#: ../../how-to/ledger-evidence.md:77
 msgid ""
 "Supporting documents also decide whether input VAT deducts. For a "
 "transaction row, declare the deduction kind with `--deduction-kind` on "
@@ -352,7 +278,7 @@ msgstr ""
 "`import_current`, `import_investment`, `intra_eu_current`, "
 "`intra_eu_investment`, `reagp_compensation` y `rectification`."
 
-#: ../../how-to/ledger-evidence.md:101
+#: ../../how-to/ledger-evidence.md:79
 msgid ""
 "Only `domestic_current` and `domestic_investment` can currently be "
 "substantiated from a transaction row. They take their supporting document"
@@ -364,7 +290,7 @@ msgstr ""
 "factura de compra vinculado, así que adjúntalo primero; "
 "`domestic_investment` necesita además `--investment-asset-id`."
 
-#: ../../how-to/ledger-evidence.md:103
+#: ../../how-to/ledger-evidence.md:81
 msgid ""
 "The import, intra-EU, REAGP, and rectification kinds need a customs "
 "declaration, an intra-EU self-assessment, a REAGP receipt, or proof of "
@@ -383,7 +309,7 @@ msgstr ""
 "deducción. Una declaración que contenga una fila así no puede superar la "
 "verificación, así que presenta ese periodo por otra vía."
 
-#: ../../how-to/ledger-evidence.md:105
+#: ../../how-to/ledger-evidence.md:83
 msgid ""
 "`investment_goods_regularisation` comes from the bienes de inversión "
 "register. Declare and inspect capital goods with `aeat app ledger bienes-"
@@ -400,11 +326,11 @@ msgstr ""
 "Modelo 303 y a la casilla 63 del Modelo 390. Indicar este tipo en una "
 "fila de movimiento no acredita esa regularización."
 
-#: ../../how-to/ledger-evidence.md:107
+#: ../../how-to/ledger-evidence.md:85
 msgid "After you correct a row"
 msgstr "Después de corregir una fila"
 
-#: ../../how-to/ledger-evidence.md:109
+#: ../../how-to/ledger-evidence.md:87
 msgid ""
 "If you merge or split transactions, check the new rows and re-attach "
 "supporting documents where needed. [Correct mistakes in your records"
@@ -414,11 +340,11 @@ msgstr ""
 "adjuntar los justificantes donde sea necesario. [Corregir errores en tus "
 "registros](correct-ledger-entries.md) trata los cambios de fila."
 
-#: ../../how-to/ledger-evidence.md:112
+#: ../../how-to/ledger-evidence.md:90
 msgid "Where supporting documents show up"
 msgstr "Dónde aparecen los justificantes"
 
-#: ../../how-to/ledger-evidence.md:114
+#: ../../how-to/ledger-evidence.md:92
 msgid ""
 "Exports of your records include the link to the supporting document with "
 "each transaction. Calculations based on your records carry the trail of "
@@ -428,7 +354,7 @@ msgstr ""
 " cada movimiento. Los cálculos basados en tus registros arrastran el "
 "rastro de los justificantes hasta los ficheros de presentación."
 
-#: ../../how-to/ledger-evidence.md:116
+#: ../../how-to/ledger-evidence.md:94
 msgid ""
 "Read [Import, export, and supporting documents](../reference/import-"
 "export-and-evidence.md) for the difference between linked supporting "
@@ -440,24 +366,24 @@ msgstr ""
 "justificantes vinculados, un fichero de subida a la AEAT, la prueba "
 "oficial de presentación y un paquete de auditoría."
 
-#: ../../how-to/ledger-evidence.md:120
+#: ../../how-to/ledger-evidence.md:98
 msgid "Where to get help"
 msgstr "Dónde conseguir ayuda"
 
-#: ../../how-to/ledger-evidence.md:122
+#: ../../how-to/ledger-evidence.md:100
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
 "Si un comando falla o se niega a continuar, consulta [Resolución de "
 "problemas](troubleshooting.md)."
 
-#: ../../how-to/ledger-evidence.md:123
+#: ../../how-to/ledger-evidence.md:101
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
 "Si algún término te resulta familiar, consulta el {doc}`Glosario "
 "</_generated/glossary>`."
 
-#: ../../how-to/ledger-evidence.md:124
+#: ../../how-to/ledger-evidence.md:102
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, DNI, or NIE."
@@ -465,11 +391,11 @@ msgstr ""
 "Antes de compartir la salida de un comando con nadie, elimina los "
 "identificadores fiscales, como tu NIF, DNI o NIE."
 
-#: ../../how-to/ledger-evidence.md:126
+#: ../../how-to/ledger-evidence.md:104
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/ledger-evidence.md:128
+#: ../../how-to/ledger-evidence.md:106
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand how supporting documents take part in "
@@ -479,7 +405,7 @@ msgstr ""
 "and-evidence.md): entiende cómo participan los justificantes en el "
 "cálculo, la presentación y la auditoría."
 
-#: ../../how-to/ledger-evidence.md:129
+#: ../../how-to/ledger-evidence.md:107
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into your records."
@@ -487,7 +413,7 @@ msgstr ""
 "[Importar y gestionar movimientos](import-bank-statements.md): incorpora "
 "más movimientos a tus registros."
 
-#: ../../how-to/ledger-evidence.md:130
+#: ../../how-to/ledger-evidence.md:108
 msgid ""
 "[Correct mistakes in your records](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
@@ -495,7 +421,7 @@ msgstr ""
 "[Corregir errores en tus registros](correct-ledger-entries.md): corrige "
 "errores en las filas de movimiento."
 
-#: ../../how-to/ledger-evidence.md:131
+#: ../../how-to/ledger-evidence.md:109
 msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
@@ -503,7 +429,7 @@ msgstr ""
 "[Clasificar movimientos](classify-transactions.md): asigna categorías "
 "fiscales a tus movimientos."
 
-#: ../../how-to/ledger-evidence.md:132
+#: ../../how-to/ledger-evidence.md:110
 msgid "[CLI reference](../cli/index.rst) - the full command surface."
 msgstr ""
 "[Referencia de la CLI](../cli/index.rst): la superficie completa de "

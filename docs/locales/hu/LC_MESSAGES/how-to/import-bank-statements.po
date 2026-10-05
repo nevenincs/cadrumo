@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 08:22+0200\n"
+"POT-Creation-Date: 2026-10-05 11:08+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -460,41 +460,10 @@ msgstr ""
 "](ledger-evidence.md)."
 
 #: ../../how-to/import-bank-statements.md:213
-msgid ""
-"Pull a document straight from Google Drive into encrypted storage with "
-"`evidence pull`. This command reaches Google Drive, so it runs against "
-"your own authorized account rather than in the documentation sandbox:"
-msgstr ""
-"Tölts le egy dokumentumot közvetlenül a Google Drive-ból a titkosított "
-"tárolóba az `evidence pull` paranccsal. Ez a parancs eléri a Google "
-"Drive-ot, ezért a saját, engedélyezett fiókoddal fut, nem a dokumentációs"
-" sandboxban:"
-
-#: ../../how-to/import-bank-statements.md:219
-msgid ""
-"The command downloads the Drive file, stores its bytes encrypted with the"
-" transaction, and keeps the original link as a record of where the file "
-"came from. Gmail links, arbitrary URLs, and Drive files outside the "
-"granted scope are refused - a supporting document always carries the "
-"document itself, never a bare link. For a refused source, download the "
-"document yourself, register it with `aeat app ledger evidence add`, and "
-"attach it with `aeat app ledger attach --purchase-invoice-evidence-id`."
-msgstr ""
-"A parancs letölti a Drive-fájlt, titkosítva tárolja a bájtjait a "
-"tranzakcióval együtt, és megőrzi az eredeti hivatkozást annak "
-"feljegyzéseként, honnan származik a fájl. A Gmail-hivatkozásokat, a "
-"tetszőleges URL-eket és a megadott hatókörön kívüli Drive-fájlokat "
-"elutasítja - a bizonylat mindig magát a dokumentumot tartalmazza, soha "
-"nem puszta hivatkozást. Elutasított forrás esetén töltsd le magad a "
-"dokumentumot, regisztráld az `aeat app ledger evidence add` paranccsal, "
-"és csatold az `aeat app ledger attach --purchase-invoice-evidence-id` "
-"paranccsal."
-
-#: ../../how-to/import-bank-statements.md:227
 msgid "Fix a wrong row"
 msgstr "Hibás sor javítása"
 
-#: ../../how-to/import-bank-statements.md:229
+#: ../../how-to/import-bank-statements.md:215
 msgid ""
 "Splitting a mixed movement into parts, merging a wrong split back, and "
 "archiving, stashing, removing, or resetting rows are all corrections. "
@@ -509,11 +478,11 @@ msgstr ""
 "tartalmazza, minden parancshoz egy példával és tanáccsal a legkevésbé "
 "romboló javítás kiválasztásához."
 
-#: ../../how-to/import-bank-statements.md:235
+#: ../../how-to/import-bank-statements.md:221
 msgid "Classify rows"
 msgstr "Sorok besorolása"
 
-#: ../../how-to/import-bank-statements.md:237
+#: ../../how-to/import-bank-statements.md:223
 msgid ""
 "Classify rows before calculation. At a minimum, imported business rows "
 "need a business/personal/mixed decision, and expense rows need a "
@@ -523,7 +492,7 @@ msgstr ""
 "soroknál döntened kell arról, hogy üzleti, személyes vagy vegyes "
 "besorolást kapjanak, a kiadássorokhoz pedig kategóriát kell megadnod:"
 
-#: ../../how-to/import-bank-statements.md:244
+#: ../../how-to/import-bank-statements.md:230
 msgid ""
 "[Classify transactions](classify-transactions.md) owns the full workflow "
 "- bulk CSV classification, mixed-use allocation, tax fields, stored "
@@ -534,11 +503,11 @@ msgstr ""
 "felosztás, adómezők, tárolt szabályok és [LLM-mel támogatott javaslatok"
 "](classify-with-llm.md)."
 
-#: ../../how-to/import-bank-statements.md:248
+#: ../../how-to/import-bank-statements.md:234
 msgid "Check readiness for a filing period"
 msgstr "Egy benyújtási időszak készenlétének ellenőrzése"
 
-#: ../../how-to/import-bank-statements.md:250
+#: ../../how-to/import-bank-statements.md:236
 msgid ""
 "Run preflight before calculating a modelo, then check the overall state "
 "of your records. Preflight looks at each record inside the period and "
@@ -553,7 +522,7 @@ msgstr ""
 "besorolást, kategóriát, adóalapot, IVA-összeget vagy -kulcsot, felosztási"
 " hivatkozást, illetve át nem váltható pénznemet:"
 
-#: ../../how-to/import-bank-statements.md:259
+#: ../../how-to/import-bank-statements.md:245
 msgid ""
 "The check changes nothing; it names the rows that are not ready so you "
 "fix the raw material before trusting any total. Continue to calculation "
@@ -566,7 +535,7 @@ msgstr ""
 "profil és a célidőszak is készen áll az általad előkészített nyomtatvány "
 "kiszámítására."
 
-#: ../../how-to/import-bank-statements.md:264
+#: ../../how-to/import-bank-statements.md:250
 msgid ""
 "For calculation review in Google Sheets, see [Review calculations with "
 "Google Sheets](review-with-google-sheets.md). That workflow exports a "
@@ -578,11 +547,11 @@ msgstr ""
 "munkafolyamat egy nyomtatvány számítását exportálja a Táblázatokba; ez "
 "különbözik a nyilvántartásaid CSV/XLSX-exportjától."
 
-#: ../../how-to/import-bank-statements.md:268
+#: ../../how-to/import-bank-statements.md:254
 msgid "If a command stops with an error"
 msgstr "Ha egy parancs hibával leáll"
 
-#: ../../how-to/import-bank-statements.md:270
+#: ../../how-to/import-bank-statements.md:256
 msgid ""
 "If a command reports that no profile is active, the period is invalid, or"
 " your records are not ready, use [Diagnose and repair your local "
@@ -593,11 +562,11 @@ msgstr ""
 "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md) "
 "útmutatót."
 
-#: ../../how-to/import-bank-statements.md:273
+#: ../../how-to/import-bank-statements.md:259
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/import-bank-statements.md:275
+#: ../../how-to/import-bank-statements.md:261
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand what imported rows mean and how they differ"
@@ -607,15 +576,15 @@ msgstr ""
 "evidence.md) - értse meg, mit jelentenek az importált sorok, és miben "
 "különböznek az adóügyi tényektől és a benyújtás igazolásától."
 
-#: ../../how-to/import-bank-statements.md:278
+#: ../../how-to/import-bank-statements.md:264
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók besorolása](classify-transactions.md)"
 
-#: ../../how-to/import-bank-statements.md:279
+#: ../../how-to/import-bank-statements.md:265
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Tranzakciók besorolása LLM-mel](classify-with-llm.md)"
 
-#: ../../how-to/import-bank-statements.md:280
+#: ../../how-to/import-bank-statements.md:266
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -623,22 +592,22 @@ msgstr ""
 "[Hogyan válnak a nyilvántartásaid adóadatokká](../explanation/from-"
 "records-to-figures.md)"
 
-#: ../../how-to/import-bank-statements.md:281
+#: ../../how-to/import-bank-statements.md:267
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/import-bank-statements.md:282
+#: ../../how-to/import-bank-statements.md:268
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Gyorsindító: nyomtatvány-benyújtás előkészítése](quickstart.md)"
 
-#: ../../how-to/import-bank-statements.md:283
+#: ../../how-to/import-bank-statements.md:269
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/import-bank-statements.md:284
+#: ../../how-to/import-bank-statements.md:270
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

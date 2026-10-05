@@ -171,6 +171,39 @@ login` signs in again and finds it:
 :verify: Confirm that with no saved session logout removes nothing.
 ```
 
+## Upgrading from an earlier version
+
+Earlier versions asked you to create a Google Cloud project, register its
+client file, and point Cadrumo at a Drive folder of your own. This version
+does none of that. After you update:
+
+1. Run `aeat config google login`. A sign-in from an earlier version is not
+   reused; Cadrumo tells you to sign in again.
+2. Export your workbooks again. Cadrumo keeps everything in the folder it
+   creates at sign-in and does not look for workbooks or folders an earlier
+   version created. Those stay in your Drive untouched; move or delete them
+   yourself.
+
+These are no longer available:
+
+| Removed | Use instead |
+|---|---|
+| `aeat config google register` and its client file | Nothing. The application carries its own Google client. |
+| `aeat config google credential-source` and service-account access | `aeat config google login` |
+| `aeat config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | Nothing. Cadrumo creates its folder at sign-in. |
+| `aeat config google login --refresh-only` | `aeat config google login` |
+| `aeat app ledger evidence pull` and `pull-all` | Download the document, then `aeat app ledger evidence add`; see [Attach supporting documents](ledger-evidence.md). |
+| `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | Nothing. It had no effect. |
+
+Scripts that read command output should also note these changes. `config
+google status` no longer reports `client_registered`, `client_id`,
+`last_refresh_at` or `reauth_required`. `config google logout` no longer
+reports `client_preserved`. `config google login` no longer reports `mode` and
+now reports `root_folder_id`. The error codes `AUTH_GOOGLE_EXPIRED` and
+`AUTH_GOOGLE_REVOKED` are replaced by `REFUSED_GOOGLE_SIGN_IN_REQUIRED`, and a
+profile whose installation has no Google client refuses with
+`REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE`.
+
 ## Where this fits
 
 Use this after transaction review and classification. Confirm the period is
