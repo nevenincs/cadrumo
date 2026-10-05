@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ecfeada2960178b6770b0ec5f7ea48e9fedc001eea9b112ea46e5577f97d2a4b'
+body_hash: 'sha256:cbfedb59ed09fc8a9afe29ba51dab8e58c766f913786a3c0c479a152be5c29fd'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -171,6 +171,100 @@ related:
 - `S04` `verify:` `just check-types` -> `fail`
 - `S04` `verify:` `just check-import-boundaries` -> `fail`
 - `S04` `by:` `CADRUMO-GOOGLE-OATH`
+- `S06` `M` `.gitignore`
+- `S06` `M` `dev/locales/fstring_registry.py`
+- `S06` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-logout.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-oauth.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-push.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-verify.seq`
+- `S06` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S06` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-logout.json`
+- `S06` `M` `docs/how-to/review-with-google-sheets.md`
+- `S06` `M` `pyproject.toml`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `S06` `D` `src/cadrumo/adapters/outbound/google/google_configuration_inputs.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/google_configuration_refusal.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/oauth_flow.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/session_store.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_records.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_logout_atomicity.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_namespace_binding.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_roundtrip.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/storage/factory.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/storage/tests/test_factory.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/storage/tests/test_mirror_manifest.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/storage/tests/test_mirror_push.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/storage/tests/test_validation_preconditions.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S06` `M` `src/cadrumo/application/export/google_operation.py`
+- `S06` `M` `src/cadrumo/application/user_profile/google_configuration_executor.py`
+- `S06` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
+- `S06` `M` `src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`
+- `S06` `M` `src/cadrumo/application/user_profile/google_configuration_operation_ports.py`
+- `S06` `M` `src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`
+- `S06` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py`
+- `S06` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_refusal.py`
+- `S06` `M` `src/cadrumo/conftest.py`
+- `S06` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S06` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/_google_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/_google_payloads.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_contract_map.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_request_correlation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_session_correlation.py`
+- `S06` `D` `src/cadrumo/entrypoints/cli/config/google_configuration_source_correlation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_status_correlation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/runtime_google_configuration.py`
+- `S06` `D` `src/cadrumo/entrypoints/cli/config/runtime_google_registration.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_error_localisation.py`
+- `S06` `D` `src/cadrumo/entrypoints/cli/config/tests/test_google_oauth_payload.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_google_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py`
+- `S06` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_runtime_attached_repositories_part1.py`
+- `S06` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S06` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/en/errors.yml`
+- `S06` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/errors.yml`
+- `S06` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S06` `A` `src/cadrumo/adapters/outbound/google/installation_client.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/google/tests/installation_client_support.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/google/tests/test_installation_client.py`
+- `S06` `verify:` `pytest unit and integration: Google adapter, storage adapter, namespace registry, user-profile application, export, error registry and Google CLI tests (1315 tests)` -> `pass`
+- `S06` `verify:` `pytest integration, native: Google configuration journey through a real profile worker` -> `pass`
+- `S06` `verify:` `pytest integration: registered-executor conformance, Google and spreadsheet cases (21)` -> `pass`
+- `S06` `verify:` `pytest: documented-command conformance (363) after dev.docs.sequences refresh of the Google how-to page` -> `pass`
+- `S06` `verify:` `ruff check and ruff format --check on touched files; just check-style; just check-format` -> `pass`
+- `S06` `verify:` `just check-import-boundaries` -> `pass`
+- `S06` `verify:` `just check-types` -> `pass`
+- `S06` `verify:` `python -m dev.locales status` -> `pass`
+- `S06` `verify:` `python -m dev.docs.sequences check --page how-to/review-with-google-sheets` -> `fail`
+- `S06` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -195,3 +289,13 @@ related:
 - `S04` Skipped within this Step: workbooks are still created through Sheets and stamped in the single Drive call that moves them into the period folder. Creating them through Drive files.create with the marker in one call changes the Drive and Sheets call sequence and is owed to the live proof in S10. Until then an interrupted creation can leave an unmarked workbook in the Drive root, which no lookup reads.
 - `S04` Runtime-backed tests and the conformance suite could not be collected: another session's uncommitted edit to the financial operand custody modules fails at import (OperationFinancialOperandCustodyConflictError). Adapter-level tests, which cover everything this Step changes, ran once that session's earlier break cleared.
 - `S04` check-types reports 20 diagnostics, none in files changed here; check-import-boundaries kept all 15 contracts and its five hard findings are in `dev/quality/import_load_worker.py` and a persistence test other sessions are changing.
+- `S06` Commitment 3 was amended on 2026-10-05 after this plan was approved: the publisher client is the only client, so this Step removes client registration instead of keeping it as a fallback. The Step row and the scope note were updated to match.
+- `S06` The missing-client code is `REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE,` not an AUTH code: the conformance run showed that an AUTH-category error raised from credential hydration settles spreadsheet operations as FAILED rather than REFUSED. One class carries both the absent file and the invalid file, with two message keys.
+- `S06` Development checkouts read the client from the git-ignored `src/cadrumo/_data/google/oauth_client.json;` both hatch build targets exclude that directory. Owed by the packaging work, not done here: placing the publisher client at the installation's data/google/ location and adapting the bundled-data reader to it. No dev/ placement helper was written.
+- `S06` The test suite pins the installation to carry no client through a session fixture in src/cadrumo/conftest.py; tests that need one redirect the location to a synthetic file. The native journey runs a separate worker process that nothing can redirect, so its sign-in assertions branch on whether the checkout holds a client file; on this machine the no-client branch ran.
+- `S06` Still open from S04 and not closed here: workbooks are created through Sheets and stamped in the Drive call that moves them, so the commitment 7 creation window stays open until the S10 live proof.
+- `S06` config google login --refresh-only still only inspects stored metadata and now also requires the installation client; GoogleAuthClientRevokedError still has no producer and only its message was reworded. Both belong to S07 and S08.
+- `S06` `dev/quality/metadata/import_load_targets` was regenerated by its owning command because the gate reported it stale; besides this Step's three module changes it gained five modules already committed by other sessions `(prorrata_volume,` `prorrata_volume_catalogue,` `child_console,` `windows_token_elevation,` `boot_record).`
+- `S06` The Google how-to and four sequence contracts were corrected and the sheets-folder and sheets-logout goldens regenerated; the regenerated goldens also record the `session_not_persisted` notice that 55 other committed goldens already carry. The page check still fails on sheets-readiness, whose golden predates that notice and is unrelated to this Step. Translated documentation catalogues and the technical articles still describe registration; they are S09.
+- `S06` Failures seen in broad runs that are not in files changed here: 24 CLI configuration tests refuse with `runtime_unavailable` because no runtime is started in this session; an unregistered SupervisorLineError in the runtime supervisor work; packaging and registry-pipeline tooling tests; locale dynamic-prefix and product-identity inventories naming ledger, TUI and desktop keys; language-flag help tests that need the installed console script; one custody acceleration-receipt test.
+- `S06` The Step's changes were committed as 3a8cb349d9 by another session's commit that swept this worktree while the final type gate was running, and the ignore rule for the client directory entered history in e3d466b67c the same way. Both were checked against the finished working tree: HEAD holds the final content and no client file is tracked. These ledger rows were therefore written after that commit.
