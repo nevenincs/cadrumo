@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, JsonValue, RootModel
+from pydantic import BaseModel, Field, JsonValue, RootModel, model_validator
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -76,11 +76,23 @@ class ProfileWorkerSettlementRequest(BaseModel):
 
 
 class ProfileWorkerControlRequest(BaseModel):
-    """Internal lifecycle control or a request for a following protected proof frame."""
+    """Internal lifecycle control or a request for a following protected proof frame.
+
+    A ``receipt`` request carries the originating OS login the runtime
+    captured for the connection presenting the proof; the worker refuses the
+    receipt unless it names that login. Other actions carry none.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: Literal["status", "stop", "password", "receipt", "cancel_human", "prepare_api"]
     request_id: UUID
+    originating_login_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
+
+    @model_validator(mode="after")
+    def _login_only_for_receipt(self) -> ProfileWorkerControlRequest:
+        if (self.action == "receipt") != (self.originating_login_id is not None):
+            raise ValueError("only a receipt proof request carries its originating login")
+        return self
 
 
 class ProfileWorkerHumanBindingRequest(BaseModel):

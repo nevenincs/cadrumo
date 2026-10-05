@@ -280,11 +280,8 @@ class ProfileLoginSessionPort(Protocol):
         *,
         storage_root: Path,
         profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Borrow the existing human wrap key for a trusted protected channel."""
+        """Read only the keychain proof the receipt locator names; never unwrap or delete."""
         ...
 
     def resume_acceleration_receipt_with_key(
@@ -296,8 +293,14 @@ class ProfileLoginSessionPort(Protocol):
         dek_epoch: str,
         now: datetime,
         receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Verify a supplied human wrap key without consulting the OS store."""
+        """Verify a supplied human wrap key against ``login_id`` and the current sign-in generation.
+
+        It never reads a key from the OS store. A receipt refused for its own
+        metadata or binding is deleted by this runtime-side reader.
+        """
         ...
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:

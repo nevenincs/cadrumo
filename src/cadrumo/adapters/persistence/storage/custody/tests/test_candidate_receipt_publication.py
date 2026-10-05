@@ -143,6 +143,8 @@ def test_password_candidate_publishes_once_without_promoting_custody(
                 bucket_id=profile_id,
                 receipt_key=proof,
                 profile_decode_context=authority.profile_decode_context(),
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in_binding=binding,
             ) as resumed,
         ):
             assert resumed.outcome.session_persisted

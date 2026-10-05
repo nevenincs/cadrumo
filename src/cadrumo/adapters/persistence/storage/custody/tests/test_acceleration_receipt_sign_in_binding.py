@@ -15,6 +15,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
+
 from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ......core.base64_codec import b64_decode, b64_encode
 from ......core.hashing import canonical_json_bytes
@@ -354,20 +356,23 @@ class TestOlderSchemaDispatch:
         assert not path.exists()
         assert _account(sign_in.binding.profile_id, session_id) not in keychain.entries
 
-    def test_borrow_deletes_both_halves(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
+    def test_borrow_reads_only_the_legacy_locator_proof(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
         path, session_id = _write_schema_2_receipt(sign_in, keychain)
-
+        before = path.read_bytes()
         outcome, key = receipt.borrow_profile_session_key(
             storage_root=sign_in.root,
             profile_id=sign_in.binding.profile_id,
-            custody_generation=sign_in.binding.custody_generation,
-            dek_epoch=_EPOCH,
-            now=_NOW + timedelta(minutes=1),
         )
-
-        assert outcome.refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH and key is None
-        assert not path.exists()
-        assert _account(sign_in.binding.profile_id, session_id) not in keychain.entries
+        assert key is not None
+        try:
+            assert outcome.resumed and outcome.record is None
+            assert len(key) == 32
+            assert path.read_bytes() == before
+            assert _account(sign_in.binding.profile_id, session_id) in keychain.entries
+        finally:
+            key[:] = b"\x00" * len(key)
 
     def test_revocation_deletes_both_halves(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
         path, session_id = _write_schema_2_receipt(sign_in, keychain)
@@ -377,11 +382,10 @@ class TestOlderSchemaDispatch:
         assert not path.exists()
         assert _account(sign_in.binding.profile_id, session_id) not in keychain.entries
 
-    def test_supplied_key_refuses_without_touching_either_half(
+    def test_runtime_supplied_key_reader_retires_a_legacy_receipt(
         self, sign_in: SignInGenerationCustody, keychain: _Keyring
     ) -> None:
         path, session_id = _write_schema_2_receipt(sign_in, keychain)
-        before = path.read_bytes()
 
         outcome, dek = receipt.resume_profile_session_with_key(
             storage_root=sign_in.root,
@@ -390,11 +394,14 @@ class TestOlderSchemaDispatch:
             dek_epoch=_EPOCH,
             now=_NOW + timedelta(minutes=1),
             receipt_key=bytearray(32),
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=sign_in,
         )
 
         assert outcome.refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH and dek is None
-        assert path.read_bytes() == before
-        assert _account(sign_in.binding.profile_id, session_id) in keychain.entries
+        assert not path.exists()
+        assert _account(sign_in.binding.profile_id, session_id) not in keychain.entries
+        assert outcome.deletion is receipt.ReceiptDeletion.DELETED
 
     def test_upgrade_mint_replaces_a_live_schema_2_receipt(
         self, sign_in: SignInGenerationCustody, keychain: _Keyring
@@ -418,26 +425,26 @@ class TestBindingVerification:
     def test_bound_receipt_is_kept(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
         record = _mint(sign_in)
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.BOUND
-        assert check.deletion is receipt.ReceiptDeletion.NOT_REQUIRED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.BOUND
+        assert check.deletion is binding_probe.ReceiptDeletion.NOT_REQUIRED
         assert check.record == record
         assert _path(sign_in).exists()
 
     def test_absent_receipt_needs_no_deletion(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.ABSENT
-        assert check.deletion is receipt.ReceiptDeletion.NOT_REQUIRED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.ABSENT
+        assert check.deletion is binding_probe.ReceiptDeletion.NOT_REQUIRED
 
     def test_another_login_is_refused_and_deleted(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
         record = _mint(sign_in)
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.LOGIN_MISMATCH
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.LOGIN_MISMATCH
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert not _path(sign_in).exists()
         assert _account(record.profile_id, record.session_id) not in keychain.entries
 
@@ -447,10 +454,10 @@ class TestBindingVerification:
         record = _mint(sign_in)
         sign_in.advance()
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.GENERATION_CHANGED
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.GENERATION_CHANGED
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert not _path(sign_in).exists()
         assert _account(record.profile_id, record.session_id) not in keychain.entries
 
@@ -460,10 +467,10 @@ class TestBindingVerification:
         _mint(sign_in)
         sign_in.path.unlink()
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.GENERATION_MISSING
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.GENERATION_MISSING
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert not _path(sign_in).exists()
         assert sign_in.observe().state is SignInGenerationState.MISSING, "verification never recreates the fence"
 
@@ -473,20 +480,20 @@ class TestBindingVerification:
         _mint(sign_in)
         sign_in.path.write_bytes(b"{not a generation record")
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.GENERATION_UNREADABLE
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.GENERATION_UNREADABLE
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert not _path(sign_in).exists()
 
     def test_an_older_schema_is_refused_and_deleted(self, sign_in: SignInGenerationCustody, keychain: _Keyring) -> None:
         sign_in.establish()
         path, session_id = _write_schema_2_receipt(sign_in, keychain)
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.SCHEMA_VERSION_MISMATCH
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.SCHEMA_VERSION_MISMATCH
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert check.record is None
         assert not path.exists()
         assert _account(sign_in.binding.profile_id, session_id) not in keychain.entries
@@ -500,10 +507,10 @@ class TestBindingVerification:
         ensure_profile_custody_local_directory(path.parent)
         path.write_bytes(b"[]")
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=RECEIPT_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.MALFORMED
-        assert check.deletion is receipt.ReceiptDeletion.DELETED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.MALFORMED
+        assert check.deletion is binding_probe.ReceiptDeletion.DELETED
         assert not path.exists()
 
     def test_an_unavailable_keychain_still_clears_the_disk_half_and_says_so(
@@ -512,10 +519,10 @@ class TestBindingVerification:
         record = _mint(sign_in)
         keychain.unavailable = True
 
-        check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
+        check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.LOGIN_MISMATCH
-        assert check.deletion is receipt.ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.LOGIN_MISMATCH
+        assert check.deletion is binding_probe.ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED
         assert not _path(sign_in).exists()
         assert _account(record.profile_id, record.session_id) in keychain.entries
 
@@ -524,14 +531,14 @@ class TestBindingVerification:
     ) -> None:
         _mint(sign_in)
         with _path(sign_in).open("rb"):
-            check = receipt.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
+            check = binding_probe.verify_profile_session_binding(sign_in=sign_in, login_id=OTHER_LOGIN_ID)
 
-        assert check.verdict is receipt.ReceiptBindingVerdict.LOGIN_MISMATCH
+        assert check.verdict is binding_probe.ReceiptBindingVerdict.LOGIN_MISMATCH
         if _path(sign_in).exists():
-            assert check.deletion is receipt.ReceiptDeletion.RECEIPT_RETAINED
+            assert check.deletion is binding_probe.ReceiptDeletion.RECEIPT_RETAINED
         else:
             # POSIX removes a file another handle holds open.
-            assert check.deletion is receipt.ReceiptDeletion.DELETED
+            assert check.deletion is binding_probe.ReceiptDeletion.DELETED
 
 
 class TestBindingClassifier:
@@ -548,12 +555,12 @@ class TestBindingClassifier:
 
         def classify(
             *, profile_id: UUID = profile, login_id: str = RECEIPT_LOGIN_ID, generation: SignInGenerationObservation
-        ) -> receipt.ReceiptBindingVerdict:
-            return receipt.classify_profile_session_binding(
+        ) -> binding_probe.ReceiptBindingVerdict:
+            return binding_probe.classify_profile_session_binding(
                 record=record, profile_id=profile_id, login_id=login_id, generation=generation
             )
 
-        verdict = receipt.ReceiptBindingVerdict
+        verdict = binding_probe.ReceiptBindingVerdict
         assert classify(generation=current) is verdict.BOUND
         assert classify(profile_id=uuid4(), generation=current) is verdict.PROFILE_MISMATCH
         assert classify(login_id=OTHER_LOGIN_ID, generation=current) is verdict.LOGIN_MISMATCH

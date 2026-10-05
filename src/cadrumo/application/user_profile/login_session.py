@@ -1066,23 +1066,19 @@ def _persist_candidate_receipt(
 
 
 @contextmanager
-def borrow_profile_receipt_key(*, bucket_id: UUID, now: datetime | None = None) -> Generator[bytearray]:
-    """Borrow only the existing human wrap key for one trusted local client.
+def borrow_profile_receipt_key(*, bucket_id: UUID) -> Generator[bytearray]:
+    """Borrow only the keychain-held proof that the receipt locator names.
 
-    This is a secret capability for a protected IPC frame, never a public
+    This is a frontend's whole share of a sign-in: it reads no custody
+    envelope, never unwraps or decrypts the receipt, and never deletes either
+    half. The runtime verifies the proof, and deletes a refused receipt. The
+    proof is a secret capability for a protected IPC frame, never a public
     result. Its buffer is wiped even when the caller's exchange fails.
     """
-    instant = _now() if now is None else now
-    storage_root = effective_storage_root()
-    material = load_profile_custody_password_material(bucket_id, root=storage_root)
     outcome, key = _profile_login_sessions().borrow_acceleration_receipt_key(
-        storage_root=storage_root,
-        profile_id=bucket_id,
-        custody_generation=material.envelope.password_generation,
-        dek_epoch=material.envelope.dek_epoch,
-        now=instant,
+        storage_root=effective_storage_root(), profile_id=bucket_id
     )
-    if not outcome.resumed or outcome.record is None or key is None:
+    if not outcome.resumed or key is None:
         if key is not None:
             _profile_login_sessions().zeroise_owned_buffer(key)
         raise ProfileReceiptRefusedError(outcome.refusal or ProfileSessionRefusalReason.ABSENT)
@@ -1098,12 +1094,19 @@ def resume_profile_candidate(
     bucket_id: UUID,
     receipt_key: bytearray,
     profile_decode_context: ProfileDecodeContext,
+    login_id: str,
+    sign_in_binding: ProfileAccessBinding,
     now: datetime | None = None,
 ) -> Generator[ProfileLoginCandidate]:
     """Prove a supplied human receipt without binding or selecting a profile.
 
-    A valid proof inherits the receipt's original deadlines. It never reads
-    the OS keyring, renews human life, or changes the active frontend context.
+    The runtime composes this with ``login_id``, the originating OS login of
+    the connection presenting the proof, and ``sign_in_binding``, its worker's
+    custody binding. The receipt must name that login and the current sign-in
+    generation; a receipt refused for its binding or its own metadata is
+    deleted by the reader, never by the presenting frontend. A valid proof
+    inherits the receipt's original deadlines. It never reads the OS keyring
+    for a key, renews human life, or changes the active frontend context.
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
@@ -1115,6 +1118,8 @@ def resume_profile_candidate(
         dek_epoch=material.envelope.dek_epoch,
         now=instant,
         receipt_key=receipt_key,
+        login_id=login_id,
+        sign_in_binding=sign_in_binding,
     )
     if not outcome.resumed or outcome.record is None or dek is None:
         if dek is not None:

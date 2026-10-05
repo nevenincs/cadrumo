@@ -181,9 +181,10 @@ async def _handle_human_control(
         startup_phase(_log, "worker_human_proof"),
         read_secret(context.channel, deadline=time.monotonic() + 5) as secret,
     ):
-        candidate, login = (
-            context.human.authenticate(secret) if request.action == "password" else context.human.resume(secret)
-        )
+        if request.action == "password":
+            candidate, login = context.human.authenticate(secret)
+        else:
+            candidate, login = context.human.resume(secret, login_id=request.originating_login_id)
     try:
         context.operations.prepare()
     except BaseException as primary:

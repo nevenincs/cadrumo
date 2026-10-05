@@ -8,6 +8,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass, field
 from datetime import timedelta
 from threading import RLock
+from typing import Final
 from uuid import UUID, uuid4
 
 from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
@@ -29,6 +30,15 @@ from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
+_RECEIPT_DENIAL: Final = AccessDenialCode.AUTHENTICATION_REQUIRED
+"""A refused receipt no longer signs this login in; a fresh proof is required."""
+
+_RECEIPT_DENIALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
+    ProfileSessionRefusalReason.EXPIRED_IDLE: AccessDenialCode.SESSION_EXPIRED,
+    ProfileSessionRefusalReason.EXPIRED_ABSOLUTE: AccessDenialCode.SESSION_EXPIRED,
+    ProfileSessionRefusalReason.CUSTODY_CHANGED: AccessDenialCode.CUSTODY_CHANGED,
+}
 
 
 @dataclass(slots=True)
@@ -58,6 +68,7 @@ class ProfileWorkerHumanLogin:
         self.custody, self.decode = custody, decode
         self._lock = RLock()
         self._candidate: tuple[UUID, ProfileLoginCandidate, UtcInstant, float] | None = None
+        self._resumed_login: str | None = None
         self._lifetime = ExitStack()
         self._pending: dict[UUID, _PendingReceipt] = {}
 
@@ -83,31 +94,35 @@ class ProfileWorkerHumanLogin:
                 self.cancel()
                 raise
 
-    def resume(self, receipt_key: bytearray) -> tuple[UUID, ProfileLoginOutcome]:
-        """Verify supplied human receipt proof without looking up a secret for the caller."""
+    def resume(self, receipt_key: bytearray, *, login_id: str | None) -> tuple[UUID, ProfileLoginOutcome]:
+        """Verify supplied human receipt proof without looking up a secret for the caller.
+
+        ``login_id`` is the originating OS login the runtime captured for the
+        presenting connection. The receipt must name it and the current
+        sign-in generation; a receipt refused for either, or for its own
+        metadata, is deleted by this worker before the refusal returns.
+        """
         with self._lock:
             self.cancel()
             try:
-                if len(receipt_key) != 32:
+                if len(receipt_key) != 32 or not login_id:
                     raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
                 candidate = self._lifetime.enter_context(
                     resume_profile_candidate(
                         bucket_id=self.custody.identity.binding.profile_id,
                         receipt_key=receipt_key,
                         profile_decode_context=self.decode(),
+                        login_id=login_id,
+                        sign_in_binding=self.custody.identity.binding,
                     )
                 )
                 identity = uuid4()
                 self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
+                self._resumed_login = login_id
                 return identity, candidate.outcome
             except ProfileReceiptRefusedError as error:
                 self.cancel()
-                refusal = {
-                    ProfileSessionRefusalReason.EXPIRED_IDLE: AccessDenialCode.SESSION_EXPIRED,
-                    ProfileSessionRefusalReason.EXPIRED_ABSOLUTE: AccessDenialCode.SESSION_EXPIRED,
-                    ProfileSessionRefusalReason.CUSTODY_CHANGED: AccessDenialCode.CUSTODY_CHANGED,
-                }.get(error.reason, AccessDenialCode.AUTHENTICATION_REQUIRED)
-                raise ProfileAccessRefusedError(refusal) from None
+                raise ProfileAccessRefusedError(_RECEIPT_DENIALS.get(error.reason, _RECEIPT_DENIAL)) from None
             except BaseException:
                 self.cancel()
                 raise
@@ -132,6 +147,7 @@ class ProfileWorkerHumanLogin:
             if (
                 lease.kind is not SessionKind.HUMAN
                 or login_id is None
+                or (self._resumed_login is not None and login_id != self._resumed_login)
                 or lease.binding != self.custody.identity.binding
                 or lease.issued_at < outcome.authenticated_at
                 or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
@@ -212,6 +228,7 @@ class ProfileWorkerHumanLogin:
         """Release the unbound candidate; pending receipts of bound sessions stay."""
         with self._lock:
             self._candidate = None
+            self._resumed_login = None
             self._lifetime.close()
 
     def close(self) -> None:

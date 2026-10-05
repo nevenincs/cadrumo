@@ -13,6 +13,7 @@ from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
+from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
@@ -158,15 +159,15 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 if mode == "unavailable":
                     assert not path.exists() and store.writes == 0
                     return
-                check = receipt.verify_profile_session_binding(
+                check = binding_probe.verify_profile_session_binding(
                     sign_in=sign_in, login_id=lease.originating_login_id or ""
                 )
-                assert check.verdict is receipt.ReceiptBindingVerdict.BOUND
+                assert check.verdict is binding_probe.ReceiptBindingVerdict.BOUND
                 assert check.record is not None and check.record.sign_in == captured
                 assert path.is_file() and store.writes == 1
                 original = path.read_bytes()
                 with borrow_profile_receipt_key(bucket_id=identity.binding.profile_id) as receipt_key:
-                    resumed_id, resumed_outcome = human.resume(receipt_key)
+                    resumed_id, resumed_outcome = human.resume(receipt_key, login_id=lease.originating_login_id)
                 successor = _human_lease(identity, resumed_outcome)
                 resumed_ack, resumed_pending = human.bind(resumed_id, successor, persist_receipt=True)
                 assert not resumed_pending

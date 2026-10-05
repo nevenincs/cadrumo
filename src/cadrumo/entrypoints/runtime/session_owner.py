@@ -265,7 +265,9 @@ class ProfileWorkerSessionOwner:
                     self._prepared_human_worker = worker
                     self._human_thread = get_ident()
                     self._human_connection = connection_id
-                    with worker.authenticate_human(proof.secret, method=proof.method) as outcome:
+                    with worker.authenticate_human(
+                        proof.secret, originating_login_id=proof.originating_login_id, method=proof.method
+                    ) as outcome:
                         yield outcome, proof.originating_login_id
             finally:
                 self._prepared_human_worker = None

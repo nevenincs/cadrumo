@@ -33,17 +33,31 @@ class ProfileWorkerHumanAdmission(ProfileWorkerOperationClient):
 
     @contextmanager
     def authenticate_human(
-        self, secret: bytearray, *, method: RuntimeHumanProofMethod = "password"
+        self,
+        secret: bytearray,
+        *,
+        method: RuntimeHumanProofMethod = "password",
+        originating_login_id: str | None = None,
     ) -> Generator[ProfileLoginOutcome]:
-        """Borrow a proven human outcome while the runtime admits its human lease."""
+        """Borrow a proven human outcome while the runtime admits its human lease.
+
+        A receipt proof must travel with ``originating_login_id``, the native
+        login captured for the presenting connection, so the worker verifies
+        the receipt against it before any unwrap. A password proof carries none.
+        """
         with self._human_lock:
             started = time.monotonic()
             transaction_deadline = started + WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS + 10
             primary: BaseException | None = None
             try:
                 self._human_deadline = transaction_deadline
+                request = ProfileWorkerControlRequest(
+                    action=method,
+                    request_id=uuid4(),
+                    originating_login_id=originating_login_id if method == "receipt" else None,
+                )
                 result = self._exchange(
-                    ProfileWorkerRequest(ProfileWorkerControlRequest(action=method, request_id=uuid4())),
+                    ProfileWorkerRequest(request),
                     ProfileWorkerHumanOutcome,
                     secret,
                     deadline=started + WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a66ea5eda795198ce5d56846f936e86ef0cf14c340240efb196aefae7f98f3bd'
+body_hash: 'sha256:0a19c4ab9b7405b5e921067e0bb48a4dda853af96dfae6ab1a2c279dfa7068a9'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -190,6 +190,32 @@ related:
 - `S04` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
 - `S04` `verify:` `just check-module-reachability; check-persistence-write-paths; registry enforcement` -> `pass`
 - `S04` `verify:` `runtime directory -n 3 (13 failed 1 error; 4 reproduce alone and predate this Step)` -> `fail`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S05` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S05` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/profile_login_session.py`
+- `S05` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/profile_worker_human_admission.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_frontend_receipt_borrow_is_proof_only.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_supplied_human_receipt.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_candidate_receipt_publication.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_commands_leave_no_unsealed_bucket_session.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/receipt_binding_probe.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_sign_in_binding.py`
+- `S05` `verify:` `focused pytest on touched files 100 passed` -> `pass`
+- `S05` `verify:` `custody 1027 passed; user_profile 578 passed` -> `pass`
+- `S05` `verify:` `gate: frontend borrow made deleting fails the proof-only test` -> `pass`
+- `S05` `verify:` `real-worker login mismatch and generation change refuse and delete runtime-side` -> `pass`
+- `S05` `verify:` `ruff; ty win32 linux darwin; just check-types` -> `pass`
+- `S05` `verify:` `check-module-reachability, persistence and secure-store write paths` -> `pass`
+- `S05` `verify:` `application/runtime + CLI/TUI login suites 189 passed 3 failed` -> `fail`
 
 ## Notes
 
@@ -197,3 +223,4 @@ related:
 - `S02` Reachability is red only until P01.S03 consumes the module; S03 lands in the next commit and its reachability run passes. Import gate failed on 44 findings in other writers' files plus a mid-run tree change. Record kept in the keystore beside the receipt and throttle, since .automation-v1 is cleared on automation retirement; value is lineage plus counter so an unreadable record can be repaired without reusing an issued generation. Taxonomy files committed with only this Step's hunks.
 - `S03` The 17 runtime/CLI failures precede login `(runtime_unavailable` without a started runtime, a desktop webview directory, a placeholder logout text) and do not reach this change. `os_keychain` tests cannot run here (Credential Manager error 1312 in this logon session) and need an interactive desktop run. Legacy in-process login no longer mints receipts; P03.S12 retires it and the now-vacuous handover keyring-failure test. Mint order unchanged; S04 moves it after publication.
 - `S04` Mint now runs after publication under the admission guard with the generation captured at publication; `require_current` refuses a moved record before any write. The worker holds the password proof as a pending receipt from bind to mint (a DEK copy for that window). Remaining failures predate this Step in earlier run logs `(runtime_unavailable` resume tests, modelo revision lifecycle, automation approval renew, operation secret tui export, worker drain) or pass alone under less load. `os_keychain` tests not run (Credential Manager error 1312 in this logon session). New internal runtime-worker request `mint_human_receipt;` scope corrected in the plan.
+- `S05` Carries the reachability-burndown S07 receipt API move (verify/classify API to `tests/receipt_binding_probe.py` and its two rewritten tests), already logged in that ledger, because it is intertwined with this Step and was verified together. Remaining failures: one `runtime_unavailable` test failing before this Step, one intermittent OpenProcess 87, one leaked-patch failure seen in earlier runs. Login and generation refusals reach clients coarsely until S09. Remaining non-runtime unwrap callers `(bind_resumed_profile_session,` `_resume_for_idempotent_login` via `_profile_session_gate` and `session_admission)` are for P03.S12. S07 must recheck the generation at publication against a sign-out between the worker check and publication.

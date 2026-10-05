@@ -26,6 +26,8 @@ from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
+from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -384,6 +386,10 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
     close_active_bucket_session()
     second_id = UUID(register_cli_profile(label="Receipt profile B", log_in=False))
     close_active_bucket_session()
+    endpoint = WindowsRuntimeEndpoint(storage_root=_isolated_cli_backend)
+    installation = runtime_installation(
+        storage_root=_isolated_cli_backend, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
     with (
         bundled_indexed_authority().operation() as authority,
         bind_profile_custody_port(build_profile_custody_port()),
@@ -395,9 +401,20 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=authority.profile_decode_context(),
             ) as candidate:
-                sign_in = committed_sign_in(_isolated_cli_backend, profile_id)
+                # Bind each receipt to the login and the custody binding the
+                # runtime below observes; a receipt bound elsewhere is refused
+                # and deleted at resume.
+                binding = current_automation_profile_binding(
+                    profile_id=profile_id,
+                    installation_id=installation.installation_id,
+                    os_owner_id=owner_id(),
+                    root=_isolated_cli_backend,
+                )
+                sign_in = SignInGenerationCustody(root=_isolated_cli_backend, binding=binding)
                 assert candidate.persist_acceleration_receipt(
-                    login_id=RECEIPT_LOGIN_ID, binding=sign_in.binding, sign_in=sign_in.establish().current
+                    login_id=_NativeLoginObservation.login_id,
+                    binding=binding,
+                    sign_in=sign_in.establish().current,
                 )
     _select(first_id)
     first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
@@ -407,10 +424,6 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
     before_first_keyring = dict(keyring.entries)
     second_metadata = json.loads(before_second)
 
-    endpoint = WindowsRuntimeEndpoint(storage_root=_isolated_cli_backend)
-    runtime_installation(
-        storage_root=_isolated_cli_backend, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-    )
     stop, boot, native = Event(), uuid4(), MemoryNativePort()
     profiles = RuntimeProfileConnections(
         storage_root=_isolated_cli_backend,

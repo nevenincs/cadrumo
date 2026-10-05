@@ -17,6 +17,8 @@ import pytest
 from keyring.errors import KeyringError, PasswordDeleteError
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -36,8 +38,13 @@ from cadrumo.application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
-from cadrumo.application.user_profile.access_contracts import AccessSession, OsLockState
-from cadrumo.application.user_profile.login_session import authenticate_profile_candidate, borrow_profile_receipt_key
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession, OsLockState
+from cadrumo.application.user_profile.login_session import (
+    ProfileReceiptRefusedError,
+    authenticate_profile_candidate,
+    borrow_profile_receipt_key,
+)
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
@@ -400,6 +407,86 @@ def test_password_login_mints_its_receipt_only_after_publication(
             finally:
                 for client in clients:
                     client.close()
+                stop.set()
+                running.result(timeout=15)
+                endpoint.close()
+
+
+@pytest.mark.parametrize("case", ["login_mismatch", "generation_changed"])
+def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, case: str
+) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    worker_script = tmp_path / "keychain_worker.py"
+    worker_script.write_text(_KEYCHAIN_WORKER, encoding="utf-8")
+    endpoint = WindowsRuntimeEndpoint(storage_root=root)
+    installation = runtime_installation(
+        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
+    # The client's proof store. The worker runs with its own, so a keychain
+    # half that survives here shows this process deleted nothing.
+    store = InMemoryKeyring()
+    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
+    ) as enrollment:
+        profile_id = enrollment.store.binding.profile_id
+        sign_in = SignInGenerationCustody(root=root, binding=enrollment.store.binding)
+        close_active_bucket_session()
+        native_login = LoginObservation(owner_id())
+        _, decode = profile_authority_contexts()
+        with authenticate_profile_candidate(
+            bucket_id=profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+        ) as candidate:
+            assert candidate.persist_acceleration_receipt(
+                login_id="another-desktop-login" if case == "login_mismatch" else native_login.login_id,
+                binding=enrollment.store.binding,
+                sign_in=sign_in.establish().current,
+            )
+        if case == "generation_changed":
+            sign_in.advance()
+        receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
+        session_id = json.loads(receipt_path.read_bytes())["session_id"]
+        account = (receipt_custody.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{session_id}")
+        assert store.get_password(*account) is not None
+
+        stop, boot = Event(), uuid4()
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: native_login,
+            secret_store=lambda: enrollment.native,
+            worker_script=worker_script,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(server.serve)
+            clients: list[RuntimeFrontendClient] = []
+            try:
+                assert server.ready.wait(3)
+                client = RuntimeFrontendClient(
+                    _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
+                )
+                clients.append(client)
+                with pytest.raises(ProfileReceiptRefusedError) as refused:
+                    client.resume_receipt()
+                # The runtime's typed denial reaches the client as a receipt refusal.
+                assert refused.value.reason is ProfileSessionRefusalReason.ABSENT
+                cause = refused.value.__cause__
+                assert isinstance(cause, RuntimeFrontendRefusedError)
+                assert cause.reason == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+                # The worker deleted the receipt; the client deleted nothing.
+                assert not receipt_path.exists()
+                assert store.get_password(*account) is not None
+            finally:
+                for opened in clients:
+                    opened.close()
                 stop.set()
                 running.result(timeout=15)
                 endpoint.close()

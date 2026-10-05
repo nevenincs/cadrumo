@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Literal, Self
+from typing import Final, Literal, Self
 from uuid import UUID, uuid4
 
 from ...application.operations.registry import (
@@ -46,12 +46,23 @@ from ...application.user_profile.automation_enrollment import AutomationReceiptP
 from ...application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from ...application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.profile_session import ProfileSessionRefusalReason
 from .enrollment_client import NativeEnrollmentClient
 from .framing import VerifiedRuntimeConnection
 from .frontend_client_contracts import RuntimeFrontendRefusedError
 from .frontend_profile_view_client import RuntimeProfileViewFrontend
 from .runtime_transport_cleanup import RuntimeTransportCleanup
 from .startup import RuntimeLaunchDoor
+
+_RUNTIME_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
+    # The runtime deleted a receipt that no longer signs this login in.
+    AccessDenialCode.AUTHENTICATION_REQUIRED.value: ProfileSessionRefusalReason.ABSENT,
+    # The denial does not distinguish idle from absolute expiry.
+    AccessDenialCode.SESSION_EXPIRED.value: ProfileSessionRefusalReason.EXPIRED_IDLE,
+    AccessDenialCode.CUSTODY_CHANGED.value: ProfileSessionRefusalReason.CUSTODY_CHANGED,
+    AutomationCustodyCode.CREDENTIAL_REJECTED.value: ProfileSessionRefusalReason.TAMPERED,
+}
+"""Runtime denials of a presented receipt, as the receipt refusals callers already handle."""
 
 
 class RuntimeFrontendClient(RuntimeProfileViewFrontend):
@@ -171,11 +182,25 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         return self._login("api_key", secret, timeout=timeout)
 
     def resume_receipt(self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
-        """Borrow the exact profile's protected receipt proof for one verified frame."""
-        from ...application.user_profile.login_session import borrow_profile_receipt_key
+        """Present the exact profile's keychain-held receipt proof on one verified frame.
+
+        This process reads only the proof and the receipt locator. It never
+        unwraps, extends or deletes the receipt: the runtime verifies the
+        proof against this connection's login and the current sign-in
+        generation, and deletes a receipt it refuses. A runtime refusal of the
+        receipt returns as :class:`ProfileReceiptRefusedError`, like a local
+        one, so callers keep one fallback path.
+        """
+        from ...application.user_profile.login_session import ProfileReceiptRefusedError, borrow_profile_receipt_key
 
         with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
-            return self._login("receipt", proof, timeout=timeout)
+            try:
+                return self._login("receipt", proof, timeout=timeout)
+            except RuntimeFrontendRefusedError as error:
+                reason = _RUNTIME_RECEIPT_REFUSALS.get(error.reason)
+                if reason is None:
+                    raise
+                raise ProfileReceiptRefusedError(reason) from error
 
     def submit_secret(
         self, requirement: OperationSecretRequirement, secret: bytearray, *, timeout: float = 20
