@@ -16,7 +16,6 @@ from zipfile import BadZipFile
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
@@ -28,6 +27,7 @@ from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
+from dev.corpus.text import normalise_corpus_text
 from dev.registry.compiler.corpus_source_location import CorpusPathEscapeError, locate_corpus_file
 
 if TYPE_CHECKING:

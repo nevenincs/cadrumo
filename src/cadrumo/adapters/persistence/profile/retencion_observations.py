@@ -73,13 +73,6 @@ class RetencionObservationRepositoryAdapter(
         """Bind an already-composed secure-object store."""
         super().__init__(objects=objects)
 
-    def validate_observation_window_modelo(self, modelo: str) -> str:
-        """Bind application window-key validation to persistence storage safety."""
-        return _translate_storage_failure(
-            "retencion_validate_observation_window_modelo",
-            lambda: safe_repository_id(modelo, context="modelo"),
-        )
-
     @override
     def extract_identifier(self, payload: _RetencionObservationEnvelopePayload) -> str:
         return retencion_observation_key(

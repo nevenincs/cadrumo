@@ -8,7 +8,6 @@ from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.schema import (
@@ -18,6 +17,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev.corpus.text import normalise_corpus_text
 
 from . import fact_providers
 from .legal_grounding import verify_legal_reference_grounding

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import Protocol, cast
 
@@ -10,6 +10,21 @@ from pydantic import BaseModel
 
 from .....core.period import Period
 from .....core.time.clock import now
+from ...storage.envelope.secure_bound_repository import SecureBoundRepository
+from ...storage.envelope.tests.record_set_authoring import replace_records
+from ...storage.path_safety import safe_repository_id
+from ..percepciones_observations import (
+    PercepcionObservationRepositoryAdapter,
+)
+from ..percepciones_observations import (
+    _translate_storage_failure as translate_percepcion_failure,
+)
+from ..retencion_observations import (
+    RetencionObservationRepositoryAdapter,
+)
+from ..retencion_observations import (
+    _translate_storage_failure as translate_retencion_failure,
+)
 
 
 class _WindowKeyedPayload(Protocol):
@@ -20,28 +35,8 @@ class _WindowKeyedPayload(Protocol):
     period: Period
 
 
-class ObservationWindowRepository[PayloadT: BaseModel](Protocol):
-    """Required application capability for the set-replace window algorithm."""
-
-    def validate_observation_window_modelo(self, modelo: str) -> str:
-        """Validate the logical window owner at the outer persistence boundary."""
-        ...
-
-    def extract_identifier(self, payload: PayloadT) -> str:
-        """Return the natural identifier for one persisted payload."""
-        ...
-
-    def iter_records(self) -> Iterable[PayloadT]:
-        """Iterate the repository's decrypted payloads."""
-        ...
-
-    def replace_records(self, replacements: Sequence[PayloadT], stale_identifiers: Iterable[str]) -> None:
-        """Atomically replace the selected observation window."""
-        ...
-
-
 def replace_observation_window[ObservationT, PayloadT: BaseModel](
-    repository: ObservationWindowRepository[PayloadT],
+    repository: SecureBoundRepository[PayloadT],
     *,
     modelo: str,
     filing_year: int,
@@ -81,30 +76,35 @@ def replace_observation_window[ObservationT, PayloadT: BaseModel](
             now, resolved once so the whole set shares one instant.
         source_metadata: Capture metadata recorded on every written row.
     """
-    repository.validate_observation_window_modelo(modelo)
+    if isinstance(repository, RetencionObservationRepositoryAdapter):
+        translate_retencion_failure(
+            "retencion_validate_observation_window_modelo", lambda: safe_repository_id(modelo, context="modelo")
+        )
+    elif isinstance(repository, PercepcionObservationRepositoryAdapter):
+        translate_percepcion_failure(
+            "percepcion_validate_observation_window_modelo", lambda: safe_repository_id(modelo, context="modelo")
+        )
+    else:
+        raise TypeError("observation fixture requires its concrete persistence adapter")
     when = captured_at if captured_at is not None else now()
     replacements = tuple(
-
-            build_payload(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observation=observation,
-                source_kind=source_kind,
-                captured_at=when,
-                source_metadata=source_metadata,
-            )
-            for observation in observations
-
+        build_payload(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observation=observation,
+            source_kind=source_kind,
+            captured_at=when,
+            source_metadata=source_metadata,
+        )
+        for observation in observations
     )
     stale_identifiers = tuple(
-
-            repository.extract_identifier(payload)
-            for payload in repository.iter_records()
-            if _in_window(payload, modelo=modelo, filing_year=filing_year, period=period)
-
+        repository.extract_identifier(payload)
+        for payload in repository.iter_records()
+        if _in_window(payload, modelo=modelo, filing_year=filing_year, period=period)
     )
-    repository.replace_records(replacements, stale_identifiers)
+    replace_records(repository, replacements, stale_identifiers)
 
 
 def _in_window(payload: BaseModel, *, modelo: str, filing_year: int, period: Period) -> bool:

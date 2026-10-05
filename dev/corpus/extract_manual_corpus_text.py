@@ -36,7 +36,6 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import (
     scan_directory,
 )
@@ -48,6 +47,7 @@ from dev.corpus.manual_corpus_sidecar import (
     ManualCorpusTextSchemaVersion,
     ManualCorpusTextSidecar,
 )
+from dev.corpus.text import normalise_corpus_text
 
 _UTF_8: Final[str] = UTF_8
 _MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2

@@ -46,8 +46,8 @@ from functools import lru_cache
 from typing import Final
 
 import pytest
+from dev.corpus.text import normalise_corpus_text, resolve_anchored_extracted_unit
 
-from ....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
 from ....core.toml import parse_toml
 from ..classification import IvaTerritorialScope

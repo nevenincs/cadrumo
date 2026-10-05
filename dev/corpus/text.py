@@ -2,29 +2,24 @@
 
 from __future__ import annotations
 
-import html
 import json
 import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from .errors.hierarchy import CoreError
-from .external_constants import UTF_8_ENCODING
-from .text_fold import fold_diacritics
-from .type_guards import is_object_dict, is_object_list
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.text_fold import normalise_corpus_text
+from cadrumo.core.type_guards import is_object_dict, is_object_list
 
 __all__ = [
-    "CorpusAnchorResolutionError",
     "CorpusRedactionMark",
     "corpus_redaction_marks",
     "extracted_unit_count",
-    "normalise_corpus_text",
     "resolve_anchored_extracted_unit",
 ]
 
-_HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
-_WHITESPACE_RE = re.compile(r"\s+")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 _ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)$")
 # ``_canonical_anchor`` folds every ``art``/``articulo`` prefix down to ``a``
@@ -93,35 +88,6 @@ _ANCHOR_PREFIXES: Final[dict[str, str]] = {
     "disposiciontransitoria": "disposiciontransitoria",
     "disposicionfinal": "disposicionfinal",
 }
-
-
-class CorpusAnchorResolutionError(CoreError):
-    """Raised when an extracted corpus sidecar has no unique target unit.
-
-    A core-primitive failure, so it inherits :class:`CoreError` and carries a
-    registered error code rather than deriving from a bare
-    :class:`ValueError`. Both consumers -- the citation lookup and the registry
-    legal-reference reader -- catch it by name and immediately wrap it in their
-    own registered error, so nothing depended on the builtin base; what an
-    unregistered root did cost was a structured envelope, leaving an operator a
-    raw interpreter traceback for a bundled-corpus anchor that cannot resolve.
-    """
-
-
-def normalise_corpus_text(text: str) -> str:
-    """Normalise corpus text for citation-presence checks.
-
-    The HTML-tag stripper only matches well-formed tags whose ``<``
-    immediately precedes a tag-name character (letter, slash, or
-    ``!``/``?``) and whose body is short and contains no spaces — so that
-    bare comparison operators (e.g. ``< 500 euros`` and ``< 3 años``
-    that AEAT's manuals use as math notation) and other unbalanced
-    angle brackets do not inadvertently swallow long spans of prose.
-    """
-    decoded = html.unescape(text).replace("\xa0", " ")
-    without_tags = _HTML_TAG_RE.sub(" ", decoded)
-    without_marks = fold_diacritics(without_tags)
-    return _WHITESPACE_RE.sub(" ", without_marks).strip().casefold()
 
 
 class CorpusRedactionMark(NamedTuple):

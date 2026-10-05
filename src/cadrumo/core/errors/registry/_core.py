@@ -90,7 +90,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_text.CorpusAnchorResolutionError",
+        "cadrumo.core.errors.hierarchy.CorpusAnchorResolutionError",
         ErrorCode(
             code="INTEGRITY_CORPUS_ANCHOR_RESOLUTION",
             category=ErrorCategory.INTEGRITY,

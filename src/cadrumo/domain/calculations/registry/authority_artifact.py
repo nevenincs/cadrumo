@@ -407,15 +407,6 @@ class AuthorityEvidenceProjection:
             self, "_sources_by_id", FrozenMapping({item.source_reference_id: item for item in self.sources})
         )
 
-    def legal_text(self, legal_reference_id: str) -> str:
-        """Return publisher-validated text for one legal citation or refuse."""
-        item = self._legal_by_id.get(legal_reference_id)
-        if item is not None:
-            return item.anchored_text
-        raise AuthorityComponentCodecError(
-            f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
-        )
-
     def source_bytes(self, source_reference_id: str) -> bytes:
         """Return digest-checked runtime source bytes for one source reference."""
         item = self._sources_by_id.get(source_reference_id)

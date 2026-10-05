@@ -23,8 +23,8 @@ from collections.abc import Iterator
 from datetime import date
 
 import pytest
+from dev.corpus.text import resolve_anchored_extracted_unit
 
-from ....core.corpus_text import resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue

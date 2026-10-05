@@ -7,12 +7,12 @@ from typing import Any
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.corpus.text import normalise_corpus_text
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo

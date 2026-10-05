@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.core.corpus_text import CorpusAnchorResolutionError
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.hex import HEX_PATTERN_64
 from cadrumo.core.type_guards import is_object_dict, is_object_list

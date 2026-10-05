@@ -169,16 +169,6 @@ class ProrrataRegisterCatalogue:
         return self.transition_kinds[1].token
 
     @property
-    def aeat_autorizada_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the AEAT-authorised provenance in registry order."""
-        return self.provenances[0].token
-
-    @property
-    def inicio_actividad_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the activity-start provenance in registry order."""
-        return self.provenances[1].token
-
-    @property
     def carried_prior_definitiva_provenance(self) -> ProrrataProvisionalProvenance:
         """Return the carried prior definitive provenance in registry order."""
         return self.provenances[2].token

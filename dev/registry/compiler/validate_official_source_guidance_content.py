@@ -86,10 +86,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.corpus.text import normalise_corpus_text
 
 from .source_file_text import read_source_file_text
 from .validate_evidence import EvidenceValidator

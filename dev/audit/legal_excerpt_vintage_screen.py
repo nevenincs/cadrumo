@@ -174,14 +174,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.corpus_text import (
-    CorpusAnchorResolutionError,
-    normalise_corpus_text,
-    resolve_anchored_extracted_unit,
-)
 from cadrumo.core.directory_scan import (
     scan_directory,
 )
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
@@ -189,6 +185,7 @@ from dev.corpus.fetch_boe_normative import (
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
+from dev.corpus.text import normalise_corpus_text, resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import render_normative_prose
 
 from .legal_catalogue import load_legal_entries

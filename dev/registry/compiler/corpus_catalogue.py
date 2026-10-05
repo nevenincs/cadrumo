@@ -11,8 +11,8 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from cadrumo.core.corpus_text import CorpusAnchorResolutionError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.text_fold import ascii_slug
 from cadrumo.core.type_guards import is_object_dict

@@ -10,9 +10,9 @@ from typing import Final, cast
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
+from dev.corpus.text import normalise_corpus_text
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars

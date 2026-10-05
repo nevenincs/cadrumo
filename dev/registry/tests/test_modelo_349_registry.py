@@ -8,7 +8,6 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
@@ -22,6 +21,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from cadrumo.tests.inventory import REPO_ROOT
+from dev.corpus.text import normalise_corpus_text
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_file

@@ -8,20 +8,20 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.tests.audited_process import run_audited_process
-
-from ..corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
-from ..corpus_text import normalise_corpus_text as normalise_corpus_text_owner
+from dev._paths import REPO_ROOT as _REPO_ROOT
+from dev.corpus.text import resolve_anchored_extracted_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
 _NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html"
 
 
 def test_corpus_text_imports_resolve_to_the_defining_module_owner() -> None:
     """All consumers share the exact stdlib-only normaliser object."""
-    assert normalise_corpus_text is normalise_corpus_text_owner
+    assert normalise_corpus_text.__module__ == "cadrumo.core.text_fold"
 
 
 def test_normaliser_imports_without_configuration_or_domain_loading() -> None:
@@ -32,7 +32,7 @@ def test_normaliser_imports_without_configuration_or_domain_loading() -> None:
     """
     probe = (
         "import sys\n"
-        "from cadrumo.core.corpus_text import normalise_corpus_text\n"
+        "from cadrumo.core.text_fold import normalise_corpus_text\n"
         "assert normalise_corpus_text('<p>Café&nbsp;2026</p>') == 'cafe 2026'\n"
         "assert 'cadrumo.core.config' not in sys.modules\n"
         "assert not any(name.startswith('cadrumo.domain') for name in sys.modules)\n"

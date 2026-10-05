@@ -35,6 +35,7 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.period import Period
 
+from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.sql.tests.raw_key_writer import save_with_raw_key
 from .retencion_observation_authoring import replace_retencion_observations, save_retencion_observation
 
@@ -238,7 +239,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            repo.replace_records((replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
+            replace_records(repo, (replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
 
         survived = repo.load_observations("180", period)
         assert set(survived) == set(declared)

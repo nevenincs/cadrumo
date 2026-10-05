@@ -8,15 +8,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from stat import S_ISDIR
-from typing import Final
 
 from .config import Settings, load_settings
 from .errors.hierarchy import CoreValidationError
-from .storage_environment import STORAGE_ROOT, ensure_storage_root
+from .storage_environment import ensure_storage_root
 from .storage_taxonomy import StorageCategory, StorageGrouping
-
-STORAGE_ROOT_MODE: Final[int] = STORAGE_ROOT.posix_directory_mode
-"""Permission mode :func:`ensure_storage_tree` requests on the state root."""
 
 
 def ensure_storage_tree(

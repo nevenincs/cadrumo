@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from dev.corpus.text import normalise_corpus_text, resolve_anchored_extracted_unit
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.legal_grounding import verify_legal_catalogue

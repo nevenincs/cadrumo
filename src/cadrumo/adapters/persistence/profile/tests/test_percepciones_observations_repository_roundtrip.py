@@ -36,6 +36,7 @@ from .....domain.calculations.registry.withholding_bindings import (
     aggregate_withholding_by_clave,
 )
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
+from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...storage.sql.tests.raw_key_writer import save_with_raw_key
@@ -286,7 +287,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            repo.replace_records((replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
+            replace_records(repo, (replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
 
         survived = repo.load_observations("190", period)
         assert set(survived) == set(declared)
