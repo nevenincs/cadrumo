@@ -62,6 +62,22 @@ def _record_generated_layout(path: Path, text: str, *, check: bool, changed: lis
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
+def _require_owned_layout_directory(path: Path) -> None:
+    """Refuse a layout directory holding a fragment the generator does not own.
+
+    The loader merges every fragment of the section, so the generated fragment
+    written beside another one leaves a revision that no longer loads.
+    """
+    if not path.parent.is_dir():
+        return
+    foreign = sorted(entry.name for entry in path.parent.iterdir() if entry.name != path.name)
+    if foreign:
+        raise RegistryValidationError(
+            f"form layout directory {path.parent.as_posix()} holds fragments its generator does not own: "
+            + ", ".join(foreign)
+        )
+
+
 def _record_revision_layout(
     registry_root: Path,
     modelo_id: str,
@@ -73,6 +89,7 @@ def _record_revision_layout(
     undeclared: list[str],
 ) -> None:
     path = form_layout_fragment_path(registry_root / "modelos" / modelo_id / "revisions" / revision_id)
+    _require_owned_layout_directory(path)
     if outcome.layout is None:
         undeclared.append(f"{modelo_id} {revision_id}: {outcome.failure}")
         _record_undeclared_layout(path, check=check, changed=changed)
