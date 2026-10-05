@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:949891059d4f0774213da9148122040cd5cd2b988332c6d3e6f855423086d78d'
+body_hash: 'sha256:506548895e7ebe8b93d9cde24d079deb89b83d9f7c687439a353bab35fdd8256'
 related:
   - "[[2026-10-04-canonical-environment-plan]]"
 ---
@@ -66,6 +66,34 @@ related:
 - `S04` `verify:` `falsifier: HEAD environment.rs and environment.py (tool-cache join) fail the webview test; a literal storage/webview join fails the override assertion` -> `pass`
 - `S04` `verify:` `ruff check and ruff format --check on python/environment.py; rustfmt --check on touched Rust files` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S03` `M` `CMakeLists.txt`
+- `S03` `M` `native/CMakeLists.txt`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `M` `native/cmake/Packaging.cmake`
+- `S03` `M` `native/cmake/platforms/Windows.cmake`
+- `S03` `M` `native/package-layout.json`
+- `S03` `M` `native/interpreter/windows/host.c`
+- `S03` `M` `native/platform/include/cadrumo_platform.h`
+- `S03` `M` `native/platform/src/lib.rs`
+- `S03` `M` `dev/packaging/native/generate.py`
+- `S03` `M` `dev/packaging/native/layout.py`
+- `S03` `M` `dev/packaging/native/metadata.py`
+- `S03` `M` `dev/packaging/native/platforms/windows.py`
+- `S03` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S03` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S03` `M` `src/cadrumo/core/config.py`
+- `S03` `M` `src/cadrumo/core/storage_environment.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S03` `M` `src/cadrumo/core/tests/test_storage_environment.py`
+- `S03` `M` `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_storage_environment.py`
+- `S03` `verify:` `verify Release docs-off 10/10 CTests incl platform.resolver and bundle.entrypoint aeat, cadrumo-mcp, cadrumo-runtime` -> `pass`
+- `S03` `verify:` `verify-package b1911 Release zip sha256 3881a7c3: entrypoint parity, root refusal 120, runtime handshake, pywin32 cache under storage with hostile tool-cache variables unwritten, 5 loader refusals` -> `pass`
+- `S03` `verify:` `platform Rust 6/6 incl mutation-checked vector replay and live Known Folder probe` -> `pass`
+- `S03` `verify:` `1624 core, storage, packaging and contract pytest` -> `pass`
+- `S03` `verify:` `ruff, ty, rustfmt` -> `pass`
+- `S03` `by:` `CADRUMO-BUILD-RUNTIME`
 
 ## Notes
 
@@ -79,3 +107,5 @@ related:
 - `S02` CMake dry-run unsupported by the MSBuild generator; regeneration evidence is the build log from the declared `native_contract` OUTPUT and storage DEPENDS glob
 - `S02` Committed by CADRUMO-BUILD-RUNTIME as 00f44b5ae1
 - `S04` The desktop host no longer reads the development tool cache. HEAD native/platform/src/lib.rs still pins `XDG_CACHE_HOME` to the tool cache (S03 scope). The fixed query still names `STORAGE_ROOT_FIELD` and keeps `storage_root_disagreement;` those S04 items stay open.
+- `S03` Committed by CADRUMO-BUILD-RUNTIME as d7a95085af through a private index; carries the aeat and cadrumo-mcp entrypoints; product allowlist carries only the primary root variable; pywin32 cache member replaces the `XDG_CACHE_HOME` pin
+- `S03` clippy retains five pre-existing `missing_safety_doc` findings on the C ABI functions
