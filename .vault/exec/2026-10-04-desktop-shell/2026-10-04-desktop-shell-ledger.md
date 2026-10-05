@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0097aa67ff45bb2556eb211b8030fc8a5123ecbd3cdc7cb2c060ab1a920d7ded'
+body_hash: 'sha256:b45c425b2516c150f4513b1c245449f369c93aa57e1c2030365d38db7ee67128'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -504,6 +504,10 @@ related:
 - `S10` `verify:` `scoped receipt fixture tests (9)` -> `pass`
 - `S10` `verify:` `receipt fixture Ruff check and format` -> `pass`
 - `S10` `verify:` `docs sequence structural tests (79 pass, 1 fail orphan Sheets contracts)` -> `fail`
+- `S10` `M` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S10` `verify:` `GUI candidate package --check-package` -> `pass`
+- `S10` `verify:` `WebView2 packaged host release build` -> `pass`
+- `S10` `verify:` `packaged setup smoke` -> `fail`
 
 ## Notes
 
@@ -582,3 +586,4 @@ related:
 - `S10` Necessary backend corrections found by fresh docs prerequisite for packaged E2E: successful amount/narrative update changes transaction identity, so correlate against new authoritative `source_transaction_id` rather than resulting ID; preserve profile/result/effect/patch checks. Repeated merge CLI IDs now normalize list to tuple at strict request boundary. Root reviewed seven previously clean paths; 37 tests pass. Logs var/storage/development/.logs/test-runs/2026-10-05/{20261005T155911.682204Z-pytest-37640-be893697,20261005T160139.195827Z-pytest-29836-92f91dea,20261005T160216.305991Z-pytest-35060-8c83b635}/run.log. New result shape requires fresh worker/package snapshots. S10 remains open; broader docs gate still failed.
 - `S10` S10 remains open. Logout retains selected profile after human-access revocation; exact-profile packaged assertions prevent empty pointer falsely proving revocation. Mixed custody.py includes external B4 work and remains uncommitted. Synthetic cold profile setup bound 300s; other fixture commands and production host deadlines unchanged. Actual GUI acceptance pending interactive run.
 - `S10` Docs executable-example prerequisite remains failed; no goldens refreshed. Synthetic shared receipt custody is selected only for three explicit sign-out scenarios or cumulative pages enrolling them; default no-vault behavior remains. Profile-setup deletion is unresolved: accepted selected-profile deletion refusal conflicts with docs guidance to logout now that logout retains selection; no auth bypass or silent reauthentication added. Retained profile-setup-inspect run passed all four expected frame exits at unchanged deadlines after docs renders ended (41.77s); this is execution, not golden equality.
+- `S10` Fresh GUI candidate app-v1 assembled from rebuilt product wheels; full docs gate remains failed. Setup exposed missing profile-custody adapter composition in test helper, corrected at pointer observation. Subsequent real runtime hello and teardown pass, but canonical CLI sign-in-status returns `runtime_unavailable;` exact retained diagnostic pending root cause. Interactive handoff not yet ready; no session bridge or runtime bypass.

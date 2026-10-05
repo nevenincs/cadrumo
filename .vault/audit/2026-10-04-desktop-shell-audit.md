@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7cfb09ecae66f8f7df93a34c22d0deaa4ce0b6eb38938754d18ef0cb674c4f40'
+body_hash: 'sha256:b0f32c852e6ac5fd7be908e3fbe379c663ca6bdd507880965758552bf9637457'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -154,6 +154,10 @@ Reviewed scoped logout selection correction: successful global human sign-out le
 ### docs-signout-fixture-scope | medium | 2026-10-05
 
 Reviewed synthetic process-shared keyring confined to private docs sandbox, selected only from three explicitly enrolled sign-out scenarios before worker startup. Real runtime password login mints receipt; default no-vault behavior remains. Nine tests pass including child-write/parent-read/revoke and failure cleanup. Structural suite has 79 passes and one failure for five orphan Sheets contracts alongside externally modified pages; no unrelated edits or goldens were changed. Cumulative profile-setup still has two sign-outs without intervening login, and deletion refuses a selected profile after logout now retains selection. Keep docs gate and S10 open pending coherent owner resolution. Full four-language HTML assets rendered with sequence checking explicitly skipped only in GUI-test build root; they do not establish full package acceptance.
+
+### packaged-setup-refusal | medium | 2026-10-05
+
+GUI candidate app-v1 passes --check-package and test host release builds with SHA256 f063d49eafc982217b1f19d7e84122cc733d3741a0ebc767213675cdfbe50db3. Initial helper failed before launch because profile pointer observation lacked canonical profile_free_adapter_composition; scoped initialization corrected. Fresh helper then completed verified runtime hello and teardown, but real aeat config sign-in-status returned REFUSED_LOCAL_RUNTIME/runtime_unavailable. Reproduced against retained synthetic root without new password or auth overrides. Keep acceptance failed until endpoint/lifecycle cause is resolved; do not classify as Session0 refusal without evidence.
 
 ## Recommendations
 

@@ -25,6 +25,7 @@ from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRef
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import published_authority_generation
+from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
 
 
 def emit(record: dict[str, str | int]) -> None:
@@ -41,7 +42,8 @@ def main() -> None:
     profile_id: UUID | None = None
     try:
         root = effective_storage_root().resolve(strict=True)
-        profile_id = UUID(observe_active_profile_pointer().bucket_id or "")
+        with profile_free_adapter_composition():
+            profile_id = UUID(observe_active_profile_pointer().bucket_id or "")
         runtime = Path(sys.argv[1]).resolve(strict=True)
         product = version("cadrumo")
         with ExitStack() as cleanup:
