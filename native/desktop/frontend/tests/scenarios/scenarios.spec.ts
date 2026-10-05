@@ -18,12 +18,15 @@ const submit = (target: Page) =>
     exact: true,
   });
 
-// The call list sits in the collapsed scenario bar, so it is read by
-// structure: a closed disclosure has no accessible content to query by role.
-const calls = (target: Page, call: string) =>
-  target
-    .locator(".scenario-bar-calls li")
-    .filter({ hasText: new RegExp(`^${call}$`) });
+/** How many times the shell has made this host call in the current run. */
+const calls = (target: Page, call: string) => () =>
+  target.evaluate(
+    (name) =>
+      (
+        window as unknown as { __scenarioHostCalls?: string[] }
+      ).__scenarioHostCalls?.filter((made) => made === name).length ?? 0,
+    call,
+  );
 
 const openLogs = (target: Page) =>
   target
@@ -56,7 +59,7 @@ test("signed out: one submission signs in and starts the TUI fixture", async ({
   await expect(target.locator(".pane-tui .xterm-rows")).toContainText(
     "Simulated TUI session",
   );
-  await expect(calls(target, "signIn")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
 test("signing in: the pending state stays up", async ({ page: target }) => {
@@ -67,7 +70,7 @@ test("signing in: the pending state stays up", async ({ page: target }) => {
   await expect(
     target.getByRole("button", { name: label("desktop.signin.submitting") }),
   ).toBeDisabled();
-  await expect(calls(target, "signIn")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
 test("signed in: the TUI runs and the account can sign out", async ({
@@ -87,7 +90,16 @@ test("signed in: the TUI runs and the account can sign out", async ({
       exact: true,
     })
     .click();
-  await expect(password(target)).toBeVisible();
+  await expect(
+    target.getByText(label("desktop.signin.signed_out_lead")),
+  ).toBeVisible();
+  await expect(password(target)).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await target
+    .locator(".pane-tui")
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(password(target)).toBeFocused();
 });
 
 test("wrong password: the refusal shows and nothing is retried", async ({
@@ -103,7 +115,7 @@ test("wrong password: the refusal shows and nothing is retried", async ({
   // The status read that follows a refusal has settled and the field is
   // usable again: nothing else was sent.
   await expect(password(target)).toBeEnabled();
-  await expect(calls(target, "signIn")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
 test("throttled: the wait is shown and submission is held", async ({
@@ -122,7 +134,7 @@ test("throttled: the wait is shown and submission is held", async ({
     );
   await expect.poll(shown).toBeGreaterThan(0);
   await expect.poll(shown).toBeLessThanOrEqual(30);
-  await expect(calls(target, "signIn")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
 test("profile locked: the refusal shows and the TUI handover is offered", async ({
@@ -190,6 +202,10 @@ test("error: refusals are shown, not swallowed", async ({ page: target }) => {
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );
+  // The failed status read is said in the sign-in dialog, with its code.
+  await expect(target.locator(".sign-in")).toContainText("timed_out");
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
   await openLogs(target);
   await expect(target.locator(".source-banner.state-unreadable")).toBeVisible();
 });
@@ -237,7 +253,7 @@ test("sign-out refused: the sign-in stays and the failure shows", async ({
       exact: true,
     })
     .click();
-  await expect(calls(target, "signOut")).toHaveCount(1);
+  await expect.poll(calls(target, "signOut")).toBe(1);
   const account = target.getByRole("region", {
     name: label("desktop.account.title"),
   });

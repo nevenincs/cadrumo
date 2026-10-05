@@ -353,9 +353,14 @@ test("throttling counts down without retry and a successful sign-in hands over t
   await expect(
     target.getByText(label("desktop.account.remaining_access")),
   ).toBeVisible();
+  // Signing out here leaves the signed-out pane; the dialog is not thrown
+  // back at the person who has just chosen to sign out.
+  await expect(
+    target.getByText(label("desktop.signin.signed_out_lead")),
+  ).toBeVisible();
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect.poll(async () => (await signInState(target)).tuiCloses).toBe(1);
   await target.evaluate(async () => {
     (
@@ -365,9 +370,14 @@ test("throttling counts down without retry and a successful sign-in hands over t
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
   });
+  await target.keyboard.press("Escape");
+  await target
+    .locator(".pane-tui")
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeVisible();
+  ).toBeFocused();
   expect((await signInState(target)).tuiStarts).toBe(1);
 });
 

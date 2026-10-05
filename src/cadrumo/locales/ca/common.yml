@@ -601,11 +601,14 @@ desktop:
     title: Configuració
   signin:
     checking: S'està comprovant la teva sessió…
+    dismiss: Ara no
+    hide_password: Amaga la contrasenya
     lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
     open_tui: Obre la TUI
     open_tui_hint: Configuració inicial, un altre perfil o recuperació? Fes servir
       la TUI.
     password: Contrasenya
+    profile: Perfil
     refused:
       custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
         ha canviat. Torna a iniciar la sessió.
@@ -622,6 +625,8 @@ desktop:
       receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
       runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.
       throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
+    show_password: Mostra la contrasenya
+    signed_out_lead: Inicia la sessió per obrir el teu espai de treball a la TUI.
     start_services: Inicia els serveis en segon pla
     submit: Inicia la sessió
     submitting: S'està iniciant la sessió…

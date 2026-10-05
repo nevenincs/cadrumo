@@ -592,10 +592,13 @@ desktop:
     title: Beállítások
   signin:
     checking: A bejelentkezésed ellenőrzése…
+    dismiss: Most nem
+    hide_password: Jelszó elrejtése
     lead: Add meg a profilod jelszavát a munkaterületed megnyitásához.
     open_tui: TUI megnyitása
     open_tui_hint: Első beállítás, másik profil vagy helyreállítás? Használd a TUI-t.
     password: Jelszó
+    profile: Profil
     refused:
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.
@@ -611,6 +614,8 @@ desktop:
       receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
       runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
+    show_password: Jelszó megjelenítése
+    signed_out_lead: Jelentkezz be, hogy megnyisd a munkaterületedet a TUI-ban.
     start_services: Háttérszolgáltatások indítása
     submit: Bejelentkezés
     submitting: Bejelentkezés…

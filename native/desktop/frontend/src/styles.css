@@ -4,38 +4,6 @@
    from src/theme.css and lengths from src/tokens.css; this sheet declares no
    value of its own. */
 
-.sign-in {
-  padding: --spacing(4);
-  overflow: auto;
-  color: var(--foreground);
-}
-.sign-in form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: --spacing(2);
-}
-.sign-in input {
-  min-width: 0;
-  max-width: 100%;
-  color: var(--foreground);
-  background: var(--background);
-  border: var(--hairline) solid var(--border-strong);
-  padding: --spacing(2);
-}
-.sign-in button,
-.account button {
-  color: var(--foreground);
-  background: var(--chrome);
-  border: var(--hairline) solid var(--border-strong);
-  border-radius: var(--radius-md);
-  padding: --spacing(2);
-}
-.account {
-  padding-block: --spacing(2);
-  border-bottom: var(--hairline) solid var(--border);
-}
-
 body.dragging-y,
 body.dragging-y * {
   cursor: row-resize !important;

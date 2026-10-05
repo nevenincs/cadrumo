@@ -585,10 +585,13 @@ desktop:
     title: Settings
   signin:
     checking: Checking your sign-in…
+    dismiss: Not now
+    hide_password: Hide password
     lead: Enter your profile password to open your workspace.
     open_tui: Open the TUI
     open_tui_hint: First-time setup, another profile or recovery? Use the TUI.
     password: Password
+    profile: Profile
     refused:
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
@@ -604,6 +607,8 @@ desktop:
       receipt_expired: Your sign-in expired. Sign in again.
       runtime_unavailable: Cadrumo's background services aren't running.
       throttled: Too many attempts. You can try again in {seconds} s.
+    show_password: Show password
+    signed_out_lead: Sign in to open your workspace in the TUI.
     start_services: Start Background Services
     submit: Sign in
     submitting: Signing in…

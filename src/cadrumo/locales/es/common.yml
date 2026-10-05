@@ -608,10 +608,13 @@ desktop:
     title: Ajustes
   signin:
     checking: Comprobando tu sesión…
+    dismiss: Ahora no
+    hide_password: Ocultar la contraseña
     lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
     open_tui: Abrir la TUI
     open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
     password: Contraseña
+    profile: Perfil
     refused:
       custody_changed: La contraseña o la configuración de recuperación de este perfil
         ha cambiado. Vuelve a iniciar sesión.
@@ -628,6 +631,8 @@ desktop:
       receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
       runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
+    show_password: Mostrar la contraseña
+    signed_out_lead: Inicia sesión para abrir tu espacio de trabajo en la TUI.
     start_services: Iniciar los servicios en segundo plano
     submit: Iniciar sesión
     submitting: Iniciando sesión…

@@ -38,7 +38,8 @@ import {
   type RecordFilters,
 } from "./components/RecordList";
 import { Settings } from "./components/Settings";
-import { Account, SignIn } from "./components/SignIn";
+import { Account, SignedOut, SignInDialog } from "./components/SignIn";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSignIn } from "./shell/signIn";
 import { Split } from "./components/Split";
 import {
@@ -129,6 +130,10 @@ export function App({ host }: { host: Host }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // The sign-in dialog opens by itself whenever the TUI becomes gated; a
+  // person who dismisses it, or who has just signed out here, reopens it.
+  const [signInDismissed, setSignInDismissed] = useState(false);
+  const signInButton = useRef<HTMLButtonElement>(null);
   const [records, setRecords] = useState<LogRecord[] | null>(null);
   const [dropped, setDropped] = useState(0);
   const [sourceState, setSourceState] = useState<
@@ -160,6 +165,15 @@ export function App({ host }: { host: Host }) {
   );
 
   useEffect(() => saveState(prefs, layout), [prefs, layout]);
+
+  const gated = account.gated;
+  useEffect(() => {
+    if (gated) return;
+    // Admitted: the next time the gate closes, the dialog opens again, and
+    // the keyboard belongs to the TUI that has just started.
+    setSignInDismissed(false);
+    requestAnimationFrame(() => terminals.current.tui?.focus());
+  }, [gated]);
 
   useEffect(() => {
     let current = true;
@@ -1130,7 +1144,11 @@ export function App({ host }: { host: Host }) {
         ]}
       />
       {account.gated ? (
-        <SignIn account={account} />
+        <SignedOut
+          account={account}
+          onSignIn={() => setSignInDismissed(false)}
+          signInButton={signInButton}
+        />
       ) : (
         terminalPane("tui", tuiVisible, DARK_TERMINAL)
       )}
@@ -1140,192 +1158,216 @@ export function App({ host }: { host: Host }) {
 
   return (
     <StringsContext.Provider value={t}>
-      <div className={`shell scheme-${scheme}`}>
-        <Rail
-          label={t("desktop.rail.label")}
-          top={railTop}
-          bottom={railBottom}
-        />
-        <div className="workspace">
-          <main className="main-area" hidden={maximized === "panel"}>
-            <Split
-              orientation={orientation}
-              reversed={prefs.order === "tui"}
-              ratio={layout.splitRatio}
-              onRatio={(ratio) => patch({ splitRatio: ratio })}
-              minA={splitMinA}
-              minB={orientation === "row" ? splitMinBRow : splitMinBCol}
-              a={docsPane}
-              b={tuiPane}
-              aShown={maximized !== "tui"}
-              bShown={tuiVisible}
-              label={t("desktop.split.resize")}
-            />
-          </main>
-          {layout.panelOpen && !maximized && (
-            <div
-              className="panel-separator"
-              role="separator"
-              aria-orientation="horizontal"
-              aria-label={t("desktop.panel.resize")}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round((panelHeight / viewportHeight) * 100)}
-              tabIndex={0}
-              onPointerDown={dragPanel}
-              onKeyDown={(event) => {
-                // The window-splitter pattern: arrows step, Home and End go
-                // to the panel's smallest and largest size.
-                const sizes: Record<string, number> = {
-                  ArrowUp: panelHeight + panelResizeStep,
-                  ArrowDown: panelHeight - panelResizeStep,
-                  Home: panelMin,
-                  End: viewportHeight - docsMin,
-                };
-                const next = sizes[event.key];
-                if (next === undefined) return;
-                event.preventDefault();
-                patch({ panelRatio: clampPanel(next) / viewportHeight });
+      <TooltipProvider>
+        <div className={`shell scheme-${scheme}`}>
+          <Rail
+            label={t("desktop.rail.label")}
+            top={railTop}
+            bottom={railBottom}
+          />
+          <div className="workspace">
+            <main className="main-area" hidden={maximized === "panel"}>
+              <Split
+                orientation={orientation}
+                reversed={prefs.order === "tui"}
+                ratio={layout.splitRatio}
+                onRatio={(ratio) => patch({ splitRatio: ratio })}
+                minA={splitMinA}
+                minB={orientation === "row" ? splitMinBRow : splitMinBCol}
+                a={docsPane}
+                b={tuiPane}
+                aShown={maximized !== "tui"}
+                bShown={tuiVisible}
+                label={t("desktop.split.resize")}
+              />
+            </main>
+            {layout.panelOpen && !maximized && (
+              <div
+                className="panel-separator"
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label={t("desktop.panel.resize")}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round((panelHeight / viewportHeight) * 100)}
+                tabIndex={0}
+                onPointerDown={dragPanel}
+                onKeyDown={(event) => {
+                  // The window-splitter pattern: arrows step, Home and End go
+                  // to the panel's smallest and largest size.
+                  const sizes: Record<string, number> = {
+                    ArrowUp: panelHeight + panelResizeStep,
+                    ArrowDown: panelHeight - panelResizeStep,
+                    Home: panelMin,
+                    End: viewportHeight - docsMin,
+                  };
+                  const next = sizes[event.key];
+                  if (next === undefined) return;
+                  event.preventDefault();
+                  patch({ panelRatio: clampPanel(next) / viewportHeight });
+                }}
+              />
+            )}
+            <section
+              className={`panel ${maximized === "panel" ? "is-maximized" : ""}`}
+              hidden={!panelVisible}
+              style={
+                maximized === "panel" ? undefined : { height: panelHeight }
+              }
+              aria-label={t("desktop.panel.label")}
+            >
+              <div
+                className="tabstrip"
+                role="tablist"
+                aria-label={t("desktop.panel.label")}
+                onDoubleClick={(event) =>
+                  event.target === event.currentTarget &&
+                  toggleMaximize("panel")
+                }
+              >
+                {TABS.map(([tab, labelKey, icon], index) => (
+                  <button
+                    key={tab}
+                    id={`tab-${tab}`}
+                    role="tab"
+                    aria-selected={layout.tab === tab}
+                    aria-controls={`panel-${tab}`}
+                    tabIndex={layout.tab === tab ? 0 : -1}
+                    className="tab"
+                    onClick={() => openTab(tab, { toggle: false })}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key !== "ArrowRight" &&
+                        event.key !== "ArrowLeft"
+                      )
+                        return;
+                      const next =
+                        TABS[
+                          (index +
+                            (event.key === "ArrowRight"
+                              ? 1
+                              : TABS.length - 1)) %
+                            TABS.length
+                        ]?.[0];
+                      if (!next) return;
+                      patch({ tab: next });
+                      document.getElementById(`tab-${next}`)?.focus();
+                    }}
+                  >
+                    <Icon name={icon} />
+                    {t(labelKey)}
+                    {tab !== "logs" && exitCode(status[tab]) !== undefined && (
+                      <span className="exit-note">
+                        {t("desktop.session.exited", {
+                          code: exitCode(status[tab]) ?? "?",
+                        })}
+                      </span>
+                    )}
+                    {tab === "logs" && errorCount > 0 && (
+                      <span className="tab-badge">{errorCount}</span>
+                    )}
+                  </button>
+                ))}
+                <span className="tools-spacer" />
+                <IconButton
+                  icon={panelMax.icon}
+                  label={panelMax.label}
+                  pressed={panelMax.pressed}
+                  run={panelMax.run}
+                />
+                <IconButton
+                  icon="chevronDown"
+                  label={`${t("desktop.panel.hide")} (${primaryChord(byId("panel.toggle"))})`}
+                  run={() => runAction("panel.toggle")}
+                />
+              </div>
+              <div className="panel-body">
+                {terminalPane("console", tabOpen("console"))}
+                {terminalPane("python", tabOpen("python"))}
+                <RecordList
+                  records={records}
+                  sourceState={sourceState}
+                  dropped={dropped}
+                  filters={filters}
+                  setFilters={setFilters}
+                  onMenu={recordMenu}
+                  shown={tabOpen("logs")}
+                />
+              </div>
+            </section>
+          </div>
+
+          {settingsOpen && (
+            <Settings
+              account={
+                <Account
+                  account={account}
+                  onSignOut={() => {
+                    setSignInDismissed(true);
+                    void account.signOut();
+                  }}
+                />
+              }
+              prefs={prefs}
+              setPrefs={setPrefs}
+              close={() => setSettingsOpen(false)}
+              onReset={() => {
+                setPrefs(DEFAULT_PREFS);
+                setLayout(DEFAULT_LAYOUT);
+                setMaximized(null);
+                say(t("desktop.settings.layout_reset"));
               }}
             />
           )}
-          <section
-            className={`panel ${maximized === "panel" ? "is-maximized" : ""}`}
-            hidden={!panelVisible}
-            style={maximized === "panel" ? undefined : { height: panelHeight }}
-            aria-label={t("desktop.panel.label")}
-          >
-            <div
-              className="tabstrip"
-              role="tablist"
-              aria-label={t("desktop.panel.label")}
-              onDoubleClick={(event) =>
-                event.target === event.currentTarget && toggleMaximize("panel")
-              }
-            >
-              {TABS.map(([tab, labelKey, icon], index) => (
-                <button
-                  key={tab}
-                  id={`tab-${tab}`}
-                  role="tab"
-                  aria-selected={layout.tab === tab}
-                  aria-controls={`panel-${tab}`}
-                  tabIndex={layout.tab === tab ? 0 : -1}
-                  className="tab"
-                  onClick={() => openTab(tab, { toggle: false })}
-                  onKeyDown={(event) => {
-                    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft")
-                      return;
-                    const next =
-                      TABS[
-                        (index +
-                          (event.key === "ArrowRight" ? 1 : TABS.length - 1)) %
-                          TABS.length
-                      ]?.[0];
-                    if (!next) return;
-                    patch({ tab: next });
-                    document.getElementById(`tab-${next}`)?.focus();
-                  }}
-                >
-                  <Icon name={icon} />
-                  {t(labelKey)}
-                  {tab !== "logs" && exitCode(status[tab]) !== undefined && (
-                    <span className="exit-note">
-                      {t("desktop.session.exited", {
-                        code: exitCode(status[tab]) ?? "?",
-                      })}
-                    </span>
-                  )}
-                  {tab === "logs" && errorCount > 0 && (
-                    <span className="tab-badge">{errorCount}</span>
-                  )}
-                </button>
-              ))}
-              <span className="tools-spacer" />
-              <IconButton
-                icon={panelMax.icon}
-                label={panelMax.label}
-                pressed={panelMax.pressed}
-                run={panelMax.run}
-              />
-              <IconButton
-                icon="chevronDown"
-                label={`${t("desktop.panel.hide")} (${primaryChord(byId("panel.toggle"))})`}
-                run={() => runAction("panel.toggle")}
-              />
+          {paletteOpen && (
+            <CommandPalette
+              actions={actions}
+              searchDocs={searchDocs}
+              openDoc={openDoc}
+              close={() => {
+                setPaletteOpen(false);
+                const back = returnFocus.current;
+                if (back instanceof HTMLElement)
+                  requestAnimationFrame(() => back.focus());
+              }}
+            />
+          )}
+          {menu && (
+            <ContextMenu
+              items={menu.items.map((item) =>
+                isSeparator(item)
+                  ? item
+                  : {
+                      id: item.id,
+                      label: item.label,
+                      shortcut: item.shortcut,
+                      enabled: item.enabled,
+                    },
+              )}
+              at={menu.at}
+              choose={(id) => {
+                const items = menu.items;
+                setMenu(null);
+                const chosen = items.find(
+                  (item) => !isSeparator(item) && item.id === id,
+                );
+                if (chosen && !isSeparator(chosen)) chosen.run?.();
+              }}
+            />
+          )}
+          {toast && (
+            <div className="toast" role="status">
+              {toast}
             </div>
-            <div className="panel-body">
-              {terminalPane("console", tabOpen("console"))}
-              {terminalPane("python", tabOpen("python"))}
-              <RecordList
-                records={records}
-                sourceState={sourceState}
-                dropped={dropped}
-                filters={filters}
-                setFilters={setFilters}
-                onMenu={recordMenu}
-                shown={tabOpen("logs")}
-              />
-            </div>
-          </section>
+          )}
+          <SignInDialog
+            account={account}
+            open={account.gated && !signInDismissed}
+            onOpenChange={(open) => setSignInDismissed(!open)}
+            returnFocus={signInButton}
+          />
         </div>
-
-        {settingsOpen && (
-          <Settings
-            account={<Account account={account} />}
-            prefs={prefs}
-            setPrefs={setPrefs}
-            close={() => setSettingsOpen(false)}
-            onReset={() => {
-              setPrefs(DEFAULT_PREFS);
-              setLayout(DEFAULT_LAYOUT);
-              setMaximized(null);
-              say(t("desktop.settings.layout_reset"));
-            }}
-          />
-        )}
-        {paletteOpen && (
-          <CommandPalette
-            actions={actions}
-            searchDocs={searchDocs}
-            openDoc={openDoc}
-            close={() => {
-              setPaletteOpen(false);
-              const back = returnFocus.current;
-              if (back instanceof HTMLElement)
-                requestAnimationFrame(() => back.focus());
-            }}
-          />
-        )}
-        {menu && (
-          <ContextMenu
-            items={menu.items.map((item) =>
-              isSeparator(item)
-                ? item
-                : {
-                    id: item.id,
-                    label: item.label,
-                    shortcut: item.shortcut,
-                    enabled: item.enabled,
-                  },
-            )}
-            at={menu.at}
-            choose={(id) => {
-              const items = menu.items;
-              setMenu(null);
-              const chosen = items.find(
-                (item) => !isSeparator(item) && item.id === id,
-              );
-              if (chosen && !isSeparator(chosen)) chosen.run?.();
-            }}
-          />
-        )}
-        {toast && (
-          <div className="toast" role="status">
-            {toast}
-          </div>
-        )}
-      </div>
+      </TooltipProvider>
     </StringsContext.Provider>
   );
 }
