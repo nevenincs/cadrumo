@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:e4511a24c407ce8d85ea5f6891b7d3900c43fd610a121bc0569fd49cee9db962'
+body_hash: 'sha256:a1aaf1a8f8c5f5f130e73533b9303bbc31d0f7428e897c1a1aa62ab8c87a5dd8'
 ---
 
 # `google-app-identity` plan
@@ -108,7 +108,7 @@ proposed to the product owner at plan close.
 - [x] `S07` - Bind the stored token to its minting client, refuse a sign-in without a refresh token, report a revoked or expired grant as a typed sign-in-required state, and use the loopback IP literal; `src/cadrumo/adapters/outbound/google/oauth_flow.py`.
 - [x] `S08` - Implement or delete the stale refresh lifecycle declarations: rotated-token persistence, last refresh and reauth fields, the refresh-only login mode and the unread refresh buffer setting; `src/cadrumo/adapters/outbound/google/records.py`.
 - [ ] `S09` - Document the removals, the local import replacement and the re-export after a client change in the user documentation and release notes, and regenerate the references they feed; `docs`.
-- [ ] `S10` - Run the live proof of every listed Sheets and Drive method under drive.file alone against an application-created workbook, or record it as pending verification; `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`.
+- [x] `S10` - Run the live proof of every listed Sheets and Drive method under drive.file alone against an application-created workbook, or record it as pending verification; `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`.
 - [x] `S11` - Commit the publisher client file with the source and include it in every build, removing the ignore rule and both build exclusions, and confirm a built wheel and sdist carry it; `src/cadrumo/_data/google/oauth_client.json`.
 - [x] `S12` - Settle a definitive provider refusal under the Google configuration operation as a refusal with no effect applied, keeping UNKNOWN wherever the effect is ambiguous; `src/cadrumo/application/user_profile/google_configuration_executor.py`.
 - [x] `S13` - Report an uncertain custody write during a ledger evidence batch as the designed refusal instead of a validation error; `src/cadrumo/application/ledger/evidence_ingestion_operation.py`.

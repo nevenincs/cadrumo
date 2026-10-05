@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c0465e56c97f1d7ff1d928697743c759f9d1686d2204eb481d2ffdbb7a4c4e5'
+body_hash: 'sha256:54a67b3683fd010bdea54ea4f692bc92d44169cde72c21faa15c519da5613073'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -457,6 +457,10 @@ related:
 - `S13` `verify:` `pytest unit and integration: ledger evidence tests and evidence conformance cases (177)` -> `pass`
 - `S13` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
 - `S13` `by:` `CADRUMO-GOOGLE-OATH`
+- `S10` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py`
+- `S10` `verify:` `ruff check, ruff format --check and ty on the live test module; pytest collection of its three tests` -> `pass`
+- `S10` `verify:` `live run against Google under drive.file alone` -> `fail`
+- `S10` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -526,3 +530,8 @@ related:
 - `S13` The uncertain write is produced through the real commit fence: the synthetic store writes the bytes and then raises, which the tracker classifies as a write of unknown outcome. The result contract still rejects an unknown effect; a test pins that, since it is the reason the refusal has to come first.
 - `S13` The refusal is the access denial `OPERATION_DENIED` that the code already intended. It carries no remedy text of its own; whether an uncertain evidence write deserves a more specific refusal is a question for the ledger's owner and was not decided here.
 - `S13` The full type and import-boundary gates were not rerun for this two-line change; ty passed on both files.
+- `S10` PENDING VERIFICATION. The live proof was not run: it needs the operator to set `CADRUMO_LIVE_TESTS_ENABLED=1` and `CADRUMO_LIVE_TESTS_GOOGLE=1,` to have an active profile, and to complete Google's consent in a browser. The implementing session can do none of those. The 'fail' above records that the check has no passing run, not that it ran and failed.
+- `S10` To run it: uv run --no-sync python -m pytest `src/cadrumo/adapters/outbound/google/tests/test_oauth_live.py` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_live.py` -m `aeat_live` -p no:cacheprovider. The first file covers sign-in, the exact scope set, folder creation, export, preview and readback; the second covers the mirror's probe, upload, download and delete.
+- `S10` Until that run passes, these stay unproven against Google: that every Sheets and Drive method the export uses accepts drive.file for an application-created workbook; that a folder is created with its marker in My Drive; that Google answers an ended grant with the `invalid_grant` body the mapping expects; and that consent completes with the 127.0.0.1 redirect. All were exercised only against local endpoints or the client library.
+- `S10` Still open from S04 and not closed by this Step: workbooks are created through Sheets and stamped with the marker in the Drive call that moves them, so an application-created workbook exists briefly without its marker. Creating it through Drive files.create with the marker in one call was left until a live run can show the Sheets calls still work on a workbook created that way. Commitment 7 is therefore not fully met for workbooks.
+- `S10` The consent screen of the publisher's project is in Testing with one test user, by the verifying session's account, so only that account can complete sign-in today.
